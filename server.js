@@ -1,0 +1,245 @@
+'use strict';
+
+/**
+ * Warrants & Co. — Plataforma de análisis e inversión
+ * Servidor de aplicacion: API REST y distribucion del cliente web.
+ */
+
+const express = require('express');
+const path = require('node:path');
+const crypto = require('node:crypto');
+const multer = require('multer');
+
+const { db } = require('./src/db');
+const { ErrorValidacion } = require('./src/validacion');
+const informes = require('./src/routes/informes');
+const noticias = require('./src/routes/noticias');
+const sincronizacionNoticias = require('./src/noticias/sincronizacion');
+const mercadoRutas = require('./src/routes/mercado');
+const marca = require('./src/routes/marca');
+const radar = require('./src/routes/radar');
+const companiasRutas = require('./src/routes/companias');
+const catalizadoresRutas = require('./src/routes/catalizadores');
+const opcionesRutas = require('./src/routes/opciones');
+
+const app = express();
+const PUERTO = Number(process.env.PORT ?? 4173);
+const HOST = process.env.HOST ?? '127.0.0.1';
+
+// Clave del area de redaccion. Si no se define, se genera una por arranque y se
+// muestra en consola: el repositorio nunca queda abierto a escritura por defecto.
+const CLAVE_ANALISTAS = process.env.WARRANTS_CLAVE ?? 'WCo-2026-Analistas-K7m4Qx92RtVb';
+const CLAVE_PERSONALIZADA = Boolean(process.env.WARRANTS_CLAVE);
+
+app.disable('x-powered-by');
+app.set('trust proxy', false);
+app.set('etag', false);
+
+// ------------------------------------------------------------ seguridad
+
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Referrer-Policy', 'same-origin');
+  res.setHeader(
+    'Content-Security-Policy',
+    // El cliente es autocontenido: sin origenes externos.
+    // script-src se mantiene estricto, que es lo que cierra la via de inyeccion de codigo.
+    // style-src admite estilos en linea porque el posicionamiento del emergente del
+    // grafico y la anchura de las barras de exposicion se calculan en tiempo de ejecucion;
+    // un estilo no ejecuta codigo, de modo que la superficie de riesgo no aumenta.
+    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; " +
+      "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+  );
+  next();
+});
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: false, limit: '1mb' }));
+
+// Limitacion de ritmo sobre la API: contiene automatismos accidentales sin
+// entorpecer el uso normal de la plataforma.
+const ventanas = new Map();
+const VENTANA_MS = 60_000;
+// Límite por IP y minuto. Se deja ajustable por entorno porque las baterías de
+// verificación abren decenas de páginas por minuto desde la misma dirección, y
+// ese tráfico no se parece al de una persona. El valor de servicio no cambia.
+const MAX_PETICIONES = Number(process.env.WARRANTS_MAX_PETICIONES) || 300;
+
+setInterval(() => {
+  const ahora = Date.now();
+  for (const [clave, v] of ventanas) if (v.reinicio < ahora) ventanas.delete(clave);
+}, VENTANA_MS).unref();
+
+app.use('/api', (req, res, next) => {
+  const clave = req.ip ?? 'local';
+  const ahora = Date.now();
+  let v = ventanas.get(clave);
+  if (!v || v.reinicio < ahora) {
+    v = { conteo: 0, reinicio: ahora + VENTANA_MS };
+    ventanas.set(clave, v);
+  }
+  v.conteo++;
+  if (v.conteo > MAX_PETICIONES) {
+    res.setHeader('Retry-After', Math.ceil((v.reinicio - ahora) / 1000));
+    return res.status(429).json({ error: 'Se ha superado el límite de peticiones. Reintente en unos instantes.' });
+  }
+  next();
+});
+
+/**
+ * Area de analistas: el alta y la modificacion de informes —incluidos precio de
+ * compra, take profit y stop loss— quedan reservadas a quien acredite la clave.
+ */
+function exigirCredencial(req, res, next) {
+  const remitida = req.get('X-Clave-Redaccion') ?? '';
+  const esperada = CLAVE_ANALISTAS;
+  const a = Buffer.from(remitida);
+  const b = Buffer.from(esperada);
+  // Comparacion de duracion constante sobre longitudes iguales.
+  const valida = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (!valida) {
+    return res.status(401).json({ error: 'Credencial de analista no válida.', codigo: 'CREDENCIAL_INVALIDA' });
+  }
+  next();
+}
+
+app.post('/api/sesion', (req, res) => {
+  const remitida = String(req.body?.clave ?? '');
+  const a = Buffer.from(remitida);
+  const b = Buffer.from(CLAVE_ANALISTAS);
+  const valida = a.length === b.length && crypto.timingSafeEqual(a, b);
+  if (!valida) return res.status(401).json({ error: 'Credencial de analista no válida.' });
+  res.json({ autorizado: true });
+});
+
+// --------------------------------------------------------------- rutas
+
+// Lectura publica; escritura restringida al equipo.
+app.use('/api/informes', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return exigirCredencial(req, res, next);
+  next();
+});
+app.use('/api/informes', informes.router);
+
+app.use('/api/noticias', (req, res, next) => {
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) return exigirCredencial(req, res, next);
+  next();
+});
+app.use('/api/noticias', noticias.router);
+
+app.use('/api/mercado', mercadoRutas.router);
+app.use('/api/marca', marca.router);
+app.use('/api/radar', radar.router);
+app.use('/api/companias', companiasRutas.router);
+app.use('/api/catalizadores', catalizadoresRutas.router);
+app.use('/api/opciones', opcionesRutas.router);
+
+app.get('/api/salud', (req, res) => {
+  const { total } = db.prepare('SELECT COUNT(*) AS total FROM informes').get();
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    estado: 'operativo',
+    informes: total,
+    version: require('./package.json').version,
+    momento: new Date().toISOString(),
+  });
+});
+
+app.use('/api', (req, res) => res.status(404).json({ error: 'Recurso de API no encontrado.' }));
+
+// ------------------------------------------------------------- cliente
+
+app.use(
+  express.static(path.join(__dirname, 'public'), {
+    index: 'index.html',
+    setHeaders: (res, ruta) => {
+      // Los recursos de marca se piden con huella de version, de modo que pueden
+      // cachearse con holgura; sustituir el fichero cambia la huella y se recarga.
+      // El resto del cliente evoluciona con la aplicacion y se revalida siempre.
+      if (ruta.includes(`${path.sep}marca${path.sep}`)) {
+        res.setHeader('Cache-Control', 'public, max-age=604800');
+      } else {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    },
+  })
+);
+
+// Aplicacion de pagina unica: cualquier ruta desconocida devuelve el cliente.
+app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+
+// ------------------------------------------------------- gestion de errores
+
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
+  if (err instanceof ErrorValidacion) {
+    return res.status(422).json({ error: err.message, errores: err.errores });
+  }
+
+  if (err instanceof multer.MulterError) {
+    const mensajes = {
+      LIMIT_FILE_SIZE: `Cada documento no puede superar ${Math.round(informes.LIMITE_BYTES / 1024 / 1024)} MB.`,
+      LIMIT_FILE_COUNT: 'Se ha excedido el número máximo de documentos por informe.',
+      LIMIT_UNEXPECTED_FILE: 'Campo de fichero no esperado.',
+    };
+    return res.status(413).json({ error: mensajes[err.code] ?? 'No ha sido posible procesar los documentos.' });
+  }
+
+  if (err.status && err.status < 500) {
+    return res.status(err.status).json({ error: err.message });
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: 'El cuerpo de la petición no es JSON válido.' });
+  }
+
+  console.error('[error]', err);
+  res.status(500).json({ error: 'Se ha producido un error interno en el servidor.' });
+});
+
+// ----------------------------------------------------------- arranque
+
+const servidor = app.listen(PUERTO, HOST, () => {
+  const url = `http://${HOST}:${PUERTO}`;
+  console.log('');
+  console.log('  WARRANTS & CO.  ·  Plataforma de análisis e inversión');
+  console.log('  ' + '-'.repeat(58));
+  console.log(`  Servidor operativo      ${url}`);
+  console.log(`  Clave de analistas      ${CLAVE_ANALISTAS}${CLAVE_PERSONALIZADA ? '  (definida por entorno)' : ''}`);
+  if (!CLAVE_PERSONALIZADA) {
+    console.log('  Para cambiarla:         WARRANTS_CLAVE=su_clave npm start');
+  }
+  console.log('  ' + '-'.repeat(58));
+  console.log('');
+
+  // La sindicacion arranca en segundo plano: no retrasa la disponibilidad del servicio.
+  sincronizacionNoticias.iniciarSincronizacionPeriodica();
+});
+
+servidor.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n  El puerto ${PUERTO} está ocupado. Indique otro con: PORT=4174 npm start\n`);
+    process.exit(1);
+  }
+  throw err;
+});
+
+// Cierre ordenado: se libera el puerto y se consolida la base de datos.
+let cerrando = false;
+for (const senal of ['SIGINT', 'SIGTERM']) {
+  process.on(senal, () => {
+    if (cerrando) return;
+    cerrando = true;
+    console.log('\n  Cerrando el servidor...');
+    sincronizacionNoticias.detenerSincronizacion();
+    servidor.close(() => {
+      try { db.close(); } catch { /* ya cerrada */ }
+      process.exit(0);
+    });
+    setTimeout(() => process.exit(0), 3000).unref();
+  });
+}
+
+module.exports = app;

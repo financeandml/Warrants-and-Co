@@ -1,0 +1,8 @@
+node_modules/
+data/warrants.db
+data/warrants.db-wal
+data/warrants.db-shm
+data/uploads/*
+!data/uploads/.gitkeep
+.DS_Store
+data/copias/

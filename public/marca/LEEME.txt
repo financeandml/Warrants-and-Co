@@ -1,0 +1,34 @@
+RECURSOS DE IDENTIDAD CORPORATIVA — Warrants & Co.
+===================================================
+
+Deposite aquí los ficheros. La plataforma los detecta sola: basta con recargar
+la página, sin reiniciar el servidor ni tocar el código.
+
+  banner.jpg      Fotografía de portada (el paisaje nevado).
+                  También se admite: banner.png, banner.webp, banner.avif
+
+                  IMPORTANTE — para que se vea nítida en pantallas Retina:
+                  suba el ORIGINAL sin recomprimir, de 3000 px de ancho o más.
+                  El suyo es de 4506 × 3004: perfecto tal cual.
+                  No lo redimensione ni lo exporte "para web".
+
+  logo.svg        Logotipo completo, con la denominación social.
+                  También se admite: logo.png, logo.jpg, logo.webp
+                  Aparece en el pie de página.
+
+  logo-marca.svg  Sello cuadrado para la cabecera y el icono de pestaña.
+                  También se admite: logo-marca.png, sello.svg, sello.png
+
+CÓMO COPIAR EL BANNER
+---------------------
+Arrastre el archivo a esta carpeta y renómbrelo "banner.jpg". O desde Terminal:
+
+  cp ~/Downloads/NOMBRE-DE-SU-FOTO.jpg \
+     ~/Desktop/Negocios/warrants-co/public/marca/banner.jpg
+
+Después recargue http://127.0.0.1:4173 — nada más.
+
+Al sustituir un fichero conservando el nombre, el cambio se refleja de inmediato:
+la versión se calcula con la fecha del archivo e invalida la caché del navegador.
+
+Compruebe qué recursos están activos en:  http://127.0.0.1:4173/api/marca

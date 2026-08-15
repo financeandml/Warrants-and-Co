@@ -1,0 +1,1201 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title data-i18n="documento.titulo">Warrants &amp; Co. — Análisis e Inversión</title>
+<meta name="description" data-i18n-attr="content:documento.descripcion"
+      content="Plataforma de análisis e inversión de Warrants &amp; Co. Repositorio de tesis de inversión, cobertura de valores y seguimiento de cartera.">
+<link rel="stylesheet" href="/estilos.css">
+<script src="/tema-inicial.js"></script>
+<script src="/idioma-inicial.js"></script>
+<link rel="icon" href="/marca/logo-marca.svg" type="image/svg+xml">
+</head>
+<body>
+
+<a class="salto-contenido" href="#principal" data-i18n="general.saltoContenido">Ir al contenido principal</a>
+
+<header class="cabecera">
+  <div class="contenedor cabecera__interior">
+    <a class="marca" href="#/inicio" data-ruta data-i18n-attr="aria-label:cabecera.marca.ir"
+       aria-label="Warrants &amp; Co. — ir al inicio">
+      <img class="marca__sello" id="marca-sello" src="/marca/logo-marca.svg" alt="" aria-hidden="true" role="presentation" width="34" height="34">
+      <span class="marca__texto">
+        <strong>Warrants &amp; Co.</strong>
+        <span data-i18n="cabecera.marca.lema">Análisis e Inversión</span>
+      </span>
+    </a>
+
+    <nav class="navegacion" id="navegacion"
+         data-i18n-attr="aria-label:cabecera.nav.etiqueta" aria-label="Navegación principal"></nav>
+
+    <div class="cabecera__acciones">
+      <span class="indicador-sesion" id="indicador-sesion" hidden role="status">
+        <span class="punto punto--activo" aria-hidden="true"></span>
+        <span id="indicador-sesion-texto" data-i18n="cabecera.sesion.analista">Analista</span>
+      </span>
+      <div class="conmutador-tema" role="group"
+           data-i18n-attr="aria-label:cabecera.tema.grupo" aria-label="Tema de la interfaz">
+        <button type="button" data-tema="claro" aria-pressed="false"
+                data-i18n-attr="title:cabecera.tema.claro; aria-label:cabecera.tema.claro"
+                title="Tema claro" aria-label="Tema claro">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 17a5 5 0 1 1 0-10 5 5 0 0 1 0 10zm0-13a1 1 0 0 1 1 1v1.5a1 1 0 0 1-2 0V5a1 1 0 0 1 1-1zm0 14a1 1 0 0 1 1 1v1.5a1 1 0 0 1-2 0V19a1 1 0 0 1 1-1zM4 12a1 1 0 0 1 1-1h1.5a1 1 0 0 1 0 2H5a1 1 0 0 1-1-1zm13.5-1H19a1 1 0 0 1 0 2h-1.5a1 1 0 0 1 0-2zM6.3 6.3a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1-1.4 1.4l-1-1a1 1 0 0 1 0-1.4zm9 9a1 1 0 0 1 1.4 0l1 1a1 1 0 0 1-1.4 1.4l-1-1a1 1 0 0 1 0-1.4zm2.4-9a1 1 0 0 1 0 1.4l-1 1a1 1 0 1 1-1.4-1.4l1-1a1 1 0 0 1 1.4 0zm-9 9a1 1 0 0 1 0 1.4l-1 1a1 1 0 0 1-1.4-1.4l1-1a1 1 0 0 1 1.4 0z"/></svg>
+        </button>
+        <button type="button" data-tema="oscuro" aria-pressed="false"
+                data-i18n-attr="title:cabecera.tema.oscuro; aria-label:cabecera.tema.oscuro"
+                title="Tema oscuro" aria-label="Tema oscuro">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.3 3a1 1 0 0 1 .26 1.6 6.5 6.5 0 0 0 8.84 9.5 1 1 0 0 1 1.44 1.2A9.5 9.5 0 1 1 11.1 3.05a1 1 0 0 1 1.2-.05z"/></svg>
+        </button>
+      </div>
+      <div class="conmutador-idioma" role="group"
+           data-i18n-attr="aria-label:idioma.grupo" aria-label="Idioma de la interfaz"></div>
+      <button class="boton boton--contorno" id="btn-acceso" type="button"
+              data-i18n="cabecera.acceso">Área de analistas</button>
+    </div>
+  </div>
+</header>
+
+<main id="principal">
+
+  <!-- ═══════════════════════════════ PORTADA ══════════════════════════════ -->
+  <section class="seccion seccion--portada" id="seccion-inicio" data-seccion-panel="inicio">
+    <div class="portada" id="portada">
+      <div class="portada__banner" id="portada-banner" hidden aria-hidden="true"></div>
+      <div class="portada__trama" aria-hidden="true"></div>
+
+      <div class="contenedor portada__interior">
+        <h1 class="portada__marca-principal" id="portada-titulo">Warrants &amp; Co.</h1>
+
+        <nav class="portada__accesos" aria-label="Accesos principales">
+          <a class="acceso" href="#/radar" data-ruta>Explore radar</a>
+          <a class="acceso" href="#/repositorio" data-ruta>View research</a>
+          <a class="acceso" href="https://www.linkedin.com/company/warrants-co/"
+             target="_blank" rel="noopener noreferrer">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zm1.78 13.02H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+            </svg>
+            LinkedIn
+          </a>
+        </nav>
+      </div>
+    </div>
+
+    <!-- ── Cinta de mercado: índices y posiciones, con datos reales ── -->
+    <div class="ticker" id="ticker-mercado" hidden aria-label="Cotizaciones de mercado">
+      <div class="ticker__pista" id="ticker-pista"></div>
+    </div>
+
+    <!-- ── Manifiesto: qué es Warrants & Co. y por dónde se entra ──
+         Va DESPUÉS del hero y no comparte con él ninguna regla de estilo: el
+         banner y su composición quedan intactos. -->
+    <div class="manifiesto">
+      <div class="contenedor">
+
+        <div class="manifiesto__enunciado">
+          <p class="etiqueta-superior aparicion" style="--i:0">Warrants &amp; Co.</p>
+          <h2 class="manifiesto__titular">
+            <span class="linea-revelada" style="--i:0"><span>Market intelligence</span></span>
+            <span class="linea-revelada" style="--i:1"><span>for investors who</span></span>
+            <span class="linea-revelada" style="--i:2"><span>think in probabilities.</span></span>
+          </h2>
+          <p class="manifiesto__entrada aparicion" style="--i:2">
+            Fundamental research, market intelligence and options analytics designed to
+            identify where conviction meets opportunity.
+          </p>
+        </div>
+
+        <div class="pilares">
+          <article class="pilar aparicion" style="--i:3">
+            <span class="pilar__numero" aria-hidden="true">01</span>
+            <h3 class="pilar__titulo">Research</h3>
+            <p class="pilar__texto">
+              Deep fundamental analysis focused on companies, catalysts, valuation
+              and investment thesis.
+            </p>
+            <a class="pilar__enlace" href="#/companias" data-ruta>
+              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+            </a>
+          </article>
+
+          <article class="pilar aparicion" style="--i:4">
+            <span class="pilar__numero" aria-hidden="true">02</span>
+            <h3 class="pilar__titulo">Radar</h3>
+            <p class="pilar__texto">
+              A systematic view of the market designed to surface the most relevant
+              opportunities and signals.
+            </p>
+            <a class="pilar__enlace" href="#/radar" data-ruta>
+              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+            </a>
+          </article>
+
+          <article class="pilar aparicion" style="--i:5">
+            <span class="pilar__numero" aria-hidden="true">03</span>
+            <h3 class="pilar__titulo">Options</h3>
+            <p class="pilar__texto">
+              Options activity, unusual positioning and market-derived signals.
+            </p>
+            <a class="pilar__enlace" href="#/opciones" data-ruta>
+              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+            </a>
+          </article>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════ MARKET PULSE ═══════════════════════════ -->
+    <section class="bloque-home" id="home-pulse" aria-labelledby="titulo-pulse">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Market</p>
+            <h2 id="titulo-pulse" class="bloque-home__titulo">Market pulse</h2>
+          </div>
+          <a class="enlace-avance" href="#/mercado" data-ruta>
+            Ver mercado <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+
+        <div class="pulse">
+          <div class="pulse__indices" id="pulse-indices" role="tablist" aria-label="Índice representado"></div>
+          <div class="pulse__grafico">
+            <figure class="grafico-linea" id="pulse-figura">
+              <figcaption class="grafico-linea__pie" id="pulse-pie"></figcaption>
+              <svg id="pulse-svg" viewBox="0 0 900 300" preserveAspectRatio="none"
+                   role="img" aria-label="Serie histórica"></svg>
+              <div class="grafico-linea__lectura" id="pulse-lectura" hidden></div>
+            </figure>
+            <p class="nota-metodologica" id="pulse-nota"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════ W&C RADAR ═════════════════════════════ -->
+    <section class="bloque-home" id="home-radar" aria-labelledby="titulo-home-radar">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Market intelligence</p>
+            <h2 id="titulo-home-radar" class="bloque-home__titulo">W&amp;C Radar</h2>
+          </div>
+          <a class="enlace-avance" href="#/radar" data-ruta>
+            View full radar <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div id="home-radar-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════ RESEARCH ══════════════════════════════ -->
+    <section class="bloque-home" id="home-research" aria-labelledby="titulo-home-research">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Research</p>
+            <h2 id="titulo-home-research" class="bloque-home__titulo">Featured coverage</h2>
+          </div>
+          <a class="enlace-avance" href="#/companias" data-ruta>
+            Todas las compañías <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div id="home-research-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════ CATALYSTS ═════════════════════════════ -->
+    <section class="bloque-home" id="home-catalizadores" aria-labelledby="titulo-home-catalizadores">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Research</p>
+            <h2 id="titulo-home-catalizadores" class="bloque-home__titulo">Upcoming catalysts</h2>
+          </div>
+          <a class="enlace-avance" href="#/catalizadores" data-ruta>
+            Agenda completa <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div id="home-catalizadores-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════ OPTIONS FLOW ════════════════════════════ -->
+    <section class="bloque-home" id="home-flujo" aria-labelledby="titulo-home-flujo">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Options</p>
+            <h2 id="titulo-home-flujo" class="bloque-home__titulo">Options flow</h2>
+          </div>
+          <a class="enlace-avance" href="#/opciones" data-ruta>
+            Ver Options <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div id="home-flujo-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ════════════════════════════ W&C SIGNAL ════════════════════════════ -->
+    <section class="bloque-home" id="home-signal" aria-labelledby="titulo-home-signal">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior">Warrants &amp; Co.</p>
+            <h2 id="titulo-home-signal" class="bloque-home__titulo">W&amp;C Signal</h2>
+          </div>
+        </header>
+        <div id="home-signal-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
+  </section>
+
+  <!-- ═══════════════════════════════ RADAR ════════════════════════════════ -->
+  <section class="seccion" id="seccion-radar" data-seccion-panel="radar" hidden>
+
+    <div class="contenedor">
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Market intelligence</p>
+          <h1>W&amp;C Radar</h1>
+        </div>
+        <div class="estado-datos" id="estado-radar-cabecera"></div>
+      </div>
+    </div>
+
+    <div class="cinta-cotizaciones" id="cinta-cotizaciones" hidden>
+      <div class="cinta-cotizaciones__pista" id="pista-cotizaciones"></div>
+    </div>
+
+    <div class="contenedor">
+
+      <!-- Market snapshot -->
+      <div class="snapshot" id="snapshot-mercado" aria-live="polite"></div>
+
+      <!-- W&C Radar -->
+      <section class="bloque-panel" id="bloque-radar" aria-labelledby="titulo-radar">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-radar">W&amp;C Radar</h2>
+          <p>The signals worth watching today.</p>
+          <span class="enlace-mas" id="estado-radar"></span>
+        </div>
+        <div class="rejilla-radar" id="rejilla-radar"></div>
+      </section>
+
+      <!-- W&C Signal -->
+      <section class="bloque-panel" aria-labelledby="titulo-signal">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-signal">W&amp;C Signal</h2>
+          <p>Indicador propietario · escala 0 – 100</p>
+        </div>
+        <div class="tarjeta-signal" id="tarjeta-signal"></div>
+      </section>
+
+      <!-- Portfolio snapshot -->
+      <section class="bloque-panel" aria-labelledby="titulo-panel-cartera">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-panel-cartera">Portfolio</h2>
+          <p>Rendimiento de la cartera frente a su índice de referencia</p>
+          <a class="enlace-mas" href="#/cartera" data-ruta>Ver cartera completa</a>
+        </div>
+        <div class="cuadro-mando" id="panel-cartera"></div>
+        <div class="rejilla-doble" id="aportaciones" style="margin-top:22px"></div>
+      </section>
+
+      <!-- Top research -->
+      <section class="bloque-panel" aria-labelledby="titulo-top-research">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-top-research">Top research</h2>
+          <p>Tesis destacadas por el comité de análisis</p>
+          <a class="enlace-mas" href="#/repositorio" data-ruta>Ver repositorio</a>
+        </div>
+        <div class="rejilla-research" id="rejilla-research"></div>
+      </section>
+
+      <!-- Upcoming catalysts -->
+      <section class="bloque-panel" aria-labelledby="titulo-catalizadores">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-catalizadores">Upcoming catalysts</h2>
+          <p>Agenda de eventos con impacto sobre la cartera</p>
+        </div>
+        <div id="agenda-catalizadores"></div>
+      </section>
+
+      <!-- Latest news -->
+      <section class="bloque-panel" aria-labelledby="titulo-ultimas-noticias">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-ultimas-noticias">Latest news</h2>
+          <p>Actualidad de mercado</p>
+          <a class="enlace-mas" href="#/noticias" data-ruta>Ver todas</a>
+        </div>
+        <div class="titulares" id="lista-titulares"></div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- ════════════════════════════ REPOSITORIO ════════════════════════════ -->
+  <section class="seccion" id="seccion-repositorio" data-seccion-panel="repositorio" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Repositorio documental</p>
+          <h1>Catálogo de informes</h1>
+        </div>
+        <button class="boton boton--solido" id="btn-nuevo-informe" type="button">Publicar informe</button>
+      </div>
+
+      <form class="panel-filtros" id="form-filtros" role="search">
+        <div class="panel-filtros__principal">
+          <label class="visualmente-oculto" for="filtro-q">Búsqueda</label>
+          <input type="search" id="filtro-q" name="q" autocomplete="off"
+                 placeholder="Empresa, ticker, analista o palabra clave…">
+          <button class="boton boton--solido" type="submit">Buscar</button>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-filtros">Limpiar</button>
+        </div>
+
+        <div class="panel-filtros__campos">
+          <label>Sector      <select name="sector" id="filtro-sector"></select></label>
+          <label>País        <select name="pais" id="filtro-pais"></select></label>
+          <label>Tipo        <select name="tipo" id="filtro-tipo"></select></label>
+          <label>Recomendación <select name="recomendacion" id="filtro-recomendacion"></select></label>
+          <label>Analista    <select name="analista" id="filtro-analista"></select></label>
+          <label>Acceso      <select name="nivel" id="filtro-nivel"></select></label>
+          <label>Desde       <input type="date" name="desde" id="filtro-desde"></label>
+          <label>Hasta       <input type="date" name="hasta" id="filtro-hasta"></label>
+          <label>Orden
+            <select name="orden" id="filtro-orden">
+              <option value="recientes">Más recientes</option>
+              <option value="antiguos">Más antiguos</option>
+              <option value="empresa">Empresa (A–Z)</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="panel-filtros__etiquetas" id="nube-etiquetas" hidden>
+          <span class="etiqueta-superior">Etiquetas frecuentes</span>
+          <div id="lista-etiquetas"></div>
+        </div>
+      </form>
+
+      <div class="barra-resultados">
+        <p id="resumen-resultados" aria-live="polite"></p>
+      </div>
+
+      <div class="tabla-envoltorio">
+        <table class="tabla-informes" id="tabla-informes">
+          <caption class="visualmente-oculto">Listado de informes publicados</caption>
+          <thead>
+            <tr>
+              <th scope="col">Compañía</th>
+              <th scope="col">Ticker</th>
+              <th scope="col">Sector</th>
+              <th scope="col">Tipo</th>
+              <th scope="col">Periodo</th>
+              <th scope="col">Recomendación</th>
+              <th scope="col" class="num">P. objetivo</th>
+              <th scope="col">Analista</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Documentos</th>
+              <th scope="col" id="cabecera-acciones" hidden>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="cuerpo-tabla-informes"></tbody>
+        </table>
+      </div>
+
+      <nav class="paginacion" id="paginacion" aria-label="Paginación de resultados"></nav>
+    </div>
+  </section>
+
+
+
+  <!-- ═════════════════════════════ COMPANIES ══════════════════════════════ -->
+  <section class="seccion" id="seccion-companias" data-seccion-panel="companias" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Research</p>
+          <h1>Companies</h1>
+        </div>
+        <div class="estado-datos" id="estado-companias"></div>
+      </div>
+
+      <!-- ── Listado ── -->
+      <div id="vista-companias-lista">
+        <form class="barra-busqueda" id="form-companias" role="search">
+          <label class="visualmente-oculto" for="busca-compania">Buscar compañía</label>
+          <input type="search" id="busca-compania" autocomplete="off"
+                 placeholder="Nombre, ticker, sector o tema…">
+          <select id="filtro-sector-compania" aria-label="Sector">
+            <option value="">Todos los sectores</option>
+          </select>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-companias">Limpiar</button>
+        </form>
+
+        <div class="rejilla-companias" id="rejilla-companias" aria-live="polite"></div>
+      </div>
+
+      <!-- ── Ficha ── -->
+      <div id="vista-compania-ficha" hidden>
+        <button class="boton boton--texto" type="button" id="btn-volver-companias">← Todas las compañías</button>
+        <div id="ficha-compania" aria-live="polite"></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ═════════════════════════════ CATALYSTS ══════════════════════════════ -->
+  <section class="seccion" id="seccion-catalizadores" data-seccion-panel="catalizadores" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Research</p>
+          <h1>Catalysts</h1>
+        </div>
+        <div class="estado-datos" id="estado-catalizadores"></div>
+      </div>
+
+      <div class="barra-busqueda barra-busqueda--filtros" role="group" aria-label="Filtros de agenda">
+        <div class="conmutador" id="conmutador-horizonte" role="tablist">
+          <button type="button" role="tab" data-horizonte="UPCOMING" aria-selected="true">Upcoming</button>
+          <button type="button" role="tab" data-horizonte="PAST" aria-selected="false">Past</button>
+        </div>
+        <select id="filtro-compania-catalizador" aria-label="Compañía">
+          <option value="">Todas las compañías</option>
+        </select>
+        <select id="filtro-tipo-catalizador" aria-label="Tipo de evento">
+          <option value="">Todos los tipos</option>
+        </select>
+      </div>
+
+      <div id="agenda-completa" aria-live="polite"></div>
+
+      <section class="bloque-panel" aria-labelledby="titulo-sin-calendario">
+        <div class="bloque-panel__cabecera">
+          <h2 id="titulo-sin-calendario">Sin fuente conectada</h2>
+          <p>Categorías que la agenda reconoce pero que hoy nadie alimenta</p>
+        </div>
+        <div class="rejilla-carencias" id="carencias-catalizadores"></div>
+      </section>
+
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════ MARKET ═══════════════════════════════ -->
+  <section class="seccion" id="seccion-mercado" data-seccion-panel="mercado" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Market</p>
+          <h1>Markets</h1>
+        </div>
+        <div class="estado-datos" id="estado-mercado"></div>
+      </div>
+
+      <div id="panorama-mercado" aria-live="polite"></div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ NOTICIAS ══════════════════════════════ -->
+  <section class="seccion" id="seccion-noticias" data-seccion-panel="noticias" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Actualidad</p>
+          <h1>Noticias de mercado</h1>
+        </div>
+        <div class="acciones-noticias">
+          <span class="estado-sincronizacion" id="estado-sincronizacion"></span>
+          <button class="boton boton--contorno" id="btn-sincronizar" type="button">Actualizar ahora</button>
+          <button class="boton boton--solido" id="btn-nueva-noticia" type="button">Publicar noticia</button>
+        </div>
+      </div>
+
+      <form class="panel-filtros" id="form-filtros-noticias" role="search">
+        <div class="panel-filtros__principal">
+          <label class="visualmente-oculto" for="filtro-noticias-q">Búsqueda de noticias</label>
+          <input type="search" id="filtro-noticias-q" name="q" autocomplete="off"
+                 placeholder="Titular, compañía, ticker o palabra clave…">
+          <button class="boton boton--solido" type="submit">Buscar</button>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-noticias">Limpiar</button>
+        </div>
+
+        <div class="panel-filtros__campos">
+          <label>Categoría   <select name="categoria" id="filtro-noticias-categoria"></select></label>
+          <label>Relevancia  <select name="relevancia" id="filtro-noticias-relevancia"></select></label>
+          <label>Valor       <select name="ticker" id="filtro-noticias-ticker"></select></label>
+          <label>Origen      <select name="origen" id="filtro-noticias-origen"></select></label>
+          <label>Desde       <input type="date" name="desde" id="filtro-noticias-desde"></label>
+          <label>Hasta       <input type="date" name="hasta" id="filtro-noticias-hasta"></label>
+        </div>
+      </form>
+
+      <div class="barra-resultados">
+        <p id="resumen-noticias" aria-live="polite"></p>
+      </div>
+
+      <div class="rejilla-noticias" id="rejilla-noticias"></div>
+      <nav class="paginacion" id="paginacion-noticias" aria-label="Paginación de noticias"></nav>
+    </div>
+  </section>
+
+
+  <!-- ══════════════════════════════ OPCIONES ══════════════════════════════ -->
+  <section class="seccion" id="seccion-opciones" data-seccion-panel="opciones" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Derivados</p>
+          <h1>Options</h1>
+        </div>
+        <div class="estado-datos" id="estado-opciones"></div>
+      </div>
+
+      <div class="pestanas" role="tablist" aria-label="Secciones de opciones">
+        <button class="pestana" type="button" role="tab" data-pestana="flujo"
+                id="pestana-flujo" aria-selected="false" aria-controls="panel-flujo">Options flow</button>
+        <button class="pestana" type="button" role="tab" data-pestana="inusual"
+                id="pestana-inusual" aria-selected="true" aria-controls="panel-inusual">Unusual activity</button>
+        <button class="pestana" type="button" role="tab" data-pestana="cadena"
+                id="pestana-cadena" aria-selected="false" aria-controls="panel-cadena">Option chain</button>
+      </div>
+
+      <div id="alcance-opciones"></div>
+
+      <!-- ── Options flow ── -->
+      <div id="panel-flujo" role="tabpanel" aria-labelledby="pestana-flujo" hidden>
+        <div id="contenido-flujo"></div>
+      </div>
+
+      <!-- ── Unusual activity ── -->
+      <div id="panel-inusual" role="tabpanel" aria-labelledby="pestana-inusual">
+
+        <section class="bloque-panel" aria-labelledby="titulo-destacadas">
+          <div class="bloque-panel__cabecera">
+            <h2 id="titulo-destacadas">Top unusual activity</h2>
+            <p>Contratos con mayor puntuación en la sesión</p>
+          </div>
+          <div class="rejilla-destacadas" id="rejilla-destacadas"></div>
+        </section>
+
+        <section class="bloque-panel" aria-labelledby="titulo-tabla-inusual">
+          <div class="bloque-panel__cabecera">
+            <h2 id="titulo-tabla-inusual">Contratos</h2>
+            <p>Pulse una fila para ver por qué destaca</p>
+            <span class="enlace-mas" id="resumen-inusual"></span>
+          </div>
+
+          <form class="filtros-opciones" id="filtros-opciones">
+            <label>Ticker
+              <select name="simbolo" id="filtro-op-simbolo"></select>
+            </label>
+            <label>Type
+              <select name="lado" id="filtro-op-lado">
+                <option value="">Todos</option>
+                <option value="CALL">Call</option>
+                <option value="PUT">Put</option>
+              </select>
+            </label>
+            <label>Expiration
+              <select name="vencimiento" id="filtro-op-vencimiento"></select>
+            </label>
+            <label>Min. premium
+              <input type="number" name="minPremium" id="filtro-op-premium" min="0" step="1000" placeholder="0">
+            </label>
+            <label>Min. volume
+              <input type="number" name="minVolumen" id="filtro-op-volumen" min="0" step="1" placeholder="0">
+            </label>
+            <label>Min. Vol/OI
+              <input type="number" name="minRatio" id="filtro-op-ratio" min="0" step="0.5" placeholder="0">
+            </label>
+            <label>Min. score
+              <input type="number" name="minScore" id="filtro-op-score" min="0" max="100" step="5" placeholder="0">
+            </label>
+            <label class="filtro-desactivado" title="Requiere volatilidad implícita del proveedor">
+              IV rank
+              <select name="ivRank" id="filtro-op-iv" disabled>
+                <option>No disponible</option>
+              </select>
+              <span class="filtro-nota">Requiere IV del proveedor</span>
+            </label>
+            <label class="filtro-desactivado" title="Requiere operaciones individuales">
+              Trade type
+              <select name="tradeType" id="filtro-op-trade" disabled>
+                <option>No disponible</option>
+              </select>
+              <span class="filtro-nota">Requiere time &amp; sales</span>
+            </label>
+            <label class="filtro-desactivado" title="Requiere el sentido de la operación">
+              Direction
+              <select name="direccion" id="filtro-op-direccion" disabled>
+                <option>No disponible</option>
+              </select>
+              <span class="filtro-nota">Requiere sentido de la operación</span>
+            </label>
+            <label class="filtro-desactivado" title="Requiere histórico intradía">
+              Time range
+              <select name="rango" id="filtro-op-rango" disabled>
+                <option>Sesión actual</option>
+              </select>
+              <span class="filtro-nota">Solo sesión actual</span>
+            </label>
+
+            <div class="filtros-opciones__acciones">
+              <label class="casilla">
+                <input type="checkbox" name="soloInusual" id="filtro-op-solo">
+                <span>Unusual only (Vol/OI ≥ 1)</span>
+              </label>
+              <button class="boton boton--contorno" type="button" id="btn-limpiar-opciones">Limpiar</button>
+              <button class="boton boton--contorno" type="button" id="btn-recargar-opciones">Actualizar</button>
+            </div>
+          </form>
+
+          <div id="tabla-inusual"></div>
+        </section>
+      </div>
+
+      <!-- ── Option chain ── -->
+      <div id="panel-cadena" role="tabpanel" aria-labelledby="pestana-cadena" hidden>
+        <form class="filtros-opciones" id="filtros-cadena">
+          <label>Ticker
+            <input type="search" name="simbolo" id="cadena-simbolo" placeholder="ORCL" autocomplete="off">
+          </label>
+          <label>Expiration
+            <select name="vencimiento" id="cadena-vencimiento"></select>
+          </label>
+          <div class="filtros-opciones__acciones">
+            <button class="boton boton--solido" type="submit">Buscar</button>
+            <span class="estado-datos" id="cadena-estado"></span>
+          </div>
+        </form>
+
+        <section class="tarjeta" aria-labelledby="titulo-mapa-oi">
+          <div class="tarjeta__cabecera">
+            <div>
+              <h2 id="titulo-mapa-oi">Open interest por strike</h2>
+              <p>Concentración de posición abierta en calls y puts</p>
+            </div>
+          </div>
+          <div id="mapa-interes"></div>
+        </section>
+
+        <section class="bloque-panel" aria-labelledby="titulo-cadena">
+          <div class="bloque-panel__cabecera">
+            <h2 id="titulo-cadena">Option chain</h2>
+            <p>Calls a la izquierda, puts a la derecha</p>
+          </div>
+          <div id="tabla-cadena"></div>
+        </section>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ══════════════════════════════ CARTERA ══════════════════════════════ -->
+  <section class="seccion" id="seccion-cartera" data-seccion-panel="cartera" hidden>
+    <div class="contenedor">
+
+      <div class="titulo-seccion">
+        <div>
+          <p class="etiqueta-superior">Gestión de cartera</p>
+          <h1>Evolución de posiciones</h1>
+        </div>
+        <div class="estado-datos" id="estado-datos"></div>
+      </div>
+
+      <p class="nota-metodologica">
+        La cartera se constituye automáticamente a partir de las tesis de inversión publicadas.
+        La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el
+        precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada
+        en el tiempo, en base 100, sin aportaciones ni reembolsos externos.
+      </p>
+
+      <div class="cuadro-mando" id="cuadro-mando"></div>
+
+      <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-grafico">Evolución de la cartera</h2>
+            <p id="subtitulo-grafico">Valor indexado · base 100 = capital invertido</p>
+          </div>
+          <div class="controles-grafico" role="group" aria-label="Opciones del gráfico">
+            <div class="conmutador" role="group" aria-label="Periodo">
+              <button type="button" data-rango="1M">1M</button>
+              <button type="button" data-rango="3M">3M</button>
+              <button type="button" data-rango="6M">6M</button>
+              <button type="button" data-rango="YTD">YTD</button>
+              <button type="button" data-rango="MAX" class="activo">Máx</button>
+            </div>
+            <label class="selector-indice">
+              <span class="visualmente-oculto">Índice de referencia</span>
+              <select id="selector-benchmark">
+                <option value="SPY">S&amp;P 500 (SPY)</option>
+                <option value="QQQ">Nasdaq 100 (QQQ)</option>
+                <option value="DIA">Dow Jones (DIA)</option>
+                <option value="IWM">Russell 2000 (IWM)</option>
+              </select>
+            </label>
+            <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false">
+              Ver datos
+            </button>
+          </div>
+        </div>
+
+        <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
+        <p class="visualmente-oculto" id="descripcion-grafico"></p>
+
+        <div class="leyenda" id="leyenda-grafico"></div>
+
+        <div class="tabla-serie" id="tabla-serie" hidden>
+          <div class="tabla-envoltorio">
+            <table class="tabla-datos">
+              <caption>Serie histórica de la cartera y del índice de referencia</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Fecha</th>
+                  <th scope="col" class="num">Cartera</th>
+                  <th scope="col" class="num" id="cabecera-indice">Índice</th>
+                  <th scope="col" class="num">Diferencial</th>
+                </tr>
+              </thead>
+              <tbody id="cuerpo-tabla-serie"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="tarjeta" aria-labelledby="titulo-posiciones">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-posiciones">Composición de la cartera</h2>
+            <p>Cotizaciones actualizadas en cada carga de la página</p>
+          </div>
+        </div>
+        <div class="tabla-envoltorio">
+          <table class="tabla-datos tabla-posiciones">
+            <caption class="visualmente-oculto">Detalle de las posiciones en cartera</caption>
+            <thead>
+              <tr>
+                <th scope="col">Valor</th>
+                <th scope="col" class="num">Peso</th>
+                <th scope="col">Alta</th>
+                <th scope="col" class="num">Compra</th>
+                <th scope="col" class="num">Cotización</th>
+                <th scope="col" class="num">Día</th>
+                <th scope="col" class="num">Rentabilidad</th>
+                <th scope="col" class="num">Take profit</th>
+                <th scope="col">Recorrido a TP</th>
+                <th scope="col" class="num">P. objetivo</th>
+                <th scope="col">Recomendación</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-posiciones"></tbody>
+          </table>
+        </div>
+        <div class="exposicion" id="exposicion-sectorial"></div>
+      </section>
+
+      <section class="tarjeta" id="tarjeta-cerradas" aria-labelledby="titulo-cerradas" hidden>
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-cerradas">Posiciones liquidadas</h2>
+            <p>Tesis cerradas automáticamente al alcanzar su take profit</p>
+          </div>
+        </div>
+        <div class="tabla-envoltorio">
+          <table class="tabla-datos">
+            <caption class="visualmente-oculto">Detalle de las posiciones liquidadas</caption>
+            <thead>
+              <tr>
+                <th scope="col">Valor</th>
+                <th scope="col">Alta</th>
+                <th scope="col" class="num">Compra</th>
+                <th scope="col">Cierre</th>
+                <th scope="col" class="num">Precio de salida</th>
+                <th scope="col" class="num">Resultado</th>
+                <th scope="col">Motivo</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-cerradas"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tarjeta" aria-labelledby="titulo-estadisticos">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-estadisticos">Parámetros y estadísticos</h2>
+            <p id="sub-estadisticos">Métricas de riesgo y rentabilidad</p>
+          </div>
+        </div>
+        <div class="rejilla-estadisticos" id="rejilla-estadisticos"></div>
+      </section>
+
+    </div>
+  </section>
+</main>
+
+<footer class="pie">
+  <div class="contenedor pie__interior">
+    <div class="pie__cabecera">
+      <div class="pie__identidad">
+        <img class="pie__logo" id="pie-logo" src="/marca/logo.svg"
+             alt="Warrants &amp; Co." width="72" height="72">
+        <div>
+          <p class="pie__marca">Warrants &amp; Co.</p>
+          <p data-i18n="pie.lema">Plataforma interna de análisis e inversión.</p>
+        </div>
+      </div>
+      <a class="pie__social" href="https://www.linkedin.com/company/warrants-co/"
+         target="_blank" rel="noopener noreferrer" data-i18n-attr="aria-label:pie.linkedin"
+         aria-label="Perfil de Warrants &amp; Co. en LinkedIn">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zm1.78 13.02H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
+        </svg>
+        <span>LinkedIn</span>
+      </a>
+    </div>
+
+    <!-- Accesos a las áreas de la plataforma, con sus rutas reales. -->
+    <nav class="pie__navegacion"
+         data-i18n-attr="aria-label:pie.nav.etiqueta" aria-label="Secciones de Warrants &amp; Co.">
+      <a href="#/companias" data-ruta data-i18n="nav.research">Research</a>
+      <a href="#/radar" data-ruta data-i18n="nav.market.radar">Radar</a>
+      <a href="#/mercado" data-ruta data-i18n="nav.market">Market</a>
+      <a href="#/opciones" data-ruta data-i18n="nav.options">Options</a>
+      <a href="#/cartera" data-ruta data-i18n="nav.portfolio">Portfolio</a>
+      <a href="#/noticias" data-ruta data-i18n="nav.research.noticias">News</a>
+    </nav>
+
+    <p class="pie__aviso">
+      La información contenida en esta plataforma tiene carácter informativo y no constituye
+      asesoramiento en materia de inversión ni oferta de compra o venta de instrumentos financieros.
+      Las rentabilidades pasadas no garantizan rendimientos futuros. Cotizaciones facilitadas por
+      proveedores de mercado con la máxima actualidad disponible; pueden presentar retardo.
+    </p>
+    <p class="pie__fuente" id="pie-fuente"></p>
+  </div>
+</footer>
+
+<!-- ══════════════════════════ DIÁLOGO: INFORME ══════════════════════════ -->
+<dialog class="dialogo" id="dialogo-informe">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cancelar"
+            data-i18n-attr="aria-label:general.cerrar" aria-label="Cerrar">&times;</button>
+  </form>
+  <h2 id="titulo-dialogo-informe">Publicar informe</h2>
+  <p class="dialogo__entradilla">
+    Complete la ficha analítica. Los campos marcados con asterisco son obligatorios.
+  </p>
+
+  <form id="form-informe" novalidate>
+    <input type="hidden" name="id">
+
+    <fieldset>
+      <legend>Identificación del emisor</legend>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Denominación social *</span>
+          <input type="text" name="empresa" required maxlength="160" autocomplete="off">
+        </label>
+        <label class="campo">
+          <span>Ticker</span>
+          <input type="text" name="ticker" maxlength="12" autocomplete="off" placeholder="ORCL">
+        </label>
+        <label class="campo">
+          <span>Sector</span>
+          <input type="text" name="sector" maxlength="80" list="lista-sectores" autocomplete="off">
+          <datalist id="lista-sectores"></datalist>
+        </label>
+        <label class="campo">
+          <span>País</span>
+          <input type="text" name="pais" maxlength="60" list="lista-paises" autocomplete="off">
+          <datalist id="lista-paises"></datalist>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Clasificación del informe</legend>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Tipo de informe</span>
+          <select name="tipo_informe" id="campo-tipo"></select>
+        </label>
+        <label class="campo">
+          <span>Periodo</span>
+          <input type="text" name="periodo" maxlength="40" placeholder="Ejercicio 2026 / 1T 2026" autocomplete="off">
+        </label>
+        <label class="campo">
+          <span>Analista</span>
+          <input type="text" name="analista" maxlength="120" list="lista-analistas" autocomplete="off">
+          <datalist id="lista-analistas"></datalist>
+        </label>
+        <label class="campo">
+          <span>Fecha de publicación *</span>
+          <input type="date" name="fecha_publicacion" required>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Valoración</legend>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Recomendación</span>
+          <select name="recomendacion" id="campo-recomendacion"></select>
+        </label>
+        <label class="campo">
+          <span>Precio objetivo</span>
+          <input type="number" name="precio_objetivo" step="0.01" min="0" inputmode="decimal">
+        </label>
+        <label class="campo">
+          <span>Divisa</span>
+          <select name="divisa" id="campo-divisa"></select>
+        </label>
+        <label class="campo">
+          <span>Peso en cartera (%)</span>
+          <input type="number" name="peso_cartera" step="0.1" min="0" max="100" inputmode="decimal"
+                 placeholder="Equiponderado si se omite">
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Operativa de la posición</legend>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Precio de compra</span>
+          <input type="number" name="precio_compra" step="0.0001" min="0" inputmode="decimal"
+                 placeholder="Precio pagado por acción">
+        </label>
+        <label class="campo">
+          <span>Take profit</span>
+          <input type="number" name="take_profit" step="0.0001" min="0" inputmode="decimal"
+                 placeholder="Nivel de venta">
+        </label>
+        <label class="campo">
+          <span>Stop loss</span>
+          <input type="number" name="stop_loss" step="0.0001" min="0" inputmode="decimal"
+                 placeholder="Opcional">
+        </label>
+      </div>
+      <p class="dialogo__entradilla" style="padding:12px 0 0; font-size:0.8rem">
+        El precio de compra fija el coste real de la posición y sustituye al cierre de la sesión
+        de publicación. Al alcanzarse el take profit, la posición se liquida automáticamente a ese
+        nivel, deja de figurar en cartera y su importe permanece como liquidez hasta que una nueva
+        tesis lo reinvierta.
+      </p>
+    </fieldset>
+
+    <fieldset>
+      <legend>Contenido y difusión</legend>
+      <label class="campo">
+        <span>Resumen ejecutivo</span>
+        <textarea name="resumen_ejecutivo" rows="6" maxlength="8000"
+                  placeholder="Síntesis de la tesis, catalizadores y principales factores de riesgo."></textarea>
+      </label>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Etiquetas libres</span>
+          <input type="text" name="etiquetas" maxlength="400" autocomplete="off"
+                 placeholder="Separadas por comas: cloud, márgenes, catalizador">
+        </label>
+        <label class="campo">
+          <span>Nivel de acceso</span>
+          <select name="nivel_acceso" id="campo-nivel"></select>
+        </label>
+      </div>
+      <div class="fila-conmutadores">
+        <label class="casilla">
+          <input type="checkbox" name="destacado" value="true">
+          <span>Destacar en portada</span>
+        </label>
+        <label class="casilla">
+          <input type="checkbox" name="en_cartera" value="true" checked>
+          <span>Incorporar a la cartera</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Documentación</legend>
+      <label class="campo campo--fichero">
+        <span>Adjuntar informes (PDF, Word o Excel · máximo 25 MB por documento)</span>
+        <input type="file" name="ficheros" id="campo-ficheros" multiple
+               accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+      </label>
+      <ul class="lista-adjuntos" id="lista-adjuntos-existentes"></ul>
+    </fieldset>
+
+    <div class="dialogo__errores" id="errores-formulario" hidden aria-live="assertive"></div>
+
+    <div class="dialogo__pie">
+      <button class="boton boton--texto" type="button" id="btn-eliminar-informe" hidden>Eliminar informe</button>
+      <div class="dialogo__pie-derecha">
+        <button class="boton boton--contorno" type="button" id="btn-cancelar-informe">Cancelar</button>
+        <button class="boton boton--solido" type="submit" id="btn-guardar-informe">Publicar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- ══════════════════════════ DIÁLOGO: DETALLE ══════════════════════════ -->
+<dialog class="dialogo dialogo--detalle" id="dialogo-detalle">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cerrar" aria-label="Cerrar">&times;</button>
+  </form>
+  <div id="contenido-detalle"></div>
+</dialog>
+
+
+<!-- ══════════════════════════ DIÁLOGO: NOTICIA ══════════════════════════ -->
+<dialog class="dialogo" id="dialogo-noticia">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cancelar" aria-label="Cerrar">&times;</button>
+  </form>
+  <h2 id="titulo-dialogo-noticia">Publicar noticia</h2>
+  <p class="dialogo__entradilla">
+    Redacte la pieza informativa. Solo el titular es obligatorio.
+  </p>
+
+  <form id="form-noticia" novalidate>
+    <input type="hidden" name="id">
+
+    <fieldset>
+      <legend>Contenido</legend>
+      <label class="campo">
+        <span>Titular *</span>
+        <input type="text" name="titular" required maxlength="220" autocomplete="off">
+      </label>
+      <label class="campo" style="margin-top:16px">
+        <span>Entradilla</span>
+        <textarea name="entradilla" rows="2" maxlength="600"
+                  placeholder="Resumen en una o dos frases."></textarea>
+      </label>
+      <label class="campo" style="margin-top:16px">
+        <span>Cuerpo</span>
+        <textarea name="cuerpo" rows="9" maxlength="20000"
+                  placeholder="Desarrollo de la noticia y su lectura para la cartera."></textarea>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>Clasificación</legend>
+      <div class="rejilla-campos">
+        <label class="campo">
+          <span>Categoría</span>
+          <select name="categoria" id="campo-noticia-categoria"></select>
+        </label>
+        <label class="campo">
+          <span>Relevancia</span>
+          <select name="relevancia" id="campo-noticia-relevancia"></select>
+        </label>
+        <label class="campo">
+          <span>Fecha de publicación *</span>
+          <input type="date" name="fecha_publicacion" required>
+        </label>
+        <label class="campo">
+          <span>Valores relacionados</span>
+          <input type="text" name="tickers" maxlength="200" autocomplete="off"
+                 placeholder="Separados por comas: ORCL, QCOM">
+        </label>
+        <label class="campo">
+          <span>Etiquetas libres</span>
+          <input type="text" name="etiquetas" maxlength="400" autocomplete="off"
+                 placeholder="Separadas por comas: resultados, guidance">
+        </label>
+        <label class="campo">
+          <span>Autor</span>
+          <input type="text" name="autor" maxlength="120" autocomplete="off">
+        </label>
+        <label class="campo">
+          <span>Fuente</span>
+          <input type="text" name="fuente" maxlength="120" autocomplete="off"
+                 placeholder="Medio o servicio de origen">
+        </label>
+        <label class="campo">
+          <span>Enlace a la fuente</span>
+          <input type="url" name="url_fuente" maxlength="500" autocomplete="off" placeholder="https://…">
+        </label>
+      </div>
+      <div class="fila-conmutadores" style="margin-top:18px">
+        <label class="casilla">
+          <input type="checkbox" name="destacada" value="true">
+          <span>Destacar en portada</span>
+        </label>
+      </div>
+    </fieldset>
+
+    <div class="dialogo__errores" id="errores-noticia" hidden aria-live="assertive"></div>
+
+    <div class="dialogo__pie">
+      <button class="boton boton--texto" type="button" id="btn-eliminar-noticia" hidden>Eliminar noticia</button>
+      <div class="dialogo__pie-derecha">
+        <button class="boton boton--contorno" type="button" id="btn-cancelar-noticia">Cancelar</button>
+        <button class="boton boton--solido" type="submit" id="btn-guardar-noticia">Publicar</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<!-- ═══════════════════════ DIÁLOGO: DETALLE NOTICIA ═════════════════════ -->
+<dialog class="dialogo dialogo--detalle" id="dialogo-detalle-noticia">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cerrar" aria-label="Cerrar">&times;</button>
+  </form>
+  <div id="contenido-detalle-noticia"></div>
+</dialog>
+
+
+<!-- ═══════════════════ DIÁLOGO: POR QUÉ ES INUSUAL ══════════════════════ -->
+<dialog class="dialogo dialogo--detalle" id="dialogo-inusual">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cerrar" aria-label="Cerrar">&times;</button>
+  </form>
+  <div id="contenido-inusual"></div>
+</dialog>
+
+<!-- ══════════════════════════ DIÁLOGO: ACCESO ═══════════════════════════ -->
+<dialog class="dialogo dialogo--estrecho" id="dialogo-acceso">
+  <form method="dialog" class="dialogo__cerrar-envoltorio">
+    <button class="dialogo__cerrar" value="cancelar" aria-label="Cerrar">&times;</button>
+  </form>
+  <h2 data-i18n="acceso.titulo">Área de analistas</h2>
+  <p class="dialogo__entradilla">
+    La publicación y modificación de informes —incluidos precio de compra, take profit y
+    stop loss— está reservada a los analistas de Warrants &amp; Co. La clave se muestra en la
+    consola del servidor al iniciarse.
+  </p>
+  <form id="form-acceso">
+    <label class="campo">
+      <span data-i18n="acceso.clave">Clave de analista</span>
+      <input type="password" name="clave" id="campo-clave" autocomplete="current-password" required>
+    </label>
+    <div class="dialogo__errores" id="error-acceso" hidden aria-live="assertive"></div>
+    <div class="dialogo__pie">
+      <button class="boton boton--texto" type="button" id="btn-cerrar-sesion" hidden
+                data-i18n="acceso.cerrarSesion">Cerrar sesión</button>
+      <div class="dialogo__pie-derecha">
+        <button class="boton boton--contorno" type="button" id="btn-cancelar-acceso"
+                data-i18n="general.cancelar">Cancelar</button>
+        <button class="boton boton--solido" type="submit" data-i18n="acceso.entrar">Acceder</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<div class="avisos" id="avisos" aria-live="polite" aria-atomic="false"></div>
+
+<script src="/app.js" type="module"></script>
+</body>
+</html>
