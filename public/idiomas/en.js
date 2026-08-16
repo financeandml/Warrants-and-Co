@@ -83,4 +83,20 @@ export default {
   'pie.lema': 'Internal research and investment platform.',
   'pie.linkedin': 'Warrants & Co. profile on LinkedIn',
   'pie.nav.etiqueta': 'Warrants & Co. sections',
+
+  // ── Take profit liquidation notice ──
+  // The whole sentence lives here rather than being stitched together in code,
+  // so each language can order its parts as it needs. Note that English leads
+  // with the event and pushes the count into a subordinate clause — an order
+  // Spanish does not use, and which concatenation could never have produced.
+  'cartera.cierre.aviso': {
+    one: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash until a new thesis reinvests them.',
+    other: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash until new theses reinvest them.',
+  },
+  'cartera.cierre.destacado': {
+    one: '{n} position closed',
+    other: '{n} positions closed',
+  },
+  'cartera.cierre.posicion': '{ticker} on {fecha} at {precio} ({rentabilidad})',
+  'general.separadorLista': ' · ',
 };

@@ -1285,7 +1285,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--tinta); border-inline-start-width: 3px;
   background: var(--superficie-alt); font-size: 0.86rem;
 }
-.aviso-cierre strong { display: block; margin-bottom: 3px; }
+.aviso-cierre strong {
+  /* En línea, no en bloque: el recuento va DENTRO de la frase, y la plantilla
+     de cada idioma decide dónde. Como bloque partía la oración en tres líneas
+     y dejaba la puntuación huérfana al principio de una de ellas. */
+  display: inline;
+}
+.aviso-cierre p { margin: 0; line-height: 1.6; }
 
 
 

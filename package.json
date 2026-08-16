@@ -7,7 +7,9 @@
     "start": "node server.js",
     "sembrar": "node scripts/sembrar.js",
     "sembrar:forzar": "node scripts/sembrar.js --forzar",
-    "copia": "node scripts/copia.js"
+    "copia": "node scripts/copia.js",
+    "test": "node tests/humo.js",
+    "test:derivadas": "node tests/derivadas.js"
   },
   "type": "commonjs",
   "dependencies": {

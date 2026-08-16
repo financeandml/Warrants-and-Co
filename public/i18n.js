@@ -112,6 +112,72 @@ function sustituir(texto, params) {
   });
 }
 
+/**
+ * Devuelve la plantilla en bruto, con su forma de plural ya elegida pero sin
+ * sustituir los marcadores. La necesita `tNodos`, que reparte el texto entre
+ * varios nodos y por tanto ha de ver dónde cae cada marcador.
+ */
+function plantillaDe(clave, params) {
+  let entrada = diccionario[clave] ?? definicion(BASE).diccionario[clave];
+  if (entrada === undefined) return clave;
+
+  if (entrada !== null && typeof entrada === 'object') {
+    const n = Number(params?.n);
+    const forma = Number.isFinite(n) ? reglasPlural.select(n) : 'other';
+    entrada = entrada[forma] ?? entrada.other ?? entrada.one ?? clave;
+  }
+  return String(entrada);
+}
+
+/**
+ * Traduce una frase que lleva elementos dentro y devuelve un fragmento de DOM.
+ *
+ * Existe para que una frase compuesta —con cifras, fechas y trozos
+ * destacados— viva **entera** en el diccionario, y no partida en fragmentos que
+ * el código concatena. Concatenar impone el orden del castellano a todos los
+ * idiomas; una plantilla completa deja que cada uno coloque las piezas donde le
+ * corresponda:
+ *
+ *     es: '{destacado} — {posiciones}. El importe permanece como liquidez…'
+ *     en: 'Take profit reached: {destacado}. {posiciones} — proceeds are held…'
+ *
+ * Un parámetro cuyo valor sea un nodo se inserta como nodo; así una parte de la
+ * frase puede ir en <strong> o ser un enlace sin recurrir a `innerHTML`.
+ *
+ * @param {string} clave
+ * @param {object} params  valores; `n` gobierna el plural
+ * @returns {DocumentFragment}
+ */
+export function tNodos(clave, params = {}) {
+  const plantilla = plantillaDe(clave, params);
+  const fragmento = document.createDocumentFragment();
+
+  let cursor = 0;
+  for (const marcador of plantilla.matchAll(/\{(\w+)\}/g)) {
+    if (marcador.index > cursor) {
+      fragmento.appendChild(document.createTextNode(plantilla.slice(cursor, marcador.index)));
+    }
+
+    const valor = params[marcador[1]];
+    if (valor instanceof Node) {
+      fragmento.appendChild(valor);
+    } else if (valor === undefined) {
+      // Marcador sin valor: se deja a la vista para que el hueco se detecte.
+      fragmento.appendChild(document.createTextNode(marcador[0]));
+    } else {
+      fragmento.appendChild(document.createTextNode(
+        typeof valor === 'number' ? valor.toLocaleString(localeActivo()) : String(valor)
+      ));
+    }
+    cursor = marcador.index + marcador[0].length;
+  }
+
+  if (cursor < plantilla.length) {
+    fragmento.appendChild(document.createTextNode(plantilla.slice(cursor)));
+  }
+  return fragmento;
+}
+
 /** ¿Existe la clave en el idioma vigente? Lo usan las pruebas de paridad. */
 export const existe = (clave) => diccionario[clave] !== undefined;
 

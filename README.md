@@ -606,6 +606,35 @@ como texto.
 
 ## Verificación
 
+### Comprobación de humo
+
+```
+npm test             # nueve secciones × dos idiomas contra el servidor local
+```
+
+Recorre las nueve secciones en español e inglés y verifica que cada una se
+pinta, que el atributo `lang` sigue al idioma elegido, que la página no
+desborda a lo ancho y que ninguna clave de diccionario llega sin traducir a la
+pantalla. Requiere Playwright, que no es dependencia del proyecto: si no está
+instalado, la comprobación lo indica y termina sin fallar.
+
+```
+npm i -D playwright && npx playwright install chromium
+```
+
+### Invalidación de vistas derivadas
+
+```
+BASE_PRUEBA=http://127.0.0.1:4174 npm run test:derivadas
+```
+
+Publica una tesis con ticker nuevo desde la interfaz y comprueba que aparece en
+cartera, compañías, radar, portada y catalizadores **sin recargar la página**;
+después la retira y comprueba lo contrario. Escribe en la base, de modo que ha
+de apuntarse siempre a una instancia de pruebas.
+
+### Baterías completas
+
 La entrega se validó con ocho baterías automatizadas sobre navegador real (Chromium),
 **605 comprobaciones** en total, ejecutadas por duplicado con resultado idéntico:
 

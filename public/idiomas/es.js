@@ -84,4 +84,20 @@ export default {
   'pie.lema': 'Plataforma interna de análisis e inversión.',
   'pie.linkedin': 'Perfil de Warrants & Co. en LinkedIn',
   'pie.nav.etiqueta': 'Secciones de Warrants & Co.',
+
+  // ── Aviso de liquidación por take profit ──
+  // La frase vive ENTERA aquí, no partida en trozos que el código concatene:
+  // así cada idioma coloca sus piezas donde le corresponde. El plural se
+  // declara con las formas que exige el idioma —`one` y `other` en castellano—
+  // y lo elige `Intl.PluralRules`, nunca una condición en el código.
+  'cartera.cierre.aviso': {
+    one: '{destacado} — {posiciones}. El importe permanece como liquidez hasta que una nueva tesis lo reinvierta.',
+    other: '{destacado} — {posiciones}. Los importes permanecen como liquidez hasta que nuevas tesis los reinviertan.',
+  },
+  'cartera.cierre.destacado': {
+    one: '{n} posición liquidada por take profit',
+    other: '{n} posiciones liquidadas por take profit',
+  },
+  'cartera.cierre.posicion': '{ticker} el {fecha} a {precio} ({rentabilidad})',
+  'general.separadorLista': ' · ',
 };
