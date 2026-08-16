@@ -6,7 +6,7 @@
 
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
-import { iniciarIdioma, t } from './i18n.js';
+import { iniciarIdioma, t, tNodos } from './i18n.js';
 import { activarApariciones, dibujarCurva, pintarCinta } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
 import {
@@ -133,18 +133,87 @@ function irA(seccion, pestana = null, { empujar = true } = {}) {
   if (empujar && location.hash !== `#/${seccion}`) location.hash = `#/${seccion}`;
   window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
 
-  if (seccion === 'radar') cargarPanel();
-  if (seccion === 'repositorio') cargarInformes();
-  if (seccion === 'noticias') { cargarNoticias(); cargarEstadoSincronizacion(); }
-  if (seccion === 'opciones') {
-    if (pestana) seleccionarPestanaOpciones(pestana);
-    cargarOpciones();
-  }
-  if (seccion === 'cartera') cargarCartera();
-  if (seccion === 'companias') cargarCompanias();
-  if (seccion === 'catalizadores') cargarCatalizadores();
-  if (seccion === 'mercado') cargarMercado();
-  if (seccion === 'inicio') cargarInicio();
+  // Si la sección quedó caducada por un cambio en las tesis, se retiran sus
+  // guardas antes de cargarla: así el cargador de siempre trae dato fresco.
+  purgarSiCaducada(seccion);
+
+  if (seccion === 'opciones' && pestana) seleccionarPestanaOpciones(pestana);
+  CARGADORES[seccion]?.();
+}
+
+/**
+ * Qué carga cada sección. Un único mapa, consultado por el enrutador y por la
+ * invalidación: si algún día una sección cambia de cargador, cambia aquí y en
+ * ningún otro sitio.
+ */
+const CARGADORES = {
+  inicio: () => cargarInicio(),
+  radar: () => cargarPanel(),
+  repositorio: () => cargarInformes(),
+  noticias: () => { cargarNoticias(); cargarEstadoSincronizacion(); },
+  opciones: () => cargarOpciones(),
+  cartera: () => cargarCartera(),
+  companias: () => cargarCompanias(),
+  catalizadores: () => cargarCatalizadores(),
+  mercado: () => cargarMercado(),
+};
+
+/* ═══════════════ Lo que se deriva de las tesis de inversión ═══════════════
+
+   La cartera, la cobertura por compañía, la agenda de catalizadores, el radar,
+   la portada y el universo de opciones salen todos del mismo conjunto de
+   informes. Publicar, editar o borrar uno los invalida a la vez.
+
+   No se recargan los seis de golpe: eso serían media docena de respuestas que
+   quizá nadie vaya a mirar. Se marcan como caducados y cada uno se rehace
+   cuando toque mostrarse. La sección a la vista se rehace de inmediato.
+
+   Aquí no se cachea nada nuevo: lo único que se guarda es qué secciones han
+   quedado caducadas, y lo único que se hace al purgarlas es **retirar** las
+   memorias que ya existían para que su cargador vuelva a pedir al servidor. */
+
+/**
+ * Memorias que cada sección conserva entre navegaciones y que un cambio en las
+ * tesis deja obsoletas. Las que no aparecen —radar, repositorio, compañías,
+ * catalizadores— no memorizan nada: su cargador ya pide al servidor cada vez.
+ */
+const MEMORIAS_DERIVADAS = {
+  inicio: () => { inicioMontado = false; },
+  cartera: () => { estado.cartera = null; },
+  opciones: () => {
+    // El universo de opciones es el de tickers cubiertos: cambia con las tesis.
+    estado.opciones.estado = null;
+    estado.opciones.inusual = null;
+    estado.opciones.cadena = null;
+  },
+  radar: () => {},
+  repositorio: () => {},
+  companias: () => {},
+  catalizadores: () => {},
+};
+
+const seccionesCaducadas = new Set();
+
+/**
+ * Punto único de invalidación. El alta, la edición y la baja de una tesis pasan
+ * por aquí y por ningún otro sitio.
+ */
+async function invalidarDerivadasDeInformes() {
+  for (const seccion of Object.keys(MEMORIAS_DERIVADAS)) seccionesCaducadas.add(seccion);
+
+  // Los vocabularios del formulario salen de los propios informes.
+  await cargarVocabularios();
+
+  // Lo que el usuario está mirando se rehace ya; el resto, al mostrarse.
+  purgarSiCaducada(estado.seccion);
+  await CARGADORES[estado.seccion]?.();
+}
+
+/** Retira las memorias de una sección caducada, justo antes de cargarla. */
+function purgarSiCaducada(seccion) {
+  if (!seccionesCaducadas.has(seccion)) return;
+  seccionesCaducadas.delete(seccion);
+  MEMORIAS_DERIVADAS[seccion]?.();
 }
 
 function seccionDesdeHash() {
@@ -726,12 +795,7 @@ async function enviarFormulario(ev) {
     $('#dialogo-informe').close();
     avisar(id ? 'Informe actualizado correctamente.' : 'Informe publicado correctamente.', { claro: true });
 
-    await cargarVocabularios();
-    if (estado.seccion === 'radar') await cargarPanel();
-    if (estado.seccion === 'repositorio') await cargarInformes();
-    // La cartera se deriva de los informes: cualquier alta la invalida.
-    estado.cartera = null;
-    if (estado.seccion === 'cartera') await cargarCartera();
+    await invalidarDerivadasDeInformes();
   } catch (err) {
     panelErrores.textContent = '';
     panelErrores.appendChild(elemento('strong', null, err.message));
@@ -761,11 +825,7 @@ async function eliminarInforme() {
     await api(`/api/informes/${id}`, { method: 'DELETE' });
     $('#dialogo-informe').close();
     avisar('Informe eliminado.', { claro: true });
-    await cargarVocabularios();
-    if (estado.seccion === 'radar') await cargarPanel();
-    if (estado.seccion === 'repositorio') await cargarInformes();
-    estado.cartera = null;
-    if (estado.seccion === 'cartera') await cargarCartera();
+    await invalidarDerivadasDeInformes();
   } catch (err) {
     avisar(err.message);
   }
@@ -1342,14 +1402,26 @@ function pintarAvisoCierre(datos) {
 
   const aviso = elemento('div', 'aviso-cierre');
   aviso.id = 'aviso-cierre';
-  const texto = document.createElement('div');
-  texto.appendChild(elemento('strong', null,
-    `${cerradas.length} posici${cerradas.length === 1 ? 'ón liquidada' : 'ones liquidadas'} por take profit`));
-  const detalle = cerradas
-    .map((p) => `${p.ticker} el ${formatearFecha(p.fechaCierre)} a ${formatearMoneda(p.precioCierre, p.divisa)} (${formatearPorcentaje(p.rentabilidadPct)})`)
-    .join(' · ');
-  texto.appendChild(document.createTextNode(
-    `${detalle}. El importe permanece como liquidez hasta que una nueva tesis lo reinvierta.`));
+
+  const n = cerradas.length;
+
+  // Cada posición es a su vez una plantilla: el inglés dice «on … at …» donde
+  // el castellano dice «el … a …».
+  const posiciones = cerradas
+    .map((p) => t('cartera.cierre.posicion', {
+      ticker: p.ticker,
+      fecha: formatearFecha(p.fechaCierre),
+      precio: formatearMoneda(p.precioCierre, p.divisa),
+      rentabilidad: formatearPorcentaje(p.rentabilidadPct),
+    }))
+    .join(t('general.separadorLista'));
+
+  // El recuento va destacado, y viaja como NODO dentro de la frase: así el
+  // énfasis sobrevive sin necesidad de insertar marcado desde el diccionario.
+  const destacado = elemento('strong', null, t('cartera.cierre.destacado', { n }));
+
+  const texto = document.createElement('p');
+  texto.appendChild(tNodos('cartera.cierre.aviso', { n, destacado, posiciones }));
   aviso.appendChild(texto);
   contenedor.parentNode.insertBefore(aviso, contenedor);
 }

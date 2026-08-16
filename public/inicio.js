@@ -525,6 +525,10 @@ function filaLectura(l, maximo, familia, alNavegar) {
 
 let researchActivo = 0;
 let researchTemporizador = null;
+/* El juego de oyentes se engancha una vez y sobrevive a los repintados, de modo
+   que no puede cerrarse sobre la lista de aquel momento: consulta estas. */
+let listaVigente = [];
+let selectorVigente = null;
 
 /**
  * Cobertura destacada. Se rota entre las compañías con informe publicado, con
@@ -547,6 +551,8 @@ export function pintarResearchHome(companias, alNavegar) {
 
   const selector = elemento('div', 'research-selector');
   selector.setAttribute('role', 'tablist');
+  listaVigente = lista;
+  selectorVigente = selector;
   for (const [i, c] of lista.entries()) {
     const b = elemento('button', 'research-selector__pestana');
     b.type = 'button';
@@ -564,9 +570,15 @@ export function pintarResearchHome(companias, alNavegar) {
   mostrarCompania(researchActivo, lista, raiz, selector, alNavegar);
 
   if (lista.length > 1 && !sinMovimiento()) {
-    raiz.addEventListener('pointerenter', detenerRotacion);
-    raiz.addEventListener('pointerleave', () => iniciarRotacion(lista, raiz, selector, alNavegar));
-    raiz.addEventListener('focusin', detenerRotacion);
+    // El contenedor sobrevive al repintado —solo se vacía su contenido—, de
+    // modo que los oyentes se enganchan una sola vez. Sin esta guarda, cada
+    // recarga de la portada añadiría un juego más.
+    if (!raiz.dataset.oyentes) {
+      raiz.addEventListener('pointerenter', detenerRotacion);
+      raiz.addEventListener('pointerleave', () => iniciarRotacion(listaVigente, raiz, selectorVigente, alNavegar));
+      raiz.addEventListener('focusin', detenerRotacion);
+      raiz.dataset.oyentes = 'true';
+    }
     observarEntrada(raiz, () => iniciarRotacion(lista, raiz, selector, alNavegar));
   }
 }
