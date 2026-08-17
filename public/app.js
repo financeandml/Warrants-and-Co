@@ -178,7 +178,9 @@ const CARGADORES = {
  * catalizadores— no memorizan nada: su cargador ya pide al servidor cada vez.
  */
 const MEMORIAS_DERIVADAS = {
-  inicio: () => { inicioMontado = false; },
+  // Lo guardado para repintar por idioma se retira con el montaje: así el
+  // repintado nunca puede resucitar datos que las tesis ya han dejado atrás.
+  inicio: () => { inicioMontado = false; olvidarDatosInicio(); },
   cartera: () => { estado.cartera = null; },
   opciones: () => {
     // El universo de opciones es el de tickers cubiertos: cambia con las tesis.
@@ -881,6 +883,45 @@ async function enviarAcceso(ev) {
 
 let inicioMontado = false;
 
+/* Lo último que cada bloque de la portada recibió de su fuente.
+   Se guarda para poder repintar al cambiar de idioma sin volver a pedir nada:
+   los datos son los mismos, lo único que cambia es el texto que los rodea. */
+const datosInicio = {
+  indices: null, cartera: null, radar: null,
+  catalizadores: null, flujo: null, signal: null, research: null,
+};
+
+/* Bloques que ya se han pintado alguna vez. Hace falta distinguir «su fuente aún
+   no ha contestado» de «contestó y no había dato»: en el segundo caso el bloque
+   muestra su carencia declarada, que sí hay que traducir, y en el primero no hay
+   nada que repintar todavía. */
+const pintadosInicio = new Set();
+
+/** Vacía lo guardado. Va de la mano de `inicioMontado`: viven y mueren juntos. */
+function olvidarDatosInicio() {
+  for (const campo of Object.keys(datosInicio)) datosInicio[campo] = null;
+  pintadosInicio.clear();
+}
+
+const irARutaInicio = (destino) => {
+  const [seccion, consulta] = String(destino).replace('#/', '').split('?');
+  if (consulta) location.hash = `#/${seccion}?${consulta}`;
+  else irA(seccion);
+};
+
+/* Cómo se pinta cada bloque a partir de lo guardado. Los pintores viven aquí
+   —y no dentro de la carga— porque el repintado por idioma usa exactamente los
+   mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio. */
+const PINTORES_INICIO = {
+  ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
+  pulso: () => pintarPulso(datosInicio.indices, api),
+  radar: () => pintarRadarHome(datosInicio.radar, irARutaInicio),
+  catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
+  flujo: () => pintarFlujoHome(datosInicio.flujo),
+  signal: () => pintarSignalHome(datosInicio.signal),
+  research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
+};
+
 /**
  * Monta la narrativa de la portada.
  *
@@ -895,47 +936,46 @@ async function cargarInicio() {
   animarManifiesto();
   animarCabeceras();
 
-  const irARuta = (destino) => {
-    const [seccion, consulta] = String(destino).replace('#/', '').split('?');
-    if (consulta) location.hash = `#/${seccion}?${consulta}`;
-    else irA(seccion);
+  // Guarda lo que llegue —resuelva la fuente o falle— y pinta ese bloque.
+  const alLlegar = (promesa, guardar, bloque) => {
+    const pintar = () => { pintadosInicio.add(bloque); PINTORES_INICIO[bloque](); };
+    return promesa.then((d) => { guardar(d); pintar(); }, () => { guardar(null); pintar(); });
   };
-
-  const cuando = (promesa, pintar) => promesa.then((d) => pintar(d), () => pintar(null));
 
   // ── Cinta y pulso comparten la llamada de índices ──
   const indices = api('/api/radar/indices');
   const cartera = api('/api/mercado/cartera').catch(() => null);
 
-  const trabajos = [
-    Promise.all([indices, cartera]).then(
-      ([i, c]) => pintarTicker(i, c),
-      () => pintarTicker(null, null)
-    ),
-    indices.then((i) => pintarPulso(i, api), () => pintarPulso(null, api)),
-    cuando(api('/api/radar'), (d) => pintarRadarHome(d, irARuta)),
-    cuando(api('/api/catalizadores'), (d) => pintarCatalizadoresHome(d, irARuta)),
-    cuando(api('/api/opciones/flujo'), pintarFlujoHome),
-    cuando(api('/api/radar/signal'), pintarSignalHome),
-    cargarResearchDestacado(irARuta),
-  ];
-
-  await Promise.allSettled(trabajos);
+  await Promise.allSettled([
+    alLlegar(Promise.all([indices, cartera]), (par) => {
+      datosInicio.indices = par?.[0] ?? null;
+      datosInicio.cartera = par?.[1] ?? null;
+    }, 'ticker'),
+    alLlegar(indices, (d) => { datosInicio.indices = d; }, 'pulso'),
+    alLlegar(api('/api/radar'), (d) => { datosInicio.radar = d; }, 'radar'),
+    alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
+    alLlegar(api('/api/opciones/flujo'), (d) => { datosInicio.flujo = d; }, 'flujo'),
+    alLlegar(api('/api/radar/signal'), (d) => { datosInicio.signal = d; }, 'signal'),
+    // La cobertura destacada no trae cotización ni resumen en el listado, de
+    // modo que se pide con ficha. Una sola llamada trae la cobertura entera:
+    // pedirla compañía a compañía multiplicaba los viajes sin ganar nada.
+    alLlegar(api('/api/companias?detalle=1'),
+      (d) => { datosInicio.research = d?.fichas ?? []; }, 'research'),
+  ]);
 }
 
 /**
- * Cobertura destacada. El listado no trae cotización ni resumen, de modo que se
- * pide la ficha de cada compañía cubierta —hoy son pocas— y se rota entre ellas.
+ * Repinta la portada en el idioma vigente.
+ *
+ * No se vuelve a pedir nada a ninguna fuente: los datos no dependen del idioma.
+ * El titular del manifiesto se recompone porque sus líneas las declara el
+ * diccionario, y un bloque cuya fuente aún no haya respondido no se toca: lo
+ * pintará su propia carga cuando llegue, ya con el diccionario nuevo.
  */
-async function cargarResearchDestacado(irARuta) {
-  try {
-    // Una sola llamada trae la cobertura entera con su ficha: pedirlas una a
-    // una multiplicaba los viajes al servidor sin ganar nada.
-    const datos = await api('/api/companias?detalle=1');
-    pintarResearchHome(datos.fichas ?? [], irARuta);
-  } catch {
-    pintarResearchHome([], irARuta);
-  }
+function repintarInicio() {
+  if (!inicioMontado) return;
+  animarManifiesto();
+  for (const bloque of pintadosInicio) PINTORES_INICIO[bloque]();
 }
 
 // ═══════════════════════════════ COMPANIES ══════════════════════════════
@@ -2295,6 +2335,8 @@ async function iniciar() {
       (titulo) => avisar(t('nav.pendiente.aviso', { seccion: titulo }), { claro: true })
     );
     marcarSeccionActiva(estado.seccion, estado.opciones.pestana);
+    // La portada tampoco: se repinta con lo que ya tiene guardado.
+    repintarInicio();
   });
   // El idioma se aplica antes de construir nada: la navegación y las vistas se
   // arman ya con el diccionario correcto, sin repintar dos veces.

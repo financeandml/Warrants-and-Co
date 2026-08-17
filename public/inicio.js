@@ -12,16 +12,39 @@
    `prefers-reduced-motion` todo aparece ya en su sitio.
    ========================================================================= */
 
-import { $, elemento, formatearNumero, formatearFecha } from './formato.js';
+import { $, elemento, formatearNumero, formatearFecha, localeFormato } from './formato.js';
+import { t, tLista } from './i18n.js';
 
-const NO_DISPONIBLE = 'N/A';
-const SIN_DATOS = 'Data unavailable';
+/* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
+   después y una constante habría quedado congelada en el de arranque. */
+const noDisponible = () => t('general.noDisponible');
+const sinDatos = () => t('general.sinDatos');
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const cifra = (v, dec = 2) => (Number.isFinite(v) ? formatearNumero(v, dec) : NO_DISPONIBLE);
+const cifra = (v, dec = 2) => (Number.isFinite(v) ? formatearNumero(v, dec) : noDisponible());
 const conSigno = (v, dec = 2, sufijo = '') =>
-  Number.isFinite(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatearNumero(Math.abs(v), dec)}${sufijo}` : NO_DISPONIBLE;
+  Number.isFinite(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatearNumero(Math.abs(v), dec)}${sufijo}` : noDisponible();
+
+/** Cifra con su divisa. Sin divisa no hay dos piezas que ordenar: va sola. */
+const importe = (v, divisa) =>
+  divisa ? t('general.importeDivisa', { importe: cifra(v), divisa }) : cifra(v);
+
+/* ── Tiempo relativo ──
+   «hace 5 min», «hoy» o «dentro de 3 días» los redacta el navegador con
+   `Intl.RelativeTimeFormat`. La unidad, el plural y hasta la palabra que
+   sustituye al número —«hoy», «mañana»— son cosa del idioma: ni una condición
+   en el código ni una entrada del diccionario los deciden. */
+const formateadoresRelativos = new Map();
+function relativo(opciones) {
+  const clave = `${localeFormato()}|${opciones.numeric}|${opciones.style ?? ''}`;
+  let f = formateadoresRelativos.get(clave);
+  if (!f) {
+    f = new Intl.RelativeTimeFormat(localeFormato(), opciones);
+    formateadoresRelativos.set(clave, f);
+  }
+  return f;
+}
 
 /** Clase de lectura direccional, sin que el color sustituya nunca al signo. */
 const claseDireccion = (v) =>
@@ -70,15 +93,16 @@ function revelar(nodo, retardo = 0) {
 
 /** Cuenta hasta un valor real. Nunca se invoca sobre un dato ausente. */
 function contarHasta(nodo, destino, { decimales = 0, duracion = 1100, sufijo = '' } = {}) {
-  if (!Number.isFinite(destino)) { nodo.textContent = NO_DISPONIBLE; return; }
+  if (!Number.isFinite(destino)) { nodo.textContent = noDisponible(); return; }
   if (sinMovimiento()) { nodo.textContent = formatearNumero(destino, decimales) + sufijo; return; }
 
   const inicio = performance.now();
   const paso = (ahora) => {
-    const t = Math.min((ahora - inicio) / duracion, 1);
-    const suave = 1 - (1 - t) ** 3;
+    // `avance`, no `t`: `t()` es la traducción y en este fichero no se tapa.
+    const avance = Math.min((ahora - inicio) / duracion, 1);
+    const suave = 1 - (1 - avance) ** 3;
     nodo.textContent = formatearNumero(destino * suave, decimales) + sufijo;
-    if (t < 1) requestAnimationFrame(paso);
+    if (avance < 1) requestAnimationFrame(paso);
     else nodo.textContent = formatearNumero(destino, decimales) + sufijo;
   };
   requestAnimationFrame(paso);
@@ -136,10 +160,10 @@ export function pintarTicker(indices, cartera) {
 
       item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
       item.appendChild(elemento('span', 'ticker__valor',
-        l.valor === null ? NO_DISPONIBLE : formatearNumero(l.valor, l.decimales) + l.sufijo));
+        l.valor === null ? noDisponible() : formatearNumero(l.valor, l.decimales) + l.sufijo));
 
       const v = elemento('span', `ticker__var ${claseDireccion(l.variacion)}`,
-        l.variacion === null ? NO_DISPONIBLE : conSigno(l.variacion, 2, ' %'));
+        l.variacion === null ? noDisponible() : conSigno(l.variacion, 2, ' %'));
       item.appendChild(v);
       g.appendChild(item);
     }
@@ -160,8 +184,26 @@ export function pintarTicker(indices, cartera) {
 
 // ══════════════════════════ 2 · DECLARACIÓN Y PILARES ══════════════════════
 
-/** Revela el enunciado línea a línea y los pilares en orden. */
+/**
+ * Compone el titular del manifiesto y revela el enunciado línea a línea.
+ *
+ * Las líneas se construyen aquí porque el diccionario las declara como lista:
+ * cuántas son y por dónde cortan es decisión tipográfica de cada idioma, y el
+ * documento no puede traerlas escritas sin imponer a todos el reparto de uno.
+ */
 export function animarManifiesto() {
+  const titular = $('#manifiesto-titular');
+  if (titular) {
+    titular.textContent = '';
+    for (const [i, texto] of tLista('portada.manifiesto.titular').entries()) {
+      // Dos capas: la exterior recorta y la interior asciende desde detrás.
+      const linea = elemento('span', 'linea-revelada');
+      linea.style.setProperty('--i', String(i));
+      linea.appendChild(elemento('span', null, texto));
+      titular.appendChild(linea);
+    }
+  }
+
   for (const linea of document.querySelectorAll('.manifiesto .linea-revelada')) {
     observarEntrada(linea);
   }
@@ -184,9 +226,9 @@ export function animarManifiesto() {
  * plataforma no comete.
  */
 const PULSO = [
-  { clave: 'sp500', nombre: 'S&P 500', serie: 'SPY', notaSerie: 'SPY · ETF réplica' },
-  { clave: 'nasdaq', nombre: 'Nasdaq 100', serie: 'QQQ', notaSerie: 'QQQ · ETF réplica' },
-  { clave: 'vix', nombre: 'VIX', serie: null, notaSerie: null },
+  { clave: 'sp500', nombre: 'S&P 500', serie: 'SPY' },
+  { clave: 'nasdaq', nombre: 'Nasdaq 100', serie: 'QQQ' },
+  { clave: 'vix', nombre: 'VIX', serie: null },
 ];
 
 const cacheSeries = new Map();
@@ -208,18 +250,21 @@ export function pintarPulso(indices, api) {
 
     boton.appendChild(elemento('span', 'pulse-indice__nombre', def.nombre));
     boton.appendChild(elemento('span', 'pulse-indice__valor',
-      i?.disponible ? formatearNumero(i.valor, 2) : NO_DISPONIBLE));
+      i?.disponible ? formatearNumero(i.valor, 2) : noDisponible()));
 
     const cambio = elemento('span', `pulse-indice__var ${claseDireccion(i?.variacionPct)}`);
     cambio.textContent = i?.disponible
-      ? `${conSigno(i.variacion, 2)}  ${conSigno(i.variacionPct, 2, ' %')}`
-      : (i?.motivo ? SIN_DATOS : NO_DISPONIBLE);
+      ? t('inicio.pulse.cambio', {
+        absoluta: conSigno(i.variacion, 2),
+        porcentaje: conSigno(i.variacionPct, 2, ' %'),
+      })
+      : (i?.motivo ? sinDatos() : noDisponible());
     boton.appendChild(cambio);
 
     const pie = elemento('span', 'pulse-indice__pie');
-    pie.textContent = i?.disponible
-      ? `${i.fuente ?? ''} · ${frescura(i.momento)}`.trim()
-      : '';
+    // Fuente y antigüedad son dos datos: solo se enuncian juntos si hay ambos.
+    const piezas = [i?.fuente, i?.disponible ? frescura(i.momento) : null].filter(Boolean);
+    pie.textContent = i?.disponible ? piezas.join(t('general.separadorLista')) : '';
     boton.appendChild(pie);
 
     boton.addEventListener('click', () => {
@@ -237,14 +282,19 @@ export function pintarPulso(indices, api) {
   if (figura) observarEntrada(figura, () => cargarSerieDelPulso(api));
 }
 
-/** Antigüedad legible de una marca temporal. */
+/** Antigüedad legible de una marca temporal: «hace 5 min», «5m ago». */
 function frescura(momento) {
   if (!momento) return '';
-  const s = Math.max(0, Math.round((Date.now() - new Date(momento).getTime()) / 1000));
-  if (!Number.isFinite(s)) return '';
-  if (s < 60) return `hace ${s} s`;
-  if (s < 3600) return `hace ${Math.round(s / 60)} min`;
-  return `hace ${Math.round(s / 3600)} h`;
+  const bruto = Math.round((Date.now() - new Date(momento).getTime()) / 1000);
+  if (!Number.isFinite(bruto)) return '';
+
+  // Negativo porque es pasado; la unidad se elige por magnitud y la redacción
+  // —incluido el plural— la pone el idioma.
+  const s = Math.max(0, bruto);
+  const f = relativo({ numeric: 'always', style: 'narrow' });
+  if (s < 60) return f.format(-s, 'second');
+  if (s < 3600) return f.format(-Math.round(s / 60), 'minute');
+  return f.format(-Math.round(s / 3600), 'hour');
 }
 
 async function cargarSerieDelPulso(api) {
@@ -256,11 +306,7 @@ async function cargarSerieDelPulso(api) {
 
   if (!def.serie) {
     dibujarSinSerie(svg, pie);
-    if (nota) {
-      nota.textContent =
-        `Ningún proveedor conectado publica la serie histórica del ${def.nombre}. ` +
-        'La cotización mostrada arriba sí es real y llega con retraso.';
-    }
+    if (nota) nota.textContent = t('inicio.pulse.nota.sinSerie', { indice: def.nombre });
     return;
   }
 
@@ -282,27 +328,28 @@ async function cargarSerieDelPulso(api) {
 
   if (!datos?.disponible) {
     dibujarSinSerie(svg, pie);
-    if (nota) {
-      nota.textContent =
-        `No ha sido posible recuperar la serie de ${def.nombre} en este momento. ` +
-        'Vuelva a seleccionarlo para reintentarlo.';
-    }
+    if (nota) nota.textContent = t('inicio.pulse.nota.fallo', { indice: def.nombre });
     return;
   }
 
   dibujarSerie(svg, datos);
   if (pie) {
     pie.textContent = '';
-    pie.appendChild(elemento('span', '', `${formatearFecha(datos.desde)} — ${formatearFecha(datos.hasta)}`));
+    pie.appendChild(elemento('span', '', t('inicio.pulse.periodo', {
+      desde: formatearFecha(datos.desde), hasta: formatearFecha(datos.hasta),
+    })));
     const v = elemento('span', `grafico-linea__periodo ${claseDireccion(datos.variacionPeriodoPct)}`,
       conSigno(datos.variacionPeriodoPct, 2, ' %'));
     pie.appendChild(v);
   }
   if (nota) {
-    nota.textContent =
-      `Curva: ${def.notaSerie}. El índice ${def.nombre} no tiene serie histórica en ningún ` +
-      'proveedor conectado; el ETF que lo replica no es el índice y se rotula como tal. ' +
-      `${datos.puntos} sesiones · dato histórico.`;
+    // El número de sesiones gobierna el plural de la frase entera: la plantilla
+    // se declara con sus formas en cada diccionario, no se cose aquí.
+    nota.textContent = t('inicio.pulse.nota.conSerie', {
+      curva: t('inicio.pulse.notaSerie', { etf: def.serie }),
+      indice: def.nombre,
+      n: datos.puntos,
+    });
   }
 }
 
@@ -313,13 +360,13 @@ const NS = 'http://www.w3.org/2000/svg';
 function dibujarSinSerie(svg, pie) {
   svg.textContent = '';
   if (pie) pie.textContent = '';
-  const t = document.createElementNS(NS, 'text');
-  t.setAttribute('x', String(ANCHO / 2));
-  t.setAttribute('y', String(ALTO / 2));
-  t.setAttribute('text-anchor', 'middle');
-  t.setAttribute('class', 'grafico-linea__vacio');
-  t.textContent = SIN_DATOS;
-  svg.appendChild(t);
+  const texto = document.createElementNS(NS, 'text');
+  texto.setAttribute('x', String(ANCHO / 2));
+  texto.setAttribute('y', String(ALTO / 2));
+  texto.setAttribute('text-anchor', 'middle');
+  texto.setAttribute('class', 'grafico-linea__vacio');
+  texto.textContent = sinDatos();
+  svg.appendChild(texto);
 }
 
 /** Traza la serie y la deja dibujarse de una pasada. */
@@ -441,8 +488,8 @@ export function pintarRadarHome(datos, alNavegar) {
   const familias = (datos?.senales ?? []).filter((f) => f.disponible && (f.lecturas ?? []).length);
 
   if (!familias.length) {
-    raiz.appendChild(bloqueSinDatos('Sin señales operativas',
-      datos?.senales?.find((f) => f.motivo)?.motivo ?? 'Ninguna familia de señales tiene fuente conectada.'));
+    raiz.appendChild(bloqueSinDatos(t('inicio.radar.vacio.titulo'),
+      datos?.senales?.find((f) => f.motivo)?.motivo ?? t('inicio.radar.vacio.motivo')));
     return;
   }
 
@@ -455,7 +502,7 @@ export function pintarRadarHome(datos, alNavegar) {
     cabecera.appendChild(elemento('h3', 'radar-familia__titulo', familia.titulo));
     if (Number.isFinite(familia.evaluados)) {
       cabecera.appendChild(elemento('span', 'radar-familia__alcance',
-        `${formatearNumero(familia.evaluados, 0)} evaluados`));
+        t('inicio.radar.evaluados', { n: familia.evaluados })));
     }
     bloque.appendChild(cabecera);
 
@@ -480,14 +527,18 @@ function filaLectura(l, maximo, familia, alNavegar) {
   const cabecera = elemento('div', 'radar-lectura__cabecera');
   const ticker = elemento('button', 'radar-lectura__ticker');
   ticker.type = 'button';
-  ticker.textContent = l.ticker ?? NO_DISPONIBLE;
+  ticker.textContent = l.ticker ?? noDisponible();
   if (l.ticker) ticker.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(l.ticker)}`));
   cabecera.appendChild(ticker);
 
   const valor = elemento('span', `radar-lectura__valor ${claseDireccion(l.sentido === 'negativo' ? -1 : l.sentido === 'positivo' ? 1 : 0)}`);
-  valor.textContent = Number.isFinite(l.valor)
-    ? `${formatearNumero(l.valor, 1)}${l.unidad ? ` ${l.unidad}` : ''}`
-    : NO_DISPONIBLE;
+  // La unidad la publica la fuente; solo el orden respecto a la cifra es del
+  // idioma, y para eso está la plantilla. Sin unidad no hay nada que ordenar.
+  valor.textContent = !Number.isFinite(l.valor)
+    ? noDisponible()
+    : l.unidad
+      ? t('inicio.radar.lectura.medida', { valor: formatearNumero(l.valor, 1), unidad: l.unidad })
+      : formatearNumero(l.valor, 1);
   cabecera.appendChild(valor);
   fila.appendChild(cabecera);
 
@@ -509,13 +560,16 @@ function filaLectura(l, maximo, familia, alNavegar) {
 
   // En una lectura cualitativa el titular es lo único que la distingue de otra;
   // el campo `detalle` trae solo la fuente y dejaría cuatro filas idénticas.
-  const cuerpo = l.titular ?? l.detalle ?? SIN_DATOS;
+  const cuerpo = l.titular ?? l.detalle ?? sinDatos();
   fila.appendChild(elemento('p', 'radar-lectura__detalle', cuerpo));
 
   if (!Number.isFinite(l.valor)) {
-    const procedencia = l.titular && l.detalle ? ` · ${l.detalle}` : '';
+    // Dos frases enteras en lugar de una y un apéndice: la que menciona la
+    // fuente puede necesitar otro orden, y así cada idioma se lo da.
     fila.appendChild(elemento('span', 'radar-lectura__nota',
-      `Lectura cualitativa, sin medición numérica${procedencia}`));
+      l.titular && l.detalle
+        ? t('inicio.radar.lectura.cualitativaFuente', { fuente: l.detalle })
+        : t('inicio.radar.lectura.cualitativa')));
   }
 
   return fila;
@@ -540,12 +594,18 @@ let selectorVigente = null;
 export function pintarResearchHome(companias, alNavegar) {
   const raiz = $('#home-research-cuerpo');
   if (!raiz) return;
+
+  /* Se detiene la rotación ANTES de vaciar: el temporizador en marcha cierra
+     sobre el selector de pestañas de este momento, que el vaciado deja fuera del
+     documento. Si sobreviviera, seguiría girando el panel mientras marca la
+     pestaña activa en unos botones que ya no están en pantalla. */
+  detenerRotacion();
   raiz.textContent = '';
 
   const lista = (companias ?? []).filter((c) => c.ticker);
   if (!lista.length) {
-    raiz.appendChild(bloqueSinDatos('Sin cobertura publicada',
-      'La cobertura se construye a partir de los informes publicados.'));
+    raiz.appendChild(bloqueSinDatos(t('inicio.research.vacio.titulo'),
+      t('inicio.research.vacio.motivo')));
     return;
   }
 
@@ -613,20 +673,22 @@ function mostrarCompania(indice, lista, raiz, selector, alNavegar) {
     const izquierda = elemento('div', 'research-panel__tesis');
     const identidad = elemento('div', 'research-panel__identidad');
     identidad.appendChild(elemento('span', 'research-panel__ticker', c.ticker));
-    if (c.enCartera) identidad.appendChild(elemento('span', 'chip chip--cartera', 'En cartera'));
+    if (c.enCartera) {
+      identidad.appendChild(elemento('span', 'chip chip--cartera', t('inicio.research.enCartera')));
+    }
     izquierda.appendChild(identidad);
     izquierda.appendChild(elemento('h3', 'research-panel__empresa', c.empresa));
     izquierda.appendChild(elemento('p', 'research-panel__sector',
-      [c.sector, c.pais].filter(Boolean).join(' · ') || NO_DISPONIBLE));
+      [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible()));
 
     const resumen = c.informes?.find((i) => i.resumen)?.resumen ?? c.resumen ?? null;
     izquierda.appendChild(resumen
       ? elemento('p', 'research-panel__resumen', recortar(resumen, 340))
-      : elemento('p', 'research-panel__vacio', `${SIN_DATOS} — ningún informe incluye resumen ejecutivo.`));
+      : elemento('p', 'research-panel__vacio', t('inicio.research.sinResumen')));
 
     const enlace = elemento('button', 'enlace-avance');
     enlace.type = 'button';
-    enlace.appendChild(document.createTextNode('Ver ficha completa '));
+    enlace.appendChild(elemento('span', null, t('inicio.research.verFicha')));
     enlace.appendChild(elemento('span', 'enlace-avance__flecha', '→'));
     enlace.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(c.ticker)}`));
     izquierda.appendChild(enlace);
@@ -634,15 +696,15 @@ function mostrarCompania(indice, lista, raiz, selector, alNavegar) {
     const derecha = elemento('div', 'research-panel__datos');
     // El precio es un nivel: no lleva signo ni dirección. La variación, que sí
     // es un cambio, va debajo y es la única que se marca al alza o a la baja.
-    derecha.appendChild(dato('Precio', c.cotizacion?.disponible
-      ? `${cifra(c.cotizacion.precio)} ${c.cotizacion.divisa ?? ''}`.trim() : NO_DISPONIBLE,
+    derecha.appendChild(dato(t('inicio.research.dato.precio'), c.cotizacion?.disponible
+      ? importe(c.cotizacion.precio, c.cotizacion.divisa) : noDisponible(),
       c.cotizacion?.disponible ? conSigno(c.cotizacion.variacionPct, 2, ' %') : null,
       null, c.cotizacion?.variacionPct));
-    derecha.appendChild(dato('Recomendación', c.recomendacion ?? NO_DISPONIBLE));
-    derecha.appendChild(dato('Precio objetivo',
-      Number.isFinite(c.precioObjetivo) ? `${cifra(c.precioObjetivo)} ${c.divisa ?? ''}`.trim() : NO_DISPONIBLE));
-    derecha.appendChild(dato('Recorrido al objetivo',
-      c.recorridoObjetivo?.disponible ? conSigno(c.recorridoObjetivo.porcentaje, 2, ' %') : NO_DISPONIBLE,
+    derecha.appendChild(dato(t('inicio.research.dato.recomendacion'), c.recomendacion ?? noDisponible()));
+    derecha.appendChild(dato(t('inicio.research.dato.objetivo'),
+      Number.isFinite(c.precioObjetivo) ? importe(c.precioObjetivo, c.divisa) : noDisponible()));
+    derecha.appendChild(dato(t('inicio.research.dato.recorrido'),
+      c.recorridoObjetivo?.disponible ? conSigno(c.recorridoObjetivo.porcentaje, 2, ' %') : noDisponible(),
       null, c.recorridoObjetivo?.porcentaje));
 
     panel.appendChild(izquierda);
@@ -664,7 +726,7 @@ function dato(etiqueta, valor, secundario = null, direccion = null, direccionSec
   const b = elemento('div', 'dato');
   b.appendChild(elemento('span', 'dato__etiqueta', etiqueta));
   const v = elemento('strong', 'dato__valor', valor);
-  if (valor === NO_DISPONIBLE) v.classList.add('dato__valor--ausente');
+  if (valor === noDisponible()) v.classList.add('dato__valor--ausente');
   if (Number.isFinite(direccion)) v.classList.add(claseDireccion(direccion));
   b.appendChild(v);
   if (secundario) {
@@ -686,8 +748,8 @@ export function pintarCatalizadoresHome(agenda, alNavegar) {
 
   const proximos = (agenda?.proximos ?? []).slice(0, 6);
   if (!proximos.length) {
-    raiz.appendChild(bloqueSinDatos('Sin eventos próximos',
-      'La agenda solo recoge eventos con fecha verificable de una fuente conectada.'));
+    raiz.appendChild(bloqueSinDatos(t('inicio.catalizadores.vacio.titulo'),
+      t('inicio.catalizadores.vacio.motivo')));
     return;
   }
 
@@ -697,8 +759,11 @@ export function pintarCatalizadoresHome(agenda, alNavegar) {
 
     const fecha = elemento('div', 'cronologia__fecha');
     fecha.appendChild(elemento('span', 'cronologia__dia', diaCorto(e.fecha)));
+    // «hoy», «mañana», «dentro de 3 días» — con la palabra en lugar de la cifra
+    // cuando el idioma la tiene, que es lo que hace `numeric: 'auto'`. La
+    // mayúscula inicial la pone la hoja de estilo: es tipografía, no texto.
     fecha.appendChild(elemento('span', 'cronologia__cuando',
-      e.dias === 0 ? 'Hoy' : e.dias === 1 ? 'Mañana' : `En ${e.dias} días`));
+      Number.isFinite(e.dias) ? relativo({ numeric: 'auto' }).format(e.dias, 'day') : ''));
     hito.appendChild(fecha);
 
     hito.appendChild(elemento('span', 'cronologia__punto'));
@@ -711,7 +776,11 @@ export function pintarCatalizadoresHome(agenda, alNavegar) {
 
     const empresa = elemento('button', 'cronologia__empresa');
     empresa.type = 'button';
-    empresa.textContent = `${e.ticker ?? ''} · ${e.compania}`.replace(/^ · /, '');
+    // Se unen los datos que hay, en vez de armar la pareja y recortarla después:
+    // aquel recorte iba con expresión regular contra el separador y se rompía en
+    // cuanto el separador cambiaba de idioma.
+    empresa.textContent = [e.ticker, e.compania].filter(Boolean)
+      .join(t('general.separadorLista'));
     if (e.ticker) empresa.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(e.ticker)}`));
     cuerpo.appendChild(empresa);
 
@@ -725,17 +794,23 @@ export function pintarCatalizadoresHome(agenda, alNavegar) {
   }
   raiz.appendChild(linea);
 
-  const criterio = elemento('p', 'nota-metodologica',
-    'Prioridad HIGH: evento a 14 días o menos sobre una compañía en cartera. ' +
-    'Resultados, guidance y eventos corporativos requieren un calendario que ningún proveedor conectado publica.');
-  raiz.appendChild(criterio);
+  raiz.appendChild(elemento('p', 'nota-metodologica', t('inicio.catalizadores.nota')));
 }
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+/**
+ * Día y mes abreviados.
+ *
+ * El orden lo decide el idioma —«17 AGO» en español, «AUG 17» en inglés—, de
+ * modo que no hay tabla de meses que mantener ni un orden fijo que imponer. Se
+ * lee en UTC: la fecha del catalizador es un día de calendario, no un instante,
+ * y desplazarla a la zona del navegador la movería un día en media Europa.
+ */
 function diaCorto(iso) {
   const d = new Date(`${String(iso).slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return NO_DISPONIBLE;
-  return `${MESES[d.getUTCMonth()].toUpperCase()} ${d.getUTCDate()}`;
+  if (Number.isNaN(d.getTime())) return noDisponible();
+  return d.toLocaleDateString(localeFormato(), {
+    day: 'numeric', month: 'short', timeZone: 'UTC',
+  }).toUpperCase();
 }
 
 // ═══════════════════════════════ 7 · OPTIONS FLOW ═══════════════════════════
@@ -761,10 +836,10 @@ export function pintarFlujoHome(flujo) {
   const bloque = elemento('div', 'flujo-vacio');
 
   const izquierda = elemento('div', 'flujo-vacio__texto');
-  izquierda.appendChild(elemento('p', 'flujo-vacio__rotulo', 'Professional options flow analytics'));
-  izquierda.appendChild(elemento('h3', 'flujo-vacio__estado', SIN_DATOS));
+  izquierda.appendChild(elemento('p', 'flujo-vacio__rotulo', t('inicio.flujo.rotulo')));
+  izquierda.appendChild(elemento('h3', 'flujo-vacio__estado', sinDatos()));
   izquierda.appendChild(elemento('p', 'flujo-vacio__motivo',
-    flujo?.motivo ?? 'Provider connection required.'));
+    flujo?.motivo ?? t('inicio.flujo.motivo')));
 
   const requisitos = flujo?.requiere ?? [];
   if (requisitos.length) {
@@ -778,7 +853,9 @@ export function pintarFlujoHome(flujo) {
   const campos = flujo?.contratoDatos?.camposRequeridos ?? [];
   if (campos.length) {
     const derecha = elemento('div', 'flujo-vacio__contrato');
-    derecha.appendChild(elemento('p', 'flujo-vacio__contrato-titulo', 'Campos que consumirá la sección'));
+    derecha.appendChild(elemento('p', 'flujo-vacio__contrato-titulo', t('inicio.flujo.contrato.titulo')));
+    // Nombres de campo del contrato de datos, no rótulos: no se traducen, igual
+    // que no se traduce el nombre de una columna de la base.
     const rejilla = elemento('div', 'flujo-vacio__campos');
     for (const c of [...campos, 'compra', 'venta', 'sentido', 'prima']) {
       rejilla.appendChild(elemento('span', 'flujo-vacio__campo', c));
@@ -795,16 +872,17 @@ function tablaFlujo(operaciones) {
   const lista = elemento('div', 'flujo-operaciones');
   for (const o of operaciones.slice(0, 8)) {
     const fila = elemento('article', 'flujo-operacion');
-    fila.appendChild(elemento('span', 'flujo-operacion__lado', o.lado ?? NO_DISPONIBLE));
-    fila.appendChild(elemento('span', 'flujo-operacion__ticker', o.simbolo ?? NO_DISPONIBLE));
+    fila.appendChild(elemento('span', 'flujo-operacion__lado', o.lado ?? noDisponible()));
+    fila.appendChild(elemento('span', 'flujo-operacion__ticker', o.simbolo ?? noDisponible()));
     fila.appendChild(elemento('span', 'flujo-operacion__strike',
-      Number.isFinite(o.strike) ? formatearNumero(o.strike, 2) : NO_DISPONIBLE));
+      Number.isFinite(o.strike) ? formatearNumero(o.strike, 2) : noDisponible()));
     fila.appendChild(elemento('span', 'flujo-operacion__vencimiento',
-      o.vencimiento ? formatearFecha(o.vencimiento) : NO_DISPONIBLE));
+      o.vencimiento ? formatearFecha(o.vencimiento) : noDisponible()));
+    // `UNKNOWN` es el valor que declara el proveedor, no un rótulo de interfaz.
     fila.appendChild(elemento('span', 'flujo-operacion__sentido',
       o.sentido?.sentido ?? 'UNKNOWN'));
     fila.appendChild(elemento('span', 'flujo-operacion__prima',
-      Number.isFinite(o.prima) ? formatearNumero(o.prima, 0) : NO_DISPONIBLE));
+      Number.isFinite(o.prima) ? formatearNumero(o.prima, 0) : noDisponible()));
     lista.appendChild(fila);
   }
   return lista;
@@ -830,8 +908,8 @@ export function pintarSignalHome(signal) {
   const dimensiones = referencia?.dimensiones ?? [];
 
   if (!dimensiones.length) {
-    raiz.appendChild(bloqueSinDatos('Signal data unavailable',
-      signal?.motivo ?? 'El modelo no publica dimensiones.'));
+    raiz.appendChild(bloqueSinDatos(t('inicio.signal.vacio.titulo'),
+      signal?.motivo ?? t('inicio.signal.vacio.motivo')));
     return;
   }
 
@@ -850,7 +928,7 @@ export function pintarSignalHome(signal) {
     const cabecera = elemento('div', 'signal-dimension__cabecera');
     cabecera.appendChild(elemento('span', 'signal-dimension__titulo', d.titulo));
     cabecera.appendChild(elemento('span', 'signal-dimension__valor',
-      Number.isFinite(d.puntuacion) ? formatearNumero(d.puntuacion, 0) : NO_DISPONIBLE));
+      Number.isFinite(d.puntuacion) ? formatearNumero(d.puntuacion, 0) : noDisponible()));
     fila.appendChild(cabecera);
 
     // La barra representa el PESO de la dimensión en el modelo —un dato real—
@@ -862,14 +940,16 @@ export function pintarSignalHome(signal) {
 
     // Fuente conectada y puntuación emitida son cosas distintas: hoy hay dos
     // dimensiones con fuente y ninguna con puntuación, y así se dice.
-    const peso = `Peso ${formatearNumero(d.peso * 100, 0)} %`;
     const estado = !d.disponible
-      ? (d.requiere ?? 'sin fuente')
+      ? (d.requiere ?? t('inicio.signal.estado.sinFuente'))
       : Number.isFinite(d.puntuacion)
-        ? 'fuente conectada'
-        : 'fuente conectada, sin puntuación emitida';
-    const pie = elemento('span', 'signal-dimension__pie', `${peso} · ${estado}`);
-    fila.appendChild(pie);
+        ? t('inicio.signal.estado.conFuente')
+        : t('inicio.signal.estado.sinPuntuacion');
+    // Peso y estado se enuncian en una sola plantilla: el orden y el separador
+    // son del idioma, no de un `${a} · ${b}` escrito aquí.
+    fila.appendChild(elemento('span', 'signal-dimension__pie', t('inicio.signal.dimension.pie', {
+      peso: formatearNumero(d.peso * 100, 0), estado,
+    })));
 
     observarEntrada(fila, () => {
       relleno.style.width = `${(((d.peso ?? 0) / pesoMaximo) * 100).toFixed(1)}%`;
@@ -890,10 +970,11 @@ export function pintarSignalHome(signal) {
     observarEntrada(resultado, () => contarHasta(cifraSignal, referencia.puntuacion, { decimales: 0 }));
   } else {
     resultado.appendChild(elemento('strong', 'signal-home__cifra signal-home__cifra--ausente',
-      'Signal data unavailable'));
-    resultado.appendChild(elemento('p', 'signal-home__motivo',
-      `${signal?.motivo ?? 'Modelo en construcción'}. Cobertura actual: ` +
-      `${formatearNumero(referencia?.cobertura ?? 0, 0)} % de las dimensiones con fuente.`));
+      t('inicio.signal.vacio.titulo')));
+    resultado.appendChild(elemento('p', 'signal-home__motivo', t('inicio.signal.cobertura', {
+      motivo: signal?.motivo ?? t('inicio.signal.motivoReserva'),
+      cobertura: formatearNumero(referencia?.cobertura ?? 0, 0),
+    })));
   }
   bloque.appendChild(resultado);
 

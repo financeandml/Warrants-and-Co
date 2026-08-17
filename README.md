@@ -679,6 +679,68 @@ leer correlaciones inexistentes.
 
 ---
 
+## Idioma de la interfaz
+
+Se traduce lo que la plataforma **dice**, nunca lo que la plataforma **publica**: las
+tesis, los teletipos, los resúmenes ejecutivos y los nombres de compañía se muestran
+siempre en su idioma original. Traducirlos automáticamente sería publicar texto que
+ningún analista ha firmado. La marca tampoco se traduce: «Warrants & Co.», «W&C Radar»
+y «W&C Signal» son nombres propios.
+
+Añadir un idioma se hace en un único fichero, `public/idiomas/index.js`: se importa su
+diccionario y se añade una entrada. Ni el motor, ni el documento, ni ninguna vista
+necesitan cambio alguno.
+
+### Tres reglas que el mecanismo impone
+
+**Una frase con datos incrustados vive entera en el diccionario**, con marcadores, y
+nunca partida en fragmentos que el código concatene. Concatenar impone a todos los
+idiomas el orden del castellano; una plantilla completa deja que cada uno coloque las
+piezas donde le corresponda:
+
+```
+es: 'Curva: {curva}. El índice {indice} no tiene serie histórica…'
+en: 'Curve: {curva}. No connected provider carries a historical series for {indice}…'
+```
+
+`tNodos()` devuelve un fragmento de DOM para las frases que llevan elementos dentro, de
+modo que una parte puede ir en `<strong>` sin que el diccionario contenga marcado ni se
+recurra a `innerHTML`.
+
+**El plural se declara por idioma, no con una condición en el código.** Cada entrada que
+dependa de un número declara sus formas y `Intl.PluralRules` elige la que toca.
+
+**El reparto tipográfico también es del idioma.** El titular de la portada es una lista:
+cuántas líneas ocupa y por dónde corta lo decide cada diccionario, no el documento. Por
+eso `#manifiesto-titular` llega vacío y lo compone `animarManifiesto()`.
+
+Cuando el propio navegador sabe redactar algo mejor que un diccionario, se le deja: la
+antigüedad de un dato («hace 5 min», «5m ago») y la distancia a un catalizador («hoy»,
+«mañana», «in 3 days») las pone `Intl.RelativeTimeFormat`, y el día y mes abreviados
+—«17 AGO», «AUG 17»— `toLocaleDateString`. Ahí no hay entrada de diccionario que
+mantener ni tabla de meses que se quede corta.
+
+### Estado
+
+| Fase | Alcance | Estado |
+| --- | --- | --- |
+| 1 | Motor, conmutador, cabecera, navegación y pie | hecho |
+| 2 | Frases compuestas como plantilla y plurales por idioma | hecho |
+| 3 | Portada e inicio: hero, manifiesto y los seis bloques | hecho |
+| 4 | Las nueve secciones | pendiente |
+
+Dos decisiones quedan abiertas a propósito, porque afectan a las nueve secciones a la vez
+y hacerlas a medias dejaría la interfaz descuadrada entre lo migrado y lo que no:
+
+- **`N/A` frente a `N/D`.** Hoy `general.noDisponible` vale `N/A` en ambos idiomas, que es
+  lo que muestra toda la plataforma. Cambiarlo es un solo cambio en el diccionario, pero
+  conviene hacerlo cuando ya no queden secciones con la cadena escrita a mano.
+- **El espacio antes del `%`.** `formatearPorcentaje()` y los sufijos escriben `12,00 %`,
+  que es la convención española; el inglés escribe `12.00%`. Es cosa de `formato.js` y
+  cambia todas las cifras de la plataforma de golpe.
+
+---
+
 ## Seguridad
 
 Content-Security-Policy con `script-src 'self'` · `X-Frame-Options: DENY` ·
@@ -699,6 +761,21 @@ Playwright ninguna prueba se ejecuta y todas salen con código `2` diciéndolo:
 una prueba que no corre no acredita nada, y su ausencia nunca se presenta como
 un aprobado. El código `1` queda reservado a la prueba que sí se ejecutó y
 falló.
+
+### Paridad de diccionarios
+
+```
+npm run test:idiomas
+```
+
+La única prueba que **no** necesita Playwright ni servidor: es aritmética sobre los
+diccionarios y corre en menos de un segundo. Comprueba que los dos idiomas declaran las
+mismas claves, que una misma clave lleva los mismos marcadores `{…}` en ambos —a una
+plantilla a la que le falte `{ticker}` el dato se le cae en silencio—, que las formas de
+plural son categorías reales del idioma y siempre existe `other`, que una entrada
+declarada como lista lo es en los dos, y que toda clave que el documento o el código
+piden existe de verdad. Informa además, sin fallar, de las claves que nadie nombra y de
+las categorías de plural que una entrada no cubre.
 
 ### Comprobación de humo
 

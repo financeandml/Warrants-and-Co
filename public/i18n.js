@@ -27,6 +27,13 @@
    dependa de un número declara sus formas y el motor elige:
 
        'companias.total': { one: '{n} compañía cubierta', other: '{n} compañías cubiertas' }
+
+   ═══ Listas ═══
+
+   Una entrada puede ser un array. Sirve para el texto que se parte en piezas
+   por decisión tipográfica de cada idioma —un titular repartido en líneas—:
+   dónde cae cada corte, y cuántos cortes hay, lo declara el diccionario y no el
+   documento. `tLista()` devuelve las piezas; `t()`, la frase entera.
    ========================================================================= */
 
 import { IDIOMAS, BASE, CLAVES, definicion } from './idiomas/index.js';
@@ -84,6 +91,34 @@ function resolver() {
  * @param {object} [params] valores para sustituir {nombre}; `n` gobierna el plural
  */
 export function t(clave, params = null) {
+  const entrada = resolver_(clave, params);
+  // Una lista es un texto partido en piezas por tipografía, no varias frases:
+  // unidas recomponen la única que hay.
+  const texto = Array.isArray(entrada) ? entrada.join(' ') : entrada;
+  return params ? sustituir(texto, params) : texto;
+}
+
+/**
+ * Piezas de una entrada declarada como lista. Una entrada que no lo sea
+ * devuelve una única pieza, de modo que quien la recorra no necesita saberlo.
+ *
+ * @param {string} clave
+ * @param {object} [params]
+ * @returns {string[]}
+ */
+export function tLista(clave, params = null) {
+  const entrada = resolver_(clave, params);
+  const piezas = Array.isArray(entrada) ? entrada : [entrada];
+  return params ? piezas.map((p) => sustituir(p, params)) : piezas;
+}
+
+/**
+ * Localiza la entrada y, si declara formas de plural, elige la que toca.
+ *
+ * Devuelve la cadena —o la lista— sin sustituir marcadores: `t()` los sustituye
+ * de una vez y `tNodos()` necesita verlos para repartir la frase entre nodos.
+ */
+function resolver_(clave, params) {
   let entrada = diccionario[clave];
 
   if (entrada === undefined) {
@@ -94,13 +129,14 @@ export function t(clave, params = null) {
     entrada = base;
   }
 
-  if (entrada !== null && typeof entrada === 'object') {
+  // Un array son piezas de un mismo texto; solo un objeto declara plurales.
+  if (entrada !== null && typeof entrada === 'object' && !Array.isArray(entrada)) {
     const n = Number(params?.n);
     const forma = Number.isFinite(n) ? reglasPlural.select(n) : 'other';
     entrada = entrada[forma] ?? entrada.other ?? entrada.one ?? clave;
   }
 
-  return params ? sustituir(entrada, params) : entrada;
+  return entrada;
 }
 
 /** Sustituye {nombre} por su valor. Los números se formatean con el locale vigente. */
@@ -118,15 +154,8 @@ function sustituir(texto, params) {
  * varios nodos y por tanto ha de ver dónde cae cada marcador.
  */
 function plantillaDe(clave, params) {
-  let entrada = diccionario[clave] ?? definicion(BASE).diccionario[clave];
-  if (entrada === undefined) return clave;
-
-  if (entrada !== null && typeof entrada === 'object') {
-    const n = Number(params?.n);
-    const forma = Number.isFinite(n) ? reglasPlural.select(n) : 'other';
-    entrada = entrada[forma] ?? entrada.other ?? entrada.one ?? clave;
-  }
-  return String(entrada);
+  const entrada = resolver_(clave, params);
+  return Array.isArray(entrada) ? entrada.join(' ') : String(entrada);
 }
 
 /**

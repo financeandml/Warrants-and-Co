@@ -2749,7 +2749,13 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   font-size: 0.76rem; font-weight: 600; letter-spacing: 0.09em;
   font-variant-numeric: tabular-nums;
 }
-.cronologia__cuando { font-size: 0.68rem; color: var(--tinta-mate); }
+.cronologia__cuando {
+  font-size: 0.68rem; color: var(--tinta-mate);
+}
+/* «hoy», «dentro de 3 días» y «tomorrow» los redacta `Intl.RelativeTimeFormat`
+   en minúscula. La mayúscula inicial se pone aquí porque es tipografía: con
+   `capitalize` sobre el elemento saldría «Dentro De 3 Días». */
+.cronologia__cuando::first-letter { text-transform: uppercase; }
 
 .cronologia__punto {
   /* Posicionado para que quede POR ENCIMA del hilo: el hilo es un ::before

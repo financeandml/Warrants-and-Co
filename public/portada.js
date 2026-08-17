@@ -1,4 +1,3 @@
-import { localeFormato } from './formato.js';
 /* ============================================================================
    Portada — movimiento discreto al servicio del contenido.
 
@@ -8,6 +7,9 @@ import { localeFormato } from './formato.js';
    El hero no anima. Con la fotografia detras, la quietud sostiene mejor la
    composicion que cualquier entrada escalonada.
    ========================================================================= */
+
+import { localeFormato } from './formato.js';
+import { t } from './i18n.js';
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -74,11 +76,12 @@ export function contarHasta(elemento, destino, duracion = 900) {
   elemento.dataset.contando = 'true';
   const inicio = performance.now();
   const paso = (ahora) => {
-    const t = Math.min((ahora - inicio) / duracion, 1);
+    // `avance`, no `t`: `t()` es la traduccion y en este fichero no se tapa.
+    const avance = Math.min((ahora - inicio) / duracion, 1);
     // Desaceleracion suave hacia el valor final.
-    const suave = 1 - (1 - t) ** 3;
+    const suave = 1 - (1 - avance) ** 3;
     elemento.textContent = Math.round(objetivo * suave).toLocaleString(localeFormato());
-    if (t < 1) requestAnimationFrame(paso);
+    if (avance < 1) requestAnimationFrame(paso);
     else {
       elemento.textContent = objetivo.toLocaleString(localeFormato());
       delete elemento.dataset.contando;
@@ -149,13 +152,13 @@ export function pintarCinta(posiciones, cerradas = []) {
       variacion.className = `cotiza__var variacion variacion--${signo}`;
       variacion.textContent = Number.isFinite(v)
         ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatear(Math.abs(v))} %`
-        : (l.cerrada ? 'liquidada' : '—');
+        : (l.cerrada ? t('cinta.liquidada') : '—');
       item.appendChild(variacion);
 
       if (l.cerrada) {
         const marca = document.createElement('span');
         marca.className = 'cotiza__var';
-        marca.textContent = '· liquidada';
+        marca.textContent = t('cinta.marcaLiquidada');
         item.appendChild(marca);
       }
       grupo.appendChild(item);

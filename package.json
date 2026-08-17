@@ -9,6 +9,7 @@
     "sembrar:forzar": "node scripts/sembrar.js --forzar",
     "copia": "node scripts/copia.js",
     "test": "node tests/humo.js",
+    "test:idiomas": "node tests/idiomas.js",
     "test:derivadas": "node tests/derivadas.js"
   },
   "type": "commonjs",

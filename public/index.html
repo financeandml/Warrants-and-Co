@@ -66,9 +66,12 @@
       <div class="contenedor portada__interior">
         <h1 class="portada__marca-principal" id="portada-titulo">Warrants &amp; Co.</h1>
 
-        <nav class="portada__accesos" aria-label="Accesos principales">
-          <a class="acceso" href="#/radar" data-ruta>Explore radar</a>
-          <a class="acceso" href="#/repositorio" data-ruta>View research</a>
+        <nav class="portada__accesos" data-i18n-attr="aria-label:portada.accesos.etiqueta"
+             aria-label="Accesos principales">
+          <a class="acceso" href="#/radar" data-ruta
+             data-i18n="portada.acceso.radar">Explorar el radar</a>
+          <a class="acceso" href="#/repositorio" data-ruta
+             data-i18n="portada.acceso.research">Ver el análisis</a>
           <a class="acceso" href="https://www.linkedin.com/company/warrants-co/"
              target="_blank" rel="noopener noreferrer">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -84,7 +87,8 @@
            única señal de que la página continúa. Un dato vivo cortado por el
            pliegue invita a bajar mejor que cualquier flecha, y de paso ocupa el
            cielo que sobraba bajo los accesos. -->
-      <div class="ticker" id="ticker-mercado" hidden aria-label="Cotizaciones de mercado">
+      <div class="ticker" id="ticker-mercado" hidden
+           data-i18n-attr="aria-label:inicio.ticker.etiqueta" aria-label="Cotizaciones de mercado">
         <div class="ticker__pista" id="ticker-pista"></div>
       </div>
     </div>
@@ -97,50 +101,55 @@
 
         <div class="manifiesto__enunciado">
           <p class="etiqueta-superior aparicion" style="--i:0">Warrants &amp; Co.</p>
-          <h2 class="manifiesto__titular">
-            <span class="linea-revelada" style="--i:0"><span>Market intelligence</span></span>
-            <span class="linea-revelada" style="--i:1"><span>for investors who</span></span>
-            <span class="linea-revelada" style="--i:2"><span>think in probabilities.</span></span>
-          </h2>
-          <p class="manifiesto__entrada aparicion" style="--i:2">
-            Fundamental research, market intelligence and options analytics designed to
-            identify where conviction meets opportunity.
+          <!-- El titular llega vacío a propósito: sus líneas las construye
+               `animarManifiesto()` a partir de la lista del diccionario, porque
+               el número de líneas y el punto de corte los decide cada idioma.
+               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
+          <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
+          <p class="manifiesto__entrada aparicion" style="--i:2"
+             data-i18n="portada.manifiesto.entrada">
+            Análisis fundamental, inteligencia de mercado y analítica de opciones para
+            identificar dónde la convicción se encuentra con la oportunidad.
           </p>
         </div>
 
         <div class="pilares">
           <article class="pilar aparicion" style="--i:3">
             <span class="pilar__numero" aria-hidden="true">01</span>
-            <h3 class="pilar__titulo">Research</h3>
-            <p class="pilar__texto">
-              Deep fundamental analysis focused on companies, catalysts, valuation
-              and investment thesis.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.research.titulo">Análisis</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.research.texto">
+              Análisis fundamental profundo, centrado en compañías, catalizadores,
+              valoración y tesis de inversión.
             </p>
             <a class="pilar__enlace" href="#/companias" data-ruta>
-              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+              <span data-i18n="portada.pilar.explorar">Explorar</span>
+              <span class="pilar__flecha" aria-hidden="true">→</span>
             </a>
           </article>
 
           <article class="pilar aparicion" style="--i:4">
             <span class="pilar__numero" aria-hidden="true">02</span>
-            <h3 class="pilar__titulo">Radar</h3>
-            <p class="pilar__texto">
-              A systematic view of the market designed to surface the most relevant
-              opportunities and signals.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.radar.titulo">Radar</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.radar.texto">
+              Una lectura sistemática del mercado, pensada para hacer emerger las
+              oportunidades y las señales más relevantes.
             </p>
             <a class="pilar__enlace" href="#/radar" data-ruta>
-              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+              <span data-i18n="portada.pilar.explorar">Explorar</span>
+              <span class="pilar__flecha" aria-hidden="true">→</span>
             </a>
           </article>
 
           <article class="pilar aparicion" style="--i:5">
             <span class="pilar__numero" aria-hidden="true">03</span>
-            <h3 class="pilar__titulo">Options</h3>
-            <p class="pilar__texto">
-              Options activity, unusual positioning and market-derived signals.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.options.titulo">Opciones</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.options.texto">
+              Actividad en opciones, posicionamiento inusual y señales derivadas
+              del propio mercado.
             </p>
             <a class="pilar__enlace" href="#/opciones" data-ruta>
-              Explore <span class="pilar__flecha" aria-hidden="true">→</span>
+              <span data-i18n="portada.pilar.explorar">Explorar</span>
+              <span class="pilar__flecha" aria-hidden="true">→</span>
             </a>
           </article>
         </div>
@@ -153,21 +162,26 @@
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
-            <p class="etiqueta-superior">Market</p>
-            <h2 id="titulo-pulse" class="bloque-home__titulo">Market pulse</h2>
+            <p class="etiqueta-superior" data-i18n="inicio.pulse.etiqueta">Mercado</p>
+            <h2 id="titulo-pulse" class="bloque-home__titulo"
+                data-i18n="inicio.pulse.titulo">Pulso de mercado</h2>
           </div>
           <a class="enlace-avance" href="#/mercado" data-ruta>
-            Ver mercado <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+            <span data-i18n="inicio.pulse.enlace">Ver mercado</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
           </a>
         </header>
 
         <div class="pulse">
-          <div class="pulse__indices" id="pulse-indices" role="tablist" aria-label="Índice representado"></div>
+          <div class="pulse__indices" id="pulse-indices" role="tablist"
+               data-i18n-attr="aria-label:inicio.pulse.indices.etiqueta"
+               aria-label="Índice representado"></div>
           <div class="pulse__grafico">
             <figure class="grafico-linea" id="pulse-figura">
               <figcaption class="grafico-linea__pie" id="pulse-pie"></figcaption>
               <svg id="pulse-svg" viewBox="0 0 900 300" preserveAspectRatio="none"
-                   role="img" aria-label="Serie histórica"></svg>
+                   role="img" data-i18n-attr="aria-label:inicio.pulse.serie.etiqueta"
+                   aria-label="Serie histórica"></svg>
               <div class="grafico-linea__lectura" id="pulse-lectura" hidden></div>
             </figure>
             <p class="nota-metodologica" id="pulse-nota"></p>
@@ -181,11 +195,12 @@
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
-            <p class="etiqueta-superior">Market intelligence</p>
+            <p class="etiqueta-superior" data-i18n="inicio.radar.etiqueta">Inteligencia de mercado</p>
             <h2 id="titulo-home-radar" class="bloque-home__titulo">W&amp;C Radar</h2>
           </div>
           <a class="enlace-avance" href="#/radar" data-ruta>
-            View full radar <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+            <span data-i18n="inicio.radar.enlace">Ver el radar completo</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
           </a>
         </header>
         <div id="home-radar-cuerpo" aria-live="polite"></div>
@@ -197,11 +212,13 @@
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
-            <p class="etiqueta-superior">Research</p>
-            <h2 id="titulo-home-research" class="bloque-home__titulo">Featured coverage</h2>
+            <p class="etiqueta-superior" data-i18n="inicio.research.etiqueta">Análisis</p>
+            <h2 id="titulo-home-research" class="bloque-home__titulo"
+                data-i18n="inicio.research.titulo">Cobertura destacada</h2>
           </div>
           <a class="enlace-avance" href="#/companias" data-ruta>
-            Todas las compañías <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+            <span data-i18n="inicio.research.enlace">Todas las compañías</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
           </a>
         </header>
         <div id="home-research-cuerpo" aria-live="polite"></div>
@@ -213,11 +230,13 @@
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
-            <p class="etiqueta-superior">Research</p>
-            <h2 id="titulo-home-catalizadores" class="bloque-home__titulo">Upcoming catalysts</h2>
+            <p class="etiqueta-superior" data-i18n="inicio.catalizadores.etiqueta">Análisis</p>
+            <h2 id="titulo-home-catalizadores" class="bloque-home__titulo"
+                data-i18n="inicio.catalizadores.titulo">Próximos catalizadores</h2>
           </div>
           <a class="enlace-avance" href="#/catalizadores" data-ruta>
-            Agenda completa <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+            <span data-i18n="inicio.catalizadores.enlace">Agenda completa</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
           </a>
         </header>
         <div id="home-catalizadores-cuerpo" aria-live="polite"></div>
@@ -229,11 +248,13 @@
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
-            <p class="etiqueta-superior">Options</p>
-            <h2 id="titulo-home-flujo" class="bloque-home__titulo">Options flow</h2>
+            <p class="etiqueta-superior" data-i18n="inicio.flujo.etiqueta">Opciones</p>
+            <h2 id="titulo-home-flujo" class="bloque-home__titulo"
+                data-i18n="inicio.flujo.titulo">Flujo de opciones</h2>
           </div>
           <a class="enlace-avance" href="#/opciones" data-ruta>
-            Ver Options <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+            <span data-i18n="inicio.flujo.enlace">Ver Options</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
           </a>
         </header>
         <div id="home-flujo-cuerpo" aria-live="polite"></div>
