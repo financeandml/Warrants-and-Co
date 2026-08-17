@@ -8,14 +8,13 @@
    ESCRIBE EN LA BASE: apúntelo siempre a una instancia de pruebas.
 
        BASE_PRUEBA=http://127.0.0.1:4174 CLAVE_PRUEBA=PRUEBA123 node tests/derivadas.js
+
+   Requiere Playwright, que NO es dependencia del proyecto. Sin él la prueba no
+   se ejecuta y termina con error, nunca con un aprobado.
    ========================================================================= */
-let chromium;
-try {
-  ({ chromium } = require('playwright'));
-} catch {
-  console.log('\n  Playwright no está instalado; se omite la comprobación.');
-  process.exit(0);
-}
+const { exigirPlaywright } = require('./dependencias');
+
+const { chromium } = exigirPlaywright('invalidación de las vistas derivadas');
 
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4174';
 const CLAVE = process.env.CLAVE_PRUEBA ?? 'PRUEBA123';

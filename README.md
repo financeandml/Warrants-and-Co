@@ -606,6 +606,14 @@ como texto.
 
 ## Verificación
 
+**Para que las pruebas corran de verdad hacen falta dos cosas: Playwright
+instalado (`npm i -D playwright && npx playwright install chromium`) y el
+servidor levantado en la dirección a la que apunte `BASE_PRUEBA`.** Sin
+Playwright ninguna prueba se ejecuta y todas salen con código `2` diciéndolo:
+una prueba que no corre no acredita nada, y su ausencia nunca se presenta como
+un aprobado. El código `1` queda reservado a la prueba que sí se ejecutó y
+falló.
+
 ### Comprobación de humo
 
 ```
@@ -615,12 +623,7 @@ npm test             # nueve secciones × dos idiomas contra el servidor local
 Recorre las nueve secciones en español e inglés y verifica que cada una se
 pinta, que el atributo `lang` sigue al idioma elegido, que la página no
 desborda a lo ancho y que ninguna clave de diccionario llega sin traducir a la
-pantalla. Requiere Playwright, que no es dependencia del proyecto: si no está
-instalado, la comprobación lo indica y termina sin fallar.
-
-```
-npm i -D playwright && npx playwright install chromium
-```
+pantalla.
 
 ### Invalidación de vistas derivadas
 

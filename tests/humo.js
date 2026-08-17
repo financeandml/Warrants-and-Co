@@ -13,16 +13,12 @@
        BASE_PRUEBA=http://…:4174 npm test   · contra otra instancia
 
    Requiere Playwright, que NO es dependencia del proyecto. Si no está
-   instalado, la comprobación lo dice y termina sin fallar la construcción.
+   instalado la comprobación no se ejecuta y termina con error: una prueba que
+   no corre no acredita nada.
    ========================================================================= */
-let chromium;
-try {
-  ({ chromium } = require('playwright'));
-} catch {
-  console.log('\n  Playwright no está instalado; se omite la comprobación de humo.');
-  console.log('  Para ejecutarla:  npm i -D playwright && npx playwright install chromium\n');
-  process.exit(0);
-}
+const { exigirPlaywright } = require('./dependencias');
+
+const { chromium } = exigirPlaywright('comprobación de humo');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 const RUTAS = [
   ['inicio', '#seccion-inicio'], ['radar', '#seccion-radar'],
