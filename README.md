@@ -78,8 +78,28 @@ ni el cliente, ni las demás secciones necesitan cambios.
 
 La portada funciona como cuadro de mando y se compone de siete bloques:
 
-**1 · Hero** — Marca, «Market Intelligence» y el lema *Fundamental research × market
-positioning*, con accesos al radar y al repositorio.
+**1 · Hero** — **La marca es el único texto.** «Warrants & Co.» y tres accesos de igual
+peso —radar, repositorio y LinkedIn—, nada más.
+
+La composición no es un descuido: está calculada sobre la fotografía de portada. El
+banner tiene una banda de cielo vacía en su 30 % superior, y el bloque se ancla arriba
+—`place-items: start center`— para caer justo sobre ella, dejando el árbol y la línea del
+horizonte por debajo de los accesos. Un eyebrow y un lema volverían a llenar esa banda y
+duplicarían, además, lo que ya dice el manifiesto.
+
+Porque el enunciado no se ha perdido: vive en el **manifiesto**, inmediatamente debajo
+—«Market intelligence for investors who think in probabilities» y su entradilla sobre
+research fundamental, market intelligence y options analytics—. El hero abre; el
+manifiesto explica.
+
+> **Residuo de la versión anterior.** El hero tuvo lede y fila de acciones. Al retirarlos
+> quedaron reglas sin marcado que las use: `.portada__acciones`
+> (`estilos.css`, en su declaración y en la lista de `@media print`), `.portada__curva`
+> junto al `#portada-curva` que `dibujarCurva()` busca y no encuentra —de modo que la
+> función es hoy un no-op—, y `.portada__marcador`. Ninguna la construye el JavaScript
+> en tiempo de ejecución: son retirables sin efecto. **No confundir con
+> `.portada__entradilla`, que sigue viva**: `app.js` la usa para la entradilla de las
+> noticias.
 
 **2 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
 **Datos reales** resueltos por la cascada de mercado; un índice que no resuelva se
@@ -575,11 +595,16 @@ Ningún dato depende solo del color: las variaciones llevan siempre glifo (▲ �
 explícito, y las señales van acompañadas de rótulo. El conjunto sigue siendo legible en
 impresión en blanco y negro y para cualquier tipo de daltonismo.
 
-**Movimiento en la portada.** Cuatro piezas discretas: el titular se compone palabra a
-palabra, la silueta real de la cartera se traza como fondo, los bloques aparecen al
-entrar en pantalla y una cinta de cotizaciones recorre los valores en cartera —se
-detiene al pasar el puntero por encima—. Todo se desactiva por completo cuando el
-sistema pide movimiento reducido, dejando el contenido en su estado final.
+**Movimiento en la portada.** Dos piezas discretas: los bloques aparecen al entrar en
+pantalla y una cinta de cotizaciones recorre índices y valores en cartera —se detiene al
+pasar el puntero por encima—. Todo se desactiva por completo cuando el sistema pide
+movimiento reducido, dejando el contenido en su estado final.
+
+El hero **no anima**. Con la fotografía detrás, la quietud sostiene mejor la composición
+que cualquier entrada escalonada. Quedan de la versión anterior dos piezas ya sin efecto:
+`componerTitular()` —el titular palabra a palabra— no la importa nadie, y `dibujarCurva()`
+—la silueta de la cartera como fondo— busca un `#portada-curva` que ya no existe. Ambas
+siguen en `portada.js` y son retirables.
 
 Paleta estrictamente acromática: blanco, negro y escala de grises. En el gráfico, al no
 disponer de color, la identidad de cada serie recae en el trazo (continuo para la
