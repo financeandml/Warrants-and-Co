@@ -1001,8 +1001,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
    Antes ocupaba `100vh - 69px`: terminaba EXACTAMENTE en el pliegue, la
    fotografía llegaba al borde inferior de la ventana y no quedaba ni un píxel
    de lo que viene después, de modo que la portada se leía como final de página.
-   Ahora el hero acaba al 88 % de la ventana y cede ese margen: el borde de la
-   foto queda a la vista, y es ese corte el que dice que hay más abajo.
+   Ahora el hero acaba al 75,5 % de la ventana y cede ese margen. Y lo que cede
+   no es hueco: es la altura justa para que asomen la etiqueta del manifiesto y
+   su primera línea de titular, ya reveladas. Esa cifra NO es de gusto, sale de
+   una condición del observador que revela el manifiesto —`threshold: 0.18` y
+   `rootMargin` inferior de −60 px, en `inicio.js`—: el texto que asoma dentro
+   de esos 60 px finales no llega a pintarse, así que asomaría una caja vacía.
+   Para que la primera línea se revele de verdad hace falta
+
+       hero + padding + 44 px  ≤  ventana − 60 − 0,18 × alto-de-línea
+
+   y con el hero al 88 % la desigualdad pedía padding negativo. Al 75,5 % se
+   cumple con holgura de 700 px de alto en adelante. Subir esta cifra sin bajar
+   el padding del manifiesto devuelve el rectángulo vacío.
 
    El 69 px de aquel `calc` era una constante equivocada. La cabecera es
    `position: sticky`, ocupa sitio en el flujo y NO mide siempre lo mismo: son
@@ -1020,7 +1031,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
    fila propia —no va en posición absoluta— para que en pantallas estrechas
    empuje en lugar de superponerse al bloque de accesos. */
 .seccion--portada .portada {
-  min-height: calc(88svh - var(--alto-cabecera));
+  min-height: calc(75.5svh - var(--alto-cabecera));
   display: grid; grid-template-rows: 1fr auto; place-items: center;
   border-bottom: none;
   overflow: hidden;
@@ -2318,8 +2329,25 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
    sin más color que la tinta de la casa.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ── El aire de arriba y el de abajo NO son iguales, y es deliberado ──
+   Arriba entra menos porque arriba no precede un bloque de texto, sino una
+   fotografía a sangre: el corte de la imagen ya hace de separación y un aire
+   simétrico sumaría respiro sobre respiro. Abajo se conserva el de siempre,
+   que sí separa de los pilares.
+
+   Hay además una condición dura. La etiqueta y la primera línea del titular
+   tienen que asomar por encima del pliegue Y estar reveladas por el observador
+   de `inicio.js`, que exige `threshold: 0.18` dentro de una raíz recortada
+   60 px por abajo. Con el `padding-block: clamp(88px, 13vh, 156px)` simétrico
+   que había aquí, no asomaba ni la etiqueta: caía 26 px por debajo del pliegue.
+
+   Por eso escala con `vh` y no es un número fijo: la condición depende del alto
+   de la ventana. Un `88px` constante se cumple a 900 de alto y falla a 700
+   —la línea deja de revelarse y asoma una caja vacía—. Con `7vh` se cumple de
+   700 a 1080. Quien suba esta cifra debe volver a medir las cuatro alturas. */
 .manifiesto {
-  padding-block: clamp(88px, 13vh, 156px);
+  padding-top: clamp(44px, 7vh, 104px);
+  padding-bottom: clamp(88px, 13vh, 156px);
   background: var(--superficie);
   border-block-start: 1px solid var(--linea);
 }

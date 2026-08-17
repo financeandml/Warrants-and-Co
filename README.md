@@ -103,12 +103,33 @@ portada, no la del tema. También sus tonos semánticos, porque el fondo de la p
 blanco en ambos temas y el verde y el rojo del tema oscuro —pensados para fondo oscuro—
 caían a 2,3:1 y 3,3:1 sobre el velo. Fijados a su versión clara suben a 5,3:1 y 6,4:1.
 
-**Dónde termina el hero.** Al 88 % de la ventana, no al 100 %: antes acababa exactamente
-en el pliegue, la fotografía llegaba al borde inferior y no se veía ni un píxel de lo que
-sigue, así que la portada se leía como final de página. Ese 12 % que cede deja a la vista
-el corte de la foto, y es el corte lo que dice que hay más abajo.
+**Dónde termina el hero.** Al **75,5 %** de la ventana, no al 100 %: antes acababa
+exactamente en el pliegue, la fotografía llegaba al borde inferior y no se veía ni un
+píxel de lo que sigue, así que la portada se leía como final de página. Lo que cede no es
+hueco: es la altura justa para que asomen, ya legibles, la etiqueta del manifiesto y su
+primera línea de titular. En una ventana de 900 px de alto asoman 156 px de texto.
 
-> La altura se calcula con `calc(88svh - var(--alto-cabecera))`. Las dos piezas importan.
+> **Esa cifra no es de gusto: sale de una desigualdad.** El manifiesto no pinta su texto
+> al cargar, lo revela un `IntersectionObserver` con `threshold: 0.18` y `rootMargin`
+> inferior de −60 px (`inicio.js`). El texto que asoma dentro de esos 60 px finales **no
+> llega a pintarse**: asomaría una caja vacía, peor que el hueco. Para que la primera
+> línea se revele de verdad hace falta
+>
+> ```
+> hero + padding-top + 44 px  ≤  ventana − 60 − 0,18 × alto-de-línea
+> ```
+>
+> y con el hero al 88 % esto exigía **padding negativo**: era imposible, no apretado.
+> Bajarlo al 75,5 % y el padding a `7vh` lo cumple con holgura de 700 px de alto en
+> adelante. Quien toque una de las dos cifras ha de volver a medir las cuatro alturas
+> —700, 844, 900 y 1080—, porque están acopladas.
+
+> **Coste aceptado.** El hero pierde 112 px en escritorio y la cinta pasa a quedar a
+> 37 px de la base del árbol, en vez de 150. Se aceptó a conciencia: el texto legible era
+> el motivo del cambio, y una primera línea cortada por la mitad de los glifos —que es lo
+> que salía conservando más hero— parece un fallo de maquetación, no una invitación.
+
+> La altura se calcula con `calc(75.5svh - var(--alto-cabecera))`. Las dos piezas importan.
 > `--alto-cabecera` la mide `seguirAlturaCabecera()` (`portada.js`) con un
 > `ResizeObserver`, porque la cabecera es `position: sticky`, ocupa sitio en el flujo y
 > **no mide siempre lo mismo**: 69 px en escritorio y 164 px a 390 px de ancho, donde se
@@ -124,6 +145,22 @@ el corte de la foto, y es el corte lo que dice que hay más abajo.
 > función `componerTitular()` y `dibujarCurva()` con su llamada desde `app.js`. **No
 > confundir con `.portada__entradilla`, que sigue viva**: `app.js` la usa para la
 > entradilla de las noticias.
+
+**El manifiesto respira distinto arriba que abajo.** `.manifiesto` no lleva
+`padding-block` simétrico, sino `padding-top: clamp(44px, 7vh, 104px)` y
+`padding-bottom: clamp(88px, 13vh, 156px)`. **Es una decisión, no un descuido: no lo
+«arregles» igualando los dos.** Por dos razones, y las dos cuentan:
+
+1. **Editorial.** Arriba no precede un bloque de texto, sino una fotografía a sangre. El
+   corte de la imagen ya hace de separación, y un aire simétrico sumaría respiro sobre
+   respiro. Abajo sí separa de los pilares, y ahí se conserva el de siempre.
+2. **Funcional.** Es una de las dos variables de la desigualdad de arriba. Con el
+   `clamp(88px, 13vh, 156px)` simétrico que había, no asomaba ni la etiqueta: caía 26 px
+   **por debajo** del pliegue.
+
+Escala con `vh` y no es un número fijo porque la condición depende del alto de la
+ventana: un `88px` constante se cumple a 900 px de alto y **falla a 700**, donde la línea
+deja de revelarse y vuelve a asomar la caja vacía.
 
 **2 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
 **Datos reales** resueltos por la cascada de mercado; un índice que no resuelva se
