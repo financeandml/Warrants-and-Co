@@ -92,14 +92,38 @@ Porque el enunciado no se ha perdido: vive en el **manifiesto**, inmediatamente 
 research fundamental, market intelligence y options analytics—. El hero abre; el
 manifiesto explica.
 
-> **Residuo de la versión anterior.** El hero tuvo lede y fila de acciones. Al retirarlos
-> quedaron reglas sin marcado que las use: `.portada__acciones`
-> (`estilos.css`, en su declaración y en la lista de `@media print`), `.portada__curva`
-> junto al `#portada-curva` que `dibujarCurva()` busca y no encuentra —de modo que la
-> función es hoy un no-op—, y `.portada__marcador`. Ninguna la construye el JavaScript
-> en tiempo de ejecución: son retirables sin efecto. **No confundir con
-> `.portada__entradilla`, que sigue viva**: `app.js` la usa para la entradilla de las
-> noticias.
+**La cinta de cotizaciones cierra el hero.** Va dentro de él, anclada a su borde
+inferior, en fila propia de la rejilla —no en posición absoluta—, de modo que en
+pantallas estrechas empuja en lugar de superponerse a los accesos. No es adorno: es lo
+único que dice que la página continúa. Un dato vivo cortado por el pliegue invita a bajar
+mejor que cualquier flecha, y de paso ocupa el cielo que sobraba bajo los botones.
+
+Sobre la fotografía, la cinta sigue la misma regla que los accesos: manda la paleta de la
+portada, no la del tema. También sus tonos semánticos, porque el fondo de la portada es
+blanco en ambos temas y el verde y el rojo del tema oscuro —pensados para fondo oscuro—
+caían a 2,3:1 y 3,3:1 sobre el velo. Fijados a su versión clara suben a 5,3:1 y 6,4:1.
+
+**Dónde termina el hero.** Al 88 % de la ventana, no al 100 %: antes acababa exactamente
+en el pliegue, la fotografía llegaba al borde inferior y no se veía ni un píxel de lo que
+sigue, así que la portada se leía como final de página. Ese 12 % que cede deja a la vista
+el corte de la foto, y es el corte lo que dice que hay más abajo.
+
+> La altura se calcula con `calc(88svh - var(--alto-cabecera))`. Las dos piezas importan.
+> `--alto-cabecera` la mide `seguirAlturaCabecera()` (`portada.js`) con un
+> `ResizeObserver`, porque la cabecera es `position: sticky`, ocupa sitio en el flujo y
+> **no mide siempre lo mismo**: 69 px en escritorio y 164 px a 390 px de ancho, donde se
+> reparte en tres filas —y cambia además al cambiar de idioma, porque los rótulos no
+> miden igual—. Y la unidad es `svh`, no `vh`: en un móvil `vh` es la ventana con la
+> barra del navegador ya retraída, de modo que al entrar el hero mediría de más y se
+> comería la cinta.
+
+> **Residuo retirado.** El hero tuvo lede y fila de acciones. Con ellos se han ido
+> `.portada__acciones` (declaración y línea de `@media print`), `.portada__curva` con sus
+> fotogramas clave, `.portada__marcador`, la regla `.portada h1 { margin-block }` —que
+> pisaba por especificidad el `margin: 0` del hero y le colaba 20 px heredados—, la
+> función `componerTitular()` y `dibujarCurva()` con su llamada desde `app.js`. **No
+> confundir con `.portada__entradilla`, que sigue viva**: `app.js` la usa para la
+> entradilla de las noticias.
 
 **2 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
 **Datos reales** resueltos por la cascada de mercado; un índice que no resuelva se
@@ -601,10 +625,10 @@ pasar el puntero por encima—. Todo se desactiva por completo cuando el sistema
 movimiento reducido, dejando el contenido en su estado final.
 
 El hero **no anima**. Con la fotografía detrás, la quietud sostiene mejor la composición
-que cualquier entrada escalonada. Quedan de la versión anterior dos piezas ya sin efecto:
-`componerTitular()` —el titular palabra a palabra— no la importa nadie, y `dibujarCurva()`
-—la silueta de la cartera como fondo— busca un `#portada-curva` que ya no existe. Ambas
-siguen en `portada.js` y son retirables.
+que cualquier entrada escalonada. Lo único que se mueve en él es la cinta, y con
+movimiento reducido se detiene sin perder su función: queda en su primer fotograma, con
+los valores legibles y cortados por el ancho de la ventana. Esa línea de datos partida
+por el borde es la que invita a bajar, y no depende del movimiento para hacerlo.
 
 Paleta estrictamente acromática: blanco, negro y escala de grises. En el gráfico, al no
 disponer de color, la identidad de cada serie recae en el trazo (continuo para la

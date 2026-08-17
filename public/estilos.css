@@ -10,6 +10,11 @@
    mismos identificadores, de modo que ningun color queda definido solo dentro
    de una consulta de medios. */
 :root {
+  /* Altura real de la cabecera. La reserva vale para el primer pintado y para
+     el caso sin JavaScript; `seguirAlturaCabecera()` la sustituye por la
+     medida en cuanto arranca y la mantiene al vuelo. */
+  --alto-cabecera: 69px;
+
   /* Superficies */
   --superficie:        #ffffff;
   --superficie-alt:    #f7f7f6;
@@ -311,14 +316,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .portada__interior { padding-block: clamp(56px, 8vw, 96px); max-width: 860px; }
-.portada h1 { margin-block: 14px 20px; }
 
+/* `.portada__entradilla` no es residuo del hero: `app.js` la usa para la
+   entradilla de las noticias. No retirar. */
 .portada__entradilla {
   font-size: 1.05rem; line-height: 1.72; color: var(--tinta-secundaria);
   max-width: 68ch;
 }
-
-.portada__acciones { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
 
 /* ─────────────────────────────── Metricas ─────────────────────────────── */
 
@@ -993,12 +997,39 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .seccion--portada { padding: 0; }
 
-/* La portada ocupa la ventana completa menos la cabecera. */
+/* ── La altura del hero deja ver que la página sigue ──
+   Antes ocupaba `100vh - 69px`: terminaba EXACTAMENTE en el pliegue, la
+   fotografía llegaba al borde inferior de la ventana y no quedaba ni un píxel
+   de lo que viene después, de modo que la portada se leía como final de página.
+   Ahora el hero acaba al 88 % de la ventana y cede ese margen: el borde de la
+   foto queda a la vista, y es ese corte el que dice que hay más abajo.
+
+   El 69 px de aquel `calc` era una constante equivocada. La cabecera es
+   `position: sticky`, ocupa sitio en el flujo y NO mide siempre lo mismo: son
+   69 px en escritorio y 164 px a 390 px de ancho, donde se reparte en tres
+   filas. Con la constante, en móvil el hero se pasaba de largo y empujaba la
+   cinta fuera de la pantalla. `--alto-cabecera` la mide de verdad
+   —`seguirAlturaCabecera()`, en `portada.js`— y aquí solo se descuenta.
+
+   La unidad es `svh`, no `vh`: en un móvil `vh` es la ventana con la barra del
+   navegador ya retraída, de modo que al entrar —con la barra a la vista— el
+   hero mediría de más y volvería a comerse la cinta. `svh` es la ventana
+   pequeña, la del peor caso, y garantiza el corte en cualquier momento.
+
+   Dos filas: el contenido arriba y la cinta al filo inferior. La cinta ocupa
+   fila propia —no va en posición absoluta— para que en pantallas estrechas
+   empuje en lugar de superponerse al bloque de accesos. */
 .seccion--portada .portada {
-  min-height: calc(100vh - 69px);
-  display: grid; place-items: center;
+  min-height: calc(88svh - var(--alto-cabecera));
+  display: grid; grid-template-rows: 1fr auto; place-items: center;
   border-bottom: none;
   overflow: hidden;
+}
+
+/* La cinta se estira a todo lo ancho y se pega al fondo de su fila. */
+.seccion--portada .portada > .ticker {
+  grid-row: 2; align-self: end; justify-self: stretch;
+  width: 100%;
 }
 
 .seccion--portada .portada__interior {
@@ -1070,6 +1101,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   --velo-portada: rgba(255, 255, 255, 0.82);
   --velo-portada-activo: rgba(255, 255, 255, 0.96);
   color-scheme: light;
+
+  /* Los tonos semánticos también quedan fijados a su versión clara, por la
+     misma razón que la tinta: dentro de la portada el fondo es blanco en ambos
+     temas. Con los valores del tema oscuro —pensados para fondo oscuro— las
+     variaciones de la cinta caían a 2,3:1 el verde y 3,3:1 el rojo sobre el
+     velo. Con los claros suben a 5,3:1 y 6,4:1, por encima del 4,5:1 de la AA.
+     El glifo (▲ ▼) y el signo siguen estando: el color nunca carga solo. */
+  --alcista: #0f7a3d;
+  --bajista: #b02a26;
+  --tinta-mate: #76767a;
 }
 
 .portada[data-banner="true"] .portada__marca-principal {
@@ -1084,6 +1125,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .portada[data-banner="true"] .acceso:hover {
   border-color: var(--tinta-portada);
+  background: var(--velo-portada-activo);
+}
+
+/* La cinta sigue la misma regla que los accesos: sobre la fotografía manda la
+   paleta de la portada, no la del tema. Con `--superficie` heredada, en tema
+   oscuro habría quedado una banda negra opaca cruzando una foto nevada. */
+.portada[data-banner="true"] .ticker {
+  color: var(--tinta-portada);
+  background: var(--velo-portada);
+  border-block-color: var(--linea-portada);
+  backdrop-filter: saturate(120%) blur(6px);
+}
+.portada[data-banner="true"] .ticker__item {
+  color: var(--tinta-portada);
+  border-inline-end-color: var(--linea-portada);
+}
+.portada[data-banner="true"] .ticker__item:hover {
   background: var(--velo-portada-activo);
 }
 
@@ -1123,9 +1181,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   :root:not([data-tema="claro"]) .portada__banner { filter: none; opacity: 1; }
 }
 
-/* Con banner presente, la retícula y la curva sobran: la foto ya da profundidad. */
-.portada[data-banner="true"] .portada__trama,
-.portada[data-banner="true"] .portada__curva { display: none; }
+/* Con banner presente, la retícula sobra: la foto ya da profundidad. */
+.portada[data-banner="true"] .portada__trama { display: none; }
 
 
 .portada { position: relative; overflow: hidden; }
@@ -1142,49 +1199,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   opacity: 0.85;
 }
 
-/* Curva de fondo trazada progresivamente al cargar. */
-.portada__curva {
-  position: absolute; inset-inline-end: 0; bottom: 0; z-index: 0;
-  width: min(56%, 720px); height: 78%;
-  pointer-events: none; opacity: 0.5;
-  mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 100%);
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 26%, #000 100%);
-}
-.portada__curva path {
-  fill: none; stroke: var(--tinta); stroke-width: 1.5;
-  stroke-linecap: round; stroke-linejoin: round;
-  stroke-dasharray: var(--largo, 2400);
-  stroke-dashoffset: var(--largo, 2400);
-  animation: trazar 2.6s cubic-bezier(0.33, 0, 0.15, 1) 0.25s forwards;
-}
-.portada__curva .relleno {
-  fill: var(--serie-relleno); stroke: none;
-  opacity: 0; animation: aparecer 1.4s ease 1.5s forwards;
-}
-@keyframes trazar   { to { stroke-dashoffset: 0; } }
-@keyframes aparecer { to { opacity: 1; } }
-
 .portada__interior { position: relative; z-index: 1; }
-
-.portada__marcador {
-  display: inline-flex; align-items: center; gap: 9px;
-  padding: 5px 13px 5px 9px; margin-bottom: 20px;
-  border: 1px solid var(--linea-fuerte); border-radius: 999px;
-  font-size: 0.72rem; letter-spacing: 0.08em; color: var(--tinta-secundaria);
-}
-.portada__marcador .pulso {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--tinta); position: relative;
-}
-.portada__marcador .pulso::after {
-  content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: var(--tinta); animation: latir 2.4s ease-out infinite;
-}
-@keyframes latir {
-  0%   { transform: scale(1);   opacity: 0.55; }
-  70%  { transform: scale(3.2); opacity: 0; }
-  100% { transform: scale(3.2); opacity: 0; }
-}
 
 /* Entrada escalonada de los elementos de la portada. */
 .aparicion {
@@ -1193,14 +1208,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
               transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .aparicion[data-visible="true"] { opacity: 1; transform: none; }
-
-.portada h1 .palabra {
-  display: inline-block;
-  opacity: 0; transform: translateY(18px);
-  animation: subir 720ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
-  animation-delay: calc(var(--i, 0) * 70ms);
-}
-@keyframes subir { to { opacity: 1; transform: none; } }
 
 /* La cifra de las métricas se compone con dígitos de anchura fija mientras cuenta. */
 .cinta-metricas__valor[data-contando="true"] { font-variant-numeric: tabular-nums; }
@@ -1827,7 +1834,11 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   .rejilla-noticias { grid-template-columns: 1fr; }
   /* El panel se repliega por bloques: dos columnas en tableta, una en móvil. */
   .snapshot { grid-template-columns: repeat(2, 1fr); }
-  .seccion--portada .portada { min-height: calc(100vh - 120px); }
+  /* Aquí vivía un `min-height: calc(100vh - 120px)`: una segunda constante de
+     cabecera, distinta de la de escritorio y también equivocada —a 390 px la
+     cabecera mide 164 px, no 120—, que además pisaba la regla general. La
+     fórmula de `.seccion--portada .portada` ya descuenta la altura medida y
+     vale para cualquier ancho, de modo que aquí no hace falta nada. */
   .tarjeta-signal { grid-template-columns: 1fr; }
   .signal__marcador { border-inline-end: none; border-block-end: 1px solid var(--linea); }
   .rejilla-doble { grid-template-columns: 1fr; }
@@ -1864,8 +1875,8 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 
 @media print {
   .cabecera, .pie, .avisos, .controles-grafico, .panel-filtros,
-  .portada__acciones, .cabecera__acciones, .cinta-cotizaciones,
-  .portada__trama, .portada__curva, .acciones-noticias,
+  .cabecera__acciones, .cinta-cotizaciones, .ticker,
+  .portada__trama, .acciones-noticias,
   .celda-acciones, .pie__social { display: none !important; }
   body { font-size: 11pt; }
   .tarjeta, .tabla-envoltorio { break-inside: avoid; border-color: #999; }
@@ -1880,11 +1891,12 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   }
   /* Sin animacion, los elementos deben quedar en su estado final, nunca ocultos. */
   .aparicion { opacity: 1 !important; transform: none !important; }
-  .portada h1 .palabra { opacity: 1 !important; transform: none !important; }
-  .portada__curva path { stroke-dashoffset: 0 !important; }
-  .portada__curva .relleno { opacity: 1 !important; }
   .cinta-cotizaciones__pista { animation: none !important; }
-  .portada__marcador .pulso::after { animation: none !important; opacity: 0 !important; }
+  /* La cinta del hero se detiene, pero sigue leyendose: queda en su primer
+     fotograma, con los valores visibles y cortados por el ancho de la ventana.
+     Esa linea de datos partida por el borde es la que invita a bajar, y no
+     depende del movimiento para hacerlo. */
+  .ticker__pista { animation: none !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════

@@ -7,7 +7,7 @@
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos } from './i18n.js';
-import { activarApariciones, dibujarCurva, pintarCinta } from './portada.js';
+import { activarApariciones, pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje,
@@ -1105,7 +1105,6 @@ function pintarCartera(datos) {
   pintarAvisoCierre(datos);
   pintarEstadoDatos(datos);
   pintarCinta(datos.posiciones ?? [], datos.cerradas ?? []);
-  dibujarCurva(datos.serie ?? []);
   // El panel de mercado muestra un resumen de las mismas cifras.
   pintarPanelCartera(datos);
 
@@ -2306,6 +2305,7 @@ async function iniciar() {
   );
   enlazarEventos();
   actualizarIndicadorSesion();
+  seguirAlturaCabecera();
   activarApariciones();
 
   await cargarMarca();

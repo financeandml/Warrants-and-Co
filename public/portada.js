@@ -2,29 +2,37 @@ import { localeFormato } from './formato.js';
 /* ============================================================================
    Portada — movimiento discreto al servicio del contenido.
 
-   Cuatro piezas: el titular que se compone por palabras, la curva de la cartera
-   que se traza al cargar, la aparicion escalonada de los bloques y la cinta de
-   cotizaciones. Todo se desactiva si el sistema pide movimiento reducido.
+   Dos piezas: la aparicion escalonada de los bloques y la cinta de
+   cotizaciones. Ambas se desactivan si el sistema pide movimiento reducido.
+
+   El hero no anima. Con la fotografia detras, la quietud sostiene mejor la
+   composicion que cualquier entrada escalonada.
    ========================================================================= */
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const NS = 'http://www.w3.org/2000/svg';
+/**
+ * Publica la altura real de la cabecera en `--alto-cabecera`.
+ *
+ * El hero la descuenta para terminar donde debe, y no vale una constante: la
+ * cabecera es `position: sticky`, ocupa sitio en el flujo y se reparte en
+ * varias filas al estrecharse la ventana —69 px en escritorio, 164 px a 390 px
+ * de ancho—. Cambia ademas al cambiar de idioma, porque los rotulos no miden lo
+ * mismo en español que en ingles y pueden reordenar el reparto. Medirla es la
+ * unica forma de que el hero acabe donde se ha decidido en cualquier ancho.
+ */
+export function seguirAlturaCabecera() {
+  const cabecera = document.querySelector('.cabecera');
+  if (!cabecera) return;
 
-/** Descompone el titular en palabras para escalonar su entrada. */
-export function componerTitular(elemento) {
-  if (!elemento || elemento.dataset.compuesto === 'true') return;
-  const palabras = elemento.textContent.trim().split(/\s+/);
-  elemento.textContent = '';
-  palabras.forEach((palabra, i) => {
-    const span = document.createElement('span');
-    span.className = 'palabra';
-    span.style.setProperty('--i', String(i));
-    span.textContent = palabra;
-    elemento.appendChild(span);
-    if (i < palabras.length - 1) elemento.appendChild(document.createTextNode(' '));
-  });
-  elemento.dataset.compuesto = 'true';
+  const publicar = () => {
+    const alto = Math.round(cabecera.getBoundingClientRect().height);
+    if (alto > 0) document.documentElement.style.setProperty('--alto-cabecera', `${alto}px`);
+  };
+
+  publicar();
+  if ('ResizeObserver' in window) new ResizeObserver(publicar).observe(cabecera);
+  else window.addEventListener('resize', publicar);
 }
 
 /** Revela los bloques marcados a medida que entran en el area visible. */
@@ -49,50 +57,6 @@ export function activarApariciones() {
     { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
   );
   for (const el of elementos) observador.observe(el);
-}
-
-/**
- * Traza la silueta real de la cartera como fondo de la portada.
- * Si no hay serie disponible, el elemento queda vacio y la portada se sostiene sola.
- */
-export function dibujarCurva(serie) {
-  const svg = document.getElementById('portada-curva');
-  if (!svg) return;
-  svg.textContent = '';
-  if (!Array.isArray(serie) || serie.length < 8) return;
-
-  const ANCHO = 720;
-  const ALTO = 300;
-  const valores = serie.map((p) => p.valor).filter(Number.isFinite);
-  if (valores.length < 8) return;
-
-  const min = Math.min(...valores);
-  const max = Math.max(...valores);
-  const rango = max - min || 1;
-
-  // Margen superior e inferior para que la curva no roce los bordes.
-  const x = (i) => (ANCHO * i) / (valores.length - 1);
-  const y = (v) => ALTO - 26 - ((v - min) / rango) * (ALTO - 70);
-
-  const d = valores.map((v, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
-
-  const relleno = document.createElementNS(NS, 'path');
-  relleno.setAttribute('class', 'relleno');
-  relleno.setAttribute('d', `${d} L ${ANCHO} ${ALTO} L 0 ${ALTO} Z`);
-  svg.appendChild(relleno);
-
-  const linea = document.createElementNS(NS, 'path');
-  linea.setAttribute('d', d);
-  svg.appendChild(linea);
-
-  // La longitud real del trazo alimenta la animacion, que asi dura lo mismo
-  // sea cual sea la forma de la curva.
-  if (sinMovimiento()) {
-    linea.style.setProperty('--largo', '0');
-  } else {
-    const largo = typeof linea.getTotalLength === 'function' ? linea.getTotalLength() : 2400;
-    linea.style.setProperty('--largo', String(Math.ceil(largo)));
-  }
 }
 
 /** Cuenta hasta el valor final de una metrica. */
