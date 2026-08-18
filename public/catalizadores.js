@@ -8,7 +8,7 @@
         etiqueta HIGH sin explicación sería una opinión disfrazada de dato.
    ========================================================================= */
 
-import { $, elemento, formatearNumero, formatearFecha } from './formato.js';
+import { $, elemento, formatearNumero, formatearFecha, porcentaje } from './formato.js';
 
 const NO_DISPONIBLE = 'N/A';
 
@@ -127,7 +127,7 @@ function detalleDe(e) {
     fila.appendChild(par('Volumen',
       Number.isFinite(d.volumen) ? formatearNumero(d.volumen, 0) : NO_DISPONIBLE));
     fila.appendChild(par('Cuota del OI',
-      Number.isFinite(d.cuotaInteresAbierto) ? `${formatearNumero(d.cuotaInteresAbierto, 1)} %` : NO_DISPONIBLE));
+      Number.isFinite(d.cuotaInteresAbierto) ? porcentaje(d.cuotaInteresAbierto, 1) : NO_DISPONIBLE));
     fila.appendChild(par('Contratos',
       Number.isFinite(d.contratos) ? formatearNumero(d.contratos, 0) : NO_DISPONIBLE));
     return fila;

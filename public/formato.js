@@ -47,11 +47,51 @@ export function formatearMoneda(v, divisa = 'USD') {
   }
 }
 
-export function formatearPorcentaje(v, conSigno = true) {
+/* ── Porcentajes ──
+   El espacio antes del signo lo decide el idioma, no el código: el castellano
+   escribe «12,50 %» y el inglés «12.50%». Lo resuelve `Intl.NumberFormat` con
+   `style: 'unit'`, que además separa con espacio duro —la cifra y el signo no
+   pueden caer en líneas distintas— y agrupa los miles según el locale.
+
+   Toma puntos porcentuales tal cual, sin dividir por cien: `style: 'percent'`
+   habría exigido `v / 100` y con ello ruido de coma flotante.
+
+   El signo lo sigue poniendo la casa. Intl firmaría los negativos con el guion
+   ASCII, y aquí se usa el menos tipográfico «−» (U+2212), que mide como un
+   dígito y por tanto cuadra en columna bajo `font-variant-numeric: tabular-nums`. */
+const formateadoresPorcentaje = new Map();
+function formateadorPorcentaje(dec) {
+  const clave = `${locale}|${dec}`;
+  let f = formateadoresPorcentaje.get(clave);
+  if (!f) {
+    f = new Intl.NumberFormat(locale, {
+      style: 'unit', unit: 'percent',
+      minimumFractionDigits: dec, maximumFractionDigits: dec,
+    });
+    formateadoresPorcentaje.set(clave, f);
+  }
+  return f;
+}
+
+/**
+ * Porcentaje sin signo, para una magnitud que no es un cambio: un peso en
+ * cartera, una cobertura, una volatilidad implícita.
+ */
+export function porcentaje(v, dec = 2) {
+  return v === null || v === undefined || !Number.isFinite(Number(v))
+    ? '—'
+    : formateadorPorcentaje(dec).format(Number(v));
+}
+
+/**
+ * Porcentaje con signo, para una magnitud que sí es un cambio: una variación,
+ * un recorrido, una rentabilidad. El cero no lleva signo.
+ */
+export function formatearPorcentaje(v, conSigno = true, dec = 2) {
   if (v === null || v === undefined || !Number.isFinite(Number(v))) return '—';
   const n = Number(v);
   const signo = conSigno ? (n > 0 ? '+' : n < 0 ? '−' : '') : '';
-  return `${signo}${formatearNumero(Math.abs(n))} %`;
+  return `${signo}${porcentaje(Math.abs(n), dec)}`;
 }
 
 export function formatearFecha(iso) {

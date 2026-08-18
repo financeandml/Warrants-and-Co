@@ -7,7 +7,8 @@
    ========================================================================= */
 
 import {
-  $, elemento, formatearNumero, formatearFecha, formatearPorcentaje, localeFormato } from './formato.js';
+  $, elemento, formatearNumero, formatearFecha, formatearPorcentaje, porcentaje,
+  localeFormato } from './formato.js';
 
 /**
  * Formatea un precio de ejercicio con la precisión mínima que lo distingue.
@@ -59,7 +60,7 @@ function celdaNota(contrato) {
   barra.appendChild(relleno);
   caja.appendChild(barra);
   caja.appendChild(elemento('span', 'nota-score__cifra', formatearNumero(contrato.puntuacion, 1)));
-  caja.appendChild(elemento('span', 'nota-score__cobertura', `${contrato.cobertura} %`));
+  caja.appendChild(elemento('span', 'nota-score__cobertura', porcentaje(contrato.cobertura, 0)));
   td.appendChild(caja);
   return td;
 }
@@ -343,7 +344,7 @@ export function construirDetalleInusual(c) {
     const meta = document.createElement('div');
     meta.appendChild(elemento('div', 'signal__etiqueta', 'Unusual activity score'));
     meta.appendChild(elemento('div', 'dimension__detalle',
-      `Escala 0–100 · cobertura ${c.cobertura} % de la metodología`));
+      `Escala 0–100 · cobertura ${porcentaje(c.cobertura, 0)} de la metodología`));
     bloqueNota.appendChild(meta);
   } else {
     bloqueNota.appendChild(elemento('strong', 'detalle-inusual__cifra detalle-inusual__cifra--nd', 'N/D'));
@@ -368,7 +369,7 @@ export function construirDetalleInusual(c) {
     ? `${formatearNumero(c.volumenSobreInteres, 2)}x`
     : (c.calidad?.volumenSobreInteres === 'no_calculable' ? 'No calculable' : 'N/A'));
   dato('Premium', formatearImporte(c.importeNegociado));
-  dato('IV', Number.isFinite(c.volatilidadImplicita) ? `${formatearNumero(c.volatilidadImplicita, 1)} %` : 'N/A');
+  dato('IV', Number.isFinite(c.volatilidadImplicita) ? porcentaje(c.volatilidadImplicita, 1) : 'N/A');
   dato('IV change', 'N/A');
   const distancia = Number.isFinite(c.precioSubyacente) && c.precioSubyacente > 0
     ? ((c.strike - c.precioSubyacente) / c.precioSubyacente) * 100
@@ -421,7 +422,7 @@ export function construirDetalleInusual(c) {
     const bloque = elemento('div', `factor${f.disponible ? '' : ' factor--ausente'}`);
     const titulo = document.createElement('div');
     titulo.appendChild(elemento('span', 'factor__titulo', f.titulo));
-    titulo.appendChild(elemento('span', 'factor__peso', `  peso ${Math.round(f.peso * 100)} %`));
+    titulo.appendChild(elemento('span', 'factor__peso', `  peso ${porcentaje(Math.round(f.peso * 100), 0)}`));
     bloque.appendChild(titulo);
 
     bloque.appendChild(elemento('div', 'factor__lectura',

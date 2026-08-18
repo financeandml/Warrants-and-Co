@@ -7,7 +7,7 @@
    ========================================================================= */
 
 import {
-  $, elemento, formatearNumero, formatearMoneda, formatearPorcentaje,
+  $, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, claseLectura, claseSentido,
 } from './formato.js';
 
@@ -41,7 +41,7 @@ export function pintarSnapshot(datos) {
     // Los tipos de interés se expresan en puntos porcentuales, no en puntos de índice.
     const esTipo = i.formato === 'tipo';
     celda.appendChild(elemento('strong', 'snapshot__valor',
-      esTipo ? `${formatearNumero(i.valor)} %` : formatearNumero(i.valor)));
+      esTipo ? porcentaje(i.valor) : formatearNumero(i.valor)));
 
     const cambio = elemento('div', 'snapshot__cambio');
     cambio.appendChild(elemento('span', claseLectura(i.variacionPct), formatearPorcentaje(i.variacionPct)));
@@ -150,7 +150,7 @@ export function pintarSignal(datos) {
     cabecera.appendChild(elemento('span', `dimension__punto${d.disponible ? ' dimension__punto--activa' : ''}`));
     cabecera.appendChild(elemento('span', 'dimension__titulo', d.titulo));
     if (Number.isFinite(d.peso)) {
-      cabecera.appendChild(elemento('span', 'dimension__peso', `${Math.round(d.peso * 100)} %`));
+      cabecera.appendChild(elemento('span', 'dimension__peso', porcentaje(Math.round(d.peso * 100), 0)));
     }
     bloque.appendChild(cabecera);
 
@@ -188,7 +188,7 @@ export function pintarPanelCartera(cartera) {
     ['Portfolio return', formatearPorcentaje(e.rentabilidadTotal), 'Sobre el capital invertido', e.rentabilidadTotal],
     [`Benchmark (${cartera.benchmark})`, formatearPorcentaje(e.rentabilidadIndice), 'Mismo periodo', e.rentabilidadIndice],
     ['Alpha', formatearPorcentaje(e.alfaJensen), 'Jensen · anualizada', e.alfaJensen],
-    ['Sharpe', formatearNumero(e.ratioSharpe), `Tasa libre ${formatearNumero(e.tasaLibreRiesgo, 1)} %`],
+    ['Sharpe', formatearNumero(e.ratioSharpe), `Tasa libre ${porcentaje(e.tasaLibreRiesgo, 1)}`],
     ['Max drawdown', formatearPorcentaje(e.maximaCaida), 'Desde máximo previo', e.maximaCaida],
     ['Volatilidad', formatearPorcentaje(e.volatilidadAnualizada, false), 'Anualizada'],
   ];

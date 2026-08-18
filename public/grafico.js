@@ -1,4 +1,4 @@
-import { localeFormato } from './formato.js';
+import { localeFormato, formatearPorcentaje } from './formato.js';
 /* ============================================================================
    Grafico de evolucion de cartera — SVG, sin dependencias externas.
 
@@ -381,7 +381,7 @@ export class GraficoCartera {
     const val = document.createElement('span');
     val.className = 'emergente__valor';
     const pct = (valorCartera / base - 1) * 100;
-    val.textContent = `${pct >= 0 ? '+' : '−'}${num(Math.abs(pct))} %`;
+    val.textContent = formatearPorcentaje(pct);
     variacion.append(etq, val);
     e.appendChild(variacion);
 

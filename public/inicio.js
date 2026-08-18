@@ -12,7 +12,9 @@
    `prefers-reduced-motion` todo aparece ya en su sitio.
    ========================================================================= */
 
-import { $, elemento, formatearNumero, formatearFecha, localeFormato } from './formato.js';
+import {
+  $, elemento, formatearNumero, formatearFecha, localeFormato,
+  porcentaje, formatearPorcentaje } from './formato.js';
 import { t, tLista } from './i18n.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
@@ -23,8 +25,10 @@ const sinDatos = () => t('general.sinDatos');
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 const cifra = (v, dec = 2) => (Number.isFinite(v) ? formatearNumero(v, dec) : noDisponible());
-const conSigno = (v, dec = 2, sufijo = '') =>
-  Number.isFinite(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatearNumero(Math.abs(v), dec)}${sufijo}` : noDisponible();
+/* Cambio con signo en unidades del propio dato. Un cambio en por ciento no pasa
+   por aquí: lo redacta `formatearPorcentaje()`, que sabe dónde va el espacio. */
+const conSigno = (v, dec = 2) =>
+  Number.isFinite(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatearNumero(Math.abs(v), dec)}` : noDisponible();
 
 /** Cifra con su divisa. Sin divisa no hay dos piezas que ordenar: va sola. */
 const importe = (v, divisa) =>
@@ -127,7 +131,8 @@ export function pintarTicker(indices, cartera) {
       etiqueta: i.nombre,
       valor: i.disponible ? i.valor : null,
       decimales: 2,
-      sufijo: i.formato === 'tipo' ? ' %' : '',
+      // Un tipo de interés se enuncia en por ciento; un nivel de índice, no.
+      esTipo: i.formato === 'tipo',
       variacion: i.disponible ? i.variacionPct : null,
       destino: '#/mercado',
     });
@@ -138,7 +143,7 @@ export function pintarTicker(indices, cartera) {
       etiqueta: p.ticker,
       valor: Number.isFinite(p.precioActual) ? p.precioActual : null,
       decimales: 2,
-      sufijo: '',
+      esTipo: false,
       variacion: Number.isFinite(p.variacionDiaPct) ? p.variacionDiaPct : null,
       // Cada valor en cartera tiene ficha propia: la cinta lleva a ella.
       destino: `#/companias?t=${encodeURIComponent(p.ticker)}`,
@@ -160,10 +165,11 @@ export function pintarTicker(indices, cartera) {
 
       item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
       item.appendChild(elemento('span', 'ticker__valor',
-        l.valor === null ? noDisponible() : formatearNumero(l.valor, l.decimales) + l.sufijo));
+        l.valor === null ? noDisponible()
+          : l.esTipo ? porcentaje(l.valor, l.decimales) : formatearNumero(l.valor, l.decimales)));
 
       const v = elemento('span', `ticker__var ${claseDireccion(l.variacion)}`,
-        l.variacion === null ? noDisponible() : conSigno(l.variacion, 2, ' %'));
+        l.variacion === null ? noDisponible() : formatearPorcentaje(l.variacion));
       item.appendChild(v);
       g.appendChild(item);
     }
@@ -256,7 +262,7 @@ export function pintarPulso(indices, api) {
     cambio.textContent = i?.disponible
       ? t('inicio.pulse.cambio', {
         absoluta: conSigno(i.variacion, 2),
-        porcentaje: conSigno(i.variacionPct, 2, ' %'),
+        porcentaje: formatearPorcentaje(i.variacionPct),
       })
       : (i?.motivo ? sinDatos() : noDisponible());
     boton.appendChild(cambio);
@@ -339,7 +345,7 @@ async function cargarSerieDelPulso(api) {
       desde: formatearFecha(datos.desde), hasta: formatearFecha(datos.hasta),
     })));
     const v = elemento('span', `grafico-linea__periodo ${claseDireccion(datos.variacionPeriodoPct)}`,
-      conSigno(datos.variacionPeriodoPct, 2, ' %'));
+      formatearPorcentaje(datos.variacionPeriodoPct));
     pie.appendChild(v);
   }
   if (nota) {
@@ -698,13 +704,13 @@ function mostrarCompania(indice, lista, raiz, selector, alNavegar) {
     // es un cambio, va debajo y es la única que se marca al alza o a la baja.
     derecha.appendChild(dato(t('inicio.research.dato.precio'), c.cotizacion?.disponible
       ? importe(c.cotizacion.precio, c.cotizacion.divisa) : noDisponible(),
-      c.cotizacion?.disponible ? conSigno(c.cotizacion.variacionPct, 2, ' %') : null,
+      c.cotizacion?.disponible ? formatearPorcentaje(c.cotizacion.variacionPct) : null,
       null, c.cotizacion?.variacionPct));
     derecha.appendChild(dato(t('inicio.research.dato.recomendacion'), c.recomendacion ?? noDisponible()));
     derecha.appendChild(dato(t('inicio.research.dato.objetivo'),
       Number.isFinite(c.precioObjetivo) ? importe(c.precioObjetivo, c.divisa) : noDisponible()));
     derecha.appendChild(dato(t('inicio.research.dato.recorrido'),
-      c.recorridoObjetivo?.disponible ? conSigno(c.recorridoObjetivo.porcentaje, 2, ' %') : noDisponible(),
+      c.recorridoObjetivo?.disponible ? formatearPorcentaje(c.recorridoObjetivo.porcentaje) : noDisponible(),
       null, c.recorridoObjetivo?.porcentaje));
 
     panel.appendChild(izquierda);

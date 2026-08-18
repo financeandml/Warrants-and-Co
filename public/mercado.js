@@ -7,7 +7,7 @@
    un minuto no son la misma cosa aunque se impriman igual.
    ========================================================================= */
 
-import { $, elemento, formatearNumero } from './formato.js';
+import { $, elemento, formatearNumero, porcentaje, formatearPorcentaje } from './formato.js';
 
 const NO_DISPONIBLE = 'N/A';
 
@@ -81,9 +81,9 @@ function tarjetaInstrumento(i) {
   }
 
   const decimales = i.decimales ?? 2;
-  const sufijo = i.formato === 'tipo' ? ' %' : '';
+  // Un tipo de interés SÍ se enuncia en por ciento; un nivel de índice, no.
   t.appendChild(elemento('span', 'tarjeta-mercado__valor',
-    `${formatearNumero(i.valor, decimales)}${sufijo}`));
+    i.formato === 'tipo' ? porcentaje(i.valor, decimales) : formatearNumero(i.valor, decimales)));
 
   const cambio = elemento('div', 'tarjeta-mercado__cambio');
   cambio.appendChild(elemento('span', 'tarjeta-mercado__flecha', FLECHA[i.direccion] ?? ''));
@@ -93,7 +93,7 @@ function tarjetaInstrumento(i) {
       : NO_DISPONIBLE));
   cambio.appendChild(elemento('span', 'tarjeta-mercado__pct',
     Number.isFinite(i.variacionPct)
-      ? `${i.variacionPct > 0 ? '+' : ''}${formatearNumero(i.variacionPct, 2)} %`
+      ? formatearPorcentaje(i.variacionPct)
       : NO_DISPONIBLE));
   t.appendChild(cambio);
 
@@ -150,7 +150,7 @@ function bloqueCurva(curva) {
     const columna = elemento('div', 'curva-tipos__punto');
     const barra = elemento('div', 'curva-tipos__barra');
     barra.style.height = `${Math.max(6, (punto.valor / maximo) * 100)}%`;
-    columna.appendChild(elemento('span', 'curva-tipos__valor', `${formatearNumero(punto.valor, 2)} %`));
+    columna.appendChild(elemento('span', 'curva-tipos__valor', porcentaje(punto.valor)));
     columna.appendChild(barra);
     columna.appendChild(elemento('span', 'curva-tipos__plazo',
       punto.plazoAnios < 1 ? `${punto.plazoAnios * 12} m` : `${punto.plazoAnios} a`));

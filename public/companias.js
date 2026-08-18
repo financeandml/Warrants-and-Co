@@ -6,7 +6,9 @@
    cliente: lo que el servidor no envía se rotula «N/A», nunca se rellena.
    ========================================================================= */
 
-import { $, elemento, formatearNumero, formatearFecha, claseVariacion } from './formato.js';
+import {
+  $, elemento, formatearNumero, formatearFecha, claseVariacion,
+  porcentaje, formatearPorcentaje } from './formato.js';
 
 const NO_DISPONIBLE = 'N/A';
 
@@ -171,7 +173,7 @@ function bloqueCotizacion(c) {
   const variacion = elemento('span',
     `ficha-cotizacion__var variacion ${claseVariacion(q.variacionPct)}`,
     Number.isFinite(q.variacionPct)
-      ? `${q.variacionPct > 0 ? '+' : ''}${formatearNumero(q.variacionPct, 2)} %`
+      ? formatearPorcentaje(q.variacionPct)
       : NO_DISPONIBLE);
   caja.appendChild(variacion);
 
@@ -194,11 +196,11 @@ function bloqueTesis(c) {
 
   const recorrido = c.recorridoObjetivo;
   rejilla.appendChild(dato('Recorrido al objetivo',
-    recorrido?.disponible ? `${recorrido.porcentaje > 0 ? '+' : ''}${formatearNumero(recorrido.porcentaje, 2)} %` : NO_DISPONIBLE,
+    recorrido?.disponible ? formatearPorcentaje(recorrido.porcentaje) : NO_DISPONIBLE,
     recorrido?.disponible ? claseVariacion(recorrido.porcentaje) : ''));
 
   rejilla.appendChild(dato('Peso en cartera',
-    Number.isFinite(c.pesoCartera) ? `${formatearNumero(c.pesoCartera, 2)} %` : NO_DISPONIBLE));
+    Number.isFinite(c.pesoCartera) ? porcentaje(c.pesoCartera) : NO_DISPONIBLE));
   bloque.appendChild(rejilla);
 
   // El resumen ejecutivo del informe más reciente que lo tenga.
@@ -236,7 +238,7 @@ function bloqueNiveles(c) {
     ? (c.takeProfit / q.precio - 1) * 100
     : null;
   rejilla.appendChild(dato('Distancia al take profit',
-    distancia === null ? NO_DISPONIBLE : `${distancia > 0 ? '+' : ''}${formatearNumero(distancia, 2)} %`));
+    distancia === null ? NO_DISPONIBLE : formatearPorcentaje(distancia)));
 
   bloque.appendChild(rejilla);
   return bloque;

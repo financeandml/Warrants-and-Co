@@ -8,7 +8,7 @@
    composicion que cualquier entrada escalonada.
    ========================================================================= */
 
-import { localeFormato } from './formato.js';
+import { localeFormato, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -151,7 +151,7 @@ export function pintarCinta(posiciones, cerradas = []) {
       const signo = Number.isFinite(v) ? (v > 0 ? 'positiva' : v < 0 ? 'negativa' : 'nula') : 'nula';
       variacion.className = `cotiza__var variacion variacion--${signo}`;
       variacion.textContent = Number.isFinite(v)
-        ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatear(Math.abs(v))} %`
+        ? formatearPorcentaje(v)
         : (l.cerrada ? t('cinta.liquidada') : '—');
       item.appendChild(variacion);
 
