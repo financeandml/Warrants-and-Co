@@ -366,41 +366,53 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Repositorio documental</p>
-          <h1>Catálogo de informes</h1>
+          <p class="etiqueta-superior" data-i18n="repositorio.etiqueta">Repositorio documental</p>
+          <h1 data-i18n="repositorio.titulo">Catálogo de informes</h1>
         </div>
-        <button class="boton boton--solido" id="btn-nuevo-informe" type="button">Publicar informe</button>
+        <button class="boton boton--solido" id="btn-nuevo-informe" type="button"
+                data-i18n="repositorio.publicar">Publicar informe</button>
       </div>
 
       <form class="panel-filtros" id="form-filtros" role="search">
         <div class="panel-filtros__principal">
-          <label class="visualmente-oculto" for="filtro-q">Búsqueda</label>
+          <label class="visualmente-oculto" for="filtro-q" data-i18n="repositorio.busqueda">Búsqueda</label>
           <input type="search" id="filtro-q" name="q" autocomplete="off"
+                 data-i18n-attr="placeholder:repositorio.busqueda.hint"
                  placeholder="Empresa, ticker, analista o palabra clave…">
-          <button class="boton boton--solido" type="submit">Buscar</button>
-          <button class="boton boton--texto" type="button" id="btn-limpiar-filtros">Limpiar</button>
+          <button class="boton boton--solido" type="submit"
+                  data-i18n="repositorio.buscar">Buscar</button>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-filtros"
+                  data-i18n="repositorio.limpiar">Limpiar</button>
         </div>
 
         <div class="panel-filtros__campos">
-          <label>Sector      <select name="sector" id="filtro-sector"></select></label>
-          <label>País        <select name="pais" id="filtro-pais"></select></label>
-          <label>Tipo        <select name="tipo" id="filtro-tipo"></select></label>
-          <label>Recomendación <select name="recomendacion" id="filtro-recomendacion"></select></label>
-          <label>Analista    <select name="analista" id="filtro-analista"></select></label>
-          <label>Acceso      <select name="nivel" id="filtro-nivel"></select></label>
-          <label>Desde       <input type="date" name="desde" id="filtro-desde"></label>
-          <label>Hasta       <input type="date" name="hasta" id="filtro-hasta"></label>
-          <label>Orden
+          <label><span data-i18n="repositorio.filtro.sector">Sector</span>
+            <select name="sector" id="filtro-sector"></select></label>
+          <label><span data-i18n="repositorio.filtro.pais">País</span>
+            <select name="pais" id="filtro-pais"></select></label>
+          <label><span data-i18n="repositorio.filtro.tipo">Tipo</span>
+            <select name="tipo" id="filtro-tipo"></select></label>
+          <label><span data-i18n="repositorio.filtro.recomendacion">Recomendación</span>
+            <select name="recomendacion" id="filtro-recomendacion"></select></label>
+          <label><span data-i18n="repositorio.filtro.analista">Analista</span>
+            <select name="analista" id="filtro-analista"></select></label>
+          <label><span data-i18n="repositorio.filtro.acceso">Acceso</span>
+            <select name="nivel" id="filtro-nivel"></select></label>
+          <label><span data-i18n="repositorio.filtro.desde">Desde</span>
+            <input type="date" name="desde" id="filtro-desde"></label>
+          <label><span data-i18n="repositorio.filtro.hasta">Hasta</span>
+            <input type="date" name="hasta" id="filtro-hasta"></label>
+          <label><span data-i18n="repositorio.filtro.orden">Orden</span>
             <select name="orden" id="filtro-orden">
-              <option value="recientes">Más recientes</option>
-              <option value="antiguos">Más antiguos</option>
-              <option value="empresa">Empresa (A–Z)</option>
+              <option value="recientes" data-i18n="repositorio.orden.recientes">Más recientes</option>
+              <option value="antiguos" data-i18n="repositorio.orden.antiguos">Más antiguos</option>
+              <option value="empresa" data-i18n="repositorio.orden.empresa">Empresa (A–Z)</option>
             </select>
           </label>
         </div>
 
         <div class="panel-filtros__etiquetas" id="nube-etiquetas" hidden>
-          <span class="etiqueta-superior">Etiquetas frecuentes</span>
+          <span class="etiqueta-superior" data-i18n="repositorio.etiquetas.frecuentes">Etiquetas frecuentes</span>
           <div id="lista-etiquetas"></div>
         </div>
       </form>
@@ -411,27 +423,31 @@
 
       <div class="tabla-envoltorio">
         <table class="tabla-informes" id="tabla-informes">
-          <caption class="visualmente-oculto">Listado de informes publicados</caption>
+          <caption class="visualmente-oculto"
+                   data-i18n="repositorio.tabla.caption">Listado de informes publicados</caption>
           <thead>
             <tr>
-              <th scope="col">Compañía</th>
-              <th scope="col">Ticker</th>
-              <th scope="col">Sector</th>
-              <th scope="col">Tipo</th>
-              <th scope="col">Periodo</th>
-              <th scope="col">Recomendación</th>
-              <th scope="col" class="num">P. objetivo</th>
-              <th scope="col">Analista</th>
-              <th scope="col">Fecha</th>
-              <th scope="col">Documentos</th>
-              <th scope="col" id="cabecera-acciones" hidden>Acciones</th>
+              <th scope="col" data-i18n="repositorio.col.compania">Compañía</th>
+              <th scope="col" data-i18n="repositorio.col.ticker">Ticker</th>
+              <th scope="col" data-i18n="repositorio.col.sector">Sector</th>
+              <th scope="col" data-i18n="repositorio.col.tipo">Tipo</th>
+              <th scope="col" data-i18n="repositorio.col.periodo">Periodo</th>
+              <th scope="col" data-i18n="repositorio.col.recomendacion">Recomendación</th>
+              <th scope="col" class="num" data-i18n="repositorio.col.precioObjetivo">P. objetivo</th>
+              <th scope="col" data-i18n="repositorio.col.analista">Analista</th>
+              <th scope="col" data-i18n="repositorio.col.fecha">Fecha</th>
+              <th scope="col" data-i18n="repositorio.col.documentos">Documentos</th>
+              <th scope="col" id="cabecera-acciones" hidden
+                  data-i18n="repositorio.col.acciones">Acciones</th>
             </tr>
           </thead>
           <tbody id="cuerpo-tabla-informes"></tbody>
         </table>
       </div>
 
-      <nav class="paginacion" id="paginacion" aria-label="Paginación de resultados"></nav>
+      <nav class="paginacion" id="paginacion"
+           data-i18n-attr="aria-label:repositorio.paginacion.etiqueta"
+           aria-label="Paginación de resultados"></nav>
     </div>
   </section>
 
@@ -731,13 +747,13 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Gestión de cartera</p>
-          <h1>Evolución de posiciones</h1>
+          <p class="etiqueta-superior" data-i18n="cartera.etiqueta">Gestión de cartera</p>
+          <h1 data-i18n="cartera.titulo">Evolución de posiciones</h1>
         </div>
         <div class="estado-datos" id="estado-datos"></div>
       </div>
 
-      <p class="nota-metodologica">
+      <p class="nota-metodologica" data-i18n="cartera.nota">
         La cartera se constituye automáticamente a partir de las tesis de inversión publicadas.
         La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el
         precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada
@@ -749,19 +765,27 @@
       <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
         <div class="tarjeta__cabecera">
           <div>
-            <h2 id="titulo-grafico">Evolución de la cartera</h2>
-            <p id="subtitulo-grafico">Valor indexado · base 100 = capital invertido</p>
+            <h2 id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la cartera</h2>
+            <!-- Dos escritores, y no es descuido: `data-i18n` cubre el rótulo
+                 previo a los datos y `pintarGrafico()` lo sustituye por el que
+                 lleva fecha y número de sesiones en cuanto la serie llega. -->
+            <p id="subtitulo-grafico" data-i18n="cartera.grafico.subtitulo">Valor indexado · base 100 = capital invertido</p>
           </div>
-          <div class="controles-grafico" role="group" aria-label="Opciones del gráfico">
-            <div class="conmutador" role="group" aria-label="Periodo">
+          <div class="controles-grafico" role="group"
+               data-i18n-attr="aria-label:cartera.grafico.opciones" aria-label="Opciones del gráfico">
+            <div class="conmutador" role="group"
+                 data-i18n-attr="aria-label:cartera.grafico.periodo" aria-label="Periodo">
+              <!-- 1M, 3M, 6M e YTD son códigos de rango, no palabras: no se traducen.
+                   «Máx» sí es una abreviatura de idioma, y lleva su clave. -->
               <button type="button" data-rango="1M">1M</button>
               <button type="button" data-rango="3M">3M</button>
               <button type="button" data-rango="6M">6M</button>
               <button type="button" data-rango="YTD">YTD</button>
-              <button type="button" data-rango="MAX" class="activo">Máx</button>
+              <button type="button" data-rango="MAX" class="activo"
+                      data-i18n="cartera.grafico.rango.max">Máx</button>
             </div>
             <label class="selector-indice">
-              <span class="visualmente-oculto">Índice de referencia</span>
+              <span class="visualmente-oculto" data-i18n="cartera.grafico.indice">Índice de referencia</span>
               <select id="selector-benchmark">
                 <option value="SPY">S&amp;P 500 (SPY)</option>
                 <option value="QQQ">Nasdaq 100 (QQQ)</option>
@@ -769,7 +793,8 @@
                 <option value="IWM">Russell 2000 (IWM)</option>
               </select>
             </label>
-            <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false">
+            <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
+                    data-i18n="cartera.grafico.verDatos">
               Ver datos
             </button>
           </div>
@@ -783,13 +808,15 @@
         <div class="tabla-serie" id="tabla-serie" hidden>
           <div class="tabla-envoltorio">
             <table class="tabla-datos">
-              <caption>Serie histórica de la cartera y del índice de referencia</caption>
+              <caption data-i18n="cartera.serie.caption">Serie histórica de la cartera y del índice de referencia</caption>
               <thead>
                 <tr>
-                  <th scope="col">Fecha</th>
-                  <th scope="col" class="num">Cartera</th>
+                  <th scope="col" data-i18n="cartera.serie.fecha">Fecha</th>
+                  <th scope="col" class="num" data-i18n="cartera.serie.cartera">Cartera</th>
+                  <!-- Sin `data-i18n`: lo rotula `pintarGrafico()` con el ticker
+                       del índice elegido, que no es texto de interfaz. -->
                   <th scope="col" class="num" id="cabecera-indice">Índice</th>
-                  <th scope="col" class="num">Diferencial</th>
+                  <th scope="col" class="num" data-i18n="cartera.serie.diferencial">Diferencial</th>
                 </tr>
               </thead>
               <tbody id="cuerpo-tabla-serie"></tbody>
@@ -801,26 +828,27 @@
       <section class="tarjeta" aria-labelledby="titulo-posiciones">
         <div class="tarjeta__cabecera">
           <div>
-            <h2 id="titulo-posiciones">Composición de la cartera</h2>
-            <p>Cotizaciones actualizadas en cada carga de la página</p>
+            <h2 id="titulo-posiciones" data-i18n="cartera.posiciones.titulo">Composición de la cartera</h2>
+            <p data-i18n="cartera.posiciones.subtitulo">Cotizaciones actualizadas en cada carga de la página</p>
           </div>
         </div>
         <div class="tabla-envoltorio">
           <table class="tabla-datos tabla-posiciones">
-            <caption class="visualmente-oculto">Detalle de las posiciones en cartera</caption>
+            <caption class="visualmente-oculto"
+                     data-i18n="cartera.posiciones.caption">Detalle de las posiciones en cartera</caption>
             <thead>
               <tr>
-                <th scope="col">Valor</th>
-                <th scope="col" class="num">Peso</th>
-                <th scope="col">Alta</th>
-                <th scope="col" class="num">Compra</th>
-                <th scope="col" class="num">Cotización</th>
-                <th scope="col" class="num">Día</th>
-                <th scope="col" class="num">Rentabilidad</th>
-                <th scope="col" class="num">Take profit</th>
-                <th scope="col">Recorrido a TP</th>
-                <th scope="col" class="num">P. objetivo</th>
-                <th scope="col">Recomendación</th>
+                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
+                <th scope="col" data-i18n="cartera.col.alta">Alta</th>
+                <th scope="col" class="num" data-i18n="cartera.col.compra">Compra</th>
+                <th scope="col" class="num" data-i18n="cartera.col.cotizacion">Cotización</th>
+                <th scope="col" class="num" data-i18n="cartera.col.dia">Día</th>
+                <th scope="col" class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
+                <th scope="col" class="num" data-i18n="cartera.col.takeProfit">Take profit</th>
+                <th scope="col" data-i18n="cartera.col.recorrido">Recorrido a TP</th>
+                <th scope="col" class="num" data-i18n="cartera.col.precioObjetivo">P. objetivo</th>
+                <th scope="col" data-i18n="cartera.col.recomendacion">Recomendación</th>
               </tr>
             </thead>
             <tbody id="cuerpo-posiciones"></tbody>
@@ -832,22 +860,23 @@
       <section class="tarjeta" id="tarjeta-cerradas" aria-labelledby="titulo-cerradas" hidden>
         <div class="tarjeta__cabecera">
           <div>
-            <h2 id="titulo-cerradas">Posiciones liquidadas</h2>
-            <p>Tesis cerradas automáticamente al alcanzar su take profit</p>
+            <h2 id="titulo-cerradas" data-i18n="cartera.cerradas.titulo">Posiciones liquidadas</h2>
+            <p data-i18n="cartera.cerradas.subtitulo">Tesis cerradas automáticamente al alcanzar su take profit</p>
           </div>
         </div>
         <div class="tabla-envoltorio">
           <table class="tabla-datos">
-            <caption class="visualmente-oculto">Detalle de las posiciones liquidadas</caption>
+            <caption class="visualmente-oculto"
+                     data-i18n="cartera.cerradas.caption">Detalle de las posiciones liquidadas</caption>
             <thead>
               <tr>
-                <th scope="col">Valor</th>
-                <th scope="col">Alta</th>
-                <th scope="col" class="num">Compra</th>
-                <th scope="col">Cierre</th>
-                <th scope="col" class="num">Precio de salida</th>
-                <th scope="col" class="num">Resultado</th>
-                <th scope="col">Motivo</th>
+                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                <th scope="col" data-i18n="cartera.col.alta">Alta</th>
+                <th scope="col" class="num" data-i18n="cartera.col.compra">Compra</th>
+                <th scope="col" data-i18n="cartera.cerradas.col.cierre">Cierre</th>
+                <th scope="col" class="num" data-i18n="cartera.cerradas.col.precioSalida">Precio de salida</th>
+                <th scope="col" class="num" data-i18n="cartera.cerradas.col.resultado">Resultado</th>
+                <th scope="col" data-i18n="cartera.cerradas.col.motivo">Motivo</th>
               </tr>
             </thead>
             <tbody id="cuerpo-cerradas"></tbody>
@@ -858,8 +887,10 @@
       <section class="tarjeta" aria-labelledby="titulo-estadisticos">
         <div class="tarjeta__cabecera">
           <div>
-            <h2 id="titulo-estadisticos">Parámetros y estadísticos</h2>
-            <p id="sub-estadisticos">Métricas de riesgo y rentabilidad</p>
+            <h2 id="titulo-estadisticos" data-i18n="cartera.estadisticos.titulo">Parámetros y estadísticos</h2>
+            <!-- Igual que el subtítulo del gráfico: rótulo previo a los datos,
+                 que `pintarEstadisticos()` sustituye por el periodo real. -->
+            <p id="sub-estadisticos" data-i18n="cartera.estadisticos.subtitulo">Métricas de riesgo y rentabilidad</p>
           </div>
         </div>
         <div class="rejilla-estadisticos" id="rejilla-estadisticos"></div>

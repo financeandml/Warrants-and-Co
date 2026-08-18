@@ -2,13 +2,16 @@
    Sección de opciones — flujo, actividad inusual y cadena.
 
    Cada bloque distingue tres estados que no deben confundirse: hay dato, el dato
-   es cero, y no hay dato. Lo que el proveedor no publica se rotula «N/A»; lo que
-   no puede calcularse, «—»; y una cifra cero se muestra como cero.
+   es cero, y no hay dato. Una cifra cero se muestra como cero. La ausencia se
+   rotula «N/A» —siempre vía `general.noDisponible`, nunca escrita a mano— salvo
+   dentro de una tabla numérica densa, donde el blanco tipográfico «—» dice lo
+   mismo sin repetir la abreviatura en cada columna.
    ========================================================================= */
 
 import {
   $, elemento, formatearNumero, formatearFecha, formatearPorcentaje, porcentaje,
   localeFormato } from './formato.js';
+import { t } from './i18n.js';
 
 /**
  * Formatea un precio de ejercicio con la precisión mínima que lo distingue.
@@ -30,14 +33,19 @@ export function formatearImporte(v) {
   return `${Math.round(v).toLocaleString(localeFormato())} $`;
 }
 
-/** Celda numérica que distingue ausencia de dato de un cero legítimo. */
-function celdaNumero(valor, { decimales = 2, sufijo = '', ausente = 'N/A' } = {}) {
+/**
+ * Celda numérica que distingue ausencia de dato de un cero legítimo.
+ *
+ * `porcentual` no añade un sufijo: delega en `porcentaje()`, que decide según el
+ * idioma si el signo lleva espacio delante —«12,5 %» frente a «12.5%»—.
+ */
+function celdaNumero(valor, { decimales = 2, porcentual = false, ausente = null } = {}) {
   const td = elemento('td', 'num');
   if (!Number.isFinite(valor)) {
-    td.textContent = ausente;
+    td.textContent = ausente ?? t('general.noDisponible');
     td.className = 'num lectura--nula';
   } else {
-    td.textContent = `${formatearNumero(valor, decimales)}${sufijo}`;
+    td.textContent = porcentual ? porcentaje(valor, decimales) : formatearNumero(valor, decimales);
   }
   return td;
 }
@@ -50,7 +58,7 @@ function distintivoLado(lado) {
 function celdaNota(contrato) {
   const td = document.createElement('td');
   if (!contrato.puntuacionDisponible || !Number.isFinite(contrato.puntuacion)) {
-    td.appendChild(elemento('span', 'nota-score nota-score--nd', 'N/D'));
+    td.appendChild(elemento('span', 'nota-score nota-score--nd', t('general.noDisponible')));
     return td;
   }
   const caja = elemento('span', 'nota-score');
@@ -233,7 +241,7 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
     fila.appendChild(tdRatio);
 
     // El proveedor no publica volatilidad implícita.
-    fila.appendChild(celdaNumero(c.volatilidadImplicita, { decimales: 1, sufijo: ' %' }));
+    fila.appendChild(celdaNumero(c.volatilidadImplicita, { decimales: 1, porcentual: true }));
 
     const tdTrade = document.createElement('td');
     tdTrade.appendChild(distintivoCerteza(c.sentido));
@@ -347,7 +355,7 @@ export function construirDetalleInusual(c) {
       `Escala 0–100 · cobertura ${porcentaje(c.cobertura, 0)} de la metodología`));
     bloqueNota.appendChild(meta);
   } else {
-    bloqueNota.appendChild(elemento('strong', 'detalle-inusual__cifra detalle-inusual__cifra--nd', 'N/D'));
+    bloqueNota.appendChild(elemento('strong', 'detalle-inusual__cifra detalle-inusual__cifra--nd', t('general.noDisponible')));
     const meta = document.createElement('div');
     meta.appendChild(elemento('div', 'signal__etiqueta', 'Unusual activity score'));
     meta.appendChild(elemento('div', 'dimension__detalle', c.motivoPuntuacion ?? 'Cobertura insuficiente'));

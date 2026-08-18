@@ -954,7 +954,7 @@ export function pintarSignalHome(signal) {
     // Peso y estado se enuncian en una sola plantilla: el orden y el separador
     // son del idioma, no de un `${a} · ${b}` escrito aquí.
     fila.appendChild(elemento('span', 'signal-dimension__pie', t('inicio.signal.dimension.pie', {
-      peso: formatearNumero(d.peso * 100, 0), estado,
+      peso: porcentaje(d.peso * 100, 0), estado,
     })));
 
     observarEntrada(fila, () => {
@@ -979,7 +979,7 @@ export function pintarSignalHome(signal) {
       t('inicio.signal.vacio.titulo')));
     resultado.appendChild(elemento('p', 'signal-home__motivo', t('inicio.signal.cobertura', {
       motivo: signal?.motivo ?? t('inicio.signal.motivoReserva'),
-      cobertura: formatearNumero(referencia?.cobertura ?? 0, 0),
+      cobertura: porcentaje(referencia?.cobertura ?? 0, 0),
     })));
   }
   bloque.appendChild(resultado);

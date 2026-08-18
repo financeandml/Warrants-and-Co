@@ -10,6 +10,7 @@ import {
   $, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, claseLectura, claseSentido,
 } from './formato.js';
+import { t } from './i18n.js';
 
 /** Bloque de estado para una sección todavía sin fuente de datos. */
 function bloquePendiente(titulo, motivo) {
@@ -32,7 +33,7 @@ export function pintarSnapshot(datos) {
     celda.appendChild(elemento('span', 'snapshot__nombre', i.nombre));
 
     if (!i.disponible) {
-      celda.appendChild(elemento('strong', 'snapshot__valor lectura--nula', 'N/D'));
+      celda.appendChild(elemento('strong', 'snapshot__valor lectura--nula', t('general.noDisponible')));
       celda.appendChild(elemento('span', 'snapshot__nota', i.motivo ?? 'No disponible'));
       destino.appendChild(celda);
       continue;
@@ -130,7 +131,7 @@ export function pintarSignal(datos) {
     barra.appendChild(relleno);
     marcador.appendChild(barra);
   } else {
-    marcador.appendChild(elemento('strong', 'signal__cifra signal__cifra--pendiente', 'N/D'));
+    marcador.appendChild(elemento('strong', 'signal__cifra signal__cifra--pendiente', t('general.noDisponible')));
   }
 
   marcador.appendChild(elemento('span', 'signal__escala', 'Escala 0 – 100'));
@@ -281,7 +282,7 @@ export function pintarResearch(informes, cartera, alAbrir) {
 
     const pie = elemento('div', 'research__pie');
     // El indicador propietario todavía no puntúa: se declara como tal.
-    pie.appendChild(elemento('span', null, 'W&C Signal: N/D'));
+    pie.appendChild(elemento('span', null, `W&C Signal: ${t('general.noDisponible')}`));
     pie.appendChild(elemento('span', null, formatearFecha(i.fecha_publicacion)));
     tarjeta.appendChild(pie);
 

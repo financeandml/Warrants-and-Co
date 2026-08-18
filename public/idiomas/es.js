@@ -185,12 +185,12 @@ export default {
   // ── Inicio · W&C Signal ──
   'inicio.signal.vacio.titulo': 'Sin datos de Signal',
   'inicio.signal.vacio.motivo': 'El modelo no publica dimensiones.',
-  'inicio.signal.dimension.pie': 'Peso {peso} % · {estado}',
+  'inicio.signal.dimension.pie': 'Peso {peso} · {estado}',
   'inicio.signal.estado.sinFuente': 'sin fuente',
   'inicio.signal.estado.conFuente': 'fuente conectada',
   'inicio.signal.estado.sinPuntuacion': 'fuente conectada, sin puntuación emitida',
   'inicio.signal.motivoReserva': 'Modelo en construcción',
-  'inicio.signal.cobertura': '{motivo}. Cobertura actual: {cobertura} % de las dimensiones con fuente.',
+  'inicio.signal.cobertura': '{motivo}. Cobertura actual: {cobertura} de las dimensiones con fuente.',
 
   // ── Cinta de cotizaciones del panel ──
   'cinta.liquidada': 'liquidada',
@@ -211,4 +211,278 @@ export default {
   },
   'cartera.cierre.posicion': '{ticker} el {fecha} a {precio} ({rentabilidad})',
   'general.separadorLista': ' · ',
+
+  // ═══════════════════════ Repositorio · catálogo ═══════════════════════
+  'repositorio.etiqueta': 'Repositorio documental',
+  'repositorio.titulo': 'Catálogo de informes',
+  'repositorio.publicar': 'Publicar informe',
+
+  'repositorio.busqueda': 'Búsqueda',
+  'repositorio.busqueda.hint': 'Empresa, ticker, analista o palabra clave…',
+  'repositorio.buscar': 'Buscar',
+  'repositorio.limpiar': 'Limpiar',
+
+  'repositorio.filtro.sector': 'Sector',
+  'repositorio.filtro.pais': 'País',
+  'repositorio.filtro.tipo': 'Tipo',
+  'repositorio.filtro.recomendacion': 'Recomendación',
+  'repositorio.filtro.analista': 'Analista',
+  'repositorio.filtro.acceso': 'Acceso',
+  'repositorio.filtro.desde': 'Desde',
+  'repositorio.filtro.hasta': 'Hasta',
+  'repositorio.filtro.orden': 'Orden',
+
+  // El castellano concuerda en género con el sustantivo elidido —«todos los
+  // sectores», «todas las recomendaciones»—, de modo que necesita dos entradas
+  // donde el inglés tiene una. Es exactamente lo que el diccionario existe para
+  // resolver: el código pide la que corresponde y no sabe que son distintas.
+  'repositorio.filtro.todos': 'Todos',
+  'repositorio.filtro.todas': 'Todas',
+
+  'repositorio.orden.recientes': 'Más recientes',
+  'repositorio.orden.antiguos': 'Más antiguos',
+  'repositorio.orden.empresa': 'Empresa (A–Z)',
+  'repositorio.etiquetas.frecuentes': 'Etiquetas frecuentes',
+
+  'repositorio.tabla.caption': 'Listado de informes publicados',
+  'repositorio.col.compania': 'Compañía',
+  'repositorio.col.ticker': 'Ticker',
+  'repositorio.col.sector': 'Sector',
+  'repositorio.col.tipo': 'Tipo',
+  'repositorio.col.periodo': 'Periodo',
+  'repositorio.col.recomendacion': 'Recomendación',
+  'repositorio.col.precioObjetivo': 'P. objetivo',
+  'repositorio.col.analista': 'Analista',
+  'repositorio.col.fecha': 'Fecha',
+  'repositorio.col.documentos': 'Documentos',
+  'repositorio.col.acciones': 'Acciones',
+  'repositorio.paginacion.etiqueta': 'Paginación de resultados',
+
+  'repositorio.vacio.titulo': 'Sin resultados',
+  'repositorio.vacio.detalle': 'Ningún informe coincide con los criterios seleccionados.',
+  'repositorio.destacadoEquipo': 'Destacado por el equipo',
+  'repositorio.editar': 'Editar',
+  'repositorio.fila.abrir': 'Abrir informe de {empresa}',
+  'repositorio.fila.editar': 'Editar el informe de {empresa}',
+
+  // El recuento no se compone con `informe${n === 1 ? '' : 's'}`: esa condición
+  // impone a todos los idiomas la morfología del castellano. Aquí cada uno
+  // declara sus formas y las elige `Intl.PluralRules`.
+  'repositorio.resumen': {
+    one: 'Mostrando {desde}–{hasta} de {n} informe',
+    other: 'Mostrando {desde}–{hasta} de {n} informes',
+  },
+
+  // ═══════════════════ Repositorio · ficha de lectura ═══════════════════
+  'informe.detalle.cargando': 'Cargando informe…',
+  'informe.detalle.noDisponible': 'No disponible',
+  'informe.detalle.destacado': 'Destacado',
+  'informe.detalle.fichaAnalitica': 'Ficha analítica',
+  'informe.detalle.analista': 'Analista',
+  'informe.detalle.publicacion': 'Publicación',
+  'informe.detalle.precioObjetivo': 'Precio objetivo',
+  'informe.detalle.nivelAcceso': 'Nivel de acceso',
+  'informe.detalle.enCartera': 'En cartera',
+  'informe.detalle.pesoAsignado': 'Peso asignado',
+  'informe.detalle.precioCompra': 'Precio de compra',
+  'informe.detalle.takeProfit': 'Take profit',
+  'informe.detalle.stopLoss': 'Stop loss',
+  'informe.detalle.resumen': 'Resumen ejecutivo',
+  'informe.detalle.etiquetas': 'Etiquetas',
+  'informe.detalle.documentacion': 'Documentación',
+  'informe.detalle.sinDocumentacion': 'Este informe todavía no tiene documentación adjunta.',
+  'informe.detalle.editar': 'Editar informe',
+
+  // ═══════════════════ Repositorio · alta y modificación ═══════════════════
+  'informe.titulo.publicar': 'Publicar informe',
+  'informe.titulo.editar': 'Editar informe',
+  'informe.entradilla': 'Complete la ficha analítica. Los campos marcados con asterisco son obligatorios.',
+
+  'informe.grupo.emisor': 'Identificación del emisor',
+  'informe.campo.empresa': 'Denominación social *',
+  'informe.campo.ticker': 'Ticker',
+  'informe.campo.sector': 'Sector',
+  'informe.campo.pais': 'País',
+
+  'informe.grupo.clasificacion': 'Clasificación del informe',
+  'informe.campo.tipo': 'Tipo de informe',
+  'informe.campo.periodo': 'Periodo',
+  'informe.campo.periodo.hint': 'Ejercicio 2026 / 1T 2026',
+  'informe.campo.analista': 'Analista',
+  'informe.campo.fecha': 'Fecha de publicación *',
+
+  'informe.grupo.valoracion': 'Valoración',
+  'informe.campo.recomendacion': 'Recomendación',
+  'informe.campo.precioObjetivo': 'Precio objetivo',
+  'informe.campo.divisa': 'Divisa',
+  'informe.campo.peso': 'Peso en cartera (%)',
+  'informe.campo.peso.hint': 'Equiponderado si se omite',
+
+  'informe.grupo.operativa': 'Operativa de la posición',
+  'informe.campo.precioCompra': 'Precio de compra',
+  'informe.campo.precioCompra.hint': 'Precio pagado por acción',
+  'informe.campo.takeProfit': 'Take profit',
+  'informe.campo.takeProfit.hint': 'Nivel de venta',
+  'informe.campo.stopLoss': 'Stop loss',
+  'informe.campo.stopLoss.hint': 'Opcional',
+  'informe.operativa.nota': 'El precio de compra fija el coste real de la posición y sustituye al cierre de la sesión de publicación. Al alcanzarse el take profit, la posición se liquida automáticamente a ese nivel, deja de figurar en cartera y su importe permanece como liquidez hasta que una nueva tesis lo reinvierta.',
+
+  'informe.grupo.contenido': 'Contenido y difusión',
+  'informe.campo.resumen': 'Resumen ejecutivo',
+  'informe.campo.resumen.hint': 'Síntesis de la tesis, catalizadores y principales factores de riesgo.',
+  'informe.campo.etiquetas': 'Etiquetas libres',
+  'informe.campo.etiquetas.hint': 'Separadas por comas: cloud, márgenes, catalizador',
+  'informe.campo.nivel': 'Nivel de acceso',
+  'informe.campo.destacar': 'Destacar en portada',
+  'informe.campo.incorporar': 'Incorporar a la cartera',
+
+  'informe.grupo.documentacion': 'Documentación',
+  'informe.campo.ficheros': 'Adjuntar informes (PDF, Word o Excel · máximo 25 MB por documento)',
+
+  'informe.select.sinClasificar': 'Sin clasificar',
+  'informe.select.sinRecomendacion': 'Sin recomendación',
+
+  'informe.eliminar': 'Eliminar informe',
+  'informe.cancelar': 'Cancelar',
+  'informe.guardar.publicar': 'Publicar',
+  'informe.guardar.cambios': 'Guardar cambios',
+  'informe.guardar.procesando': 'Procesando…',
+
+  'informe.adjunto.retirar': 'Retirar',
+  'informe.adjunto.confirmar': '¿Retirar el documento «{nombre}»?',
+  'informe.adjunto.retirado': 'Documento retirado.',
+  'informe.guardado.actualizado': 'Informe actualizado correctamente.',
+  'informe.guardado.publicado': 'Informe publicado correctamente.',
+  'informe.eliminar.confirmar': '¿Eliminar definitivamente este informe y su documentación asociada?',
+  'informe.eliminado': 'Informe eliminado.',
+
+  // ═════════════════════════ Cartera · encabezado ═════════════════════════
+  'cartera.etiqueta': 'Gestión de cartera',
+  'cartera.titulo': 'Evolución de posiciones',
+  'cartera.nota': 'La cartera se constituye automáticamente a partir de las tesis de inversión publicadas. La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada en el tiempo, en base 100, sin aportaciones ni reembolsos externos.',
+
+  'cartera.error.mercado': 'Datos de mercado no disponibles',
+  'cartera.vacia.titulo': 'Cartera no constituida',
+  'cartera.estado.actualizado': 'Actualizado a las {hora}',
+  'cartera.pie.fuente': 'Datos de mercado: {fuentes}. Última actualización: {momento}.',
+
+  // ═══════════════════════ Cartera · cuadro de mando ═══════════════════════
+  'cartera.indicador.rentabilidad': 'Rentabilidad acumulada',
+  'cartera.indicador.rentabilidad.nota': 'Sobre el capital invertido · desde {fecha}',
+  'cartera.indicador.valorIndexado': 'Valor indexado',
+  'cartera.indicador.valorIndexado.nota': 'Base {base} = capital invertido',
+  'cartera.indicador.dia': 'Variación del día',
+  'cartera.indicador.dia.nota': 'Ponderada por peso',
+  'cartera.indicador.posiciones': 'Posiciones',
+  'cartera.indicador.posiciones.nota': 'Tesis en cartera',
+  'cartera.indicador.posiciones.liquidadas': {
+    one: '{n} liquidada',
+    other: '{n} liquidadas',
+  },
+  'cartera.indicador.sharpe': 'Ratio de Sharpe',
+  'cartera.indicador.sharpe.nota': 'Tasa libre de riesgo {tasa}',
+  'cartera.indicador.maximaCaida': 'Máxima caída',
+  'cartera.indicador.maximaCaida.nota': 'Desde máximo previo',
+
+  // ══════════════════════════ Cartera · gráfico ══════════════════════════
+  'cartera.grafico.titulo': 'Evolución de la cartera',
+  'cartera.grafico.subtitulo': 'Valor indexado · base 100 = capital invertido',
+  'cartera.grafico.subtitulo.serie': {
+    one: 'Valor indexado · base 100 en {fecha} · {n} sesión',
+    other: 'Valor indexado · base 100 en {fecha} · {n} sesiones',
+  },
+  'cartera.grafico.opciones': 'Opciones del gráfico',
+  'cartera.grafico.periodo': 'Periodo',
+  'cartera.grafico.rango.max': 'Máx',
+  'cartera.grafico.indice': 'Índice de referencia',
+  'cartera.grafico.verDatos': 'Ver datos',
+  'cartera.leyenda.cartera': 'Cartera Warrants & Co.',
+
+  'cartera.serie.caption': 'Serie histórica de la cartera y del índice de referencia',
+  'cartera.serie.fecha': 'Fecha',
+  'cartera.serie.cartera': 'Cartera',
+  'cartera.serie.indice': 'Índice',
+  'cartera.serie.diferencial': 'Diferencial',
+
+  // ════════════════════════ Cartera · composición ════════════════════════
+  'cartera.posiciones.titulo': 'Composición de la cartera',
+  'cartera.posiciones.subtitulo': 'Cotizaciones actualizadas en cada carga de la página',
+  'cartera.posiciones.caption': 'Detalle de las posiciones en cartera',
+  'cartera.col.valor': 'Valor',
+  'cartera.col.peso': 'Peso',
+  'cartera.col.alta': 'Alta',
+  'cartera.col.compra': 'Compra',
+  'cartera.col.cotizacion': 'Cotización',
+  'cartera.col.dia': 'Día',
+  'cartera.col.rentabilidad': 'Rentabilidad',
+  'cartera.col.takeProfit': 'Take profit',
+  'cartera.col.recorrido': 'Recorrido a TP',
+  'cartera.col.precioObjetivo': 'P. objetivo',
+  'cartera.col.recomendacion': 'Recomendación',
+  'cartera.recorrido.title': '{avance} del recorrido hasta el take profit',
+
+  // ═════════════════════════ Cartera · liquidadas ═════════════════════════
+  'cartera.cerradas.titulo': 'Posiciones liquidadas',
+  'cartera.cerradas.subtitulo': 'Tesis cerradas automáticamente al alcanzar su take profit',
+  'cartera.cerradas.caption': 'Detalle de las posiciones liquidadas',
+  'cartera.cerradas.col.cierre': 'Cierre',
+  'cartera.cerradas.col.precioSalida': 'Precio de salida',
+  'cartera.cerradas.col.resultado': 'Resultado',
+  'cartera.cerradas.col.motivo': 'Motivo',
+  'cartera.cerradas.motivo': 'Cerrada',
+
+  // ═══════════════════════ Cartera · estadísticos ═══════════════════════
+  'cartera.estadisticos.titulo': 'Parámetros y estadísticos',
+  'cartera.estadisticos.subtitulo': 'Métricas de riesgo y rentabilidad',
+  'cartera.estadisticos.vacio.titulo': 'Estadísticos no disponibles',
+  'cartera.estadisticos.vacio.detalle': 'Se requiere un histórico más amplio para calcular las métricas de riesgo.',
+  'cartera.estadisticos.periodo': {
+    one: 'Periodo {inicio} – {fin} · {n} sesión · referencia {indice}',
+    other: 'Periodo {inicio} – {fin} · {n} sesiones · referencia {indice}',
+  },
+
+  'cartera.metrica.rentabilidadTotal': 'Rentabilidad total',
+  'cartera.metrica.rentabilidadTotal.nota': 'Del periodo completo',
+  'cartera.metrica.rentabilidadAnualizada': 'Rentabilidad anualizada',
+  'cartera.metrica.rentabilidadAnualizada.nota': 'Tasa compuesta',
+  'cartera.metrica.rentabilidadIndice': 'Rentabilidad {indice}',
+  'cartera.metrica.rentabilidadIndice.nota': 'Mismo periodo',
+  'cartera.metrica.volatilidad': 'Volatilidad',
+  'cartera.metrica.volatilidad.nota': 'Anualizada',
+  'cartera.metrica.sharpe': 'Ratio de Sharpe',
+  'cartera.metrica.sharpe.nota': 'Exceso sobre {tasa}',
+  'cartera.metrica.sortino': 'Ratio de Sortino',
+  'cartera.metrica.sortino.nota': 'Solo riesgo bajista',
+  'cartera.metrica.calmar': 'Ratio de Calmar',
+  'cartera.metrica.calmar.nota': 'Rentabilidad / máxima caída',
+  'cartera.metrica.maximaCaida': 'Máxima caída',
+  'cartera.metrica.maximaCaida.nota': '{desde} – {hasta}',
+  'cartera.metrica.beta': 'Beta',
+  'cartera.metrica.beta.nota': 'Frente a {indice}',
+  'cartera.metrica.alfa': 'Alfa de Jensen',
+  'cartera.metrica.alfa.nota': 'Anualizada',
+  'cartera.metrica.correlacion': 'Correlación',
+  'cartera.metrica.correlacion.nota': 'Con {indice}',
+  'cartera.metrica.sesionesPositivas': 'Sesiones positivas',
+  'cartera.metrica.sesionesPositivas.nota': 'Del total',
+  'cartera.metrica.mejorSesion': 'Mejor sesión',
+  'cartera.metrica.peorSesion': 'Peor sesión',
+  'cartera.metrica.sesion.nota': 'Variación diaria',
+
+  // ══════════════════ Cartera · gráfico SVG (grafico.js) ══════════════════
+  'grafico.indice': 'Índice',
+  'grafico.vacio.titulo': 'Serie no disponible',
+  'grafico.vacio.detalle': 'No existe histórico suficiente para representar la evolución de la cartera.',
+  'grafico.etiqueta': 'Gráfico de evolución de la cartera. Use las flechas para recorrer las sesiones.',
+  // Descripción equivalente para lectores de pantalla. Vive entera aquí: el
+  // inglés no ordena estas piezas como el castellano.
+  'grafico.descripcion': {
+    one: 'Serie de {n} sesión entre el {desde} y el {hasta}. La cartera evoluciona desde {inicial} hasta {final} en base 100, lo que representa una variación del {variacion}. Comparada con {indice}. El detalle numérico completo está disponible en la tabla de datos.',
+    other: 'Serie de {n} sesiones entre el {desde} y el {hasta}. La cartera evoluciona desde {inicial} hasta {final} en base 100, lo que representa una variación del {variacion}. Comparada con {indice}. El detalle numérico completo está disponible en la tabla de datos.',
+  },
+  'grafico.emergente.cartera': 'Cartera',
+  'grafico.emergente.acumulado': 'Acumulado',
+
+  'general.si': 'Sí',
+  'general.no': 'No',
 };

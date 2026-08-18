@@ -100,7 +100,11 @@ function clavesPedidas(archivos) {
  */
 function clavesMencionadas(archivos) {
   const vistas = new Set();
-  for (const [, src] of archivos) {
+  for (const [nombre, src] of archivos) {
+    // El diccionario no se nombra a sí mismo: incluirlo daba por usada toda
+    // clave declarada —su propia declaración la mencionaba— y dejaba la
+    // comprobación sin poder saltar nunca.
+    if (nombre.startsWith('idiomas/')) continue;
     for (const m of src.matchAll(/['"]([a-z][\w]*(?:\.[\w]+)+)['"]/gi)) vistas.add(m[1]);
     for (const m of src.matchAll(/data-i18n(?:-attr)?="([^"]+)"/g)) {
       for (const trozo of m[1].split(';')) {
