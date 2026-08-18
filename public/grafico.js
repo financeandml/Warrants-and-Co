@@ -1,4 +1,5 @@
 import { localeFormato, formatearPorcentaje } from './formato.js';
+import { t } from './i18n.js';
 /* ============================================================================
    Grafico de evolucion de cartera — SVG, sin dependencias externas.
 
@@ -19,17 +20,21 @@ const crear = (nombre, atributos = {}) => {
   return el;
 };
 
-const MESES = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+/* ── Fechas ──
+   Las redacta el navegador, no una tabla de meses escrita a mano: aquella solo
+   sabia castellano y habria necesitado una copia por idioma. `toLocaleDateString`
+   ademas ordena las piezas como toca —«17 ago» frente a «Aug 17»—, algo que una
+   plantilla con dia y mes concatenados no puede hacer.
 
-function fechaCorta(iso) {
-  const [a, m, d] = iso.split('-');
-  return `${Number(d)} ${MESES[Number(m) - 1]}`;
-}
+   Se construye la fecha a mediodia UTC. A medianoche, un huso al oeste de
+   Greenwich la retrasaria al dia anterior y el eje rotularia un dia menos. */
+const fecha_ = (iso) => new Date(`${String(iso).slice(0, 10)}T12:00:00Z`);
 
-function fechaLarga(iso) {
-  const [a, m, d] = iso.split('-');
-  return `${Number(d)} de ${MESES[Number(m) - 1]} de ${a}`;
-}
+const fechaCorta = (iso) =>
+  fecha_(iso).toLocaleDateString(localeFormato(), { day: 'numeric', month: 'short' });
+
+const fechaLarga = (iso) =>
+  fecha_(iso).toLocaleDateString(localeFormato(), { day: 'numeric', month: 'long', year: 'numeric' });
 
 const num = (v, dec = 2) =>
   v === null || v === undefined || !Number.isFinite(v)
@@ -53,7 +58,7 @@ export class GraficoCartera {
   #contenedor;
   #emergente;
   #svg = null;
-  #datos = { cartera: [], indice: [], nombreIndice: 'Índice' };
+  #datos = { cartera: [], indice: [], nombreIndice: '' };
   #geometria = null;
   #indiceActivo = null;
   #observador = null;
@@ -94,7 +99,7 @@ export class GraficoCartera {
     this.#datos = {
       cartera: Array.isArray(cartera) ? cartera.filter((p) => Number.isFinite(p.valor)) : [],
       indice: Array.isArray(indice) ? indice.filter((p) => Number.isFinite(p.valor)) : [],
-      nombreIndice: nombreIndice || 'Índice',
+      nombreIndice: nombreIndice || t('grafico.indice'),
     };
     this.#dibujar();
   }
@@ -108,14 +113,11 @@ export class GraficoCartera {
       if (!this.#contenedor.querySelector('.vacio')) {
         const vacio = document.createElement('div');
         vacio.className = 'vacio';
-        const t = document.createElement('strong');
-        t.textContent = 'Serie no disponible';
-        vacio.appendChild(t);
-        vacio.appendChild(
-          document.createTextNode(
-            'No existe histórico suficiente para representar la evolución de la cartera.'
-          )
-        );
+        // `titulo`, y no `t`: `t` es el traductor importado arriba.
+        const titulo = document.createElement('strong');
+        titulo.textContent = t('grafico.vacio.titulo');
+        vacio.appendChild(titulo);
+        vacio.appendChild(document.createTextNode(t('grafico.vacio.detalle')));
         this.#contenedor.appendChild(vacio);
       }
       return;
@@ -140,16 +142,18 @@ export class GraficoCartera {
       preserveAspectRatio: 'xMidYMid meet',
       tabindex: '0',
       role: 'application',
-      'aria-label': 'Gráfico de evolución de la cartera. Use las flechas para recorrer las sesiones.',
+      'aria-label': t('grafico.etiqueta'),
     });
 
     // ── Rejilla y eje de valores ──
-    for (const t of ticks) {
-      const py = y(t);
+    // `marca`, y no `t`: `t` es el traductor, y usarlo de variable de bucle lo
+    // taparia justo donde alguien querria traducir.
+    for (const marca of ticks) {
+      const py = y(marca);
       if (py < MARGEN.arriba - 1 || py > MARGEN.arriba + altoUtil + 1) continue;
       svg.appendChild(crear('line', { class: 'grafico__rejilla', x1: MARGEN.izquierda, x2: MARGEN.izquierda + anchoUtil, y1: py, y2: py }));
       const et = crear('text', { class: 'grafico__texto', x: MARGEN.izquierda - 10, y: py + 3.5, 'text-anchor': 'end' });
-      et.textContent = num(t, 0);
+      et.textContent = num(marca, 0);
       svg.appendChild(et);
     }
 
@@ -261,12 +265,16 @@ export class GraficoCartera {
     const { cartera, nombreIndice } = this.#datos;
     const primero = cartera[0];
     const ultimo = cartera[cartera.length - 1];
-    const variacion = ((ultimo.valor / primero.valor - 1) * 100).toFixed(2);
-    destino.textContent =
-      `Serie de ${cartera.length} sesiones entre el ${fechaLarga(primero.fecha)} y el ${fechaLarga(ultimo.fecha)}. ` +
-      `La cartera evoluciona desde ${num(primero.valor)} hasta ${num(ultimo.valor)} en base 100, ` +
-      `lo que representa una variación del ${variacion} por ciento. Comparada con ${nombreIndice}. ` +
-      `El detalle numérico completo está disponible en la tabla de datos.`;
+    const variacion = (ultimo.valor / primero.valor - 1) * 100;
+    destino.textContent = t('grafico.descripcion', {
+      n: cartera.length,
+      desde: fechaLarga(primero.fecha),
+      hasta: fechaLarga(ultimo.fecha),
+      inicial: num(primero.valor),
+      final: num(ultimo.valor),
+      variacion: formatearPorcentaje(variacion),
+      indice: nombreIndice,
+    });
   }
 
   #posicionDesdeEvento(ev) {
@@ -370,14 +378,14 @@ export class GraficoCartera {
       e.appendChild(f);
     };
 
-    fila('Cartera', valorCartera, false);
+    fila(t('grafico.emergente.cartera'), valorCartera, false);
     if (Number.isFinite(valorIndice)) fila(this.#datos.nombreIndice, valorIndice, true);
 
     const variacion = document.createElement('div');
     variacion.className = 'emergente__fila';
     const etq = document.createElement('span');
     etq.className = 'emergente__nombre';
-    etq.textContent = 'Acumulado';
+    etq.textContent = t('grafico.emergente.acumulado');
     const val = document.createElement('span');
     val.className = 'emergente__valor';
     const pct = (valorCartera / base - 1) * 100;

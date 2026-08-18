@@ -10,6 +10,7 @@
     "copia": "node scripts/copia.js",
     "test": "node tests/humo.js",
     "test:idiomas": "node tests/idiomas.js",
+    "test:repintado": "node tests/repintado.js",
     "test:derivadas": "node tests/derivadas.js"
   },
   "type": "commonjs",

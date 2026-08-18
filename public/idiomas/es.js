@@ -485,4 +485,12 @@ export default {
 
   'general.si': 'Sí',
   'general.no': 'No',
+
+  // Los cuatro niveles de acceso llegan del servidor ya rotulados, pero ese
+  // rótulo es vocabulario de la interfaz —no algo que haya escrito un
+  // analista—, así que se traduce desde la clave, que sí es estable.
+  'informe.acceso.publico': 'Público',
+  'informe.acceso.cliente': 'Cliente',
+  'informe.acceso.institucional': 'Institucional',
+  'informe.acceso.interno': 'Interno',
 };

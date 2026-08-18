@@ -813,9 +813,11 @@
                 <tr>
                   <th scope="col" data-i18n="cartera.serie.fecha">Fecha</th>
                   <th scope="col" class="num" data-i18n="cartera.serie.cartera">Cartera</th>
-                  <!-- Sin `data-i18n`: lo rotula `pintarGrafico()` con el ticker
-                       del índice elegido, que no es texto de interfaz. -->
-                  <th scope="col" class="num" id="cabecera-indice">Índice</th>
+                  <!-- Rótulo previo a los datos: `pintarGrafico()` lo sustituye
+                       por el ticker del índice elegido, que no es texto de
+                       interfaz y por tanto no se traduce. -->
+                  <th scope="col" class="num" id="cabecera-indice"
+                      data-i18n="cartera.serie.indice">Índice</th>
                   <th scope="col" class="num" data-i18n="cartera.serie.diferencial">Diferencial</th>
                 </tr>
               </thead>
@@ -948,8 +950,8 @@
     <button class="dialogo__cerrar" value="cancelar"
             data-i18n-attr="aria-label:general.cerrar" aria-label="Cerrar">&times;</button>
   </form>
-  <h2 id="titulo-dialogo-informe">Publicar informe</h2>
-  <p class="dialogo__entradilla">
+  <h2 id="titulo-dialogo-informe" data-i18n="informe.titulo.publicar">Publicar informe</h2>
+  <p class="dialogo__entradilla" data-i18n="informe.entradilla">
     Complete la ficha analítica. Los campos marcados con asterisco son obligatorios.
   </p>
 
@@ -957,23 +959,24 @@
     <input type="hidden" name="id">
 
     <fieldset>
-      <legend>Identificación del emisor</legend>
+      <legend data-i18n="informe.grupo.emisor">Identificación del emisor</legend>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Denominación social *</span>
+          <span data-i18n="informe.campo.empresa">Denominación social *</span>
           <input type="text" name="empresa" required maxlength="160" autocomplete="off">
         </label>
         <label class="campo">
-          <span>Ticker</span>
+          <span data-i18n="informe.campo.ticker">Ticker</span>
+          <!-- «ORCL» es un ejemplo de ticker, no texto de interfaz: no se traduce. -->
           <input type="text" name="ticker" maxlength="12" autocomplete="off" placeholder="ORCL">
         </label>
         <label class="campo">
-          <span>Sector</span>
+          <span data-i18n="informe.campo.sector">Sector</span>
           <input type="text" name="sector" maxlength="80" list="lista-sectores" autocomplete="off">
           <datalist id="lista-sectores"></datalist>
         </label>
         <label class="campo">
-          <span>País</span>
+          <span data-i18n="informe.campo.pais">País</span>
           <input type="text" name="pais" maxlength="60" list="lista-paises" autocomplete="off">
           <datalist id="lista-paises"></datalist>
         </label>
@@ -981,71 +984,78 @@
     </fieldset>
 
     <fieldset>
-      <legend>Clasificación del informe</legend>
+      <legend data-i18n="informe.grupo.clasificacion">Clasificación del informe</legend>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Tipo de informe</span>
+          <span data-i18n="informe.campo.tipo">Tipo de informe</span>
           <select name="tipo_informe" id="campo-tipo"></select>
         </label>
         <label class="campo">
-          <span>Periodo</span>
-          <input type="text" name="periodo" maxlength="40" placeholder="Ejercicio 2026 / 1T 2026" autocomplete="off">
+          <span data-i18n="informe.campo.periodo">Periodo</span>
+          <input type="text" name="periodo" maxlength="40" autocomplete="off"
+                 data-i18n-attr="placeholder:informe.campo.periodo.hint"
+                 placeholder="Ejercicio 2026 / 1T 2026">
         </label>
         <label class="campo">
-          <span>Analista</span>
+          <span data-i18n="informe.campo.analista">Analista</span>
           <input type="text" name="analista" maxlength="120" list="lista-analistas" autocomplete="off">
           <datalist id="lista-analistas"></datalist>
         </label>
         <label class="campo">
-          <span>Fecha de publicación *</span>
+          <span data-i18n="informe.campo.fecha">Fecha de publicación *</span>
           <input type="date" name="fecha_publicacion" required>
         </label>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Valoración</legend>
+      <legend data-i18n="informe.grupo.valoracion">Valoración</legend>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Recomendación</span>
+          <span data-i18n="informe.campo.recomendacion">Recomendación</span>
           <select name="recomendacion" id="campo-recomendacion"></select>
         </label>
         <label class="campo">
-          <span>Precio objetivo</span>
+          <span data-i18n="informe.campo.precioObjetivo">Precio objetivo</span>
           <input type="number" name="precio_objetivo" step="0.01" min="0" inputmode="decimal">
         </label>
         <label class="campo">
-          <span>Divisa</span>
+          <span data-i18n="informe.campo.divisa">Divisa</span>
           <select name="divisa" id="campo-divisa"></select>
         </label>
         <label class="campo">
-          <span>Peso en cartera (%)</span>
+          <span data-i18n="informe.campo.peso">Peso en cartera (%)</span>
           <input type="number" name="peso_cartera" step="0.1" min="0" max="100" inputmode="decimal"
+                 data-i18n-attr="placeholder:informe.campo.peso.hint"
                  placeholder="Equiponderado si se omite">
         </label>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Operativa de la posición</legend>
+      <legend data-i18n="informe.grupo.operativa">Operativa de la posición</legend>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Precio de compra</span>
+          <span data-i18n="informe.campo.precioCompra">Precio de compra</span>
           <input type="number" name="precio_compra" step="0.0001" min="0" inputmode="decimal"
+                 data-i18n-attr="placeholder:informe.campo.precioCompra.hint"
                  placeholder="Precio pagado por acción">
         </label>
         <label class="campo">
-          <span>Take profit</span>
+          <span data-i18n="informe.campo.takeProfit">Take profit</span>
           <input type="number" name="take_profit" step="0.0001" min="0" inputmode="decimal"
+                 data-i18n-attr="placeholder:informe.campo.takeProfit.hint"
                  placeholder="Nivel de venta">
         </label>
         <label class="campo">
-          <span>Stop loss</span>
+          <span data-i18n="informe.campo.stopLoss">Stop loss</span>
           <input type="number" name="stop_loss" step="0.0001" min="0" inputmode="decimal"
+                 data-i18n-attr="placeholder:informe.campo.stopLoss.hint"
                  placeholder="Opcional">
         </label>
       </div>
-      <p class="dialogo__entradilla" style="padding:12px 0 0; font-size:0.8rem">
+      <p class="dialogo__entradilla" style="padding:12px 0 0; font-size:0.8rem"
+         data-i18n="informe.operativa.nota">
         El precio de compra fija el coste real de la posición y sustituye al cierre de la sesión
         de publicación. Al alcanzarse el take profit, la posición se liquida automáticamente a ese
         nivel, deja de figurar en cartera y su importe permanece como liquidez hasta que una nueva
@@ -1054,39 +1064,41 @@
     </fieldset>
 
     <fieldset>
-      <legend>Contenido y difusión</legend>
+      <legend data-i18n="informe.grupo.contenido">Contenido y difusión</legend>
       <label class="campo">
-        <span>Resumen ejecutivo</span>
+        <span data-i18n="informe.campo.resumen">Resumen ejecutivo</span>
         <textarea name="resumen_ejecutivo" rows="6" maxlength="8000"
+                  data-i18n-attr="placeholder:informe.campo.resumen.hint"
                   placeholder="Síntesis de la tesis, catalizadores y principales factores de riesgo."></textarea>
       </label>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Etiquetas libres</span>
+          <span data-i18n="informe.campo.etiquetas">Etiquetas libres</span>
           <input type="text" name="etiquetas" maxlength="400" autocomplete="off"
+                 data-i18n-attr="placeholder:informe.campo.etiquetas.hint"
                  placeholder="Separadas por comas: cloud, márgenes, catalizador">
         </label>
         <label class="campo">
-          <span>Nivel de acceso</span>
+          <span data-i18n="informe.campo.nivel">Nivel de acceso</span>
           <select name="nivel_acceso" id="campo-nivel"></select>
         </label>
       </div>
       <div class="fila-conmutadores">
         <label class="casilla">
           <input type="checkbox" name="destacado" value="true">
-          <span>Destacar en portada</span>
+          <span data-i18n="informe.campo.destacar">Destacar en portada</span>
         </label>
         <label class="casilla">
           <input type="checkbox" name="en_cartera" value="true" checked>
-          <span>Incorporar a la cartera</span>
+          <span data-i18n="informe.campo.incorporar">Incorporar a la cartera</span>
         </label>
       </div>
     </fieldset>
 
     <fieldset>
-      <legend>Documentación</legend>
+      <legend data-i18n="informe.grupo.documentacion">Documentación</legend>
       <label class="campo campo--fichero">
-        <span>Adjuntar informes (PDF, Word o Excel · máximo 25 MB por documento)</span>
+        <span data-i18n="informe.campo.ficheros">Adjuntar informes (PDF, Word o Excel · máximo 25 MB por documento)</span>
         <input type="file" name="ficheros" id="campo-ficheros" multiple
                accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       </label>
@@ -1096,10 +1108,13 @@
     <div class="dialogo__errores" id="errores-formulario" hidden aria-live="assertive"></div>
 
     <div class="dialogo__pie">
-      <button class="boton boton--texto" type="button" id="btn-eliminar-informe" hidden>Eliminar informe</button>
+      <button class="boton boton--texto" type="button" id="btn-eliminar-informe" hidden
+              data-i18n="informe.eliminar">Eliminar informe</button>
       <div class="dialogo__pie-derecha">
-        <button class="boton boton--contorno" type="button" id="btn-cancelar-informe">Cancelar</button>
-        <button class="boton boton--solido" type="submit" id="btn-guardar-informe">Publicar</button>
+        <button class="boton boton--contorno" type="button" id="btn-cancelar-informe"
+                data-i18n="informe.cancelar">Cancelar</button>
+        <button class="boton boton--solido" type="submit" id="btn-guardar-informe"
+                data-i18n="informe.guardar.publicar">Publicar</button>
       </div>
     </div>
   </form>
@@ -1108,7 +1123,8 @@
 <!-- ══════════════════════════ DIÁLOGO: DETALLE ══════════════════════════ -->
 <dialog class="dialogo dialogo--detalle" id="dialogo-detalle">
   <form method="dialog" class="dialogo__cerrar-envoltorio">
-    <button class="dialogo__cerrar" value="cerrar" aria-label="Cerrar">&times;</button>
+    <button class="dialogo__cerrar" value="cerrar"
+            data-i18n-attr="aria-label:general.cerrar" aria-label="Cerrar">&times;</button>
   </form>
   <div id="contenido-detalle"></div>
 </dialog>

@@ -10,7 +10,7 @@ import { iniciarIdioma, t, tNodos } from './i18n.js';
 import { activarApariciones, pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
 import {
-  $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje,
+  $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
 import {
   pintarSnapshot, pintarRadar, pintarSignal, pintarPanelCartera,
@@ -39,6 +39,11 @@ const estado = {
   filtros: {},
   pagina: 1,
   vocabularios: null,
+  // Últimas cargas resueltas. Existen para que un cambio de idioma repinte con
+  // lo que ya hay en memoria en vez de volver a pedirlo: cambian los rótulos,
+  // no los datos.
+  informes: null,
+  formularioEditando: false,
   cartera: null,
   rangoGrafico: 'MAX',
   benchmark: 'SPY',
@@ -189,7 +194,10 @@ const MEMORIAS_DERIVADAS = {
     estado.opciones.cadena = null;
   },
   radar: () => {},
-  repositorio: () => {},
+  // El catálogo también guarda su última carga para repintarse por idioma: sin
+  // retirarla, publicar una tesis y conmutar el idioma repintaría la tabla con
+  // la lista anterior, que es exactamente lo que este mapa existe para impedir.
+  repositorio: () => { estado.informes = null; },
   companias: () => {},
   catalizadores: () => {},
 };
@@ -317,35 +325,6 @@ async function cargarPanel() {
   await Promise.allSettled(trabajos);
 }
 
-function construirFicha(informe) {
-  const ficha = elemento('button', 'ficha');
-  ficha.type = 'button';
-  ficha.addEventListener('click', () => abrirDetalle(informe.id));
-
-  const superior = elemento('div', 'ficha__superior');
-  if (informe.ticker) superior.appendChild(elemento('span', 'ficha__ticker', informe.ticker));
-  superior.appendChild(elemento('span', null, informe.tipo_informe || 'Informe'));
-  if (informe.destacado) superior.appendChild(elemento('span', 'distintivo distintivo--solido', 'Destacado'));
-  ficha.appendChild(superior);
-
-  ficha.appendChild(elemento('h3', 'ficha__titulo', informe.empresa));
-
-  if (informe.resumen_ejecutivo) {
-    ficha.appendChild(elemento('p', 'ficha__resumen', informe.resumen_ejecutivo));
-  }
-
-  const pie = elemento('div', 'ficha__pie');
-  if (informe.recomendacion) pie.appendChild(elemento('span', 'distintivo distintivo--fuerte', informe.recomendacion));
-  if (informe.precio_objetivo != null) {
-    pie.appendChild(elemento('span', null, `P.O. ${formatearMoneda(informe.precio_objetivo, informe.divisa)}`));
-  }
-  pie.appendChild(elemento('span', null, formatearFecha(informe.fecha_publicacion)));
-  for (const a of informe.adjuntos ?? []) pie.appendChild(elemento('span', 'formato-doc', a.formato));
-  ficha.appendChild(pie);
-
-  return ficha;
-}
-
 // ────────────────────────────── repositorio ──────────────────────────────
 
 async function cargarVocabularios() {
@@ -374,9 +353,31 @@ function poblarSelect(select, valores, textoVacio, rotular = (v) => v) {
   if (previo && valores.includes(previo)) select.value = previo;
 }
 
-/** Denominación visible de un nivel de acceso, resuelta contra el vocabulario del servidor. */
+/**
+ * Rótulo de cada nivel de acceso.
+ *
+ * Tabla y no plantilla `informe.acceso.${nivel}`: escritas, las claves quedan a
+ * la vista de quien lea el fichero y de la prueba de paridad, que comprueba
+ * que existen y avisa de las que sobran. Es la misma pauta de `navegacion.js`.
+ */
+const CLAVES_ACCESO = {
+  publico: 'informe.acceso.publico',
+  cliente: 'informe.acceso.cliente',
+  institucional: 'informe.acceso.institucional',
+  interno: 'informe.acceso.interno',
+};
+
+/**
+ * Denominación visible de un nivel de acceso.
+ *
+ * Manda el diccionario, y el rótulo del servidor queda de reserva: la clave
+ * —`publico`, `cliente`…— es estable y traducible, mientras que el rótulo llega
+ * siempre en castellano y dejaría «Institucional» en mitad de la interfaz
+ * inglesa. Un nivel que la tabla no recoja sigue mostrándose.
+ */
 function etiquetaAcceso(nivel) {
   if (!nivel) return '—';
+  if (CLAVES_ACCESO[nivel]) return t(CLAVES_ACCESO[nivel]);
   return estado.vocabularios?.etiquetasAcceso?.[nivel]
     ?? nivel[0].toUpperCase() + nivel.slice(1);
 }
@@ -384,12 +385,15 @@ function etiquetaAcceso(nivel) {
 function poblarFiltros() {
   const v = estado.vocabularios;
   if (!v) return;
-  poblarSelect($('#filtro-sector'), v.sectores, 'Todos');
-  poblarSelect($('#filtro-pais'), v.paises, 'Todos');
-  poblarSelect($('#filtro-tipo'), v.tipos, 'Todos');
-  poblarSelect($('#filtro-recomendacion'), v.recomendaciones, 'Todas');
-  poblarSelect($('#filtro-analista'), v.analistas, 'Todos');
-  poblarSelect($('#filtro-nivel'), v.nivelesAcceso, 'Todos', etiquetaAcceso);
+  // «Todos» y «Todas» son dos claves, no una: el castellano concuerda con el
+  // sustantivo elidido —«todas las recomendaciones»— y el inglés no distingue.
+  const todos = t('repositorio.filtro.todos');
+  poblarSelect($('#filtro-sector'), v.sectores, todos);
+  poblarSelect($('#filtro-pais'), v.paises, todos);
+  poblarSelect($('#filtro-tipo'), v.tipos, todos);
+  poblarSelect($('#filtro-recomendacion'), v.recomendaciones, t('repositorio.filtro.todas'));
+  poblarSelect($('#filtro-analista'), v.analistas, todos);
+  poblarSelect($('#filtro-nivel'), v.nivelesAcceso, todos, etiquetaAcceso);
 
   const nube = $('#nube-etiquetas');
   const lista = $('#lista-etiquetas');
@@ -426,7 +430,6 @@ function recogerFiltros() {
 }
 
 async function cargarInformes() {
-  const cuerpo = $('#cuerpo-tabla-informes');
   const envoltorio = $('.tabla-envoltorio');
   envoltorio?.classList.add('cargando');
 
@@ -434,24 +437,10 @@ async function cargarInformes() {
 
   try {
     const datos = await api(`/api/informes?${parametros}`);
-    cuerpo.textContent = '';
-
-    if (!datos.informes.length) {
-      const fila = document.createElement('tr');
-      const celda = document.createElement('td');
-      celda.colSpan = 11;
-      const vacio = elemento('div', 'vacio');
-      vacio.appendChild(elemento('strong', null, 'Sin resultados'));
-      vacio.appendChild(document.createTextNode('Ningún informe coincide con los criterios seleccionados.'));
-      celda.appendChild(vacio);
-      fila.appendChild(celda);
-      cuerpo.appendChild(fila);
-    } else {
-      for (const i of datos.informes) cuerpo.appendChild(construirFila(i));
-    }
-
-    pintarResumen(datos.paginacion);
-    pintarPaginacion(datos.paginacion);
+    // Se guarda la carga para poder repintar la tabla al cambiar de idioma sin
+    // volver a pedirla: un cambio de rótulos no es un cambio de datos.
+    estado.informes = datos;
+    pintarInformes(datos);
   } catch (err) {
     avisar(err.message);
   } finally {
@@ -459,11 +448,35 @@ async function cargarInformes() {
   }
 }
 
+/** Pinta la tabla del repositorio a partir de una carga ya resuelta. */
+function pintarInformes(datos) {
+  const cuerpo = $('#cuerpo-tabla-informes');
+  if (!cuerpo || !datos) return;
+  cuerpo.textContent = '';
+
+  if (!datos.informes.length) {
+    const fila = document.createElement('tr');
+    const celda = document.createElement('td');
+    celda.colSpan = 11;
+    const vacio = elemento('div', 'vacio');
+    vacio.appendChild(elemento('strong', null, t('repositorio.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('repositorio.vacio.detalle')));
+    celda.appendChild(vacio);
+    fila.appendChild(celda);
+    cuerpo.appendChild(fila);
+  } else {
+    for (const i of datos.informes) cuerpo.appendChild(construirFila(i));
+  }
+
+  pintarResumen(datos.paginacion);
+  pintarPaginacion(datos.paginacion);
+}
+
 function construirFila(informe) {
   const fila = document.createElement('tr');
   fila.tabIndex = 0;
   fila.setAttribute('role', 'button');
-  fila.setAttribute('aria-label', `Abrir informe de ${informe.empresa}`);
+  fila.setAttribute('aria-label', t('repositorio.fila.abrir', { empresa: informe.empresa }));
   const abrir = () => abrirDetalle(informe.id);
   fila.addEventListener('click', abrir);
   fila.addEventListener('keydown', (ev) => {
@@ -473,7 +486,7 @@ function construirFila(informe) {
   const celdaEmpresa = elemento('td', 'celda-empresa');
   celdaEmpresa.appendChild(document.createTextNode(informe.empresa));
   if (informe.destacado) {
-    const marca = elemento('small', null, 'Destacado por el equipo');
+    const marca = elemento('small', null, t('repositorio.destacadoEquipo'));
     celdaEmpresa.appendChild(marca);
   }
   fila.appendChild(celdaEmpresa);
@@ -504,9 +517,9 @@ function construirFila(informe) {
   const celdaAcciones = elemento('td', 'celda-acciones');
   celdaAcciones.hidden = !hayCredencial();
   if (hayCredencial()) {
-    const editar = elemento('button', 'boton boton--contorno', 'Editar');
+    const editar = elemento('button', 'boton boton--contorno', t('repositorio.editar'));
     editar.type = 'button';
-    editar.setAttribute('aria-label', `Editar el informe de ${informe.empresa}`);
+    editar.setAttribute('aria-label', t('repositorio.fila.editar', { empresa: informe.empresa }));
     editar.addEventListener('click', async (ev) => {
       // El clic no debe propagarse a la fila, que abre la ficha de lectura.
       ev.stopPropagation();
@@ -526,9 +539,12 @@ function construirFila(informe) {
 function pintarResumen(p) {
   const desde = (p.pagina - 1) * p.limite + 1;
   const hasta = Math.min(p.pagina * p.limite, p.total);
+  // El plural lo elige `Intl.PluralRules` sobre las formas que declara cada
+  // idioma, no un `informe${n === 1 ? '' : 's'}` que impondría a todos la
+  // morfología del castellano.
   $('#resumen-resultados').textContent = p.total
-    ? `Mostrando ${desde}–${hasta} de ${p.total} informe${p.total === 1 ? '' : 's'}`
-    : 'Sin resultados';
+    ? t('repositorio.resumen', { n: p.total, desde, hasta })
+    : t('repositorio.vacio.titulo');
 }
 
 function pintarPaginacion(p) {
@@ -567,7 +583,7 @@ async function abrirDetalle(id) {
   const dialogo = $('#dialogo-detalle');
   const contenido = $('#contenido-detalle');
   contenido.textContent = '';
-  contenido.appendChild(elemento('div', 'detalle', 'Cargando informe…'));
+  contenido.appendChild(elemento('div', 'detalle', t('informe.detalle.cargando')));
   dialogo.showModal();
 
   try {
@@ -577,7 +593,7 @@ async function abrirDetalle(id) {
   } catch (err) {
     contenido.textContent = '';
     const d = elemento('div', 'detalle');
-    d.appendChild(elemento('h2', null, 'No disponible'));
+    d.appendChild(elemento('h2', null, t('informe.detalle.noDisponible')));
     d.appendChild(elemento('p', 'detalle__subtitulo', err.message));
     contenido.appendChild(d);
   }
@@ -590,13 +606,14 @@ function construirDetalle(i) {
   if (i.ticker) superior.appendChild(elemento('span', 'ficha__ticker', i.ticker));
   if (i.tipo_informe) superior.appendChild(elemento('span', 'distintivo', i.tipo_informe));
   if (i.recomendacion) superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', i.recomendacion));
-  if (i.destacado) superior.appendChild(elemento('span', 'distintivo distintivo--solido', 'Destacado'));
+  if (i.destacado) superior.appendChild(elemento('span', 'distintivo distintivo--solido', t('informe.detalle.destacado')));
   raiz.appendChild(superior);
 
   raiz.appendChild(elemento('h2', null, i.empresa));
 
   const partes = [i.sector, i.pais, i.periodo].filter(Boolean);
-  raiz.appendChild(elemento('p', 'detalle__subtitulo', partes.join(' · ') || 'Ficha analítica'));
+  raiz.appendChild(elemento('p', 'detalle__subtitulo',
+    partes.join(t('general.separadorLista')) || t('informe.detalle.fichaAnalitica')));
 
   const datos = elemento('dl', 'detalle__datos');
   const dato = (etiqueta, valor) => {
@@ -605,27 +622,28 @@ function construirDetalle(i) {
     bloque.appendChild(elemento('dd', null, valor));
     datos.appendChild(bloque);
   };
-  dato('Analista', i.analista || '—');
-  dato('Publicación', formatearFecha(i.fecha_publicacion));
-  dato('Precio objetivo', i.precio_objetivo != null ? formatearMoneda(i.precio_objetivo, i.divisa) : '—');
-  dato('Nivel de acceso', etiquetaAcceso(i.nivel_acceso));
-  dato('En cartera', i.en_cartera ? 'Si' : 'No');
-  if (i.peso_cartera != null) dato('Peso asignado', `${formatearNumero(i.peso_cartera)} %`);
-  if (i.precio_compra != null) dato('Precio de compra', formatearMoneda(i.precio_compra, i.divisa));
-  if (i.take_profit != null) dato('Take profit', formatearMoneda(i.take_profit, i.divisa));
-  if (i.stop_loss != null) dato('Stop loss', formatearMoneda(i.stop_loss, i.divisa));
+  dato(t('informe.detalle.analista'), i.analista || '—');
+  dato(t('informe.detalle.publicacion'), formatearFecha(i.fecha_publicacion));
+  dato(t('informe.detalle.precioObjetivo'),
+    i.precio_objetivo != null ? formatearMoneda(i.precio_objetivo, i.divisa) : '—');
+  dato(t('informe.detalle.nivelAcceso'), etiquetaAcceso(i.nivel_acceso));
+  dato(t('informe.detalle.enCartera'), i.en_cartera ? t('general.si') : t('general.no'));
+  if (i.peso_cartera != null) dato(t('informe.detalle.pesoAsignado'), porcentaje(i.peso_cartera));
+  if (i.precio_compra != null) dato(t('informe.detalle.precioCompra'), formatearMoneda(i.precio_compra, i.divisa));
+  if (i.take_profit != null) dato(t('informe.detalle.takeProfit'), formatearMoneda(i.take_profit, i.divisa));
+  if (i.stop_loss != null) dato(t('informe.detalle.stopLoss'), formatearMoneda(i.stop_loss, i.divisa));
   raiz.appendChild(datos);
 
   if (i.resumen_ejecutivo) {
     const s = elemento('div', 'detalle__seccion');
-    s.appendChild(elemento('h3', null, 'Resumen ejecutivo'));
+    s.appendChild(elemento('h3', null, t('informe.detalle.resumen')));
     s.appendChild(elemento('p', 'detalle__resumen', i.resumen_ejecutivo));
     raiz.appendChild(s);
   }
 
   if (i.etiquetas?.length) {
     const s = elemento('div', 'detalle__seccion');
-    s.appendChild(elemento('h3', null, 'Etiquetas'));
+    s.appendChild(elemento('h3', null, t('informe.detalle.etiquetas')));
     const cont = elemento('div', 'detalle__etiquetas');
     for (const e of i.etiquetas) cont.appendChild(elemento('span', 'distintivo', e));
     s.appendChild(cont);
@@ -633,7 +651,7 @@ function construirDetalle(i) {
   }
 
   const s = elemento('div', 'detalle__seccion');
-  s.appendChild(elemento('h3', null, 'Documentación'));
+  s.appendChild(elemento('h3', null, t('informe.detalle.documentacion')));
   if (i.adjuntos?.length) {
     const lista = elemento('ul', 'lista-adjuntos');
     for (const a of i.adjuntos) {
@@ -649,13 +667,13 @@ function construirDetalle(i) {
     }
     s.appendChild(lista);
   } else {
-    s.appendChild(elemento('p', 'detalle__subtitulo', 'Este informe todavía no tiene documentación adjunta.'));
+    s.appendChild(elemento('p', 'detalle__subtitulo', t('informe.detalle.sinDocumentacion')));
   }
   raiz.appendChild(s);
 
   if (hayCredencial()) {
     const pie = elemento('div', 'detalle__pie');
-    const editar = elemento('button', 'boton boton--contorno', 'Editar informe');
+    const editar = elemento('button', 'boton boton--contorno', t('informe.detalle.editar'));
     editar.type = 'button';
     editar.addEventListener('click', () => {
       $('#dialogo-detalle').close();
@@ -674,23 +692,33 @@ function poblarFormulario() {
   const v = estado.vocabularios;
   if (!v) return;
 
+  // Conserva la selección porque esta función ya no se ejecuta una sola vez:
+  // `repintarVistas()` la repite en cada cambio de idioma, y una repoblación no
+  // debe alterar el estado del formulario.
   const conVacio = (select, valores, textoVacio) => {
     if (!select) return;
+    const previo = select.value;
     select.textContent = '';
     select.appendChild(opcion('', textoVacio));
     for (const x of valores) select.appendChild(opcion(x, x));
+    if (previo && valores.includes(previo)) select.value = previo;
   };
 
-  conVacio($('#campo-tipo'), v.tipos, 'Sin clasificar');
-  conVacio($('#campo-recomendacion'), v.recomendaciones, 'Sin recomendación');
+  conVacio($('#campo-tipo'), v.tipos, t('informe.select.sinClasificar'));
+  conVacio($('#campo-recomendacion'), v.recomendaciones, t('informe.select.sinRecomendacion'));
 
   const nivel = $('#campo-nivel');
+  const nivelPrevio = nivel.value;
   nivel.textContent = '';
   for (const n of v.nivelesAcceso) nivel.appendChild(opcion(n, etiquetaAcceso(n)));
+  if (nivelPrevio && v.nivelesAcceso.includes(nivelPrevio)) nivel.value = nivelPrevio;
 
+  // Los códigos de divisa no se traducen; se repuebla igualmente por simetría.
   const divisa = $('#campo-divisa');
+  const divisaPrevia = divisa.value;
   divisa.textContent = '';
   for (const d of v.divisas) divisa.appendChild(opcion(d, d));
+  if (divisaPrevia && v.divisas.includes(divisaPrevia)) divisa.value = divisaPrevia;
 
   const rellenar = (id, valores) => {
     const dl = $(id);
@@ -703,6 +731,19 @@ function poblarFormulario() {
   rellenar('#lista-analistas', v.analistas);
 }
 
+/**
+ * Rótulos que dependen del modo del formulario. Viven aparte de
+ * `abrirFormulario()` porque hay que volver a aplicarlos al cambiar de idioma:
+ * la pasada sobre el DOM los devolvería a «Publicar» en mitad de una edición.
+ */
+function reflejarModoFormulario() {
+  const editando = estado.formularioEditando;
+  $('#titulo-dialogo-informe').textContent =
+    t(editando ? 'informe.titulo.editar' : 'informe.titulo.publicar');
+  $('#btn-guardar-informe').textContent =
+    t(editando ? 'informe.guardar.cambios' : 'informe.guardar.publicar');
+}
+
 function abrirFormulario(informe = null) {
   if (!hayCredencial()) { abrirAcceso(); return; }
 
@@ -713,10 +754,9 @@ function abrirFormulario(informe = null) {
   $('#lista-adjuntos-existentes').textContent = '';
   for (const c of $$('[aria-invalid]', form)) c.removeAttribute('aria-invalid');
 
-  const editando = Boolean(informe);
-  $('#titulo-dialogo-informe').textContent = editando ? 'Editar informe' : 'Publicar informe';
-  $('#btn-guardar-informe').textContent = editando ? 'Guardar cambios' : 'Publicar';
-  $('#btn-eliminar-informe').hidden = !editando;
+  estado.formularioEditando = Boolean(informe);
+  reflejarModoFormulario();
+  $('#btn-eliminar-informe').hidden = !estado.formularioEditando;
 
   form.elements.id.value = editando ? informe.id : '';
 
@@ -743,14 +783,14 @@ function abrirFormulario(informe = null) {
         li.appendChild(elemento('span', null, a.nombre_original));
         li.appendChild(elemento('span', 'peso', formatearBytes(a.bytes)));
 
-        const quitar = elemento('button', 'boton boton--texto', 'Retirar');
+        const quitar = elemento('button', 'boton boton--texto', t('informe.adjunto.retirar'));
         quitar.type = 'button';
         quitar.addEventListener('click', async () => {
-          if (!confirm(`¿Retirar el documento «${a.nombre_original}»?`)) return;
+          if (!confirm(t('informe.adjunto.confirmar', { nombre: a.nombre_original }))) return;
           try {
             await api(`/api/informes/${informe.id}/adjuntos/${a.id}`, { method: 'DELETE' });
             li.remove();
-            avisar('Documento retirado.', { claro: true });
+            avisar(t('informe.adjunto.retirado'), { claro: true });
           } catch (err) { avisar(err.message); }
         });
         li.appendChild(quitar);
@@ -790,12 +830,12 @@ async function enviarFormulario(ev) {
   for (const fichero of $('#campo-ficheros').files) datos.append('ficheros', fichero);
 
   boton.disabled = true;
-  boton.textContent = 'Procesando…';
+  boton.textContent = t('informe.guardar.procesando');
 
   try {
     await api(id ? `/api/informes/${id}` : '/api/informes', { method: id ? 'PUT' : 'POST', body: datos });
     $('#dialogo-informe').close();
-    avisar(id ? 'Informe actualizado correctamente.' : 'Informe publicado correctamente.', { claro: true });
+    avisar(t(id ? 'informe.guardado.actualizado' : 'informe.guardado.publicado'), { claro: true });
 
     await invalidarDerivadasDeInformes();
   } catch (err) {
@@ -814,19 +854,19 @@ async function enviarFormulario(ev) {
     panelErrores.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } finally {
     boton.disabled = false;
-    boton.textContent = id ? 'Guardar cambios' : 'Publicar';
+    boton.textContent = t(id ? 'informe.guardar.cambios' : 'informe.guardar.publicar');
   }
 }
 
 async function eliminarInforme() {
   const id = $('#form-informe').elements.id.value;
   if (!id) return;
-  if (!confirm('¿Eliminar definitivamente este informe y su documentación asociada?')) return;
+  if (!confirm(t('informe.eliminar.confirmar'))) return;
 
   try {
     await api(`/api/informes/${id}`, { method: 'DELETE' });
     $('#dialogo-informe').close();
-    avisar('Informe eliminado.', { claro: true });
+    avisar(t('informe.eliminado'), { claro: true });
     await invalidarDerivadasDeInformes();
   } catch (err) {
     avisar(err.message);
@@ -978,6 +1018,33 @@ function repintarInicio() {
   for (const bloque of pintadosInicio) PINTORES_INICIO[bloque]();
 }
 
+/**
+ * Repinta lo que la pasada sobre el DOM no alcanza.
+ *
+ * `traducir()` solo sabe de nodos con `data-i18n`; todo lo que el cliente
+ * construye en JavaScript —tablas, cuadros de mando, diálogos— quedaría en el
+ * idioma anterior. Se repinta desde lo ya cargado, sin volver a la red: cambian
+ * los rótulos, no los datos.
+ *
+ * Se repinta siempre, no solo la sección visible: las demás están ocultas con
+ * `hidden`, y dejarlas sin repintar significaría que al navegar a ellas
+ * aparecen en el idioma anterior hasta que su cargador vuelva a resolver.
+ */
+function repintarVistas() {
+  // Los desplegables se arman en JavaScript —«Todos», «Sin clasificar», los
+  // niveles de acceso—, así que tampoco los alcanza la pasada sobre el DOM.
+  // Ambas funciones conservan la selección vigente.
+  if (estado.vocabularios) { poblarFiltros(); poblarFormulario(); }
+  if (estado.informes) pintarInformes(estado.informes);
+  if (estado.cartera) pintarCartera(estado.cartera, { avisos: false });
+
+  // Los diálogos no entran, y no es un olvido: se abren con `showModal()`, que
+  // deja el conmutador de idioma fuera del alcance del ratón y del tabulador.
+  // Con uno abierto no puede llegar a cambiarse el idioma, de modo que repintar
+  // su contenido sería código que nunca se ejecuta. Si algún día alguno pasara
+  // a `show()` —sin modal—, habría que volver a añadirlos aquí.
+}
+
 // ═══════════════════════════════ COMPANIES ══════════════════════════════
 
 /**
@@ -1115,7 +1182,7 @@ async function cargarCartera({ silencioso = false } = {}) {
     if (cuadro && !cuadro.children.length) {
       cuadro.textContent = '';
       const vacio = elemento('div', 'vacio');
-      vacio.appendChild(elemento('strong', null, 'Datos de mercado no disponibles'));
+      vacio.appendChild(elemento('strong', null, t('cartera.error.mercado')));
       vacio.appendChild(document.createTextNode(err.message));
       cuadro.appendChild(vacio);
     }
@@ -1125,11 +1192,17 @@ async function cargarCartera({ silencioso = false } = {}) {
   }
 }
 
-function pintarCartera(datos) {
+/**
+ * @param {object} datos
+ * @param {object} [opciones] `{ avisos }` — false al repintar por cambio de
+ *   idioma: los avisos ya se mostraron, y volver a lanzarlos cada vez que se
+ *   pulsa ES o EN convertiría el conmutador en una fuente de ruido.
+ */
+function pintarCartera(datos, { avisos = true } = {}) {
   if (datos.vacia) {
     $('#cuadro-mando').textContent = '';
     const vacio = elemento('div', 'vacio');
-    vacio.appendChild(elemento('strong', null, 'Cartera no constituida'));
+    vacio.appendChild(elemento('strong', null, t('cartera.vacia.titulo')));
     vacio.appendChild(document.createTextNode(datos.mensaje));
     $('#cuadro-mando').appendChild(vacio);
     $('#cuerpo-posiciones').textContent = '';
@@ -1148,7 +1221,7 @@ function pintarCartera(datos) {
   // El panel de mercado muestra un resumen de las mismas cifras.
   pintarPanelCartera(datos);
 
-  for (const a of datos.avisos ?? []) avisar(a, { claro: true, duracion: 8000 });
+  if (avisos) for (const a of datos.avisos ?? []) avisar(a, { claro: true, duracion: 8000 });
 }
 
 function pintarCuadroMando(datos) {
@@ -1172,19 +1245,24 @@ function pintarCuadroMando(datos) {
     return acc + (p.variacionDiaPct * p.peso) / 100;
   }, 0);
 
-  indicador('Rentabilidad acumulada', formatearPorcentaje(e.rentabilidadTotal),
-    `Sobre el capital invertido · desde ${formatearFecha(e.inicio)}`,
+  indicador(t('cartera.indicador.rentabilidad'), formatearPorcentaje(e.rentabilidadTotal),
+    t('cartera.indicador.rentabilidad.nota', { fecha: formatearFecha(e.inicio) }),
     { principal: true, variacion: e.rentabilidadTotal });
 
   // El valor indexado es un nivel, no una rentabilidad: se muestra sin signo ni símbolo.
-  indicador('Valor indexado', formatearNumero(e.valorIndexado ?? datos.valorIndice),
-    `Base ${formatearNumero(e.baseCapital ?? 100, 0)} = capital invertido`);
-  indicador('Variación del día', formatearPorcentaje(dia), 'Ponderada por peso', { variacion: dia });
+  indicador(t('cartera.indicador.valorIndexado'), formatearNumero(e.valorIndexado ?? datos.valorIndice),
+    t('cartera.indicador.valorIndexado.nota', { base: formatearNumero(e.baseCapital ?? 100, 0) }));
+  indicador(t('cartera.indicador.dia'), formatearPorcentaje(dia),
+    t('cartera.indicador.dia.nota'), { variacion: dia });
   const cerradas = datos.cerradas ?? [];
-  indicador('Posiciones', String(posiciones.length),
-    cerradas.length ? `${cerradas.length} liquidada${cerradas.length === 1 ? '' : 's'}` : 'Tesis en cartera');
-  indicador('Ratio de Sharpe', formatearNumero(e.ratioSharpe), `Tasa libre de riesgo ${formatearNumero(e.tasaLibreRiesgo, 1)} %`);
-  indicador('Máxima caída', formatearPorcentaje(e.maximaCaida), 'Desde máximo previo');
+  indicador(t('cartera.indicador.posiciones'), String(posiciones.length),
+    cerradas.length
+      ? t('cartera.indicador.posiciones.liquidadas', { n: cerradas.length })
+      : t('cartera.indicador.posiciones.nota'));
+  indicador(t('cartera.indicador.sharpe'), formatearNumero(e.ratioSharpe),
+    t('cartera.indicador.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }));
+  indicador(t('cartera.indicador.maximaCaida'), formatearPorcentaje(e.maximaCaida),
+    t('cartera.indicador.maximaCaida.nota'));
 }
 
 function filtrarPorRango(serie, rango) {
@@ -1225,8 +1303,9 @@ function pintarGrafico(datos) {
   const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark} (${datos.benchmark})`;
   estado.grafico.actualizar(serie, serieIndice, nombreIndice);
 
-  $('#subtitulo-grafico').textContent =
-    `Valor indexado · base 100 en ${formatearFecha(serie[0]?.fecha)} · ${serie.length} sesiones`;
+  $('#subtitulo-grafico').textContent = t('cartera.grafico.subtitulo.serie', {
+    n: serie.length, fecha: formatearFecha(serie[0]?.fecha),
+  });
   $('#cabecera-indice').textContent = datos.benchmark;
 
   pintarLeyenda(serie, serieIndice, nombreIndice);
@@ -1247,7 +1326,7 @@ function pintarLeyenda(serie, serieIndice, nombreIndice) {
     leyenda.appendChild(el);
   };
 
-  entrada('Cartera Warrants & Co.', serie, false);
+  entrada(t('cartera.leyenda.cartera'), serie, false);
   entrada(nombreIndice, serieIndice, true);
 }
 
@@ -1301,7 +1380,8 @@ function celdaRecorrido(p) {
   envoltorio.appendChild(elemento('span', null, formatearPorcentaje(p.recorridoTakeProfitPct)));
 
   celda.appendChild(envoltorio);
-  celda.setAttribute('title', `${formatearNumero(avance * 100)} % del recorrido hasta el take profit`);
+  celda.setAttribute('title',
+    t('cartera.recorrido.title', { avance: porcentaje(avance * 100) }));
   return celda;
 }
 
@@ -1318,7 +1398,7 @@ function pintarPosiciones(datos) {
     valor.appendChild(sub);
     fila.appendChild(valor);
 
-    fila.appendChild(elemento('td', 'num', `${formatearNumero(p.pesoVigente ?? p.peso)} %`));
+    fila.appendChild(elemento('td', 'num', porcentaje(p.pesoVigente ?? p.peso)));
     fila.appendChild(elemento('td', null, formatearFecha(p.fechaEntrada ?? p.fechaAlta)));
     fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioEntrada, p.divisa)));
     fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioActual, p.divisa)));
@@ -1343,7 +1423,7 @@ function pintarPosiciones(datos) {
     const linea = elemento('div', 'exposicion__linea');
     const cab = elemento('div', 'exposicion__cabecera');
     cab.appendChild(elemento('span', null, s.sector));
-    cab.appendChild(elemento('strong', null, `${formatearNumero(s.peso)} %`));
+    cab.appendChild(elemento('strong', null, porcentaje(s.peso)));
     linea.appendChild(cab);
 
     const barra = elemento('div', 'barra');
@@ -1380,7 +1460,8 @@ function pintarCerradas(datos) {
     fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`, formatearPorcentaje(p.rentabilidadPct)));
 
     const motivo = document.createElement('td');
-    motivo.appendChild(elemento('span', 'distintivo distintivo--fuerte', p.motivoCierre ?? 'Cerrada'));
+    motivo.appendChild(elemento('span', 'distintivo distintivo--fuerte',
+      p.motivoCierre ?? t('cartera.cerradas.motivo')));
     fila.appendChild(motivo);
 
     cuerpo.appendChild(fila);
@@ -1394,31 +1475,52 @@ function pintarEstadisticos(datos) {
 
   if (!e) {
     const vacio = elemento('div', 'vacio');
-    vacio.appendChild(elemento('strong', null, 'Estadísticos no disponibles'));
-    vacio.appendChild(document.createTextNode('Se requiere un histórico más amplio para calcular las métricas de riesgo.'));
+    vacio.appendChild(elemento('strong', null, t('cartera.estadisticos.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('cartera.estadisticos.vacio.detalle')));
     rejilla.appendChild(vacio);
     return;
   }
 
   const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark}`;
-  $('#sub-estadisticos').textContent =
-    `Periodo ${formatearFecha(e.inicio)} – ${formatearFecha(e.fin)} · ${e.sesiones} sesiones · referencia ${nombreIndice}`;
+  $('#sub-estadisticos').textContent = t('cartera.estadisticos.periodo', {
+    n: e.sesiones,
+    inicio: formatearFecha(e.inicio),
+    fin: formatearFecha(e.fin),
+    indice: nombreIndice,
+  });
 
+  // El ticker del índice no se traduce —es un nombre—, pero la frase que lo
+  // rodea sí, de modo que viaja como parámetro de la plantilla.
+  const sesion = t('cartera.metrica.sesion.nota');
   const metricas = [
-    ['Rentabilidad total', formatearPorcentaje(e.rentabilidadTotal), 'Del periodo completo', e.rentabilidadTotal],
-    ['Rentabilidad anualizada', formatearPorcentaje(e.rentabilidadAnualizada), 'Tasa compuesta', e.rentabilidadAnualizada],
-    [`Rentabilidad ${datos.benchmark}`, formatearPorcentaje(e.rentabilidadIndice), 'Mismo periodo', e.rentabilidadIndice],
-    ['Volatilidad', formatearPorcentaje(e.volatilidadAnualizada, false), 'Anualizada'],
-    ['Ratio de Sharpe', formatearNumero(e.ratioSharpe), `Exceso sobre ${formatearNumero(e.tasaLibreRiesgo, 1)} %`],
-    ['Ratio de Sortino', formatearNumero(e.ratioSortino), 'Solo riesgo bajista'],
-    ['Ratio de Calmar', formatearNumero(e.ratioCalmar), 'Rentabilidad / máxima caída'],
-    ['Máxima caída', formatearPorcentaje(e.maximaCaida), `${formatearFecha(e.maximaCaidaDesde)} – ${formatearFecha(e.maximaCaidaHasta)}`],
-    ['Beta', formatearNumero(e.beta), `Frente a ${datos.benchmark}`],
-    ['Alfa de Jensen', formatearPorcentaje(e.alfaJensen), 'Anualizada', e.alfaJensen],
-    ['Correlación', formatearNumero(e.correlacionIndice), `Con ${datos.benchmark}`],
-    ['Sesiones positivas', formatearPorcentaje(e.sesionesPositivasPct, false), 'Del total'],
-    ['Mejor sesión', formatearPorcentaje(e.mejorSesion), 'Variación diaria', e.mejorSesion],
-    ['Peor sesión', formatearPorcentaje(e.peorSesion), 'Variación diaria', e.peorSesion],
+    [t('cartera.metrica.rentabilidadTotal'), formatearPorcentaje(e.rentabilidadTotal),
+      t('cartera.metrica.rentabilidadTotal.nota'), e.rentabilidadTotal],
+    [t('cartera.metrica.rentabilidadAnualizada'), formatearPorcentaje(e.rentabilidadAnualizada),
+      t('cartera.metrica.rentabilidadAnualizada.nota'), e.rentabilidadAnualizada],
+    [t('cartera.metrica.rentabilidadIndice', { indice: datos.benchmark }), formatearPorcentaje(e.rentabilidadIndice),
+      t('cartera.metrica.rentabilidadIndice.nota'), e.rentabilidadIndice],
+    [t('cartera.metrica.volatilidad'), formatearPorcentaje(e.volatilidadAnualizada, false),
+      t('cartera.metrica.volatilidad.nota')],
+    [t('cartera.metrica.sharpe'), formatearNumero(e.ratioSharpe),
+      t('cartera.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) })],
+    [t('cartera.metrica.sortino'), formatearNumero(e.ratioSortino),
+      t('cartera.metrica.sortino.nota')],
+    [t('cartera.metrica.calmar'), formatearNumero(e.ratioCalmar),
+      t('cartera.metrica.calmar.nota')],
+    [t('cartera.metrica.maximaCaida'), formatearPorcentaje(e.maximaCaida),
+      t('cartera.metrica.maximaCaida.nota', {
+        desde: formatearFecha(e.maximaCaidaDesde), hasta: formatearFecha(e.maximaCaidaHasta),
+      })],
+    [t('cartera.metrica.beta'), formatearNumero(e.beta),
+      t('cartera.metrica.beta.nota', { indice: datos.benchmark })],
+    [t('cartera.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
+      t('cartera.metrica.alfa.nota'), e.alfaJensen],
+    [t('cartera.metrica.correlacion'), formatearNumero(e.correlacionIndice),
+      t('cartera.metrica.correlacion.nota', { indice: datos.benchmark })],
+    [t('cartera.metrica.sesionesPositivas'), formatearPorcentaje(e.sesionesPositivasPct, false),
+      t('cartera.metrica.sesionesPositivas.nota')],
+    [t('cartera.metrica.mejorSesion'), formatearPorcentaje(e.mejorSesion), sesion, e.mejorSesion],
+    [t('cartera.metrica.peorSesion'), formatearPorcentaje(e.peorSesion), sesion, e.peorSesion],
   ];
 
   for (const [etiqueta, valor, nota, variacion] of metricas) {
@@ -1470,9 +1572,12 @@ function pintarEstadoDatos(datos) {
   const momento = new Date(datos.generadoEn);
   const hora = momento.toLocaleTimeString(localeFormato(), { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-  $('#estado-datos').textContent = `Actualizado a las ${hora}`;
+  $('#estado-datos').textContent = t('cartera.estado.actualizado', { hora });
   $('#pie-fuente').textContent = fuentes.length
-    ? `Datos de mercado: ${fuentes.join(', ')}. Última actualización: ${momento.toLocaleString(localeFormato())}.`
+    ? t('cartera.pie.fuente', {
+        fuentes: fuentes.join(', '),
+        momento: momento.toLocaleString(localeFormato()),
+      })
     : '';
 }
 
@@ -2337,6 +2442,7 @@ async function iniciar() {
     marcarSeccionActiva(estado.seccion, estado.opciones.pestana);
     // La portada tampoco: se repinta con lo que ya tiene guardado.
     repintarInicio();
+    repintarVistas();
   });
   // El idioma se aplica antes de construir nada: la navegación y las vistas se
   // arman ya con el diccionario correcto, sin repintar dos veces.

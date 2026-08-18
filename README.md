@@ -164,7 +164,7 @@ deja de revelarse y vuelve a asomar la caja vacía.
 
 **2 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
 **Datos reales** resueltos por la cascada de mercado; un índice que no resuelva se
-rotula `N/D` con su motivo.
+rotula `N/A` con su motivo.
 
 **3 · W&C Radar** — Seis familias de señal. Cada una es un módulo independiente que
 declara si tiene fuente:
@@ -181,7 +181,7 @@ declara si tiene fuente:
 **4 · W&C Signal** — Indicador propietario en escala 0–100 sobre siete dimensiones
 (Fundamentals, Options flow, Institutional positioning, Catalysts, Valuation,
 Momentum, Risk) con sus pesos. **La arquitectura está completa; la puntuación no se
-emite.** Mientras falten fuentes, muestra `N/D` y detalla qué le falta a cada
+emite.** Mientras falten fuentes, muestra `N/A` y detalla qué le falta a cada
 dimensión: preferimos eso a publicar un número que no podamos justificar.
 
 **5 · Portfolio snapshot** — Portfolio return, benchmark, alfa, Sharpe, máxima caída
@@ -720,6 +720,19 @@ antigüedad de un dato («hace 5 min», «5m ago») y la distancia a un cataliza
 —«17 AGO», «AUG 17»— `toLocaleDateString`. Ahí no hay entrada de diccionario que
 mantener ni tabla de meses que se quede corta.
 
+El gráfico de cartera fue el último reducto: llevaba su propia tabla `MESES` escrita a
+mano, que solo sabía castellano. Retirada en la fase 4, y la ganancia va más allá de no
+mantener doce cadenas por idioma: **el orden de las piezas también es del idioma**, y una
+plantilla con día y mes concatenados no puede darle la vuelta.
+
+```
+es → «30 ene»   ·   «30 de enero de 2026»
+en → «Jan 30»   ·   «January 30, 2026»
+```
+
+La fecha se construye a mediodía UTC, no a medianoche: a las 00:00 un huso al oeste de
+Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
+
 ### Estado
 
 | Fase | Alcance | Estado |
@@ -727,17 +740,67 @@ mantener ni tabla de meses que se quede corta.
 | 1 | Motor, conmutador, cabecera, navegación y pie | hecho |
 | 2 | Frases compuestas como plantilla y plurales por idioma | hecho |
 | 3 | Portada e inicio: hero, manifiesto y los seis bloques | hecho |
-| 4 | Las nueve secciones | pendiente |
+| 4 | Las nueve secciones · **cartera y repositorio** | hecho |
+| 4 | Las nueve secciones · las siete restantes | pendiente |
 
-Dos decisiones quedan abiertas a propósito, porque afectan a las nueve secciones a la vez
-y hacerlas a medias dejaría la interfaz descuadrada entre lo migrado y lo que no:
+### Las dos decisiones transversales, cerradas
 
-- **`N/A` frente a `N/D`.** Hoy `general.noDisponible` vale `N/A` en ambos idiomas, que es
-  lo que muestra toda la plataforma. Cambiarlo es un solo cambio en el diccionario, pero
-  conviene hacerlo cuando ya no queden secciones con la cadena escrita a mano.
-- **El espacio antes del `%`.** `formatearPorcentaje()` y los sufijos escriben `12,00 %`,
-  que es la convención española; el inglés escribe `12.00%`. Es cosa de `formato.js` y
-  cambia todas las cifras de la plataforma de golpe.
+Estaban abiertas a propósito, porque afectaban a las nueve secciones a la vez y hacerlas
+a medias habría dejado la interfaz descuadrada entre lo migrado y lo que no. Se cerraron
+al empezar la fase 4 y se aplicaron **a toda la plataforma**, no solo a las dos secciones
+traducidas.
+
+**1 · Un marcador de ausencia, no tres.** La plataforma usaba tres, y la diferencia entre
+dos de ellos no la podía descifrar nadie:
+
+| Antes | Dónde | Ahora |
+|---|---|---|
+| `—` | los seis formateadores de `formato.js` y las tablas | **se queda** |
+| `N/A` | companias, catalizadores, mercado, opciones | **se queda**, vía diccionario |
+| `N/D` | radar ×3, opciones ×2 | **retirado** |
+
+La elección entre los dos que quedan es **estructural, no semántica**. Dentro de una tabla
+numérica densa manda el blanco tipográfico `—`: un `N/A` repetido en cada columna es ruido,
+y el guion además no depende del idioma, como no depende el separador de miles. Donde iría
+una **cifra rotulada** —un indicador del cuadro de mando, una cifra titular, el valor de una
+lista de definición— manda `N/A`, siempre resuelto por `general.noDisponible` y nunca escrito
+a mano.
+
+`N/D` se retiró y no `N/A` por tres razones. El coste era asimétrico —cinco sitios frente a
+unos cuarenta—; `N/D` abrevia «no disponible» y solo se lee en castellano, de modo que la
+interfaz inglesa habría necesitado una abreviatura distinta por idioma; y la distinción que
+sostenía —`N/D` para «falta la fuente», `N/A` para «el proveedor no lo publica»— no estaba
+explicada en ninguna parte de la pantalla. **El motivo no se ha perdido: sigue donde debía
+estar**, en el texto contiguo —el panorama lo rotula con su motivo, y Signal detalla qué le
+falta a cada dimensión—. Las clases CSS `--nd` y `--pendiente` se conservan: el atenuado
+visual sí es información. Lo que se unificó es el texto.
+
+**2 · El espacio antes del `%` lo decide el idioma, no la casa.** Lo resuelve
+`Intl.NumberFormat` con `style: 'unit', unit: 'percent'` en `formato.js`, y de ahí salen
+`porcentaje()` —sin signo, para una magnitud— y `formatearPorcentaje()` —con signo, para un
+cambio—:
+
+```
+es-ES → «1234,50 %»   espacio DURO (U+00A0) antes del signo
+en-US → «1,234.50%»   sin espacio, y con agrupación de miles
+```
+
+Fijar una sola convención habría dejado un idioma tipográficamente mal escrito de forma
+permanente: la ISO 31-0 y la RAE exigen el espacio en castellano, y el estilo estadounidense
+lo omite en inglés. Las dos son correctas —cada una en su idioma—, y esa es precisamente la
+clase de decisión que no le toca al código.
+
+Es además mejor que la concatenación que sustituye, por dos motivos que no eran el objetivo
+pero se ganan igual: el espacio es duro, de modo que la cifra y el signo ya no pueden caer en
+líneas distintas; y la agrupación de miles pasa a seguir al locale.
+
+> **El signo lo sigue poniendo la casa**, y es deliberado: `Intl` firmaría los negativos con
+> el guion ASCII, mientras que aquí se usa el menos tipográfico «−» (U+2212), que mide como
+> un dígito y por tanto cuadra en columna bajo `font-variant-numeric: tabular-nums`.
+
+> **Un `%` no puede vivir dentro de una plantilla del diccionario.** Escribirlo ahí —
+> `'Peso {peso} % · {estado}'`— fija la convención de un idioma en los dos. Lo que viaja como
+> parámetro es el porcentaje **ya formateado**, no el número desnudo.
 
 ---
 
@@ -777,6 +840,20 @@ declarada como lista lo es en los dos, y que toda clave que el documento o el c�
 piden existe de verdad. Informa además, sin fallar, de las claves que nadie nombra y de
 las categorías de plural que una entrada no cubre.
 
+> **El aviso de claves huérfanas estuvo mudo hasta la fase 4.** `clavesMencionadas()`
+> recorría también los diccionarios, de modo que toda clave quedaba «nombrada» por su
+> propia declaración y la comprobación no podía saltar nunca. Corregido excluyendo
+> `idiomas/`, delató en el acto 140 claves declaradas y todavía sin cablear. Quien añada
+> una fuente a esa función ha de excluirla igual, o el aviso vuelve a enmudecer.
+>
+> Sobreviven dos huérfanas **a propósito**: `idioma.es` e `idioma.en`. El conmutador
+> escribe el nombre de cada idioma *en ese idioma* —quien no entienda la interfaz actual
+> debe reconocer la suya—, y lo toma de `idiomas/index.js`. No se leerán nunca.
+
+Una clave que se compone en tiempo de ejecución —`informe.acceso.${nivel}`— es invisible
+para esta prueba. Por eso los niveles de acceso se declaran en una tabla, `CLAVES_ACCESO`,
+con las cuatro claves escritas: la misma pauta de `navegacion.js`, y por la misma razón.
+
 ### Comprobación de humo
 
 ```
@@ -788,6 +865,28 @@ pinta, que el atributo `lang` sigue al idioma elegido, que la página no
 desborda a lo ancho y que ninguna clave de diccionario llega sin traducir a la
 pantalla.
 
+### Repintado al cambiar de idioma
+
+```
+BASE_PRUEBA=http://127.0.0.1:4174 npm run test:repintado
+```
+
+La pasada sobre el DOM solo alcanza a los nodos con `data-i18n`; todo lo que el cliente
+construye en JavaScript se quedaría en el idioma anterior si nadie lo repintara. **Una
+sección traducida que no se repinta está a medias**: se ve bien al entrar y mal en cuanto
+se pulsa el conmutador. Esta prueba lo pulsa sin recargar y comprueba, en las dos
+direcciones, que siguen al idioma la tabla de posiciones, el cuadro de mando, los
+estadísticos, la leyenda del gráfico y los desplegables del repositorio. Verifica de paso
+dos cosas que el repintado no debe romper: que el porcentaje conserva la convención del
+idioma y que la selección que el usuario tenga hecha en un filtro sobrevive.
+
+Solo lee: no escribe en la base.
+
+> **Los diálogos quedan fuera, y no es un olvido.** Se abren con `showModal()`, que deja el
+> conmutador fuera del alcance del ratón *y* del tabulador —comprobado—: con uno abierto no
+> se puede llegar a cambiar el idioma. Repintar su contenido sería código inalcanzable. Si
+> alguno pasara algún día a `show()`, habría que añadirlo a `repintarVistas()`.
+
 ### Invalidación de vistas derivadas
 
 ```
@@ -798,6 +897,14 @@ Publica una tesis con ticker nuevo desde la interfaz y comprueba que aparece en
 cartera, compañías, radar, portada y catalizadores **sin recargar la página**;
 después la retira y comprueba lo contrario. Escribe en la base, de modo que ha
 de apuntarse siempre a una instancia de pruebas.
+
+> **Las dos cosas se tocan.** El repintado por idioma se hace desde lo ya cargado, sin
+> volver a la red: cambian los rótulos, no los datos. Eso obliga a guardar la última carga
+> de cada sección —`estado.cartera`, `estado.informes`—, y una carga guardada es una carga
+> que puede quedarse rancia. Por eso toda memoria de repintado ha de retirarse en
+> `MEMORIAS_DERIVADAS`: sin ello, publicar una tesis y conmutar el idioma repintaría la
+> vista con la lista anterior. **Quien añada una caché de repintado tiene que darla de alta
+> ahí**, o reintroduce exactamente el fallo que ese mapa existe para impedir.
 
 ### Baterías completas
 

@@ -471,4 +471,9 @@ export default {
 
   'general.si': 'Yes',
   'general.no': 'No',
+
+  'informe.acceso.publico': 'Public',
+  'informe.acceso.cliente': 'Client',
+  'informe.acceso.institucional': 'Institutional',
+  'informe.acceso.interno': 'Internal',
 };
