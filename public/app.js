@@ -49,7 +49,6 @@ const estado = {
   rangoGrafico: 'MAX',
   benchmark: 'SPY',
   grafico: null,
-  cargandoCartera: false,
   filtrosNoticias: {},
   paginaNoticias: 1,
   companias: { q: '', sector: '', ficha: null },
@@ -1273,18 +1272,35 @@ async function cargarMercado() {
 
 // ──────────────────────────────── cartera ────────────────────────────────
 
+/* Número de la carga de cartera en curso.
+
+   Antes había aquí un pestillo —«si ya hay una cargando, no hagas nada»— que
+   ahorraba una petición y a cambio perdía la recarga: dar de baja una tesis
+   mientras la cartera estaba en vuelo dejaba la vista con la posición borrada
+   hasta que uno salía de la sección y volvía. Y la respuesta vieja, al llegar,
+   pintaba encima lo que ya se sabía anterior.
+
+   El número lo arregla sin pestillo: cada carga se lleva el suyo, la última
+   pedida es la única que puede pintar, y ninguna se descarta antes de salir. Se
+   paga una petición de más en un solapamiento raro, que es mucho menos de lo que
+   costaba enseñar una posición que ya no existe. */
+let generacionCartera = 0;
+
 async function cargarCartera({ silencioso = false } = {}) {
-  if (estado.cargandoCartera) return;
-  estado.cargandoCartera = true;
+  const generacion = ++generacionCartera;
+  const vigente = () => generacion === generacionCartera;
 
   const tarjetas = [$('#cuadro-mando'), $('.tarjeta--grafico'), $('#rejilla-estadisticos')];
   if (!silencioso) for (const t of tarjetas) t?.classList.add('cargando');
 
   try {
     const datos = await api(`/api/mercado/cartera?benchmark=${encodeURIComponent(estado.benchmark)}`);
+    // Si mientras volaba se pidió otra carga, esta respuesta ya nació vieja.
+    if (!vigente()) return;
     estado.cartera = datos;
     pintarCartera(datos);
   } catch (err) {
+    if (!vigente()) return;
     avisar(err.message);
     const cuadro = $('#cuadro-mando');
     if (cuadro && !cuadro.children.length) {
@@ -1295,8 +1311,9 @@ async function cargarCartera({ silencioso = false } = {}) {
       cuadro.appendChild(vacio);
     }
   } finally {
-    estado.cargandoCartera = false;
-    for (const t of tarjetas) t?.classList.remove('cargando');
+    // El indicador de carga lo retira quien siga siendo la carga vigente: si no,
+    // la que acaba primero lo apagaría con otra todavía en vuelo.
+    if (vigente()) for (const t of tarjetas) t?.classList.remove('cargando');
   }
 }
 

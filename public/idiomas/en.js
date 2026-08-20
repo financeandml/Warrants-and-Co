@@ -686,4 +686,12 @@ export default {
   'radar.noticias.enlace': 'View all',
   'radar.noticias.vacio.titulo': 'No stories',
   'radar.noticias.vacio.motivo': 'The repository is fed automatically from Investing.com every fifteen minutes.',
+
+  // ══════════════════════ Data quality seals ══════════════════════════════
+  'sello.tiempoReal': 'Real time',
+  'sello.retrasado': 'Delayed',
+  'sello.historico': 'Historical',
+  'sello.calculado': 'Calculated',
+  'sello.inferido': 'Inferred',
+  'sello.noDisponible': 'Unavailable',
 };

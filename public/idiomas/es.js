@@ -723,4 +723,14 @@ export default {
   'radar.noticias.enlace': 'Ver todas',
   'radar.noticias.vacio.titulo': 'Sin noticias',
   'radar.noticias.vacio.motivo': 'El repositorio se alimenta automáticamente desde Investing.com cada quince minutos.',
+
+  // ═══════════════════ Sellos de calidad del dato ══════════════════════════
+  // Vocabulario cerrado del servidor, rotulado desde `vocabulario.js`. El código
+  // sigue viajando en la clase CSS; aquí solo se traduce lo que se lee.
+  'sello.tiempoReal': 'Tiempo real',
+  'sello.retrasado': 'Con retraso',
+  'sello.historico': 'Histórico',
+  'sello.calculado': 'Calculado',
+  'sello.inferido': 'Inferido',
+  'sello.noDisponible': 'No disponible',
 };

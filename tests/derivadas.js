@@ -76,15 +76,19 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
     return Boolean(el) && el.innerText.includes(tk);
   }, [sel, TICKER]);
 
-  /* La vista ha cargado —tiene contenido— y ya NO menciona el ticker. Se exige
-     que tenga contenido a propósito: una sección todavía en blanco tampoco
-     menciona el ticker, y daría por buena una baja que nadie ha propagado. */
-  const sinTicker = (sel) => esperar(([s, tk]) => {
+  /* La vista ha cargado y ya NO menciona el ticker.
+
+     «Ha cargado» no puede medirse sobre la sección entera: su armazón —títulos,
+     cabeceras de tabla— ya la hace no vacía antes de que llegue ningún dato, de
+     modo que una sección todavía sin pintar pasaría por «no menciona el ticker»
+     y daría por buena una baja que nadie ha propagado. Por eso se señala aparte
+     el nodo que SOLO existe con datos ya pintados. */
+  const sinTicker = (sel, listo = sel) => esperar(([s, l, tk]) => {
     const el = document.querySelector(s);
-    if (!el) return false;
-    const texto = el.innerText.trim();
-    return texto.length > 0 && !texto.includes(tk);
-  }, [sel, TICKER]);
+    const pintado = document.querySelector(l);
+    if (!el || !pintado || pintado.innerText.trim().length === 0) return false;
+    return !el.innerText.includes(tk);
+  }, [sel, listo, TICKER]);
 
   /** La portada está montada: es la que cachea, y sin ella no hay nada que mirar. */
   const portadaMontada = () => esperar(() => ['#ticker-pista', '#home-radar-cuerpo',
@@ -172,13 +176,13 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
       trasBaja.slice(0, 90).replace(/\n/g, ' '));
 
     await p.evaluate(() => { location.hash = '#/cartera'; });
-    await sinTicker('#seccion-cartera');
+    await sinTicker('#seccion-cartera', '#cuadro-mando');
     const carteraTrasBaja = await p.locator('#seccion-cartera').innerText();
     t('La baja lo retira de cartera sin recargar', !carteraTrasBaja.includes(TICKER),
       carteraTrasBaja.slice(0, 90).replace(/\n/g, ' '));
 
     await p.evaluate(() => { location.hash = '#/inicio'; });
-    await sinTicker('#seccion-inicio');
+    await sinTicker('#seccion-inicio', '#home-research-cuerpo');
     const portadaTrasBaja = await p.locator('#seccion-inicio').innerText();
     t('La baja lo retira de la portada sin recargar', !portadaTrasBaja.includes(TICKER),
       portadaTrasBaja.slice(0, 90).replace(/\n/g, ' '));
