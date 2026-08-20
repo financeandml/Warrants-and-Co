@@ -12,6 +12,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, formatearPorcentaje, porcentaje,
   localeFormato } from './formato.js';
 import { t } from './i18n.js';
+import { etiquetaClasificacion } from './vocabulario.js';
 
 /**
  * Formatea un precio de ejercicio con la precisión mínima que lo distingue.
@@ -76,7 +77,10 @@ function celdaNota(contrato) {
 /** Etiqueta de certeza de una clasificación. */
 function distintivoCerteza(clasificacion) {
   const certeza = (clasificacion?.certeza ?? 'UNKNOWN').toLowerCase();
-  const texto = clasificacion?.hipotesis ?? clasificacion?.sentido ?? clasificacion?.posicion ?? 'UNKNOWN';
+  // La hipótesis la redacta el servidor y va tal cual; el resto son códigos
+  // —«BUY CALL», «SWEEP», «OPENING»— que se rotulan desde `vocabulario.js`.
+  const texto = clasificacion?.hipotesis
+    ?? etiquetaClasificacion(clasificacion?.sentido ?? clasificacion?.posicion ?? 'UNKNOWN');
   const el = elemento('span', `certeza certeza--${certeza}`, texto);
   if (clasificacion?.motivo) el.setAttribute('title', clasificacion.motivo);
   return el;
@@ -479,8 +483,8 @@ export function pintarCadena(destino, cadena, vencimiento) {
   const contratos = cadena.contratos.filter((c) => c.vencimiento === vencimiento);
   if (!contratos.length) {
     const vacio = elemento('div', 'vacio');
-    vacio.appendChild(elemento('strong', null, 'Sin contratos'));
-    vacio.appendChild(document.createTextNode('El vencimiento seleccionado no tiene contratos publicados.'));
+    vacio.appendChild(elemento('strong', null, t('opciones.cadena.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('opciones.cadena.vacio.motivo')));
     destino.appendChild(vacio);
     return;
   }
@@ -496,22 +500,30 @@ export function pintarCadena(destino, cadena, vencimiento) {
   const envoltorio = elemento('div', 'tabla-envoltorio envoltorio-opciones');
   const tabla = elemento('table', 'tabla-datos tabla-opciones');
 
-  const COLS = ['Bid', 'Ask', 'Last', 'Volume', 'Open int.', 'IV', 'Delta', 'Gamma', 'Theta', 'Vega'];
+  /* Claves, no rótulos: se resuelven aquí dentro, en cada pintada. Bid, Ask y
+     las griegas figuran igualmente en el diccionario aunque no cambien de
+     idioma, para que la prueba de paridad las vigile como a las demás. */
+  const COLS = [
+    'opciones.cadena.col.bid', 'opciones.cadena.col.ask', 'opciones.cadena.col.last',
+    'opciones.col.volumen', 'opciones.col.interesAbierto', 'opciones.col.iv',
+    'opciones.cadena.col.delta', 'opciones.cadena.col.gamma',
+    'opciones.cadena.col.theta', 'opciones.cadena.col.vega',
+  ];
   const thead = document.createElement('thead');
 
   const filaGrupo = document.createElement('tr');
-  const thCalls = elemento('th', 'num', 'Calls');
+  const thCalls = elemento('th', 'num', t('opciones.cadena.calls'));
   thCalls.colSpan = COLS.length;
   const thStrike = elemento('th', null, '');
-  const thPuts = elemento('th', null, 'Puts');
+  const thPuts = elemento('th', null, t('opciones.cadena.puts'));
   thPuts.colSpan = COLS.length;
   filaGrupo.append(thCalls, thStrike, thPuts);
   thead.appendChild(filaGrupo);
 
   const filaCab = document.createElement('tr');
-  for (const c of COLS) filaCab.appendChild(elemento('th', 'num', c));
-  filaCab.appendChild(elemento('th', 'num', 'Strike'));
-  for (const c of COLS) filaCab.appendChild(elemento('th', 'num', c));
+  for (const clave of COLS) filaCab.appendChild(elemento('th', 'num', t(clave)));
+  filaCab.appendChild(elemento('th', 'num', t('opciones.col.strike')));
+  for (const clave of COLS) filaCab.appendChild(elemento('th', 'num', t(clave)));
   thead.appendChild(filaCab);
   tabla.appendChild(thead);
 
@@ -562,8 +574,7 @@ export function pintarMapaInteres(destino, cadena, vencimiento) {
     (c) => c.vencimiento === vencimiento && Number.isFinite(c.interesAbierto) && c.interesAbierto > 0
   );
   if (!contratos.length) {
-    destino.appendChild(elemento('p', 'senal__motivo',
-      'Sin interés abierto publicado para este vencimiento.'));
+    destino.appendChild(elemento('p', 'senal__motivo', t('opciones.mapa.sinDatos')));
     return;
   }
 
@@ -583,9 +594,9 @@ export function pintarMapaInteres(destino, cadena, vencimiento) {
   const precio = cadena.subyacente?.precio;
 
   const cabecera = elemento('div', 'mapa-oi__cabecera');
-  cabecera.appendChild(elemento('span', null, 'Call OI'));
-  cabecera.appendChild(elemento('span', null, 'Strike'));
-  cabecera.appendChild(elemento('span', null, 'Put OI'));
+  cabecera.appendChild(elemento('span', null, t('opciones.mapa.callOI')));
+  cabecera.appendChild(elemento('span', null, t('opciones.col.strike')));
+  cabecera.appendChild(elemento('span', null, t('opciones.mapa.putOI')));
   destino.appendChild(cabecera);
 
   const mapa = elemento('div', 'mapa-oi');
@@ -596,7 +607,7 @@ export function pintarMapaInteres(destino, cadena, vencimiento) {
     const relCall = document.createElement('span');
     relCall.style.width = `${(f.call / maximo) * 100}%`;
     barraCall.appendChild(relCall);
-    barraCall.setAttribute('title', `${formatearNumero(f.call, 0)} contratos abiertos en calls`);
+    barraCall.setAttribute('title', t('opciones.mapa.tituloCall', { n: f.call }));
     fila.appendChild(barraCall);
 
     const margen = Number.isFinite(precio) ? Math.max(precio * 0.02, 0.01) : 0;
@@ -608,7 +619,7 @@ export function pintarMapaInteres(destino, cadena, vencimiento) {
     const relPut = document.createElement('span');
     relPut.style.width = `${(f.put / maximo) * 100}%`;
     barraPut.appendChild(relPut);
-    barraPut.setAttribute('title', `${formatearNumero(f.put, 0)} contratos abiertos en puts`);
+    barraPut.setAttribute('title', t('opciones.mapa.tituloPut', { n: f.put }));
     fila.appendChild(barraPut);
 
     mapa.appendChild(fila);

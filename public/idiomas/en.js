@@ -942,4 +942,47 @@ export default {
   'opciones.flujo.titulo': 'Options flow needs another source',
   'opciones.flujo.motivo': 'No provider of individual trades.',
   'opciones.flujo.mientras': 'In the meantime «Unusual activity» does work: it scores the session aggregates with the factors that can be computed.',
+
+  // ═══════════════════════ Options · chain (B) ═════════════════════════════
+  'opciones.cadena.calls': 'Calls',
+  'opciones.cadena.puts': 'Puts',
+  'opciones.cadena.col.bid': 'Bid',
+  'opciones.cadena.col.ask': 'Ask',
+  'opciones.cadena.col.last': 'Last',
+  'opciones.cadena.col.delta': 'Delta',
+  'opciones.cadena.col.gamma': 'Gamma',
+  'opciones.cadena.col.theta': 'Theta',
+  'opciones.cadena.col.vega': 'Vega',
+  'opciones.cadena.vacio.titulo': 'No contracts',
+  'opciones.cadena.vacio.motivo': 'The selected expiration has no published contracts.',
+  'opciones.cadena.buscar': 'Search',
+  'opciones.cadena.subtitulo': 'Calls on the left, puts on the right',
+
+  // ── Open interest map ──
+  'opciones.mapa.titulo': 'Open interest by strike',
+  'opciones.mapa.subtitulo': 'Concentration of open position in calls and puts',
+  'opciones.mapa.callOI': 'Call OI',
+  'opciones.mapa.putOI': 'Put OI',
+  'opciones.mapa.sinDatos': 'No open interest published for this expiration.',
+  'opciones.mapa.tituloCall': {
+    one: '{n} open contract in calls',
+    other: '{n} open contracts in calls',
+  },
+  'opciones.mapa.tituloPut': {
+    one: '{n} open contract in puts',
+    other: '{n} open contracts in puts',
+  },
+
+  // ── Options trade classification ──
+  'operacion.compraCall': 'Buy call',
+  'operacion.ventaCall': 'Sell call',
+  'operacion.compraPut': 'Buy put',
+  'operacion.ventaPut': 'Sell put',
+  'operacion.sweep': 'Sweep',
+  'operacion.block': 'Block',
+  'operacion.simple': 'Single',
+  'operacion.multipata': 'Multi-leg',
+  'operacion.apertura': 'Opening',
+  'operacion.cierre': 'Closing',
+  'operacion.desconocido': 'Unknown',
 };

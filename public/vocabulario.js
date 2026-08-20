@@ -87,3 +87,25 @@ export const etiquetaCalidadFecha = rotular(CLAVES_CALIDAD_FECHA);
 
 /** Rótulo de la clase de vínculo entre un evento y una compañía. */
 export const etiquetaVinculacion = rotular(CLAVES_VINCULACION);
+
+/* Clasificación de una operación de opciones: sentido, modalidad y carácter de
+   apertura o cierre. Tres vocabularios que no colisionan entre sí, de modo que
+   comparten tabla. Se traduce lo que un analista diría en castellano —«compra
+   call», «apertura»— y se quedan `SWEEP` y `BLOCK`, que los diría en inglés. */
+const CLAVES_CLASIFICACION = {
+  'BUY CALL': 'operacion.compraCall',
+  'SELL CALL': 'operacion.ventaCall',
+  'BUY PUT': 'operacion.compraPut',
+  'SELL PUT': 'operacion.ventaPut',
+  SWEEP: 'operacion.sweep',
+  BLOCK: 'operacion.block',
+  SINGLE: 'operacion.simple',
+  'MULTI-LEG': 'operacion.multipata',
+  OPENING: 'operacion.apertura',
+  CLOSING: 'operacion.cierre',
+  UNKNOWN: 'operacion.desconocido',
+};
+
+/** Rótulo de un código de clasificación de operación. */
+export const etiquetaClasificacion = rotular(CLAVES_CLASIFICACION);
+

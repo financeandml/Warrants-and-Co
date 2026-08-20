@@ -990,4 +990,49 @@ export default {
   'opciones.flujo.titulo': 'El flujo de operaciones necesita otra fuente',
   'opciones.flujo.motivo': 'Sin proveedor de operaciones individuales.',
   'opciones.flujo.mientras': 'Mientras tanto, «Actividad inusual» sí opera: puntúa los agregados de la sesión con los factores que sí pueden calcularse.',
+
+  // ═══════════════════════ Opciones · cadena (B) ═══════════════════════════
+  // Bid, Ask y las griegas se quedan en inglés: es lo que se dice en una mesa
+  // aunque se hable en castellano. «Last» sí tiene forma viva —«último»—.
+  'opciones.cadena.calls': 'Calls',
+  'opciones.cadena.puts': 'Puts',
+  'opciones.cadena.col.bid': 'Bid',
+  'opciones.cadena.col.ask': 'Ask',
+  'opciones.cadena.col.last': 'Último',
+  'opciones.cadena.col.delta': 'Delta',
+  'opciones.cadena.col.gamma': 'Gamma',
+  'opciones.cadena.col.theta': 'Theta',
+  'opciones.cadena.col.vega': 'Vega',
+  'opciones.cadena.vacio.titulo': 'Sin contratos',
+  'opciones.cadena.vacio.motivo': 'El vencimiento seleccionado no tiene contratos publicados.',
+  'opciones.cadena.buscar': 'Buscar',
+  'opciones.cadena.subtitulo': 'Calls a la izquierda, puts a la derecha',
+
+  // ── Mapa de interés abierto ──
+  'opciones.mapa.titulo': 'Interés abierto por strike',
+  'opciones.mapa.subtitulo': 'Concentración de posición abierta en calls y puts',
+  'opciones.mapa.callOI': 'Call OI',
+  'opciones.mapa.putOI': 'Put OI',
+  'opciones.mapa.sinDatos': 'Sin interés abierto publicado para este vencimiento.',
+  'opciones.mapa.tituloCall': {
+    one: '{n} contrato abierto en calls',
+    other: '{n} contratos abiertos en calls',
+  },
+  'opciones.mapa.tituloPut': {
+    one: '{n} contrato abierto en puts',
+    other: '{n} contratos abiertos en puts',
+  },
+
+  // ── Clasificación de operaciones de opciones ──
+  'operacion.compraCall': 'Compra call',
+  'operacion.ventaCall': 'Venta call',
+  'operacion.compraPut': 'Compra put',
+  'operacion.ventaPut': 'Venta put',
+  'operacion.sweep': 'Sweep',
+  'operacion.block': 'Block',
+  'operacion.simple': 'Simple',
+  'operacion.multipata': 'Multipata',
+  'operacion.apertura': 'Apertura',
+  'operacion.cierre': 'Cierre',
+  'operacion.desconocido': 'Desconocido',
 };

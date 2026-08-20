@@ -750,14 +750,15 @@
       <!-- ── Option chain ── -->
       <div id="panel-cadena" role="tabpanel" aria-labelledby="pestana-cadena" hidden>
         <form class="filtros-opciones" id="filtros-cadena">
-          <label>Ticker
+          <label><span data-i18n="opciones.col.ticker">Ticker</span>
             <input type="search" name="simbolo" id="cadena-simbolo" placeholder="ORCL" autocomplete="off">
           </label>
-          <label>Expiration
+          <label><span data-i18n="opciones.col.vencimiento">Vencimiento</span>
             <select name="vencimiento" id="cadena-vencimiento"></select>
           </label>
           <div class="filtros-opciones__acciones">
-            <button class="boton boton--solido" type="submit">Buscar</button>
+            <button class="boton boton--solido" type="submit"
+                    data-i18n="opciones.cadena.buscar">Buscar</button>
             <span class="estado-datos" id="cadena-estado"></span>
           </div>
         </form>
@@ -765,8 +766,8 @@
         <section class="tarjeta" aria-labelledby="titulo-mapa-oi">
           <div class="tarjeta__cabecera">
             <div>
-              <h2 id="titulo-mapa-oi">Open interest por strike</h2>
-              <p>Concentración de posición abierta en calls y puts</p>
+              <h2 id="titulo-mapa-oi" data-i18n="opciones.mapa.titulo">Interés abierto por strike</h2>
+              <p data-i18n="opciones.mapa.subtitulo">Concentración de posición abierta en calls y puts</p>
             </div>
           </div>
           <div id="mapa-interes"></div>
@@ -774,8 +775,8 @@
 
         <section class="bloque-panel" aria-labelledby="titulo-cadena">
           <div class="bloque-panel__cabecera">
-            <h2 id="titulo-cadena">Option chain</h2>
-            <p>Calls a la izquierda, puts a la derecha</p>
+            <h2 id="titulo-cadena" data-i18n="opciones.pestana.cadena">Cadena de opciones</h2>
+            <p data-i18n="opciones.cadena.subtitulo">Calls a la izquierda, puts a la derecha</p>
           </div>
           <div id="tabla-cadena"></div>
         </section>

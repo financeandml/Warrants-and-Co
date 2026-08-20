@@ -366,6 +366,27 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       (v) => v && /^Mostrando .+ de \d+ contratos?$/.test(v));
   }
 
+  // ── Cadena de opciones (tanda B) ──
+  // Se cambia de pestaña sin recargar: la cadena la pinta su propio módulo, y su
+  // cabecera mezcla lo que se traduce con lo que no.
+  await p.locator('#pestana-cadena').click();
+  const cadenaPintada = () => p.waitForFunction(
+    () => document.querySelectorAll('#tabla-cadena .tabla-opciones thead tr').length > 0
+      || document.querySelectorAll('#tabla-cadena .vacio, #tabla-cadena .pendiente-bloque').length > 0,
+    null, { timeout: 60000 });
+  await cadenaPintada();
+
+  const hayCadena = await p.locator('#tabla-cadena .tabla-opciones thead tr').count();
+  if (hayCadena) {
+    comp('columna traducida de la cadena',
+      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Último');
+    comp('columna que se queda en inglés',
+      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
+    comp('griega intacta',
+      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(7)'), 'Delta');
+  }
+  comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Interés abierto por strike');
+
   await idioma('en');
   console.log('\n  ── opciones · repintadas al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-opciones h1'), 'Options');
@@ -381,6 +402,16 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
       (v) => v && /^Showing .+ of \d+ contracts?$/.test(v));
   }
+
+  console.log('\n  ── opciones · cadena repintada ──');
+  if (hayCadena) {
+    comp('columna traducida de la cadena',
+      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Last');
+    comp('columna que se queda en inglés',
+      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
+  }
+  comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Open interest by strike');
+  comp('cabecera de la cadena', await txt('#titulo-cadena'), 'Option chain');
 
   // ── Noticias ──
   // El listado, las tarjetas y la línea de sindicación se construyen enteros en

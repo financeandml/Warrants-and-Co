@@ -746,8 +746,18 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 | 4 | Las nueve secciones · **compañías** | hecho |
 | 4 | Las nueve secciones · **catalizadores** | hecho |
 | 4 | Las nueve secciones · **mercado** | hecho |
-| 4 | Las nueve secciones · opciones · **flujo y actividad inusual** | hecho |
-| 4 | Las nueve secciones · opciones · cadena de opciones | pendiente |
+| 4 | Las nueve secciones · **opciones** | hecho |
+
+**La fase 4 está cerrada: las nueve secciones hablan los dos idiomas.** Lo que se pinta en
+JavaScript se repinta al conmutar sin volver a la red, y lo comprueba `npm run test:repintado`
+sección por sección.
+
+Junto al motor quedó un módulo que no estaba en el plan y que pide la migración de cualquier
+sección futura: **`public/vocabulario.js`**, con el vocabulario cerrado que emite el servidor
+—sellos de calidad, tipos y prioridades de evento, clasificación de operaciones—. El código
+sigue siendo el valor del filtro y el que cuelga de la clase CSS; lo que se traduce es el
+rótulo. Antes de existir, la interfaz castellana rotulaba «UNAVAILABLE», «OPTIONS EXPIRY» y
+«BUY CALL».
 
 > **Dos etiquetas del historial no dicen la verdad, y se quedan como están.** El commit
 > `8e20efb` se llama «Fase 3: portada e inicio traducidas», pero lo que trae es la fase 4
