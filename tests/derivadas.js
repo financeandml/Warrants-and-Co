@@ -9,6 +9,17 @@
 
        BASE_PRUEBA=http://127.0.0.1:4174 CLAVE_PRUEBA=PRUEBA123 node tests/derivadas.js
 
+   Una pasada completa abre unas cinco decenas de peticiones en pocos segundos, y
+   varias seguidas superan el límite por minuto que el servidor aplica por IP. No
+   es un fallo de la plataforma —ese tráfico no se parece al de una persona—, pero
+   desde aquí se ve como una vista que no se actualiza, que es justo lo que esta
+   prueba vigila. Levante la instancia con el límite subido:
+
+       WARRANTS_MAX_PETICIONES=100000 PORT=4174 WARRANTS_CLAVE=PRUEBA123 npm start
+
+   Si aun así se topa con el límite, la prueba lo dice por su nombre en vez de
+   dejar que aparezca disfrazado de invalidación rota.
+
    Requiere Playwright, que NO es dependencia del proyecto. Sin él la prueba no
    se ejecuta y termina con error, nunca con un aprobado.
    ========================================================================= */
@@ -32,19 +43,69 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   const err = [];
   p.on('pageerror', e => err.push(e.message));
 
+  /* Un 429 se ve desde aquí como una vista que no se actualiza —exactamente el
+     síntoma que esta prueba persigue—, así que se vigila aparte: vale más una
+     línea que nombre la causa que ocho comprobaciones rojas sin explicación. */
+  let limitadas = 0;
+  p.on('response', (r) => { if (r.status() === 429) limitadas++; });
+
+  /* Se espera por CONDICIÓN, no por reloj.
+
+     Cada vista tarda lo que tarde su fuente —la agenda consulta cadenas de
+     opciones y se va a varios segundos—, de modo que un plazo fijo o sobra o se
+     queda corto, y cuando se queda corto la prueba falla sin que nada esté mal.
+     Ese era el origen de los fallos intermitentes: no medían el programa, medían
+     la carga de la máquina.
+
+     El plazo de aquí abajo NO es una espera: es el límite a partir del cual se
+     da por perdida la condición. Quien lo agote falla de verdad. */
+  const LIMITE = 30000;
+
+  const esperar = async (condicion, arg) => {
+    try {
+      await p.waitForFunction(condicion, arg, { timeout: LIMITE, polling: 200 });
+      return true;
+    } catch {
+      return false; // lo dirá la comprobación que venga detrás, con su texto
+    }
+  };
+
+  /** La vista ha cargado y menciona el ticker. */
+  const conTicker = (sel) => esperar(([s, tk]) => {
+    const el = document.querySelector(s);
+    return Boolean(el) && el.innerText.includes(tk);
+  }, [sel, TICKER]);
+
+  /* La vista ha cargado —tiene contenido— y ya NO menciona el ticker. Se exige
+     que tenga contenido a propósito: una sección todavía en blanco tampoco
+     menciona el ticker, y daría por buena una baja que nadie ha propagado. */
+  const sinTicker = (sel) => esperar(([s, tk]) => {
+    const el = document.querySelector(s);
+    if (!el) return false;
+    const texto = el.innerText.trim();
+    return texto.length > 0 && !texto.includes(tk);
+  }, [sel, TICKER]);
+
+  /** La portada está montada: es la que cachea, y sin ella no hay nada que mirar. */
+  const portadaMontada = () => esperar(() => ['#ticker-pista', '#home-radar-cuerpo',
+    '#home-research-cuerpo', '#home-catalizadores-cuerpo', '#home-signal-cuerpo']
+    .every((s) => (document.querySelector(s)?.innerText ?? '').trim().length > 0));
+
   await p.goto(`${B}/#/inicio`);
-  await p.waitForTimeout(2500);
+  await portadaMontada();
 
   // Sesión de analista.
   await p.evaluate((c) => sessionStorage.setItem('warrants.clave', c), CLAVE);
-  await p.reload(); await p.waitForTimeout(3500);
+  await p.reload();
+  await portadaMontada();
 
   // Estado ANTES, con la portada ya montada (es la que cachea).
   const antesPortada = await p.evaluate(t => document.body.innerText.includes(t), TICKER);
   t('El ticker no está en la portada antes', !antesPortada);
 
   // ── Alta desde la interfaz, sin recargar en ningún momento ──
-  await p.goto(`${B}/#/repositorio`); await p.waitForTimeout(2200);
+  await p.goto(`${B}/#/repositorio`);
+  await esperar(() => document.querySelectorAll('#cuerpo-tabla-informes tr').length > 0);
   await p.locator('#btn-nuevo-informe').click();
   await p.waitForSelector('#form-informe [name="empresa"]', { state: 'visible', timeout: 15000 });
 
@@ -67,54 +128,60 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   if (!(await enCartera.isChecked())) await enCartera.check();
 
   await p.locator('#btn-guardar-informe').click();
-  await p.waitForTimeout(6000);
+  // El alta cierra el diálogo y repuebla la tabla: se espera a las dos cosas.
+  await esperar(() => !document.querySelector('#dialogo-informe')?.open);
+  await conTicker('#cuerpo-tabla-informes');
 
   t('El alta se acepta', await p.locator('#dialogo-informe').evaluate(d => !d.open));
   t('Aparece en el repositorio (sección visible)',
     (await p.locator('#cuerpo-tabla-informes').innerText()).includes(TICKER));
 
   // ── Sin recargar: se navega a cada vista derivada ──
-  const visita = async (ruta, sel, etiqueta, espera = 6000) => {
-    await p.locator(`.nav-enlace[data-seccion="${ruta}"]`).count()
-      ? await p.evaluate(r => { location.hash = '#/' + r; }, ruta)
-      : await p.evaluate(r => { location.hash = '#/' + r; }, ruta);
-    await p.waitForTimeout(espera);
+  const visita = async (ruta, sel, etiqueta) => {
+    await p.evaluate(r => { location.hash = '#/' + r; }, ruta);
+    await conTicker(sel);
     const texto = await p.locator(sel).innerText();
     t(`Aparece en ${etiqueta}`, texto.includes(TICKER), texto.slice(0, 90).replace(/\n/g, ' '));
   };
 
-  await visita('cartera', '#seccion-cartera', 'CARTERA', 9000);
+  await visita('cartera', '#seccion-cartera', 'CARTERA');
   await visita('companias', '#seccion-companias', 'COMPAÑÍAS');
-  await visita('radar', '#seccion-radar', 'RADAR', 9000);
-  await visita('inicio', '#seccion-inicio', 'PORTADA', 9000);
-  await visita('catalizadores', '#seccion-catalizadores', 'CATALIZADORES', 9000);
+  await visita('radar', '#seccion-radar', 'RADAR');
+  await visita('inicio', '#seccion-inicio', 'PORTADA');
+  await visita('catalizadores', '#seccion-catalizadores', 'CATALIZADORES');
 
   t('Sin errores de consola', err.length === 0, err.slice(0, 2).join(' | '));
+  t('Sin rechazos por límite de peticiones', limitadas === 0,
+    `${limitadas} peticiones rechazadas con 429 — levante la instancia con ` +
+    'WARRANTS_MAX_PETICIONES=100000');
 
   // ── La baja, por la misma interfaz y el mismo punto único ──
   try {
     await p.evaluate(() => { location.hash = '#/repositorio'; });
-    await p.waitForTimeout(3000);
+    await conTicker('#cuerpo-tabla-informes');
     // Por estructura y no por rótulo: «Editar»/«Edit» cambia con el idioma.
     await p.locator(`#cuerpo-tabla-informes tr:has-text("${TICKER}") .celda-acciones button`)
       .first().click();
     await p.waitForSelector('#btn-eliminar-informe:not([hidden])', { timeout: 15000 });
     p.once('dialog', (d) => d.accept());
     await p.locator('#btn-eliminar-informe').click();
-    await p.waitForTimeout(6000);
+    await sinTicker('#cuerpo-tabla-informes');
 
-    t('La baja lo retira del repositorio',
-      !(await p.locator('#cuerpo-tabla-informes').innerText()).includes(TICKER));
+    const trasBaja = await p.locator('#cuerpo-tabla-informes').innerText();
+    t('La baja lo retira del repositorio', !trasBaja.includes(TICKER),
+      trasBaja.slice(0, 90).replace(/\n/g, ' '));
 
     await p.evaluate(() => { location.hash = '#/cartera'; });
-    await p.waitForTimeout(9000);
-    t('La baja lo retira de cartera sin recargar',
-      !(await p.locator('#seccion-cartera').innerText()).includes(TICKER));
+    await sinTicker('#seccion-cartera');
+    const carteraTrasBaja = await p.locator('#seccion-cartera').innerText();
+    t('La baja lo retira de cartera sin recargar', !carteraTrasBaja.includes(TICKER),
+      carteraTrasBaja.slice(0, 90).replace(/\n/g, ' '));
 
     await p.evaluate(() => { location.hash = '#/inicio'; });
-    await p.waitForTimeout(9000);
-    t('La baja lo retira de la portada sin recargar',
-      !(await p.locator('#seccion-inicio').innerText()).includes(TICKER));
+    await sinTicker('#seccion-inicio');
+    const portadaTrasBaja = await p.locator('#seccion-inicio').innerText();
+    t('La baja lo retira de la portada sin recargar', !portadaTrasBaja.includes(TICKER),
+      portadaTrasBaja.slice(0, 90).replace(/\n/g, ' '));
   } catch (e) {
     t('La baja se completa', false, String(e.message).split('\n')[0]);
   }
