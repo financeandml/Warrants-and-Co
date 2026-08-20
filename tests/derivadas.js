@@ -24,7 +24,11 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
 
 (async () => {
   const b = await chromium.launch();
-  const p = await (await b.newContext({ viewport: { width: 1440, height: 950 } })).newPage();
+  // El idioma se fija: la interfaz sigue al del navegador, y esta prueba
+  // comprueba rótulos y escribe vocabulario en castellano.
+  const p = await (await b.newContext({
+    viewport: { width: 1440, height: 950 }, locale: 'es-ES',
+  })).newPage();
   const err = [];
   p.on('pageerror', e => err.push(e.message));
 
@@ -91,7 +95,8 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   try {
     await p.evaluate(() => { location.hash = '#/repositorio'; });
     await p.waitForTimeout(3000);
-    await p.locator(`#cuerpo-tabla-informes tr:has-text("${TICKER}") button:has-text("Editar")`)
+    // Por estructura y no por rótulo: «Editar»/«Edit» cambia con el idioma.
+    await p.locator(`#cuerpo-tabla-informes tr:has-text("${TICKER}") .celda-acciones button`)
       .first().click();
     await p.waitForSelector('#btn-eliminar-informe:not([hidden])', { timeout: 15000 });
     p.once('dialog', (d) => d.accept());

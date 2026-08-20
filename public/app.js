@@ -44,6 +44,9 @@ const estado = {
   // no los datos.
   informes: null,
   formularioEditando: false,
+  noticias: null,
+  noticiaEditando: false,
+  sincronizacion: null,
   cartera: null,
   rangoGrafico: 'MAX',
   benchmark: 'SPY',
@@ -89,7 +92,7 @@ async function api(ruta, opciones = {}) {
   try {
     respuesta = await fetch(ruta, { ...opciones, headers: cabeceras });
   } catch {
-    throw new Error('No ha sido posible contactar con el servidor. Verifique que la aplicación sigue en ejecución.');
+    throw new Error(t('error.red'));
   }
 
   let datos = null;
@@ -103,7 +106,9 @@ async function api(ruta, opciones = {}) {
       sessionStorage.removeItem(CLAVE_SESION);
       actualizarIndicadorSesion();
     }
-    const error = new Error(datos?.error ?? `La solicitud ha fallado (código ${respuesta.status}).`);
+    // El servidor redacta su propio error en castellano; solo se traduce el
+    // de reserva, que es el único que pone el cliente.
+    const error = new Error(datos?.error ?? t('error.solicitud', { codigo: respuesta.status }));
     error.status = respuesta.status;
     error.errores = datos?.errores;
     throw error;
@@ -194,6 +199,10 @@ const MEMORIAS_DERIVADAS = {
     estado.opciones.cadena = null;
   },
   radar: () => {},
+  // El listado de noticias guarda su última carga por la misma razón que el
+  // catálogo, y por eso figura aquí aunque una tesis no altere las noticias:
+  // lo que este mapa vigila es la memoria, no quién la ensucia.
+  noticias: () => { estado.noticias = null; },
   // El catálogo también guarda su última carga para repintarse por idioma: sin
   // retirarla, publicar una tesis y conmutar el idioma repintaría la tabla con
   // la lista anterior, que es exactamente lo que este mapa existe para impedir.
@@ -215,6 +224,20 @@ async function invalidarDerivadasDeInformes() {
   await cargarVocabularios();
 
   // Lo que el usuario está mirando se rehace ya; el resto, al mostrarse.
+  purgarSiCaducada(estado.seccion);
+  await CARGADORES[estado.seccion]?.();
+}
+
+/**
+ * Punto único de invalidación por cambio en las noticias.
+ *
+ * Publicar, editar, borrar o sindicar una noticia deja obsoletos el listado y
+ * el bloque de titulares del radar. Se sigue la misma pauta que con las tesis:
+ * se marcan como caducadas y se rehace de inmediato solo la que está a la
+ * vista; las demás, al mostrarse.
+ */
+async function invalidarDerivadasDeNoticias() {
+  for (const seccion of ['noticias', 'radar']) seccionesCaducadas.add(seccion);
   purgarSiCaducada(estado.seccion);
   await CARGADORES[estado.seccion]?.();
 }
@@ -754,9 +777,12 @@ function abrirFormulario(informe = null) {
   $('#lista-adjuntos-existentes').textContent = '';
   for (const c of $$('[aria-invalid]', form)) c.removeAttribute('aria-invalid');
 
-  estado.formularioEditando = Boolean(informe);
+  // El modo vive en `estado` porque `reflejarModoFormulario()` vuelve a
+  // aplicarlo en cada cambio de idioma, cuando esta función ya ha terminado.
+  const editando = Boolean(informe);
+  estado.formularioEditando = editando;
   reflejarModoFormulario();
-  $('#btn-eliminar-informe').hidden = !estado.formularioEditando;
+  $('#btn-eliminar-informe').hidden = !editando;
 
   form.elements.id.value = editando ? informe.id : '';
 
@@ -906,12 +932,12 @@ async function enviarAcceso(ev) {
     });
     if (!respuesta.ok) {
       const datos = await respuesta.json().catch(() => null);
-      throw new Error(datos?.error ?? 'Credencial no válida.');
+      throw new Error(datos?.error ?? t('acceso.credencialInvalida'));
     }
     sessionStorage.setItem(CLAVE_SESION, campo.value);
     actualizarIndicadorSesion();
     $('#dialogo-acceso').close();
-    avisar('Sesión iniciada como analista de Warrants & Co.', { claro: true });
+    avisar(t('acceso.iniciada'), { claro: true });
     if (estado.seccion === 'repositorio') cargarInformes();
   } catch (err) {
     error.textContent = err.message;
@@ -1032,11 +1058,23 @@ function repintarInicio() {
  */
 function repintarVistas() {
   // Los desplegables se arman en JavaScript —«Todos», «Sin clasificar», los
-  // niveles de acceso—, así que tampoco los alcanza la pasada sobre el DOM.
-  // Ambas funciones conservan la selección vigente.
+  // niveles de acceso, las categorías de noticia—, así que tampoco los alcanza
+  // la pasada sobre el DOM. Todas estas funciones conservan la selección
+  // vigente: repoblar por idioma no debe deshacer lo que el usuario eligió.
   if (estado.vocabularios) { poblarFiltros(); poblarFormulario(); }
   if (estado.informes) pintarInformes(estado.informes);
   if (estado.cartera) pintarCartera(estado.cartera, { avisos: false });
+
+  if (estado.vocabulariosNoticias) { poblarFiltrosNoticias(); poblarFormularioNoticia(); }
+  if (estado.noticias) pintarNoticias(estado.noticias);
+  pintarEstadoSincronizacion();
+
+  // De la sección de opciones se repinta lo que `app.js` rotula. Sus tablas las
+  // pintan los módulos de `opciones.js`, todavía sin traducir: cuando lo estén,
+  // este repintado ya las alcanza sin tocar nada más.
+  pintarEstadoOpciones();
+  if (estado.opciones.inusual) { poblarFiltrosOpciones(); aplicarFiltrosOpciones(); }
+  pintarCadenaOpciones();
 
   // Los diálogos no entran, y no es un olvido: se abren con `showModal()`, que
   // deja el conmutador de idioma fuera del alcance del ratón y del tabulador.
@@ -1070,7 +1108,7 @@ async function cargarCompanias() {
     pintarSectores(datos.sectores, estado.companias.sector);
     pintarCompanias(datos, (clave) => abrirCompania(clave));
   } catch (err) {
-    avisar(`No ha sido posible cargar la cobertura: ${err.message}`);
+    avisar(t('companias.error', { detalle: err.message }));
   }
 }
 
@@ -1083,7 +1121,7 @@ async function abrirCompania(clave, { empujar = true } = {}) {
   if (empujar) location.hash = `#/companias?t=${encodeURIComponent(clave)}`;
 
   const raiz = $('#ficha-compania');
-  if (raiz) raiz.textContent = 'Cargando…';
+  if (raiz) raiz.textContent = t('companias.ficha.cargando');
 
   try {
     const datos = await api(`/api/companias/${encodeURIComponent(clave)}`);
@@ -1099,7 +1137,7 @@ async function abrirCompania(clave, { empujar = true } = {}) {
     if (raiz) {
       raiz.textContent = '';
       const vacio = elemento('div', 'vacio');
-      vacio.appendChild(elemento('strong', '', 'Compañía no encontrada'));
+      vacio.appendChild(elemento('strong', '', t('companias.ficha.noEncontrada')));
       vacio.appendChild(elemento('span', '', err.message));
       raiz.appendChild(vacio);
     }
@@ -1127,7 +1165,7 @@ async function cargarCatalizadores() {
   if (estado.catalizadores.tipo) parametros.set('tipo', estado.catalizadores.tipo);
 
   const raiz = $('#agenda-completa');
-  if (raiz && !raiz.childElementCount) raiz.textContent = 'Cargando agenda…';
+  if (raiz && !raiz.childElementCount) raiz.textContent = t('catalizadores.cargando');
 
   try {
     const datos = await api(`/api/catalizadores${parametros.toString() ? `?${parametros}` : ''}`);
@@ -1139,7 +1177,7 @@ async function cargarCatalizadores() {
     pintarCarencias(datos);
     marcarHorizonte();
   } catch (err) {
-    avisar(`No ha sido posible cargar la agenda: ${err.message}`);
+    avisar(t('catalizadores.error', { detalle: err.message }));
   }
 }
 
@@ -1154,12 +1192,12 @@ function marcarHorizonte() {
 
 async function cargarMercado() {
   const raiz = $('#panorama-mercado');
-  if (raiz && !raiz.childElementCount) raiz.textContent = 'Cargando panorama…';
+  if (raiz && !raiz.childElementCount) raiz.textContent = t('mercado.cargando');
 
   try {
     pintarPanorama(await api('/api/mercado/panorama'));
   } catch (err) {
-    avisar(`No ha sido posible cargar el panorama: ${err.message}`);
+    avisar(t('mercado.error', { detalle: err.message }));
   }
 }
 
@@ -1586,6 +1624,47 @@ function pintarEstadoDatos(datos) {
 
 const CLASE_RELEVANCIA = { urgente: 'noticia--urgente', alta: '', normal: '' };
 
+/**
+ * Denominación visible de un nivel de relevancia.
+ *
+ * Tabla con las claves escritas, y no `noticias.relevancia.${nivel}`: así
+ * quedan a la vista de quien lea el fichero y de la prueba de paridad. Es la
+ * misma pauta de `CLAVES_ACCESO`, y por la misma razón.
+ *
+ * El rótulo del servidor queda de reserva: llega siempre en castellano, de modo
+ * que solo se usa para un nivel que esta tabla no recoja.
+ */
+const CLAVES_RELEVANCIA = {
+  normal: 'noticias.relevancia.normal',
+  alta: 'noticias.relevancia.alta',
+  urgente: 'noticias.relevancia.urgente',
+};
+
+function etiquetaRelevancia(nivel, vocabulario = estado.vocabulariosNoticias) {
+  if (CLAVES_RELEVANCIA[nivel]) return t(CLAVES_RELEVANCIA[nivel]);
+  return vocabulario?.etiquetasRelevancia?.[nivel] ?? nivel;
+}
+
+/**
+ * Denominación visible de una categoría de noticia.
+ *
+ * El servidor guarda la categoría con su nombre castellano, que hace de clave
+ * estable —así lo almacena la base y así viaja en el filtro—; lo que se traduce
+ * es el rótulo. Misma pauta que los niveles de acceso y de relevancia.
+ */
+const CLAVES_CATEGORIA = {
+  'Mercados': 'noticias.categoria.mercados',
+  'Compañía': 'noticias.categoria.compania',
+  'Macroeconomía': 'noticias.categoria.macroeconomia',
+  'Sector': 'noticias.categoria.sector',
+  'Resultados': 'noticias.categoria.resultados',
+  'Operación corporativa': 'noticias.categoria.corporativa',
+  'Regulación': 'noticias.categoria.regulacion',
+};
+
+const etiquetaCategoria = (categoria) =>
+  (CLAVES_CATEGORIA[categoria] ? t(CLAVES_CATEGORIA[categoria]) : categoria);
+
 async function cargarVocabulariosNoticias() {
   try {
     estado.vocabulariosNoticias = await api('/api/noticias/vocabularios');
@@ -1599,26 +1678,36 @@ async function cargarVocabulariosNoticias() {
 function poblarFiltrosNoticias() {
   const v = estado.vocabulariosNoticias;
   if (!v) return;
-  poblarSelect($('#filtro-noticias-categoria'), v.categorias, 'Todas');
-  poblarSelect($('#filtro-noticias-relevancia'), v.relevancias, 'Todas',
-    (r) => v.etiquetasRelevancia?.[r] ?? r);
+  // «Todas» y «Todos» son dos claves, no una, por lo mismo que en el
+  // repositorio: el castellano concuerda con el sustantivo elidido.
+  const todas = t('noticias.filtro.todas');
+  const todos = t('noticias.filtro.todos');
+  poblarSelect($('#filtro-noticias-categoria'), v.categorias, todas, etiquetaCategoria);
+  poblarSelect($('#filtro-noticias-relevancia'), v.relevancias, todas,
+    (r) => etiquetaRelevancia(r, v));
   // Los valores seleccionables son los que ya cubre el repositorio.
   const tickers = estado.vocabularios?.tickers ?? [];
-  poblarSelect($('#filtro-noticias-ticker'), tickers, 'Todos');
-  poblarSelect($('#filtro-noticias-origen'), v.origenes ?? [], 'Todos',
-    (o) => (o === 'manual' ? 'Redacción propia' : o));
+  poblarSelect($('#filtro-noticias-ticker'), tickers, todos);
+  poblarSelect($('#filtro-noticias-origen'), v.origenes ?? [], todos,
+    (o) => (o === 'manual' ? t('noticias.origen.propio') : o));
 }
 
 function poblarFormularioNoticia() {
   const v = estado.vocabulariosNoticias;
   if (!v) return;
+  // Conserva la selección: `repintarVistas()` repite esta función en cada
+  // cambio de idioma, y repoblar no debe alterar el formulario abierto.
   const cat = $('#campo-noticia-categoria');
+  const catPrevia = cat.value;
   cat.textContent = '';
-  for (const c of v.categorias) cat.appendChild(opcion(c, c));
+  for (const c of v.categorias) cat.appendChild(opcion(c, etiquetaCategoria(c)));
+  if (catPrevia && v.categorias.includes(catPrevia)) cat.value = catPrevia;
 
   const rel = $('#campo-noticia-relevancia');
+  const relPrevia = rel.value;
   rel.textContent = '';
-  for (const r of v.relevancias) rel.appendChild(opcion(r, v.etiquetasRelevancia?.[r] ?? r));
+  for (const r of v.relevancias) rel.appendChild(opcion(r, etiquetaRelevancia(r, v)));
+  if (relPrevia && v.relevancias.includes(relPrevia)) rel.value = relPrevia;
 }
 
 function recogerFiltrosNoticias() {
@@ -1641,38 +1730,54 @@ async function cargarNoticias() {
 
   try {
     const datos = await api(`/api/noticias?${parametros}`);
-    rejilla.textContent = '';
-
-    if (!datos.noticias.length) {
-      const vacio = elemento('div', 'vacio');
-      vacio.appendChild(elemento('strong', null, 'Sin noticias'));
-      vacio.appendChild(document.createTextNode(
-        Object.keys(estado.filtrosNoticias).length
-          ? 'Ninguna noticia coincide con los criterios seleccionados.'
-          : 'Todavía no se ha publicado ninguna noticia. Utilice «Publicar noticia» para registrar la primera.'
-      ));
-      rejilla.appendChild(vacio);
-      rejilla.classList.remove('rejilla-noticias');
-    } else {
-      rejilla.classList.add('rejilla-noticias');
-      for (const n of datos.noticias) rejilla.appendChild(construirTarjetaNoticia(n));
-    }
-
-    const p = datos.paginacion;
-    $('#resumen-noticias').textContent = p.total
-      ? `Mostrando ${(p.pagina - 1) * p.limite + 1}–${Math.min(p.pagina * p.limite, p.total)} de ${p.total} noticia${p.total === 1 ? '' : 's'}`
-      : 'Sin resultados';
-
-    pintarPaginacionGenerica($('#paginacion-noticias'), p, (n) => {
-      estado.paginaNoticias = n;
-      cargarNoticias();
-      $('#seccion-noticias').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
+    // Se guarda la carga para repintar el listado al cambiar de idioma sin
+    // volver a pedirla: un cambio de rótulos no es un cambio de datos.
+    estado.noticias = datos;
+    pintarNoticias(datos);
   } catch (err) {
     avisar(err.message);
   } finally {
     rejilla.classList.remove('cargando');
   }
+}
+
+/** Pinta el listado de noticias a partir de una carga ya resuelta. */
+function pintarNoticias(datos) {
+  const rejilla = $('#rejilla-noticias');
+  if (!rejilla || !datos) return;
+  rejilla.textContent = '';
+
+  if (!datos.noticias.length) {
+    const vacio = elemento('div', 'vacio');
+    vacio.appendChild(elemento('strong', null, t('noticias.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t(
+      Object.keys(estado.filtrosNoticias).length
+        ? 'noticias.vacio.filtrado'
+        : 'noticias.vacio.inicial'
+    )));
+    rejilla.appendChild(vacio);
+    rejilla.classList.remove('rejilla-noticias');
+  } else {
+    rejilla.classList.add('rejilla-noticias');
+    for (const n of datos.noticias) rejilla.appendChild(construirTarjetaNoticia(n));
+  }
+
+  const p = datos.paginacion;
+  // El plural lo elige `Intl.PluralRules` sobre las formas de cada idioma, no
+  // un `noticia${n === 1 ? '' : 's'}` que impondría la morfología castellana.
+  $('#resumen-noticias').textContent = p.total
+    ? t('noticias.resumen', {
+        n: p.total,
+        desde: (p.pagina - 1) * p.limite + 1,
+        hasta: Math.min(p.pagina * p.limite, p.total),
+      })
+    : t('noticias.sinResultados');
+
+  pintarPaginacionGenerica($('#paginacion-noticias'), p, (n) => {
+    estado.paginaNoticias = n;
+    cargarNoticias();
+    $('#seccion-noticias').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 }
 
 function construirTarjetaNoticia(n) {
@@ -1681,10 +1786,10 @@ function construirTarjetaNoticia(n) {
   tarjeta.addEventListener('click', () => abrirDetalleNoticia(n.id));
 
   const superior = elemento('div', 'noticia__superior');
-  superior.appendChild(elemento('span', null, n.categoria));
-  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', 'Urgente'));
-  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', 'Alta'));
-  if (n.destacada) superior.appendChild(elemento('span', 'distintivo', 'Portada'));
+  superior.appendChild(elemento('span', null, etiquetaCategoria(n.categoria)));
+  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', etiquetaRelevancia('urgente')));
+  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRelevancia('alta')));
+  if (n.destacada) superior.appendChild(elemento('span', 'distintivo', t('noticias.destacada')));
   tarjeta.appendChild(superior);
 
   tarjeta.appendChild(elemento('h3', 'noticia__titular', n.titular));
@@ -1694,7 +1799,7 @@ function construirTarjetaNoticia(n) {
   pie.appendChild(elemento('span', null, formatearMomento(n)));
   const propia = n.origen === 'manual' || !n.origen;
   pie.appendChild(elemento('span', `origen${propia ? ' origen--propio' : ''}`,
-    propia ? 'Redacción propia' : n.fuente || n.origen));
+    propia ? t('noticias.origen.propio') : n.fuente || n.origen));
   for (const t of n.tickers ?? []) pie.appendChild(elemento('span', 'ficha__ticker', t));
   tarjeta.appendChild(pie);
 
@@ -1705,7 +1810,7 @@ async function abrirDetalleNoticia(id) {
   const dialogo = $('#dialogo-detalle-noticia');
   const contenido = $('#contenido-detalle-noticia');
   contenido.textContent = '';
-  contenido.appendChild(elemento('div', 'detalle', 'Cargando noticia…'));
+  contenido.appendChild(elemento('div', 'detalle', t('noticias.detalle.cargando')));
   dialogo.showModal();
 
   try {
@@ -1715,7 +1820,7 @@ async function abrirDetalleNoticia(id) {
   } catch (err) {
     contenido.textContent = '';
     const d = elemento('div', 'detalle');
-    d.appendChild(elemento('h2', null, 'No disponible'));
+    d.appendChild(elemento('h2', null, t('noticias.detalle.noDisponible')));
     d.appendChild(elemento('p', 'detalle__subtitulo', err.message));
     contenido.appendChild(d);
   }
@@ -1725,19 +1830,18 @@ function construirDetalleNoticia(n) {
   const raiz = elemento('div', 'detalle');
 
   const superior = elemento('div', 'detalle__superior');
-  superior.appendChild(elemento('span', 'distintivo', n.categoria));
-  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', 'Urgente'));
-  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', 'Alta'));
+  superior.appendChild(elemento('span', 'distintivo', etiquetaCategoria(n.categoria)));
+  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', etiquetaRelevancia('urgente')));
+  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRelevancia('alta')));
   raiz.appendChild(superior);
 
   raiz.appendChild(elemento('h2', null, n.titular));
 
   const meta = [formatearMomento(n), n.autor, n.fuente, n.feed_origen].filter(Boolean);
-  raiz.appendChild(elemento('p', 'detalle__subtitulo', meta.join(' · ')));
+  raiz.appendChild(elemento('p', 'detalle__subtitulo', meta.join(t('general.separadorLista'))));
 
   if (n.origen && n.origen !== 'manual') {
-    const nota = elemento('p', 'detalle__subtitulo',
-      'Pieza sindicada: la plataforma recoge el titular y remite al artículo original en la fuente.');
+    const nota = elemento('p', 'detalle__subtitulo', t('noticias.detalle.sindicada'));
     nota.style.marginTop = '-14px';
     raiz.appendChild(nota);
   }
@@ -1756,7 +1860,7 @@ function construirDetalleNoticia(n) {
 
   if (n.tickers?.length) {
     const s = elemento('div', 'detalle__seccion');
-    s.appendChild(elemento('h3', null, 'Valores relacionados'));
+    s.appendChild(elemento('h3', null, t('noticias.detalle.valores')));
     const cont = elemento('div', 'detalle__etiquetas');
     for (const t of n.tickers) {
       const boton = elemento('button', 'pastilla', t);
@@ -1776,7 +1880,7 @@ function construirDetalleNoticia(n) {
 
   if (n.etiquetas?.length) {
     const s = elemento('div', 'detalle__seccion');
-    s.appendChild(elemento('h3', null, 'Etiquetas'));
+    s.appendChild(elemento('h3', null, t('noticias.detalle.etiquetas')));
     const cont = elemento('div', 'detalle__etiquetas');
     for (const e of n.etiquetas) cont.appendChild(elemento('span', 'distintivo', e));
     s.appendChild(cont);
@@ -1791,11 +1895,11 @@ function construirDetalleNoticia(n) {
     enlace.href = n.url_fuente;
     enlace.target = '_blank';
     enlace.rel = 'noopener noreferrer';
-    enlace.textContent = 'Consultar fuente original';
+    enlace.textContent = t('noticias.detalle.fuenteOriginal');
     pie.appendChild(enlace);
   }
   if (hayCredencial()) {
-    const editar = elemento('button', 'boton boton--contorno', 'Editar noticia');
+    const editar = elemento('button', 'boton boton--contorno', t('noticias.detalle.editar'));
     editar.type = 'button';
     editar.addEventListener('click', () => {
       $('#dialogo-detalle-noticia').close();
@@ -1817,9 +1921,9 @@ function abrirFormularioNoticia(noticia = null) {
   $('#errores-noticia').hidden = true;
   for (const c of $$('[aria-invalid]', form)) c.removeAttribute('aria-invalid');
 
-  const editando = Boolean(noticia);
-  $('#titulo-dialogo-noticia').textContent = editando ? 'Editar noticia' : 'Publicar noticia';
-  $('#btn-guardar-noticia').textContent = editando ? 'Guardar cambios' : 'Publicar';
+  estado.noticiaEditando = Boolean(noticia);
+  const editando = estado.noticiaEditando;
+  reflejarModoFormularioNoticia();
   $('#btn-eliminar-noticia').hidden = !editando;
   form.elements.id.value = editando ? noticia.id : '';
 
@@ -1841,6 +1945,20 @@ function abrirFormularioNoticia(noticia = null) {
   form.elements.titular.focus();
 }
 
+/**
+ * Rótulos que dependen del modo del formulario de noticia. Viven aparte, como
+ * los del formulario de informe, porque hay que volver a aplicarlos al cambiar
+ * de idioma: la pasada sobre el DOM los devolvería a «Publicar» en mitad de
+ * una edición.
+ */
+function reflejarModoFormularioNoticia() {
+  const editando = estado.noticiaEditando;
+  $('#titulo-dialogo-noticia').textContent =
+    t(editando ? 'noticia.titulo.editar' : 'noticia.titulo.publicar');
+  $('#btn-guardar-noticia').textContent =
+    t(editando ? 'noticia.guardar.cambios' : 'noticia.guardar.publicar');
+}
+
 async function enviarFormularioNoticia(ev) {
   ev.preventDefault();
   const form = $('#form-noticia');
@@ -1858,7 +1976,7 @@ async function enviarFormularioNoticia(ev) {
   cuerpo.destacada = form.elements.destacada.checked;
 
   boton.disabled = true;
-  boton.textContent = 'Procesando…';
+  boton.textContent = t('noticia.guardar.procesando');
 
   try {
     await api(id ? `/api/noticias/${id}` : '/api/noticias', {
@@ -1866,10 +1984,9 @@ async function enviarFormularioNoticia(ev) {
       body: JSON.stringify(cuerpo),
     });
     $('#dialogo-noticia').close();
-    avisar(id ? 'Noticia actualizada correctamente.' : 'Noticia publicada correctamente.', { claro: true });
+    avisar(t(id ? 'noticia.guardado.actualizada' : 'noticia.guardado.publicada'), { claro: true });
     await cargarVocabulariosNoticias();
-    if (estado.seccion === 'noticias') await cargarNoticias();
-    if (estado.seccion === 'radar') await cargarPanel();
+    await invalidarDerivadasDeNoticias();
   } catch (err) {
     panel.textContent = '';
     panel.appendChild(elemento('strong', null, err.message));
@@ -1886,20 +2003,19 @@ async function enviarFormularioNoticia(ev) {
     panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } finally {
     boton.disabled = false;
-    boton.textContent = id ? 'Guardar cambios' : 'Publicar';
+    boton.textContent = t(id ? 'noticia.guardar.cambios' : 'noticia.guardar.publicar');
   }
 }
 
 async function eliminarNoticia() {
   const id = $('#form-noticia').elements.id.value;
   if (!id) return;
-  if (!confirm('¿Eliminar definitivamente esta noticia?')) return;
+  if (!confirm(t('noticia.eliminar.confirmar'))) return;
   try {
     await api(`/api/noticias/${id}`, { method: 'DELETE' });
     $('#dialogo-noticia').close();
-    avisar('Noticia eliminada.', { claro: true });
-    if (estado.seccion === 'noticias') await cargarNoticias();
-    if (estado.seccion === 'radar') await cargarPanel();
+    avisar(t('noticia.eliminada'), { claro: true });
+    await invalidarDerivadasDeNoticias();
   } catch (err) {
     avisar(err.message);
   }
@@ -1911,25 +2027,40 @@ async function cargarEstadoSincronizacion() {
   const destino = $('#estado-sincronizacion');
   if (!destino) return;
   try {
-    const e = await api('/api/noticias/sincronizacion');
-    const partes = [];
-    if (e.ultimaEjecucion) {
-      const d = new Date(e.ultimaEjecucion);
-      partes.push(`Actualizado ${d.toLocaleString(localeFormato(), { hour: '2-digit', minute: '2-digit' })}`);
-    }
-    partes.push(`${e.noticiasSindicadas} de Investing.com`);
-    if (e.noticiasPropias) partes.push(`${e.noticiasPropias} propias`);
-    if (e.automatica) partes.push(`cada ${Math.round(e.intervaloMs / 60000)} min`);
-    else partes.push('automatismo desactivado');
-    destino.textContent = partes.join(' · ');
-
-    if (e.incidencias?.length) {
-      destino.setAttribute('title', e.incidencias.join(' | '));
-    } else {
-      destino.removeAttribute('title');
-    }
+    // Se guarda para repintar la línea al cambiar de idioma sin volver a pedirla.
+    estado.sincronizacion = await api('/api/noticias/sincronizacion');
+    pintarEstadoSincronizacion();
   } catch {
-    destino.textContent = 'Estado de sindicación no disponible';
+    estado.sincronizacion = null;
+    destino.textContent = t('noticias.sindicacion.noDisponible');
+  }
+}
+
+/** Pinta la línea de sindicación a partir del último estado resuelto. */
+function pintarEstadoSincronizacion() {
+  const destino = $('#estado-sincronizacion');
+  const e = estado.sincronizacion;
+  if (!destino || !e) return;
+
+  // Cada pieza es un dato independiente, no una frase partida: unirlas con el
+  // separador de lista no impone a nadie el orden del castellano.
+  const partes = [];
+  if (e.ultimaEjecucion) {
+    const d = new Date(e.ultimaEjecucion);
+    partes.push(t('noticias.sindicacion.actualizado', {
+      hora: d.toLocaleString(localeFormato(), { hour: '2-digit', minute: '2-digit' }),
+    }));
+  }
+  partes.push(t('noticias.sindicacion.sindicadas', { n: e.noticiasSindicadas }));
+  if (e.noticiasPropias) partes.push(t('noticias.sindicacion.propias', { n: e.noticiasPropias }));
+  if (e.automatica) partes.push(t('noticias.sindicacion.cada', { min: Math.round(e.intervaloMs / 60000) }));
+  else partes.push(t('noticias.sindicacion.manual'));
+  destino.textContent = partes.join(t('general.separadorLista'));
+
+  if (e.incidencias?.length) {
+    destino.setAttribute('title', e.incidencias.join(' | '));
+  } else {
+    destino.removeAttribute('title');
   }
 }
 
@@ -1940,22 +2071,26 @@ async function sincronizarAhora() {
   const boton = $('#btn-sincronizar');
   boton.dataset.ocupado = 'true';
   const rotulo = boton.textContent;
-  boton.textContent = 'Actualizando…';
+  boton.textContent = t('noticias.sindicacion.actualizando');
 
   try {
     const r = await api('/api/noticias/sincronizar', { method: 'POST', body: JSON.stringify({}) });
     const detalle = r.incorporadas
-      ? `${r.incorporadas} noticia${r.incorporadas === 1 ? '' : 's'} incorporada${r.incorporadas === 1 ? '' : 's'}`
-      : 'Sin novedades desde la última consulta';
-    const vinculo = r.vinculadas ? ` · ${r.vinculadas} sobre valores en cartera` : '';
-    avisar(`${detalle}${vinculo}.`, { claro: true });
+      ? t('noticias.sindicacion.incorporadas', { n: r.incorporadas })
+      : t('noticias.sindicacion.sinNovedades');
+    // El aviso viaja entero al diccionario, con su puntuación: partirlo en
+    // trozos que el código concatena impondría a todos el orden castellano.
+    avisar(r.vinculadas
+      ? t('noticias.sindicacion.avisoVinculadas', { detalle, n: r.vinculadas })
+      : t('noticias.sindicacion.aviso', { detalle }), { claro: true });
 
-    for (const i of r.incidencias ?? []) avisar(`Canal no disponible — ${i}`, { duracion: 8000 });
+    for (const i of r.incidencias ?? []) {
+      avisar(t('noticias.sindicacion.canal', { detalle: i }), { duracion: 8000 });
+    }
 
     await cargarVocabulariosNoticias();
     await cargarEstadoSincronizacion();
-    if (estado.seccion === 'noticias') await cargarNoticias();
-    if (estado.seccion === 'radar') await cargarPanel();
+    await invalidarDerivadasDeNoticias();
   } catch (err) {
     avisar(err.message, { duracion: 9000 });
     await cargarEstadoSincronizacion();
@@ -2026,9 +2161,13 @@ function pintarEstadoOpciones() {
   const destino = $('#estado-opciones');
   const e = estado.opciones.estado;
   if (!destino || !e) return;
+  // El «sesión(es)» de antes era un plural escrito con paréntesis porque el
+  // código no podía elegir; ahora lo elige `Intl.PluralRules` por idioma.
   const h = e.historico;
-  destino.textContent =
-    `Proveedor ${e.proveedores.activo.nombre} · archivo propio ${h?.sesiones ?? 0} sesión(es)`;
+  destino.textContent = t('opciones.estado.proveedor', {
+    proveedor: e.proveedores.activo.nombre,
+    n: h?.sesiones ?? 0,
+  });
 }
 
 /** Flujo de operaciones: hoy sin fuente, con su explicación. */
@@ -2052,7 +2191,7 @@ async function cargarInusual({ forzar = false } = {}) {
   destacadas?.classList.add('cargando');
 
   if (!tabla.textContent.trim()) {
-    tabla.appendChild(elemento('p', 'senal__motivo', 'Consultando cadenas de opciones…'));
+    tabla.appendChild(elemento('p', 'senal__motivo', t('opciones.inusual.consultando')));
   }
 
   try {
@@ -2065,8 +2204,8 @@ async function cargarInusual({ forzar = false } = {}) {
   } catch (err) {
     tabla.textContent = '';
     const caja = elemento('div', 'pendiente-bloque');
-    caja.appendChild(elemento('span', 'pendiente-bloque__marca', 'Error'));
-    caja.appendChild(elemento('strong', null, 'No ha sido posible consultar las opciones'));
+    caja.appendChild(elemento('span', 'pendiente-bloque__marca', t('opciones.inusual.error.marca')));
+    caja.appendChild(elemento('strong', null, t('opciones.inusual.error.titulo')));
     caja.appendChild(elemento('p', null, err.message));
     tabla.appendChild(caja);
   } finally {
@@ -2080,11 +2219,12 @@ function poblarFiltrosOpciones() {
   const datos = estado.opciones.inusual;
   if (!datos) return;
 
+  const todos = t('opciones.filtro.todos');
   const simbolos = [...new Set(datos.contratos.map((c) => c.simbolo))].sort();
-  poblarSelect($('#filtro-op-simbolo'), simbolos, 'Todos');
+  poblarSelect($('#filtro-op-simbolo'), simbolos, todos);
 
   const vencimientos = [...new Set(datos.contratos.map((c) => c.vencimiento))].sort();
-  poblarSelect($('#filtro-op-vencimiento'), vencimientos, 'Todos', (v) => formatearFecha(v));
+  poblarSelect($('#filtro-op-vencimiento'), vencimientos, todos, (v) => formatearFecha(v));
 }
 
 /** Filtra en cliente y repinta tabla y tarjetas. */
@@ -2121,13 +2261,43 @@ function aplicarFiltrosOpciones() {
 
   const resumen = $('#resumen-inusual');
   if (resumen) {
-    resumen.textContent = `${filtrados.length} de ${datos.evaluados} contratos evaluados`;
+    resumen.textContent = t('opciones.inusual.resumen', {
+      n: filtrados.length, total: datos.evaluados,
+    });
   }
 
   pintarDestacadas($('#rejilla-destacadas'), filtrados, { alSeleccionar: abrirDetalleInusual });
   pintarTablaInusual($('#tabla-inusual'), filtrados, {
     alSeleccionar: abrirDetalleInusual,
     alReordenar: () => aplicarFiltrosOpciones(),
+  });
+}
+
+/**
+ * Pinta la cadena a partir de la última carga resuelta.
+ *
+ * Las fechas de vencimiento y el resumen siguen al idioma, de modo que esto se
+ * repite al conmutar; los datos, no, y por eso no se vuelve a la red. El
+ * vencimiento elegido sobrevive porque el desplegable se repuebla conservándolo.
+ */
+function pintarCadenaOpciones() {
+  const cadena = estado.opciones.cadena;
+  if (!cadena) return;
+
+  const select = $('#cadena-vencimiento');
+  const previo = select.value;
+  select.textContent = '';
+  for (const v of cadena.vencimientos) select.appendChild(opcion(v, formatearFecha(v)));
+  if (previo && cadena.vencimientos.includes(previo)) select.value = previo;
+
+  const vencimiento = select.value || cadena.vencimientos[0];
+  pintarCadena($('#tabla-cadena'), cadena, vencimiento);
+  pintarMapaInteres($('#mapa-interes'), cadena, vencimiento);
+
+  $('#cadena-estado').textContent = t('opciones.cadena.resumen', {
+    contratos: cadena.agregados.contratos,
+    precio: formatearNumero(cadena.subyacente.precio),
+    vencimientos: cadena.vencimientos.length,
   });
 }
 
@@ -2147,33 +2317,24 @@ async function cargarCadenaOpciones(simboloSolicitado = null) {
   campo.value = simbolo;
 
   const marcador = $('#cadena-estado');
-  marcador.textContent = 'Consultando…';
+  marcador.textContent = t('opciones.cadena.consultando');
   $('#tabla-cadena').classList.add('cargando');
 
   try {
     const cadena = await api(`/api/opciones/cadena/${encodeURIComponent(simbolo)}`);
     estado.opciones.cadena = cadena;
 
-    const select = $('#cadena-vencimiento');
-    const previo = select.value;
-    select.textContent = '';
-    for (const v of cadena.vencimientos) select.appendChild(opcion(v, formatearFecha(v)));
-    if (previo && cadena.vencimientos.includes(previo)) select.value = previo;
-
-    const vencimiento = select.value || cadena.vencimientos[0];
-    pintarCadena($('#tabla-cadena'), cadena, vencimiento);
-    pintarMapaInteres($('#mapa-interes'), cadena, vencimiento);
-
-    marcador.textContent =
-      `${cadena.agregados.contratos} contratos · subyacente ${formatearNumero(cadena.subyacente.precio)} · ` +
-      `${cadena.vencimientos.length} vencimientos`;
+    pintarCadenaOpciones();
   } catch (err) {
+    // Sin cadena válida no hay nada que repintar: se retira la memoria para que
+    // un cambio de idioma no resucite la última que sí cargó.
+    estado.opciones.cadena = null;
     marcador.textContent = '';
     const destino = $('#tabla-cadena');
     destino.textContent = '';
     const caja = elemento('div', 'pendiente-bloque');
-    caja.appendChild(elemento('span', 'pendiente-bloque__marca', 'Sin datos'));
-    caja.appendChild(elemento('strong', null, `No hay cadena disponible para ${simbolo}`));
+    caja.appendChild(elemento('span', 'pendiente-bloque__marca', t('opciones.cadena.sinDatos.marca')));
+    caja.appendChild(elemento('strong', null, t('opciones.cadena.sinDatos.titulo', { simbolo })));
     caja.appendChild(elemento('p', null, err.message));
     destino.appendChild(caja);
     $('#mapa-interes').textContent = '';
@@ -2391,7 +2552,7 @@ function enlazarEventos() {
     sessionStorage.removeItem(CLAVE_SESION);
     actualizarIndicadorSesion();
     $('#dialogo-acceso').close();
-    avisar('Sesión cerrada.', { claro: true });
+    avisar(t('acceso.cerrada'), { claro: true });
     if (estado.seccion === 'repositorio') cargarInformes();
   });
 

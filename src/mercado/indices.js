@@ -5,7 +5,7 @@
  *
  * Se apoya integramente en la capa de mercado existente, de modo que hereda su
  * cascada de proveedores y su cache. Un indice que no resuelve no interrumpe al
- * resto: se devuelve marcado como no disponible y la interfaz lo rotula «N/D».
+ * resto: se devuelve marcado como no disponible y la interfaz lo rotula «N/A».
  */
 
 const mercado = require('../market');

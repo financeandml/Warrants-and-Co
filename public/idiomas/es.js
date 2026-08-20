@@ -493,4 +493,157 @@ export default {
   'informe.acceso.cliente': 'Cliente',
   'informe.acceso.institucional': 'Institucional',
   'informe.acceso.interno': 'Interno',
+  // ═══════════════════════════ Errores de la red ═══════════════════════════
+  // Los emite `api()`, antes de que ninguna sección los interprete.
+  'error.red': 'No ha sido posible contactar con el servidor. Verifique que la aplicación sigue en ejecución.',
+  'error.solicitud': 'La solicitud ha fallado (código {codigo}).',
+
+  // ══════════════════════════ Acceso de analista ═══════════════════════════
+  'acceso.credencialInvalida': 'Credencial no válida.',
+  'acceso.iniciada': 'Sesión iniciada como analista de Warrants & Co.',
+  'acceso.cerrada': 'Sesión cerrada.',
+
+  // ════════════════════ Cobertura, agenda y panorama ═══════════════════════
+  // Solo los rótulos que pone `app.js`; el cuerpo de cada sección lo pintan
+  // sus propios módulos.
+  'companias.ficha.cargando': 'Cargando…',
+  'companias.ficha.noEncontrada': 'Compañía no encontrada',
+  'companias.error': 'No ha sido posible cargar la cobertura: {detalle}',
+  'catalizadores.cargando': 'Cargando agenda…',
+  'catalizadores.error': 'No ha sido posible cargar la agenda: {detalle}',
+  'mercado.cargando': 'Cargando panorama…',
+  'mercado.error': 'No ha sido posible cargar el panorama: {detalle}',
+
+  // ═══════════════════════════════ Noticias ════════════════════════════════
+  'noticias.antetitulo': 'Actualidad',
+  'noticias.titulo': 'Noticias de mercado',
+  'noticias.sincronizar': 'Actualizar ahora',
+  'noticias.publicar': 'Publicar noticia',
+  'noticias.busqueda': 'Búsqueda de noticias',
+  'noticias.busqueda.hint': 'Titular, compañía, ticker o palabra clave…',
+  'noticias.buscar': 'Buscar',
+  'noticias.limpiar': 'Limpiar',
+  'noticias.paginacion.etiqueta': 'Paginación de noticias',
+
+  'noticias.filtro.categoria': 'Categoría',
+  'noticias.filtro.relevancia': 'Relevancia',
+  'noticias.filtro.valor': 'Valor',
+  'noticias.filtro.origen': 'Origen',
+  'noticias.filtro.desde': 'Desde',
+  'noticias.filtro.hasta': 'Hasta',
+  // «Todas» y «Todos» son dos claves por la misma razón que en el repositorio:
+  // el castellano concuerda con el sustantivo elidido y el inglés no distingue.
+  'noticias.filtro.todas': 'Todas',
+  'noticias.filtro.todos': 'Todos',
+
+  'noticias.origen.propio': 'Redacción propia',
+  'noticias.relevancia.urgente': 'Urgente',
+  'noticias.relevancia.alta': 'Alta',
+  'noticias.relevancia.normal': 'Normal',
+
+  // Las siete categorías son vocabulario cerrado de la interfaz —no algo que
+  // haya escrito un analista—, igual que los niveles de acceso: se guarda la
+  // clave, que es estable, y se traduce el rótulo.
+  'noticias.categoria.mercados': 'Mercados',
+  'noticias.categoria.compania': 'Compañía',
+  'noticias.categoria.macroeconomia': 'Macroeconomía',
+  'noticias.categoria.sector': 'Sector',
+  'noticias.categoria.resultados': 'Resultados',
+  'noticias.categoria.corporativa': 'Operación corporativa',
+  'noticias.categoria.regulacion': 'Regulación',
+  'noticias.destacada': 'Portada',
+
+  'noticias.vacio.titulo': 'Sin noticias',
+  'noticias.vacio.filtrado': 'Ninguna noticia coincide con los criterios seleccionados.',
+  'noticias.vacio.inicial': 'Todavía no se ha publicado ninguna noticia. Utilice «Publicar noticia» para registrar la primera.',
+  'noticias.sinResultados': 'Sin resultados',
+  'noticias.resumen': {
+    one: 'Mostrando {desde}–{hasta} de {n} noticia',
+    other: 'Mostrando {desde}–{hasta} de {n} noticias',
+  },
+
+  // ── Noticias · ficha de lectura ──
+  'noticias.detalle.cargando': 'Cargando noticia…',
+  'noticias.detalle.noDisponible': 'No disponible',
+  'noticias.detalle.sindicada': 'Pieza sindicada: la plataforma recoge el titular y remite al artículo original en la fuente.',
+  'noticias.detalle.valores': 'Valores relacionados',
+  'noticias.detalle.etiquetas': 'Etiquetas',
+  'noticias.detalle.fuenteOriginal': 'Consultar fuente original',
+  'noticias.detalle.editar': 'Editar noticia',
+
+  // ── Noticias · alta y modificación ──
+  'noticia.titulo.publicar': 'Publicar noticia',
+  'noticia.titulo.editar': 'Editar noticia',
+  'noticia.entradilla': 'Redacte la pieza informativa. Solo el titular es obligatorio.',
+  'noticia.grupo.contenido': 'Contenido',
+  'noticia.campo.titular': 'Titular *',
+  'noticia.campo.entradilla': 'Entradilla',
+  'noticia.campo.entradilla.hint': 'Resumen en una o dos frases.',
+  'noticia.campo.cuerpo': 'Cuerpo',
+  'noticia.campo.cuerpo.hint': 'Desarrollo de la noticia y su lectura para la cartera.',
+  'noticia.grupo.clasificacion': 'Clasificación',
+  'noticia.campo.categoria': 'Categoría',
+  'noticia.campo.relevancia': 'Relevancia',
+  'noticia.campo.fecha': 'Fecha de publicación *',
+  'noticia.campo.valores': 'Valores relacionados',
+  'noticia.campo.valores.hint': 'Separados por comas: ORCL, QCOM',
+  'noticia.campo.etiquetas': 'Etiquetas libres',
+  'noticia.campo.etiquetas.hint': 'Separadas por comas: resultados, guidance',
+  'noticia.campo.autor': 'Autor',
+  'noticia.campo.fuente': 'Fuente',
+  'noticia.campo.fuente.hint': 'Medio o servicio de origen',
+  'noticia.campo.url': 'Enlace a la fuente',
+  'noticia.campo.destacar': 'Destacar en portada',
+  'noticia.eliminar': 'Eliminar noticia',
+  'noticia.cancelar': 'Cancelar',
+  'noticia.guardar.publicar': 'Publicar',
+  'noticia.guardar.cambios': 'Guardar cambios',
+  'noticia.guardar.procesando': 'Procesando…',
+  'noticia.guardado.publicada': 'Noticia publicada correctamente.',
+  'noticia.guardado.actualizada': 'Noticia actualizada correctamente.',
+  'noticia.eliminar.confirmar': '¿Eliminar definitivamente esta noticia?',
+  'noticia.eliminada': 'Noticia eliminada.',
+
+  // ── Noticias · sindicación con Investing.com ──
+  // Cada pieza es un dato independiente y se une con el separador de lista, no
+  // una frase partida: el orden de los datos no cambia de un idioma a otro.
+  'noticias.sindicacion.actualizado': 'Actualizado {hora}',
+  'noticias.sindicacion.sindicadas': '{n} de Investing.com',
+  'noticias.sindicacion.propias': '{n} propias',
+  'noticias.sindicacion.cada': 'cada {min} min',
+  'noticias.sindicacion.manual': 'automatismo desactivado',
+  'noticias.sindicacion.noDisponible': 'Estado de sindicación no disponible',
+  'noticias.sindicacion.actualizando': 'Actualizando…',
+  'noticias.sindicacion.incorporadas': {
+    one: '{n} noticia incorporada',
+    other: '{n} noticias incorporadas',
+  },
+  'noticias.sindicacion.sinNovedades': 'Sin novedades desde la última consulta',
+  // El resultado viaja entero, con su puntuación: el inglés no la coloca igual.
+  'noticias.sindicacion.aviso': '{detalle}.',
+  'noticias.sindicacion.avisoVinculadas': {
+    one: '{detalle} · {n} sobre un valor en cartera.',
+    other: '{detalle} · {n} sobre valores en cartera.',
+  },
+  'noticias.sindicacion.canal': 'Canal no disponible — {detalle}',
+
+  // ═══════════════════════ Opciones · rótulos de app.js ════════════════════
+  'opciones.estado.proveedor': {
+    one: 'Proveedor {proveedor} · archivo propio {n} sesión',
+    other: 'Proveedor {proveedor} · archivo propio {n} sesiones',
+  },
+  'opciones.filtro.todos': 'Todos',
+  'opciones.inusual.consultando': 'Consultando cadenas de opciones…',
+  'opciones.inusual.error.marca': 'Error',
+  'opciones.inusual.error.titulo': 'No ha sido posible consultar las opciones',
+  'opciones.inusual.resumen': {
+    one: '{n} de {total} contrato evaluado',
+    other: '{n} de {total} contratos evaluados',
+  },
+  'opciones.cadena.consultando': 'Consultando…',
+  // Dos cifras mandan aquí a la vez —contratos y vencimientos— y `Intl` solo
+  // puede concordar con una: la plantilla se declara sin formas de plural.
+  'opciones.cadena.resumen': '{contratos} contratos · subyacente {precio} · {vencimientos} vencimientos',
+  'opciones.cadena.sinDatos.marca': 'Sin datos',
+  'opciones.cadena.sinDatos.titulo': 'No hay cadena disponible para {simbolo}',
 };

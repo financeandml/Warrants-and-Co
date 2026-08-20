@@ -550,32 +550,44 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Actualidad</p>
-          <h1>Noticias de mercado</h1>
+          <p class="etiqueta-superior" data-i18n="noticias.antetitulo">Actualidad</p>
+          <h1 data-i18n="noticias.titulo">Noticias de mercado</h1>
         </div>
         <div class="acciones-noticias">
           <span class="estado-sincronizacion" id="estado-sincronizacion"></span>
-          <button class="boton boton--contorno" id="btn-sincronizar" type="button">Actualizar ahora</button>
-          <button class="boton boton--solido" id="btn-nueva-noticia" type="button">Publicar noticia</button>
+          <button class="boton boton--contorno" id="btn-sincronizar" type="button"
+                  data-i18n="noticias.sincronizar">Actualizar ahora</button>
+          <button class="boton boton--solido" id="btn-nueva-noticia" type="button"
+                  data-i18n="noticias.publicar">Publicar noticia</button>
         </div>
       </div>
 
       <form class="panel-filtros" id="form-filtros-noticias" role="search">
         <div class="panel-filtros__principal">
-          <label class="visualmente-oculto" for="filtro-noticias-q">Búsqueda de noticias</label>
+          <label class="visualmente-oculto" for="filtro-noticias-q"
+                 data-i18n="noticias.busqueda">Búsqueda de noticias</label>
           <input type="search" id="filtro-noticias-q" name="q" autocomplete="off"
+                 data-i18n-attr="placeholder:noticias.busqueda.hint"
                  placeholder="Titular, compañía, ticker o palabra clave…">
-          <button class="boton boton--solido" type="submit">Buscar</button>
-          <button class="boton boton--texto" type="button" id="btn-limpiar-noticias">Limpiar</button>
+          <button class="boton boton--solido" type="submit"
+                  data-i18n="noticias.buscar">Buscar</button>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-noticias"
+                  data-i18n="noticias.limpiar">Limpiar</button>
         </div>
 
         <div class="panel-filtros__campos">
-          <label>Categoría   <select name="categoria" id="filtro-noticias-categoria"></select></label>
-          <label>Relevancia  <select name="relevancia" id="filtro-noticias-relevancia"></select></label>
-          <label>Valor       <select name="ticker" id="filtro-noticias-ticker"></select></label>
-          <label>Origen      <select name="origen" id="filtro-noticias-origen"></select></label>
-          <label>Desde       <input type="date" name="desde" id="filtro-noticias-desde"></label>
-          <label>Hasta       <input type="date" name="hasta" id="filtro-noticias-hasta"></label>
+          <label><span data-i18n="noticias.filtro.categoria">Categoría</span>
+            <select name="categoria" id="filtro-noticias-categoria"></select></label>
+          <label><span data-i18n="noticias.filtro.relevancia">Relevancia</span>
+            <select name="relevancia" id="filtro-noticias-relevancia"></select></label>
+          <label><span data-i18n="noticias.filtro.valor">Valor</span>
+            <select name="ticker" id="filtro-noticias-ticker"></select></label>
+          <label><span data-i18n="noticias.filtro.origen">Origen</span>
+            <select name="origen" id="filtro-noticias-origen"></select></label>
+          <label><span data-i18n="noticias.filtro.desde">Desde</span>
+            <input type="date" name="desde" id="filtro-noticias-desde"></label>
+          <label><span data-i18n="noticias.filtro.hasta">Hasta</span>
+            <input type="date" name="hasta" id="filtro-noticias-hasta"></label>
         </div>
       </form>
 
@@ -584,7 +596,9 @@
       </div>
 
       <div class="rejilla-noticias" id="rejilla-noticias"></div>
-      <nav class="paginacion" id="paginacion-noticias" aria-label="Paginación de noticias"></nav>
+      <nav class="paginacion" id="paginacion-noticias"
+           data-i18n-attr="aria-label:noticias.paginacion.etiqueta"
+           aria-label="Paginación de noticias"></nav>
     </div>
   </section>
 
@@ -1133,10 +1147,11 @@
 <!-- ══════════════════════════ DIÁLOGO: NOTICIA ══════════════════════════ -->
 <dialog class="dialogo" id="dialogo-noticia">
   <form method="dialog" class="dialogo__cerrar-envoltorio">
-    <button class="dialogo__cerrar" value="cancelar" aria-label="Cerrar">&times;</button>
+    <button class="dialogo__cerrar" value="cancelar"
+            data-i18n-attr="aria-label:general.cerrar" aria-label="Cerrar">&times;</button>
   </form>
-  <h2 id="titulo-dialogo-noticia">Publicar noticia</h2>
-  <p class="dialogo__entradilla">
+  <h2 id="titulo-dialogo-noticia" data-i18n="noticia.titulo.publicar">Publicar noticia</h2>
+  <p class="dialogo__entradilla" data-i18n="noticia.entradilla">
     Redacte la pieza informativa. Solo el titular es obligatorio.
   </p>
 
@@ -1144,66 +1159,72 @@
     <input type="hidden" name="id">
 
     <fieldset>
-      <legend>Contenido</legend>
+      <legend data-i18n="noticia.grupo.contenido">Contenido</legend>
       <label class="campo">
-        <span>Titular *</span>
+        <span data-i18n="noticia.campo.titular">Titular *</span>
         <input type="text" name="titular" required maxlength="220" autocomplete="off">
       </label>
       <label class="campo" style="margin-top:16px">
-        <span>Entradilla</span>
+        <span data-i18n="noticia.campo.entradilla">Entradilla</span>
         <textarea name="entradilla" rows="2" maxlength="600"
+                  data-i18n-attr="placeholder:noticia.campo.entradilla.hint"
                   placeholder="Resumen en una o dos frases."></textarea>
       </label>
       <label class="campo" style="margin-top:16px">
-        <span>Cuerpo</span>
+        <span data-i18n="noticia.campo.cuerpo">Cuerpo</span>
         <textarea name="cuerpo" rows="9" maxlength="20000"
+                  data-i18n-attr="placeholder:noticia.campo.cuerpo.hint"
                   placeholder="Desarrollo de la noticia y su lectura para la cartera."></textarea>
       </label>
     </fieldset>
 
     <fieldset>
-      <legend>Clasificación</legend>
+      <legend data-i18n="noticia.grupo.clasificacion">Clasificación</legend>
       <div class="rejilla-campos">
         <label class="campo">
-          <span>Categoría</span>
+          <span data-i18n="noticia.campo.categoria">Categoría</span>
           <select name="categoria" id="campo-noticia-categoria"></select>
         </label>
         <label class="campo">
-          <span>Relevancia</span>
+          <span data-i18n="noticia.campo.relevancia">Relevancia</span>
           <select name="relevancia" id="campo-noticia-relevancia"></select>
         </label>
         <label class="campo">
-          <span>Fecha de publicación *</span>
+          <span data-i18n="noticia.campo.fecha">Fecha de publicación *</span>
           <input type="date" name="fecha_publicacion" required>
         </label>
         <label class="campo">
-          <span>Valores relacionados</span>
+          <span data-i18n="noticia.campo.valores">Valores relacionados</span>
           <input type="text" name="tickers" maxlength="200" autocomplete="off"
+                 data-i18n-attr="placeholder:noticia.campo.valores.hint"
                  placeholder="Separados por comas: ORCL, QCOM">
         </label>
         <label class="campo">
-          <span>Etiquetas libres</span>
+          <span data-i18n="noticia.campo.etiquetas">Etiquetas libres</span>
           <input type="text" name="etiquetas" maxlength="400" autocomplete="off"
+                 data-i18n-attr="placeholder:noticia.campo.etiquetas.hint"
                  placeholder="Separadas por comas: resultados, guidance">
         </label>
         <label class="campo">
-          <span>Autor</span>
+          <span data-i18n="noticia.campo.autor">Autor</span>
           <input type="text" name="autor" maxlength="120" autocomplete="off">
         </label>
         <label class="campo">
-          <span>Fuente</span>
+          <span data-i18n="noticia.campo.fuente">Fuente</span>
           <input type="text" name="fuente" maxlength="120" autocomplete="off"
+                 data-i18n-attr="placeholder:noticia.campo.fuente.hint"
                  placeholder="Medio o servicio de origen">
         </label>
         <label class="campo">
-          <span>Enlace a la fuente</span>
+          <span data-i18n="noticia.campo.url">Enlace a la fuente</span>
+          <!-- «https://…» no es texto de interfaz: no se traduce. -->
           <input type="url" name="url_fuente" maxlength="500" autocomplete="off" placeholder="https://…">
         </label>
       </div>
       <div class="fila-conmutadores" style="margin-top:18px">
         <label class="casilla">
           <input type="checkbox" name="destacada" value="true">
-          <span>Destacar en portada</span>
+          <span data-i18n="noticia.campo.destacar">Destacar en portada</span>
         </label>
       </div>
     </fieldset>
@@ -1211,10 +1232,13 @@
     <div class="dialogo__errores" id="errores-noticia" hidden aria-live="assertive"></div>
 
     <div class="dialogo__pie">
-      <button class="boton boton--texto" type="button" id="btn-eliminar-noticia" hidden>Eliminar noticia</button>
+      <button class="boton boton--texto" type="button" id="btn-eliminar-noticia" hidden
+              data-i18n="noticia.eliminar">Eliminar noticia</button>
       <div class="dialogo__pie-derecha">
-        <button class="boton boton--contorno" type="button" id="btn-cancelar-noticia">Cancelar</button>
-        <button class="boton boton--solido" type="submit" id="btn-guardar-noticia">Publicar</button>
+        <button class="boton boton--contorno" type="button" id="btn-cancelar-noticia"
+                data-i18n="noticia.cancelar">Cancelar</button>
+        <button class="boton boton--solido" type="submit" id="btn-guardar-noticia"
+                data-i18n="noticia.guardar.publicar">Publicar</button>
       </div>
     </div>
   </form>

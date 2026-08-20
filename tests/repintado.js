@@ -102,6 +102,55 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   comp('el filtro elegido sobrevive al repintado',
     await p.locator('#filtro-sector').inputValue(), elegido);
 
+  // ── Noticias ──
+  // El listado, las tarjetas y la línea de sindicación se construyen enteros en
+  // JavaScript; la categoría y la relevancia llegan del servidor con su rótulo
+  // castellano y se traducen desde la clave, como los niveles de acceso.
+  await p.goto(`${B}/#/noticias`);
+  await p.waitForTimeout(1200);
+  await idioma('es');
+  await p.waitForTimeout(400);
+
+  console.log('\n  ── noticias · castellano de partida ──');
+  comp('titular', await txt('#seccion-noticias h1'), 'Noticias de mercado');
+  comp('rótulo de filtro',
+    await txt('#form-filtros-noticias .panel-filtros__campos label:first-child span'), 'Categoría');
+  comp('opción vacía femenina', await opcion('#filtro-noticias-categoria', 0), 'Todas');
+  comp('opción vacía masculina', await opcion('#filtro-noticias-ticker', 0), 'Todos');
+  comp('recuento con plural', await txt('#resumen-noticias'),
+    (v) => v && /^Mostrando .+ noticias?$/.test(v));
+  comp('línea de sindicación', await txt('#estado-sincronizacion'),
+    (v) => v && /de Investing\.com/.test(v));
+
+  // La categoría elegida ha de sobrevivir al repintado, igual que en el catálogo.
+  await p.selectOption('#filtro-noticias-categoria', { index: 1 });
+  await p.waitForTimeout(700);
+  const categoria = await p.locator('#filtro-noticias-categoria').inputValue();
+
+  await idioma('en');
+  console.log('\n  ── noticias · repintadas al conmutar, sin recargar ──');
+  comp('titular', await txt('#seccion-noticias h1'), 'Market news');
+  comp('botón de sindicación', await txt('#btn-sincronizar'), 'Refresh now');
+  comp('rótulo de filtro',
+    await txt('#form-filtros-noticias .panel-filtros__campos label:first-child span'), 'Category');
+  comp('las dos opciones vacías caen en la misma palabra',
+    await opcion('#filtro-noticias-categoria', 0), await opcion('#filtro-noticias-ticker', 0));
+  comp('categoría traducida desde su clave', await opcion('#filtro-noticias-categoria', 1),
+    (v) => v && !/Mercados|Compañía|Macroeconomía|Regulación/.test(v));
+  comp('recuento con plural', await txt('#resumen-noticias'),
+    (v) => v && /^Showing .+ stor(y|ies)$/.test(v));
+  comp('línea de sindicación', await txt('#estado-sincronizacion'),
+    (v) => v && /from Investing\.com/.test(v));
+  comp('la categoría elegida sobrevive al repintado',
+    await p.locator('#filtro-noticias-categoria').inputValue(), categoria);
+
+  // La tarjeta la construye `construirTarjetaNoticia()`: nada de `data-i18n`.
+  const tarjetas = await p.locator('.noticia').count();
+  if (tarjetas) {
+    comp('categoría de la tarjeta', await txt('.noticia .noticia__superior span'),
+      (v) => v && !/Mercados|Compañía|Macroeconomía|Regulación/.test(v));
+  }
+
   if (errores.length) {
     fallos++;
     console.log('\n  errores de consola:');
