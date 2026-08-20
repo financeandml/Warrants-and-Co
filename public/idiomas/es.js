@@ -72,6 +72,7 @@ export default {
 
   // ── General ──
   'general.cerrar': 'Cerrar',
+  'general.cerrarAviso': 'Cerrar aviso',
   'general.cancelar': 'Cancelar',
 
   // ── Área de analistas ──
@@ -396,6 +397,7 @@ export default {
   'cartera.grafico.rango.max': 'Máx',
   'cartera.grafico.indice': 'Índice de referencia',
   'cartera.grafico.verDatos': 'Ver datos',
+  'cartera.grafico.ocultarDatos': 'Ocultar datos',
   'cartera.leyenda.cartera': 'Cartera Warrants & Co.',
 
   'cartera.serie.caption': 'Serie histórica de la cartera y del índice de referencia',
@@ -646,4 +648,79 @@ export default {
   'opciones.cadena.resumen': '{contratos} contratos · subyacente {precio} · {vencimientos} vencimientos',
   'opciones.cadena.sinDatos.marca': 'Sin datos',
   'opciones.cadena.sinDatos.titulo': 'No hay cadena disponible para {simbolo}',
+
+  // ══════════════════════════ Radar · W&C Radar ════════════════════════════
+  // «W&C Radar» y «W&C Signal» no figuran aquí: son nombres de producto y no se
+  // traducen, igual que en la portada, donde tampoco llevan `data-i18n`.
+  'radar.etiqueta': 'Inteligencia de mercado',
+  'radar.subtitulo': 'Las señales que conviene vigilar hoy.',
+  'radar.pendiente.marca': 'Próximamente',
+  // El plural concuerda con el total, que es el sustantivo cuantificado: son
+  // «7 señales» de las que 3 están operativas, no «3 señales».
+  'radar.senales.operativas': {
+    one: '{operativas} de {n} señal operativa',
+    other: '{operativas} de {n} señales operativas',
+  },
+
+  // ── Radar · W&C Signal ──
+  'radar.signal.subtitulo': 'Indicador propietario · escala 0 – 100',
+  'radar.signal.agregado': 'Signal agregado',
+  'radar.signal.escala': 'Escala 0 – 100',
+  'radar.signal.enConstruccion': 'Modelo en construcción',
+  'radar.signal.lecturaDe': 'Lectura de {ticker}',
+  'radar.signal.lecturaDisponible': 'Lectura disponible',
+  'radar.signal.pendiente': 'Pendiente',
+
+  // ── Radar · cartera ──
+  'radar.cartera.titulo': 'Cartera',
+  'radar.cartera.subtitulo': 'Rendimiento de la cartera frente a su índice de referencia',
+  'radar.cartera.enlace': 'Ver cartera completa',
+  'radar.cartera.vacio.titulo': 'Cartera sin datos',
+  'radar.cartera.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado.',
+
+  // Cada métrica lleva su nota aparte: son dos líneas distintas en pantalla, no
+  // una frase partida.
+  'radar.metrica.rentabilidad': 'Rentabilidad de la cartera',
+  'radar.metrica.rentabilidad.nota': 'Sobre el capital invertido',
+  'radar.metrica.benchmark': 'Índice ({indice})',
+  'radar.metrica.benchmark.nota': 'Mismo periodo',
+  'radar.metrica.alfa': 'Alfa',
+  'radar.metrica.alfa.nota': 'Jensen · anualizada',
+  'radar.metrica.sharpe': 'Sharpe',
+  // La tasa llega ya formateada: un «%» dentro de la plantilla fijaría la
+  // convención de un idioma en los dos.
+  'radar.metrica.sharpe.nota': 'Tasa libre {tasa}',
+  'radar.metrica.caida': 'Máxima caída',
+  'radar.metrica.caida.nota': 'Desde máximo previo',
+  'radar.metrica.volatilidad': 'Volatilidad',
+  'radar.metrica.volatilidad.nota': 'Anualizada',
+
+  'radar.aportaciones.suman': 'Las que más suman',
+  'radar.aportaciones.restan': 'Las que más restan',
+  'radar.aportaciones.sinGrupo': 'Sin posiciones en este grupo.',
+  'radar.aportaciones.vacio.titulo': 'Sin contribuciones',
+  'radar.aportaciones.vacio.motivo': 'Todavía no hay posiciones con rentabilidad calculada.',
+
+  // ── Radar · análisis destacado ──
+  'radar.research.titulo': 'Análisis destacado',
+  'radar.research.subtitulo': 'Tesis destacadas por el comité de análisis',
+  'radar.research.enlace': 'Ver repositorio',
+  'radar.research.vacio.titulo': 'Sin tesis publicadas',
+  'radar.research.vacio.motivo': 'Publique un informe desde el área de analistas para verlo aquí.',
+  'radar.research.signal': 'W&C Signal: {valor}',
+
+  // ── Radar · catalizadores ──
+  'radar.catalizadores.titulo': 'Próximos catalizadores',
+  'radar.catalizadores.subtitulo': 'Agenda de eventos con impacto sobre la cartera',
+  'radar.catalizadores.vacio.titulo': 'Agenda sin conectar',
+  'radar.catalizadores.sinCalendario': 'Sin calendario de eventos',
+  'radar.catalizadores.vacio.motivo': '{motivo}. La interfaz está preparada para recibir eventos de tipo {tipos}.',
+  'radar.catalizadores.nota': '{motivo}: {tipos}.',
+
+  // ── Radar · últimas noticias ──
+  'radar.noticias.titulo': 'Últimas noticias',
+  'radar.noticias.subtitulo': 'Actualidad de mercado',
+  'radar.noticias.enlace': 'Ver todas',
+  'radar.noticias.vacio.titulo': 'Sin noticias',
+  'radar.noticias.vacio.motivo': 'El repositorio se alimenta automáticamente desde Investing.com cada quince minutos.',
 };

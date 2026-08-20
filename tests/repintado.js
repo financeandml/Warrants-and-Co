@@ -59,6 +59,15 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   comp('porcentaje con espacio duro',
     await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && / %$/.test(v));
 
+  // El conmutador de la tabla del gráfico lleva `data-i18n`, que la pasada
+  // sobre el DOM devolvería a «Ver datos». Se deja la tabla abierta antes de
+  // conmutar: así el repintado ha de acertar con el estado vigente y no con
+  // el de partida, que es justo lo que fallaba.
+  comp('conmutador de la tabla, cerrada', await txt('#btn-tabla-serie'), 'Ver datos');
+  await p.click('#btn-tabla-serie');
+  await p.waitForTimeout(200);
+  comp('conmutador de la tabla, abierta', await txt('#btn-tabla-serie'), 'Ocultar datos');
+
   await idioma('en');
   console.log('\n  ── cartera · repintada al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
@@ -70,6 +79,9 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   comp('periodo de estadísticos', await txt('#sub-estadisticos'), (v) => v && /^Period /.test(v));
   comp('porcentaje sin espacio',
     await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && /\d%$/.test(v));
+
+  comp('el conmutador sigue al estado de la tabla, no al de partida',
+    await txt('#btn-tabla-serie'), 'Hide data');
 
   await p.goto(`${B}/#/repositorio`);
   await p.waitForTimeout(1000);
@@ -101,6 +113,70 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   await idioma('en');
   comp('el filtro elegido sobrevive al repintado',
     await p.locator('#filtro-sector').inputValue(), elegido);
+
+  // ── Radar ──
+  // Los seis bloques se construyen en JavaScript salvo sus cabeceras. Se
+  // comprueban las dos mitades: los rótulos del documento y lo que pintan los
+  // pintores de `home.js` desde lo que el radar guardó.
+  await p.goto(`${B}/#/radar`);
+  // El radar resuelve seis fuentes y la agenda tarda segundos. Hay que esperar a
+  // que TODAS hayan pintado antes de conmutar: un bloque que llegue después del
+  // cambio pinta ya con el diccionario nuevo, y entonces la prueba pasaría sin
+  // que nadie haya repintado nada. Se espera por condición, no por reloj.
+  const radarPintado = () => p.waitForFunction(() => {
+    const lleno = (sel) => (document.querySelector(sel)?.textContent ?? '').trim().length > 0;
+    return ['#snapshot-mercado', '#rejilla-radar', '#tarjeta-signal', '#agenda-catalizadores',
+      '#rejilla-research', '#lista-titulares', '#panel-cartera'].every(lleno);
+  }, null, { timeout: 60000 });
+  await radarPintado();
+  await idioma('es');
+  await radarPintado();
+
+  console.log('\n  ── radar · castellano de partida ──');
+  comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Inteligencia de mercado');
+  comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Cartera');
+  comp('cabecera de análisis', await txt('#titulo-top-research'), 'Análisis destacado');
+  comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Próximos catalizadores');
+  comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Últimas noticias');
+  comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Signal agregado');
+  if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
+    comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'),
+      'Rentabilidad de la cartera');
+  }
+  if (await p.locator('#aportaciones h2').count()) {
+    comp('columna de aportaciones', await txt('#aportaciones h2'), 'Las que más suman');
+  }
+  const recuentoEs = await txt('#estado-radar');
+  if (recuentoEs) {
+    comp('recuento de señales con plural', recuentoEs,
+      (v) => v && /^\d+ de \d+ señales? operativas?$/.test(v));
+  }
+
+  await idioma('en');
+  console.log('\n  ── radar · repintado al conmutar, sin recargar ──');
+  comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Market intelligence');
+  comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Portfolio');
+  comp('cabecera de análisis', await txt('#titulo-top-research'), 'Top research');
+  comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Upcoming catalysts');
+  comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Latest news');
+  comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Aggregate Signal');
+
+  // Los nombres de producto no se traducen, y nadie les puso `data-i18n`.
+  comp('«W&C Radar» sigue siendo «W&C Radar»', await txt('#titulo-radar'), 'W&C Radar');
+  comp('«W&C Signal» sigue siendo «W&C Signal»', await txt('#titulo-signal'), 'W&C Signal');
+
+  // Lo que pintan los pintores desde lo guardado, no el documento.
+  if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
+    comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'), 'Portfolio return');
+  }
+  if (await p.locator('#aportaciones h2').count()) {
+    comp('columna de aportaciones', await txt('#aportaciones h2'), 'Top contributors');
+  }
+  const recuento = await txt('#estado-radar');
+  if (recuento) {
+    comp('recuento de señales con plural', recuento,
+      (v) => v && /^\d+ of \d+ signals? live$/.test(v));
+  }
 
   // ── Noticias ──
   // El listado, las tarjetas y la línea de sindicación se construyen enteros en

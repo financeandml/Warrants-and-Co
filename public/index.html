@@ -282,7 +282,7 @@
     <div class="contenedor">
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Market intelligence</p>
+          <p class="etiqueta-superior" data-i18n="radar.etiqueta">Inteligencia de mercado</p>
           <h1>W&amp;C Radar</h1>
         </div>
         <div class="estado-datos" id="estado-radar-cabecera"></div>
@@ -302,7 +302,7 @@
       <section class="bloque-panel" id="bloque-radar" aria-labelledby="titulo-radar">
         <div class="bloque-panel__cabecera">
           <h2 id="titulo-radar">W&amp;C Radar</h2>
-          <p>The signals worth watching today.</p>
+          <p data-i18n="radar.subtitulo">Las señales que conviene vigilar hoy.</p>
           <span class="enlace-mas" id="estado-radar"></span>
         </div>
         <div class="rejilla-radar" id="rejilla-radar"></div>
@@ -312,7 +312,7 @@
       <section class="bloque-panel" aria-labelledby="titulo-signal">
         <div class="bloque-panel__cabecera">
           <h2 id="titulo-signal">W&amp;C Signal</h2>
-          <p>Indicador propietario · escala 0 – 100</p>
+          <p data-i18n="radar.signal.subtitulo">Indicador propietario · escala 0 – 100</p>
         </div>
         <div class="tarjeta-signal" id="tarjeta-signal"></div>
       </section>
@@ -320,9 +320,10 @@
       <!-- Portfolio snapshot -->
       <section class="bloque-panel" aria-labelledby="titulo-panel-cartera">
         <div class="bloque-panel__cabecera">
-          <h2 id="titulo-panel-cartera">Portfolio</h2>
-          <p>Rendimiento de la cartera frente a su índice de referencia</p>
-          <a class="enlace-mas" href="#/cartera" data-ruta>Ver cartera completa</a>
+          <h2 id="titulo-panel-cartera" data-i18n="radar.cartera.titulo">Cartera</h2>
+          <p data-i18n="radar.cartera.subtitulo">Rendimiento de la cartera frente a su índice de referencia</p>
+          <a class="enlace-mas" href="#/cartera" data-ruta
+             data-i18n="radar.cartera.enlace">Ver cartera completa</a>
         </div>
         <div class="cuadro-mando" id="panel-cartera"></div>
         <div class="rejilla-doble" id="aportaciones" style="margin-top:22px"></div>
@@ -331,9 +332,10 @@
       <!-- Top research -->
       <section class="bloque-panel" aria-labelledby="titulo-top-research">
         <div class="bloque-panel__cabecera">
-          <h2 id="titulo-top-research">Top research</h2>
-          <p>Tesis destacadas por el comité de análisis</p>
-          <a class="enlace-mas" href="#/repositorio" data-ruta>Ver repositorio</a>
+          <h2 id="titulo-top-research" data-i18n="radar.research.titulo">Análisis destacado</h2>
+          <p data-i18n="radar.research.subtitulo">Tesis destacadas por el comité de análisis</p>
+          <a class="enlace-mas" href="#/repositorio" data-ruta
+             data-i18n="radar.research.enlace">Ver repositorio</a>
         </div>
         <div class="rejilla-research" id="rejilla-research"></div>
       </section>
@@ -341,8 +343,8 @@
       <!-- Upcoming catalysts -->
       <section class="bloque-panel" aria-labelledby="titulo-catalizadores">
         <div class="bloque-panel__cabecera">
-          <h2 id="titulo-catalizadores">Upcoming catalysts</h2>
-          <p>Agenda de eventos con impacto sobre la cartera</p>
+          <h2 id="titulo-catalizadores" data-i18n="radar.catalizadores.titulo">Próximos catalizadores</h2>
+          <p data-i18n="radar.catalizadores.subtitulo">Agenda de eventos con impacto sobre la cartera</p>
         </div>
         <div id="agenda-catalizadores"></div>
       </section>
@@ -350,9 +352,10 @@
       <!-- Latest news -->
       <section class="bloque-panel" aria-labelledby="titulo-ultimas-noticias">
         <div class="bloque-panel__cabecera">
-          <h2 id="titulo-ultimas-noticias">Latest news</h2>
-          <p>Actualidad de mercado</p>
-          <a class="enlace-mas" href="#/noticias" data-ruta>Ver todas</a>
+          <h2 id="titulo-ultimas-noticias" data-i18n="radar.noticias.titulo">Últimas noticias</h2>
+          <p data-i18n="radar.noticias.subtitulo">Actualidad de mercado</p>
+          <a class="enlace-mas" href="#/noticias" data-ruta
+             data-i18n="radar.noticias.enlace">Ver todas</a>
         </div>
         <div class="titulares" id="lista-titulares"></div>
       </section>

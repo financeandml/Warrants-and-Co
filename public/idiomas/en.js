@@ -71,6 +71,7 @@ export default {
 
   // ── General ──
   'general.cerrar': 'Close',
+  'general.cerrarAviso': 'Dismiss notice',
   'general.cancelar': 'Cancel',
 
   // ── Analyst area ──
@@ -384,6 +385,7 @@ export default {
   'cartera.grafico.rango.max': 'Max',
   'cartera.grafico.indice': 'Benchmark index',
   'cartera.grafico.verDatos': 'View data',
+  'cartera.grafico.ocultarDatos': 'Hide data',
   'cartera.leyenda.cartera': 'Warrants & Co. portfolio',
 
   'cartera.serie.caption': 'Historical series of the portfolio and its benchmark',
@@ -617,4 +619,71 @@ export default {
   'opciones.cadena.resumen': '{contratos} contracts · underlying {precio} · {vencimientos} expirations',
   'opciones.cadena.sinDatos.marca': 'No data',
   'opciones.cadena.sinDatos.titulo': 'No chain available for {simbolo}',
+
+  // ═════════════════════════ Radar · W&C Radar ═════════════════════════════
+  'radar.etiqueta': 'Market intelligence',
+  'radar.subtitulo': 'The signals worth watching today.',
+  'radar.pendiente.marca': 'Coming soon',
+  'radar.senales.operativas': {
+    one: '{operativas} of {n} signal live',
+    other: '{operativas} of {n} signals live',
+  },
+
+  // ── Radar · W&C Signal ──
+  'radar.signal.subtitulo': 'Proprietary indicator · 0 – 100 scale',
+  'radar.signal.agregado': 'Aggregate Signal',
+  'radar.signal.escala': '0 – 100 scale',
+  'radar.signal.enConstruccion': 'Model under construction',
+  'radar.signal.lecturaDe': '{ticker} reading',
+  'radar.signal.lecturaDisponible': 'Reading available',
+  'radar.signal.pendiente': 'Pending',
+
+  // ── Radar · portfolio ──
+  'radar.cartera.titulo': 'Portfolio',
+  'radar.cartera.subtitulo': 'Portfolio performance against its benchmark',
+  'radar.cartera.enlace': 'View the full portfolio',
+  'radar.cartera.vacio.titulo': 'No portfolio data',
+  'radar.cartera.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker.',
+
+  'radar.metrica.rentabilidad': 'Portfolio return',
+  'radar.metrica.rentabilidad.nota': 'On invested capital',
+  'radar.metrica.benchmark': 'Benchmark ({indice})',
+  'radar.metrica.benchmark.nota': 'Same period',
+  'radar.metrica.alfa': 'Alpha',
+  'radar.metrica.alfa.nota': 'Jensen · annualised',
+  'radar.metrica.sharpe': 'Sharpe',
+  'radar.metrica.sharpe.nota': 'Risk-free {tasa}',
+  'radar.metrica.caida': 'Max drawdown',
+  'radar.metrica.caida.nota': 'From prior peak',
+  'radar.metrica.volatilidad': 'Volatility',
+  'radar.metrica.volatilidad.nota': 'Annualised',
+
+  'radar.aportaciones.suman': 'Top contributors',
+  'radar.aportaciones.restan': 'Top detractors',
+  'radar.aportaciones.sinGrupo': 'No positions in this group.',
+  'radar.aportaciones.vacio.titulo': 'No contributions',
+  'radar.aportaciones.vacio.motivo': 'No position has a computed return yet.',
+
+  // ── Radar · top research ──
+  'radar.research.titulo': 'Top research',
+  'radar.research.subtitulo': 'Theses highlighted by the research committee',
+  'radar.research.enlace': 'View the catalogue',
+  'radar.research.vacio.titulo': 'No theses published',
+  'radar.research.vacio.motivo': 'Publish a report from the analyst area to see it here.',
+  'radar.research.signal': 'W&C Signal: {valor}',
+
+  // ── Radar · catalysts ──
+  'radar.catalizadores.titulo': 'Upcoming catalysts',
+  'radar.catalizadores.subtitulo': 'Calendar of events bearing on the portfolio',
+  'radar.catalizadores.vacio.titulo': 'Calendar not connected',
+  'radar.catalizadores.sinCalendario': 'No event calendar',
+  'radar.catalizadores.vacio.motivo': '{motivo}. The interface is ready to take in events of type {tipos}.',
+  'radar.catalizadores.nota': '{motivo}: {tipos}.',
+
+  // ── Radar · latest news ──
+  'radar.noticias.titulo': 'Latest news',
+  'radar.noticias.subtitulo': 'Market news',
+  'radar.noticias.enlace': 'View all',
+  'radar.noticias.vacio.titulo': 'No stories',
+  'radar.noticias.vacio.motivo': 'The repository is fed automatically from Investing.com every fifteen minutes.',
 };

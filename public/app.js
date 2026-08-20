@@ -43,9 +43,7 @@ const estado = {
   // lo que ya hay en memoria en vez de volver a pedirlo: cambian los rótulos,
   // no los datos.
   informes: null,
-  formularioEditando: false,
   noticias: null,
-  noticiaEditando: false,
   sincronizacion: null,
   cartera: null,
   rangoGrafico: 'MAX',
@@ -69,7 +67,7 @@ function avisar(mensaje, { claro = false, duracion = 5200 } = {}) {
 
   const cerrar = elemento('button', 'aviso__cerrar', '×');
   cerrar.type = 'button';
-  cerrar.setAttribute('aria-label', 'Cerrar aviso');
+  cerrar.setAttribute('aria-label', t('general.cerrarAviso'));
   const retirar = () => aviso.remove();
   cerrar.addEventListener('click', retirar);
   aviso.appendChild(cerrar);
@@ -184,8 +182,13 @@ const CARGADORES = {
 
 /**
  * Memorias que cada sección conserva entre navegaciones y que un cambio en las
- * tesis deja obsoletas. Las que no aparecen —radar, repositorio, compañías,
- * catalizadores— no memorizan nada: su cargador ya pide al servidor cada vez.
+ * tesis deja obsoletas.
+ *
+ * Las claves son el censo de secciones que hay que marcar como caducadas; el
+ * cuerpo, lo que hay que retirar de cada una. Por eso figuran también las que no
+ * memorizan nada —compañías, catalizadores—, con el cuerpo vacío: su cargador ya
+ * pide al servidor cada vez, pero sin la marca no volvería a correr.
+ * Quien añada una sección ha de añadirla aquí aunque no tenga nada que purgar.
  */
 const MEMORIAS_DERIVADAS = {
   // Lo guardado para repintar por idioma se retira con el montaje: así el
@@ -198,7 +201,8 @@ const MEMORIAS_DERIVADAS = {
     estado.opciones.inusual = null;
     estado.opciones.cadena = null;
   },
-  radar: () => {},
+  // El radar guarda lo suyo para repintarse por idioma, igual que la portada.
+  radar: () => olvidarDatosRadar(),
   // El listado de noticias guarda su última carga por la misma razón que el
   // catálogo, y por eso figura aquí aunque una tesis no altere las noticias:
   // lo que este mapa vigila es la memoria, no quién la ensucia.
@@ -302,12 +306,53 @@ async function cargarMarca() {
   }
 }
 
-// ─────────────────────────────── portada ─────────────────────────────────
+// ════════════════════════════════ RADAR ═════════════════════════════════
 
-/**
- * Carga el panel de mercado. Cada sección se resuelve por separado: una fuente
- * caída deja su bloque en estado pendiente sin afectar a las demás.
- */
+/* Lo último que cada bloque del radar recibió de su fuente. Se guarda con la
+   misma pauta que la portada, y por la misma razón: repintar al cambiar de
+   idioma sin volver a pedir nada, porque los datos son los mismos y lo único
+   que cambia es el texto que los rodea. */
+const datosRadar = {
+  indices: null, senales: null, signal: null,
+  catalizadores: null, research: null, titulares: null,
+};
+
+/* Bloques que ya se han pintado alguna vez. Hace falta distinguir «su fuente aún
+   no ha contestado» de «contestó y no había dato»: en el segundo caso el bloque
+   muestra su carencia declarada, que también hay que traducir, y en el primero
+   no hay nada que repintar todavía. */
+const pintadosRadar = new Set();
+
+/** Vacía lo guardado, para que la próxima visita vuelva a pedirlo. */
+function olvidarDatosRadar() {
+  for (const campo of Object.keys(datosRadar)) datosRadar[campo] = null;
+  pintadosRadar.clear();
+}
+
+const irARadar = (destino) => irA(String(destino).replace('#/', ''));
+
+/* Cómo se pinta cada bloque a partir de lo guardado. Los pintores viven aquí
+   —y no dentro de la carga— porque el repintado por idioma usa exactamente los
+   mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio. */
+const PINTORES_RADAR = {
+  snapshot: () => pintarSnapshot(datosRadar.indices),
+  senales: () => pintarRadar(datosRadar.senales, irARadar),
+  signal: () => pintarSignal(datosRadar.signal),
+  catalizadores: () => pintarCatalizadores(datosRadar.catalizadores),
+  research: () => pintarResearch(datosRadar.research ?? [], estado.cartera, abrirDetalle),
+  titulares: () => pintarUltimasNoticias(datosRadar.titulares, abrirDetalleNoticia),
+  // Cuando la cartera resuelve, este bloque lo repinta `pintarCartera()`, que ya
+  // pasa por `repintarVistas()`. Solo figura aquí para el caso contrario: si no
+  // resolvió, lo que hay en pantalla es su carencia declarada, y a esa no llega
+  // nadie más.
+  cartera: () => pintarPanelCartera(estado.cartera),
+};
+
+/** Repinta los bloques del radar que ya se pintaron alguna vez. */
+function repintarRadar() {
+  for (const bloque of pintadosRadar) PINTORES_RADAR[bloque]();
+}
+
 /**
  * Cuadro de mando.
  *
@@ -317,35 +362,41 @@ async function cargarMarca() {
  * Una fuente caída deja su bloque en estado declarado sin afectar a los demás.
  */
 async function cargarPanel() {
-  const irA_ = (destino) => irA(String(destino).replace('#/', ''));
+  // Guarda lo que llegue —resuelva la fuente o falle— y pinta ese bloque.
+  const alLlegar = (promesa, guardar, bloque) => {
+    const pintar = () => { pintadosRadar.add(bloque); PINTORES_RADAR[bloque](); };
+    return promesa.then((d) => { guardar(d); pintar(); }, () => { guardar(null); pintar(); });
+  };
 
-  const pintarCuando = (promesa, pintar) =>
-    promesa.then((d) => pintar(d), () => pintar(null));
+  await Promise.allSettled([
+    alLlegar(api('/api/radar/indices'), (d) => { datosRadar.indices = d; }, 'snapshot'),
+    alLlegar(api('/api/radar'), (d) => { datosRadar.senales = d; }, 'senales'),
+    alLlegar(api('/api/radar/signal'), (d) => { datosRadar.signal = d; }, 'signal'),
+    alLlegar(api('/api/radar/catalizadores'),
+      (d) => { datosRadar.catalizadores = d; }, 'catalizadores'),
 
-  const trabajos = [
-    pintarCuando(api('/api/radar/indices'), pintarSnapshot),
-    pintarCuando(api('/api/radar'), (d) => pintarRadar(d, irA_)),
-    pintarCuando(api('/api/radar/signal'), pintarSignal),
-    pintarCuando(api('/api/radar/catalizadores'), pintarCatalizadores),
-
-    pintarCuando(api('/api/informes/destacados?limite=4'), (informes) => {
+    alLlegar(api('/api/informes/destacados?limite=4'), (informes) => {
       // Prevalecen los destacados por el comité; si no hay, los más recientes.
-      const seleccion = informes?.destacados?.length ? informes.destacados : (informes?.recientes ?? []);
-      pintarResearch(seleccion, estado.cartera, abrirDetalle);
-    }),
+      datosRadar.research = informes?.destacados?.length
+        ? informes.destacados
+        : (informes?.recientes ?? []);
+    }, 'research'),
 
-    pintarCuando(api('/api/noticias/portada?limite=6'), (piezas) => {
+    alLlegar(api('/api/noticias/portada?limite=6'), (piezas) => {
       const vistos = new Set();
-      const titulares = [...(piezas?.destacadas ?? []), ...(piezas?.recientes ?? [])]
+      datosRadar.titulares = [...(piezas?.destacadas ?? []), ...(piezas?.recientes ?? [])]
         .filter((n) => (vistos.has(n.id) ? false : vistos.add(n.id)));
-      pintarUltimasNoticias(titulares, abrirDetalleNoticia);
+    }, 'titulares'),
+
+    // La cartera alimenta también la cinta y la curva de fondo, y se pinta sola
+    // desde `cargarCartera()`. Aquí solo se decide quién repinta su bloque: si
+    // resolvió, `pintarCartera()`; si no, este mapa con la carencia declarada.
+    cargarCartera({ silencioso: true }).finally(() => {
+      if (estado.cartera) { pintadosRadar.delete('cartera'); return; }
+      pintadosRadar.add('cartera');
+      pintarPanelCartera(null);
     }),
-
-    // La cartera alimenta también la cinta y la curva de fondo.
-    cargarCartera({ silencioso: true }).catch(() => pintarPanelCartera(null)),
-  ];
-
-  await Promise.allSettled(trabajos);
+  ]);
 }
 
 // ────────────────────────────── repositorio ──────────────────────────────
@@ -755,12 +806,14 @@ function poblarFormulario() {
 }
 
 /**
- * Rótulos que dependen del modo del formulario. Viven aparte de
- * `abrirFormulario()` porque hay que volver a aplicarlos al cambiar de idioma:
- * la pasada sobre el DOM los devolvería a «Publicar» en mitad de una edición.
+ * Rótulos que dependen del modo del formulario, en un solo sitio.
+ *
+ * No se repintan al conmutar el idioma, y no hace falta: mientras el diálogo
+ * está abierto el idioma no puede cambiar —lo explica `repintarVistas()`—, y al
+ * abrirlo se aplican de nuevo con el diccionario vigente. Por eso el modo llega
+ * por parámetro y no se guarda en `estado`: nadie lo necesita después.
  */
-function reflejarModoFormulario() {
-  const editando = estado.formularioEditando;
+function reflejarModoFormulario(editando) {
   $('#titulo-dialogo-informe').textContent =
     t(editando ? 'informe.titulo.editar' : 'informe.titulo.publicar');
   $('#btn-guardar-informe').textContent =
@@ -777,11 +830,8 @@ function abrirFormulario(informe = null) {
   $('#lista-adjuntos-existentes').textContent = '';
   for (const c of $$('[aria-invalid]', form)) c.removeAttribute('aria-invalid');
 
-  // El modo vive en `estado` porque `reflejarModoFormulario()` vuelve a
-  // aplicarlo en cada cambio de idioma, cuando esta función ya ha terminado.
   const editando = Boolean(informe);
-  estado.formularioEditando = editando;
-  reflejarModoFormulario();
+  reflejarModoFormulario(editando);
   $('#btn-eliminar-informe').hidden = !editando;
 
   form.elements.id.value = editando ? informe.id : '';
@@ -1064,6 +1114,9 @@ function repintarVistas() {
   if (estado.vocabularios) { poblarFiltros(); poblarFormulario(); }
   if (estado.informes) pintarInformes(estado.informes);
   if (estado.cartera) pintarCartera(estado.cartera, { avisos: false });
+  reflejarModoTablaSerie();
+
+  repintarRadar();
 
   if (estado.vocabulariosNoticias) { poblarFiltrosNoticias(); poblarFormularioNoticia(); }
   if (estado.noticias) pintarNoticias(estado.noticias);
@@ -1079,8 +1132,25 @@ function repintarVistas() {
   // Los diálogos no entran, y no es un olvido: se abren con `showModal()`, que
   // deja el conmutador de idioma fuera del alcance del ratón y del tabulador.
   // Con uno abierto no puede llegar a cambiarse el idioma, de modo que repintar
-  // su contenido sería código que nunca se ejecuta. Si algún día alguno pasara
-  // a `show()` —sin modal—, habría que volver a añadirlos aquí.
+  // su contenido sería código que nunca se ejecuta. Sus rótulos de modo se
+  // aplican al abrirlos, que es cuando se sabe el modo. Si algún día alguno
+  // pasara a `show()` —sin modal—, habría que volver a añadirlos aquí.
+}
+
+/**
+ * Rótulo del conmutador de la tabla del gráfico.
+ *
+ * Este sí se ve mientras se conmuta el idioma: está en la sección, no en un
+ * diálogo. Su `data-i18n` lo devolvería a «Ver datos» con la tabla abierta, así
+ * que `repintarVistas()` lo vuelve a aplicar. El modo no se guarda en `estado`
+ * porque ya lo dice el DOM, que es donde ocurre.
+ */
+function reflejarModoTablaSerie() {
+  const boton = $('#btn-tabla-serie');
+  const tabla = $('#tabla-serie');
+  if (!boton || !tabla) return;
+  boton.textContent =
+    t(tabla.hidden ? 'cartera.grafico.verDatos' : 'cartera.grafico.ocultarDatos');
 }
 
 // ═══════════════════════════════ COMPANIES ══════════════════════════════
@@ -1921,9 +1991,8 @@ function abrirFormularioNoticia(noticia = null) {
   $('#errores-noticia').hidden = true;
   for (const c of $$('[aria-invalid]', form)) c.removeAttribute('aria-invalid');
 
-  estado.noticiaEditando = Boolean(noticia);
-  const editando = estado.noticiaEditando;
-  reflejarModoFormularioNoticia();
+  const editando = Boolean(noticia);
+  reflejarModoFormularioNoticia(editando);
   $('#btn-eliminar-noticia').hidden = !editando;
   form.elements.id.value = editando ? noticia.id : '';
 
@@ -1945,14 +2014,8 @@ function abrirFormularioNoticia(noticia = null) {
   form.elements.titular.focus();
 }
 
-/**
- * Rótulos que dependen del modo del formulario de noticia. Viven aparte, como
- * los del formulario de informe, porque hay que volver a aplicarlos al cambiar
- * de idioma: la pasada sobre el DOM los devolvería a «Publicar» en mitad de
- * una edición.
- */
-function reflejarModoFormularioNoticia() {
-  const editando = estado.noticiaEditando;
+/** Los rótulos del formulario de noticia, con la misma pauta y por lo mismo. */
+function reflejarModoFormularioNoticia(editando) {
   $('#titulo-dialogo-noticia').textContent =
     t(editando ? 'noticia.titulo.editar' : 'noticia.titulo.publicar');
   $('#btn-guardar-noticia').textContent =
@@ -2576,7 +2639,7 @@ function enlazarEventos() {
     const visible = tabla.hidden;
     tabla.hidden = !visible;
     btnTabla.setAttribute('aria-expanded', String(visible));
-    btnTabla.textContent = visible ? 'Ocultar datos' : 'Ver datos';
+    reflejarModoTablaSerie();
   });
 
   // Los dialogos nativos se cierran con Escape; se limpia el estado asociado.

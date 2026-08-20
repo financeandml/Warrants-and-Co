@@ -15,7 +15,7 @@ import { t } from './i18n.js';
 /** Bloque de estado para una sección todavía sin fuente de datos. */
 function bloquePendiente(titulo, motivo) {
   const caja = elemento('div', 'pendiente-bloque');
-  caja.appendChild(elemento('span', 'pendiente-bloque__marca', 'Próximamente'));
+  caja.appendChild(elemento('span', 'pendiente-bloque__marca', t('radar.pendiente.marca')));
   caja.appendChild(elemento('strong', null, titulo));
   caja.appendChild(elemento('p', null, motivo));
   return caja;
@@ -34,7 +34,8 @@ export function pintarSnapshot(datos) {
 
     if (!i.disponible) {
       celda.appendChild(elemento('strong', 'snapshot__valor lectura--nula', t('general.noDisponible')));
-      celda.appendChild(elemento('span', 'snapshot__nota', i.motivo ?? 'No disponible'));
+      // El motivo lo redacta el servidor; solo se traduce la reserva.
+      celda.appendChild(elemento('span', 'snapshot__nota', i.motivo ?? t('general.sinDatos')));
       destino.appendChild(celda);
       continue;
     }
@@ -68,7 +69,7 @@ export function pintarRadar(datos, alNavegar) {
   const senales = datos?.senales ?? [];
   if (estado) {
     estado.textContent = senales.length
-      ? `${datos.operativas} de ${datos.total} señales operativas`
+      ? t('radar.senales.operativas', { n: datos.total, operativas: datos.operativas })
       : '';
   }
 
@@ -105,7 +106,7 @@ export function pintarRadar(datos, alNavegar) {
 
       if (d.detalle) cuerpo.appendChild(elemento('span', 'senal__detalle', d.detalle));
     } else {
-      cuerpo.appendChild(elemento('span', 'pendiente-bloque__marca', 'Próximamente'));
+      cuerpo.appendChild(elemento('span', 'pendiente-bloque__marca', t('radar.pendiente.marca')));
       cuerpo.appendChild(elemento('p', 'senal__motivo', s.motivo ?? s.descripcion));
     }
     tarjeta.appendChild(cuerpo);
@@ -121,7 +122,7 @@ export function pintarSignal(datos) {
   destino.textContent = '';
 
   const marcador = elemento('div', 'signal__marcador');
-  marcador.appendChild(elemento('span', 'signal__etiqueta', 'Signal agregado'));
+  marcador.appendChild(elemento('span', 'signal__etiqueta', t('radar.signal.agregado')));
 
   if (datos?.disponible && Number.isFinite(datos.agregado)) {
     marcador.appendChild(elemento('strong', 'signal__cifra', formatearNumero(datos.agregado, 1)));
@@ -134,9 +135,10 @@ export function pintarSignal(datos) {
     marcador.appendChild(elemento('strong', 'signal__cifra signal__cifra--pendiente', t('general.noDisponible')));
   }
 
-  marcador.appendChild(elemento('span', 'signal__escala', 'Escala 0 – 100'));
+  marcador.appendChild(elemento('span', 'signal__escala', t('radar.signal.escala')));
   if (!datos?.disponible) {
-    marcador.appendChild(elemento('span', 'signal__escala', datos?.motivo ?? 'Modelo en construcción'));
+    marcador.appendChild(elemento('span', 'signal__escala',
+      datos?.motivo ?? t('radar.signal.enConstruccion')));
   }
   destino.appendChild(marcador);
 
@@ -159,9 +161,12 @@ export function pintarSignal(datos) {
       bloque.appendChild(elemento('div', 'dimension__lectura',
         `${formatearNumero(d.lectura, 1)}${d.unidad ?? ''}`));
       bloque.appendChild(elemento('span', 'dimension__detalle',
-        primero?.ticker ? `Lectura de ${primero.ticker}` : 'Lectura disponible'));
+        primero?.ticker
+          ? t('radar.signal.lecturaDe', { ticker: primero.ticker })
+          : t('radar.signal.lecturaDisponible')));
     } else {
-      bloque.appendChild(elemento('span', 'dimension__detalle', d.detalle ?? d.requiere ?? 'Pendiente'));
+      bloque.appendChild(elemento('span', 'dimension__detalle',
+        d.detalle ?? d.requiere ?? t('radar.signal.pendiente')));
     }
     dimensiones.appendChild(bloque);
   }
@@ -179,19 +184,27 @@ export function pintarPanelCartera(cartera) {
 
   const e = cartera?.estadisticos;
   if (!e) {
-    destino.appendChild(bloquePendiente('Cartera sin datos',
-      cartera?.mensaje ?? 'La cartera se constituye a partir de las tesis publicadas con ticker asignado.'));
+    destino.appendChild(bloquePendiente(t('radar.cartera.vacio.titulo'),
+      cartera?.mensaje ?? t('radar.cartera.vacio.motivo')));
     return;
   }
 
   // Se reutilizan las métricas ya calculadas por el motor de cartera.
+  // La tasa libre de riesgo viaja ya formateada: un «%» dentro de la plantilla
+  // del diccionario fijaría la convención de un idioma en los dos.
   const metricas = [
-    ['Portfolio return', formatearPorcentaje(e.rentabilidadTotal), 'Sobre el capital invertido', e.rentabilidadTotal],
-    [`Benchmark (${cartera.benchmark})`, formatearPorcentaje(e.rentabilidadIndice), 'Mismo periodo', e.rentabilidadIndice],
-    ['Alpha', formatearPorcentaje(e.alfaJensen), 'Jensen · anualizada', e.alfaJensen],
-    ['Sharpe', formatearNumero(e.ratioSharpe), `Tasa libre ${porcentaje(e.tasaLibreRiesgo, 1)}`],
-    ['Max drawdown', formatearPorcentaje(e.maximaCaida), 'Desde máximo previo', e.maximaCaida],
-    ['Volatilidad', formatearPorcentaje(e.volatilidadAnualizada, false), 'Anualizada'],
+    [t('radar.metrica.rentabilidad'), formatearPorcentaje(e.rentabilidadTotal),
+      t('radar.metrica.rentabilidad.nota'), e.rentabilidadTotal],
+    [t('radar.metrica.benchmark', { indice: cartera.benchmark }), formatearPorcentaje(e.rentabilidadIndice),
+      t('radar.metrica.benchmark.nota'), e.rentabilidadIndice],
+    [t('radar.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
+      t('radar.metrica.alfa.nota'), e.alfaJensen],
+    [t('radar.metrica.sharpe'), formatearNumero(e.ratioSharpe),
+      t('radar.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) })],
+    [t('radar.metrica.caida'), formatearPorcentaje(e.maximaCaida),
+      t('radar.metrica.caida.nota'), e.maximaCaida],
+    [t('radar.metrica.volatilidad'), formatearPorcentaje(e.volatilidadAnualizada, false),
+      t('radar.metrica.volatilidad.nota')],
   ];
 
   for (const [etiqueta, valor, nota, lectura] of metricas) {
@@ -211,8 +224,8 @@ export function pintarPanelCartera(cartera) {
     .filter((p) => Number.isFinite(p.contribucionPct));
 
   if (!lineas.length) {
-    aportaciones.appendChild(bloquePendiente('Sin contribuciones',
-      'Todavía no hay posiciones con rentabilidad calculada.'));
+    aportaciones.appendChild(bloquePendiente(t('radar.aportaciones.vacio.titulo'),
+      t('radar.aportaciones.vacio.motivo')));
     return;
   }
 
@@ -226,7 +239,7 @@ export function pintarPanelCartera(cartera) {
 
     const lista = elemento('div', 'lista-aportacion');
     if (!conjunto.length) {
-      lista.appendChild(elemento('p', 'senal__motivo', 'Sin posiciones en este grupo.'));
+      lista.appendChild(elemento('p', 'senal__motivo', t('radar.aportaciones.sinGrupo')));
     }
     for (const p of conjunto) {
       const fila = elemento('div', 'aportacion');
@@ -240,8 +253,9 @@ export function pintarPanelCartera(cartera) {
     return caja;
   };
 
-  aportaciones.appendChild(columna('Top contributors', ordenadas.filter((p) => p.contribucionPct > 0).slice(0, 4)));
-  aportaciones.appendChild(columna('Top detractors',
+  aportaciones.appendChild(columna(t('radar.aportaciones.suman'),
+    ordenadas.filter((p) => p.contribucionPct > 0).slice(0, 4)));
+  aportaciones.appendChild(columna(t('radar.aportaciones.restan'),
     ordenadas.filter((p) => p.contribucionPct < 0).reverse().slice(0, 4)));
 }
 
@@ -253,8 +267,8 @@ export function pintarResearch(informes, cartera, alAbrir) {
   destino.textContent = '';
 
   if (!informes?.length) {
-    destino.appendChild(bloquePendiente('Sin tesis publicadas',
-      'Publique un informe desde el área de analistas para verlo aquí.'));
+    destino.appendChild(bloquePendiente(t('radar.research.vacio.titulo'),
+      t('radar.research.vacio.motivo')));
     return;
   }
 
@@ -282,7 +296,8 @@ export function pintarResearch(informes, cartera, alAbrir) {
 
     const pie = elemento('div', 'research__pie');
     // El indicador propietario todavía no puntúa: se declara como tal.
-    pie.appendChild(elemento('span', null, `W&C Signal: ${t('general.noDisponible')}`));
+    pie.appendChild(elemento('span', null,
+      t('radar.research.signal', { valor: t('general.noDisponible') })));
     pie.appendChild(elemento('span', null, formatearFecha(i.fecha_publicacion)));
     tarjeta.appendChild(pie);
 
@@ -299,9 +314,14 @@ export function pintarCatalizadores(datos) {
 
   const eventos = datos?.eventos ?? [];
   if (!eventos.length) {
+    // El aviso viaja entero al diccionario, con su puntuación: partirlo en
+    // trozos que el código concatena impondría a todos el orden castellano.
     destino.appendChild(bloquePendiente(
-      'Agenda sin conectar',
-      `${datos?.motivo ?? 'Sin calendario de eventos'}. La interfaz está preparada para recibir eventos de tipo ${(datos?.tipos ?? []).join(', ')}.`
+      t('radar.catalizadores.vacio.titulo'),
+      t('radar.catalizadores.vacio.motivo', {
+        motivo: datos?.motivo ?? t('radar.catalizadores.sinCalendario'),
+        tipos: (datos?.tipos ?? []).join(', '),
+      })
     ));
     return;
   }
@@ -320,7 +340,7 @@ export function pintarCatalizadores(datos) {
   // La agenda se sostiene sobre las fuentes que hay; lo que no cubre se dice.
   if (datos?.tipos?.length) {
     destino.appendChild(elemento('p', 'nota-metodologica',
-      `${datos.motivo}: ${datos.tipos.join(', ')}.`));
+      t('radar.catalizadores.nota', { motivo: datos.motivo, tipos: datos.tipos.join(', ') })));
   }
 }
 
@@ -332,8 +352,8 @@ export function pintarUltimasNoticias(noticias, alAbrir) {
   destino.textContent = '';
 
   if (!noticias?.length) {
-    destino.appendChild(bloquePendiente('Sin noticias',
-      'El repositorio se alimenta automáticamente desde Investing.com cada quince minutos.'));
+    destino.appendChild(bloquePendiente(t('radar.noticias.vacio.titulo'),
+      t('radar.noticias.vacio.motivo')));
     return;
   }
 
