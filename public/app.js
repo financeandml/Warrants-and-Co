@@ -46,6 +46,7 @@ const estado = {
   noticias: null,
   sincronizacion: null,
   cartera: null,
+  mercado: null,
   rangoGrafico: 'MAX',
   benchmark: 'SPY',
   grafico: null,
@@ -1121,6 +1122,7 @@ function repintarVistas() {
   repintarRadar();
   repintarCompanias();
   pintarAgendaCompleta();
+  pintarPanoramaCompleto();
 
   if (estado.vocabulariosNoticias) { poblarFiltrosNoticias(); poblarFormularioNoticia(); }
   if (estado.noticias) pintarNoticias(estado.noticias);
@@ -1307,10 +1309,17 @@ async function cargarMercado() {
   if (raiz && !raiz.childElementCount) raiz.textContent = t('mercado.cargando');
 
   try {
-    pintarPanorama(await api('/api/mercado/panorama'));
+    // Se guarda la carga para repintar al cambiar de idioma sin volver a pedirla.
+    estado.mercado = await api('/api/mercado/panorama');
+    pintarPanoramaCompleto();
   } catch (err) {
     avisar(t('mercado.error', { detalle: err.message }));
   }
+}
+
+/** Pinta el panorama a partir de la última carga resuelta. */
+function pintarPanoramaCompleto() {
+  if (estado.mercado) pintarPanorama(estado.mercado);
 }
 
 // ──────────────────────────────── cartera ────────────────────────────────

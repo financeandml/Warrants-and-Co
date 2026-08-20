@@ -810,4 +810,27 @@ export default {
   'catalizadores.dato.recomendacion': 'Recommendation',
   'catalizadores.dato.objetivo': 'Target price',
   'catalizadores.dato.analista': 'Analyst',
+
+  // ════════════════════════════ Markets ════════════════════════════════════
+  'mercado.etiqueta': 'Market',
+  'mercado.titulo': 'Markets',
+  'mercado.cobertura': {
+    one: '{n} of {total} instrument resolved',
+    other: '{n} of {total} instruments resolved',
+  },
+  'mercado.sinMotivo': 'Data unavailable',
+
+  // ── Yield curve ──
+  'mercado.curva.titulo': 'Curve slope',
+  'mercado.curva.puntosBasicos': '{valor} bp',
+  'mercado.curva.invertida': 'Inverted curve (10y < 2y)',
+  'mercado.curva.positiva': 'Upward-sloping curve (10y > 2y)',
+  'mercado.curva.selloNota': 'Difference between the 10-year and 2-year points.',
+  'mercado.curva.plazoMeses': '{n}m',
+  'mercado.curva.plazoAnios': '{n}y',
+
+  // ── Quality legend ──
+  'mercado.leyenda.titulo': 'Data quality',
+  'mercado.leyenda.subtitulo': 'What each seal means on this page',
+  'mercado.leyenda.ausentes': 'Not resolved on this load: {instrumentos}.',
 };

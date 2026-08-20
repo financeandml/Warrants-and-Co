@@ -7,24 +7,35 @@
    un minuto no son la misma cosa aunque se impriman igual.
    ========================================================================= */
 
-import { $, elemento, formatearNumero, porcentaje, formatearPorcentaje } from './formato.js';
+import {
+  $, elemento, formatearNumero, porcentaje, formatearPorcentaje, relativo,
+} from './formato.js';
+import { t } from './i18n.js';
+import { etiquetaSello, claseSello } from './vocabulario.js';
 
-const NO_DISPONIBLE = 'N/A';
+/* El rótulo de ausencia se resuelve al pintar, que es cuando se sabe el idioma. */
+const noDisponible = () => t('general.noDisponible');
 
 const FLECHA = { UP: '▲', DOWN: '▼', FLAT: '—', UNKNOWN: '' };
 
+/* El sello venía duplicado aquí, con el código crudo por rótulo: «UNAVAILABLE»
+   en mitad del castellano. Ahora sale de `vocabulario.js`, que es donde vive el
+   vocabulario cerrado del servidor. El código sigue en la clase. */
 function sello(calidad, explicacion = '') {
-  const s = elemento('span', `sello sello--${String(calidad ?? 'UNAVAILABLE').toLowerCase()}`, calidad ?? 'UNAVAILABLE');
+  const s = elemento('span', claseSello(calidad), etiquetaSello(calidad));
   if (explicacion) s.title = explicacion;
   return s;
 }
 
-/** Antigüedad legible del dato. */
+/* Antigüedad del dato. Era una escalera de condiciones —«hace N s», «min», «h»—
+   que solo sabía castellano; la unidad y el plural son cosa del idioma, y eso lo
+   sabe `Intl.RelativeTimeFormat`. Se escoge la unidad y él redacta el resto. */
 function frescura(segundos) {
-  if (!Number.isFinite(segundos)) return NO_DISPONIBLE;
-  if (segundos < 60) return `hace ${segundos} s`;
-  if (segundos < 3600) return `hace ${Math.round(segundos / 60)} min`;
-  return `hace ${Math.round(segundos / 3600)} h`;
+  if (!Number.isFinite(segundos)) return noDisponible();
+  const f = relativo({ numeric: 'always' });
+  if (segundos < 60) return f.format(-segundos, 'second');
+  if (segundos < 3600) return f.format(-Math.round(segundos / 60), 'minute');
+  return f.format(-Math.round(segundos / 3600), 'hour');
 }
 
 export function pintarPanorama(datos) {
@@ -34,9 +45,13 @@ export function pintarPanorama(datos) {
   raiz.textContent = '';
 
   if (estado) {
-    estado.textContent =
-      `${datos.cobertura.resueltos} de ${datos.cobertura.solicitados} instrumentos resueltos` +
-      (datos.proveedores?.length ? ` · ${datos.proveedores.join(' → ')}` : '');
+    // La cadena de proveedores es un dato aparte, no parte de la frase: se une
+    // con el separador de lista y conserva su propia flecha.
+    const partes = [t('mercado.cobertura', {
+      n: datos.cobertura.resueltos, total: datos.cobertura.solicitados,
+    })];
+    if (datos.proveedores?.length) partes.push(datos.proveedores.join(' → '));
+    estado.textContent = partes.join(t('general.separadorLista'));
   }
 
   for (const grupo of datos.grupos) {
@@ -65,24 +80,25 @@ export function pintarPanorama(datos) {
 }
 
 function tarjetaInstrumento(i) {
-  const t = elemento('article', 'tarjeta-mercado');
-  t.dataset.direccion = i.direccion;
+  const tarjeta = elemento('article', 'tarjeta-mercado');
+  tarjeta.dataset.direccion = i.direccion;
 
   const cabecera = elemento('div', 'tarjeta-mercado__cabecera');
   cabecera.appendChild(elemento('h3', 'tarjeta-mercado__nombre', i.nombre));
   cabecera.appendChild(elemento('span', 'tarjeta-mercado__simbolo', i.simbolo));
-  t.appendChild(cabecera);
+  tarjeta.appendChild(cabecera);
 
   if (!i.disponible) {
-    t.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', NO_DISPONIBLE));
-    t.appendChild(elemento('p', 'tarjeta-mercado__motivo', i.motivo ?? 'Data unavailable'));
-    t.appendChild(sello('UNAVAILABLE'));
-    return t;
+    tarjeta.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', noDisponible()));
+    // El motivo lo redacta el servidor; solo se traduce la reserva.
+    tarjeta.appendChild(elemento('p', 'tarjeta-mercado__motivo', i.motivo ?? t('mercado.sinMotivo')));
+    tarjeta.appendChild(sello('UNAVAILABLE'));
+    return tarjeta;
   }
 
   const decimales = i.decimales ?? 2;
   // Un tipo de interés SÍ se enuncia en por ciento; un nivel de índice, no.
-  t.appendChild(elemento('span', 'tarjeta-mercado__valor',
+  tarjeta.appendChild(elemento('span', 'tarjeta-mercado__valor',
     i.formato === 'tipo' ? porcentaje(i.valor, decimales) : formatearNumero(i.valor, decimales)));
 
   const cambio = elemento('div', 'tarjeta-mercado__cambio');
@@ -90,33 +106,33 @@ function tarjetaInstrumento(i) {
   cambio.appendChild(elemento('span', '',
     Number.isFinite(i.variacion)
       ? `${i.variacion > 0 ? '+' : ''}${formatearNumero(i.variacion, decimales)}`
-      : NO_DISPONIBLE));
+      : noDisponible()));
   cambio.appendChild(elemento('span', 'tarjeta-mercado__pct',
     Number.isFinite(i.variacionPct)
       ? formatearPorcentaje(i.variacionPct)
-      : NO_DISPONIBLE));
-  t.appendChild(cambio);
+      : noDisponible()));
+  tarjeta.appendChild(cambio);
 
-  if (i.nota) t.appendChild(elemento('p', 'tarjeta-mercado__nota', i.nota));
+  if (i.nota) tarjeta.appendChild(elemento('p', 'tarjeta-mercado__nota', i.nota));
 
   const pie = elemento('div', 'tarjeta-mercado__pie');
   pie.appendChild(sello(i.calidad, i.explicacionCalidad ?? ''));
   pie.appendChild(elemento('span', '', frescura(i.antiguedadSegundos)));
   pie.appendChild(elemento('span', '', i.fuente ?? ''));
-  t.appendChild(pie);
+  tarjeta.appendChild(pie);
 
-  return t;
+  return tarjeta;
 }
 
 function tarjetaAusente(s) {
-  const t = elemento('article', 'tarjeta-mercado tarjeta-mercado--ausente');
+  const tarjeta = elemento('article', 'tarjeta-mercado tarjeta-mercado--ausente');
   const cabecera = elemento('div', 'tarjeta-mercado__cabecera');
   cabecera.appendChild(elemento('h3', 'tarjeta-mercado__nombre', s.nombre));
-  t.appendChild(cabecera);
-  t.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', NO_DISPONIBLE));
-  t.appendChild(elemento('p', 'tarjeta-mercado__motivo', s.motivo));
-  t.appendChild(sello('UNAVAILABLE'));
-  return t;
+  tarjeta.appendChild(cabecera);
+  tarjeta.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', noDisponible()));
+  tarjeta.appendChild(elemento('p', 'tarjeta-mercado__motivo', s.motivo));
+  tarjeta.appendChild(sello('UNAVAILABLE'));
+  return tarjeta;
 }
 
 /**
@@ -127,18 +143,20 @@ function bloqueCurva(curva) {
   const bloque = elemento('div', 'curva-tipos');
 
   const cabecera = elemento('div', 'curva-tipos__cabecera');
-  cabecera.appendChild(elemento('h3', '', 'Pendiente de la curva'));
+  cabecera.appendChild(elemento('h3', '', t('mercado.curva.titulo')));
 
   const p = curva.pendiente;
   if (p.disponible) {
-    const valor = elemento('strong', 'curva-tipos__pendiente',
-      `${p.puntosBasicos > 0 ? '+' : ''}${formatearNumero(p.puntosBasicos, 1)} pb`);
-    cabecera.appendChild(valor);
+    // El signo lo pone la casa —«−» tipográfico, no el guion de `Intl`—, así que
+    // la cifra viaja ya formateada y la plantilla solo le pega su unidad.
+    const cifra = `${p.puntosBasicos > 0 ? '+' : ''}${formatearNumero(p.puntosBasicos, 1)}`;
+    cabecera.appendChild(elemento('strong', 'curva-tipos__pendiente',
+      t('mercado.curva.puntosBasicos', { valor: cifra })));
     cabecera.appendChild(elemento('span', 'curva-tipos__lectura',
-      p.invertida ? 'Curva invertida (10 a < 2 a)' : 'Curva con pendiente positiva (10 a > 2 a)'));
-    cabecera.appendChild(sello('CALCULATED', 'Diferencia entre los tramos de 10 y 2 años.'));
+      t(p.invertida ? 'mercado.curva.invertida' : 'mercado.curva.positiva')));
+    cabecera.appendChild(sello('CALCULATED', t('mercado.curva.selloNota')));
   } else {
-    cabecera.appendChild(elemento('strong', 'curva-tipos__pendiente curva-tipos__pendiente--ausente', NO_DISPONIBLE));
+    cabecera.appendChild(elemento('strong', 'curva-tipos__pendiente curva-tipos__pendiente--ausente', noDisponible()));
     cabecera.appendChild(elemento('span', 'curva-tipos__lectura', p.motivo));
   }
   bloque.appendChild(cabecera);
@@ -152,8 +170,11 @@ function bloqueCurva(curva) {
     barra.style.height = `${Math.max(6, (punto.valor / maximo) * 100)}%`;
     columna.appendChild(elemento('span', 'curva-tipos__valor', porcentaje(punto.valor)));
     columna.appendChild(barra);
+    // «m» y «a» son abreviaturas de mes y año, y en inglés no son las mismas.
     columna.appendChild(elemento('span', 'curva-tipos__plazo',
-      punto.plazoAnios < 1 ? `${punto.plazoAnios * 12} m` : `${punto.plazoAnios} a`));
+      punto.plazoAnios < 1
+        ? t('mercado.curva.plazoMeses', { n: punto.plazoAnios * 12 })
+        : t('mercado.curva.plazoAnios', { n: punto.plazoAnios })));
     barras.appendChild(columna);
   }
   bloque.appendChild(barras);
@@ -165,8 +186,8 @@ function bloqueCurva(curva) {
 function bloqueLeyenda(datos) {
   const bloque = elemento('section', 'bloque-panel');
   const cabecera = elemento('div', 'bloque-panel__cabecera');
-  cabecera.appendChild(elemento('h2', '', 'Calidad del dato'));
-  cabecera.appendChild(elemento('p', '', 'Qué significa cada sello en esta página'));
+  cabecera.appendChild(elemento('h2', '', t('mercado.leyenda.titulo')));
+  cabecera.appendChild(elemento('p', '', t('mercado.leyenda.subtitulo')));
   bloque.appendChild(cabecera);
 
   const lista = elemento('div', 'rejilla-leyenda');
@@ -179,8 +200,9 @@ function bloqueLeyenda(datos) {
   bloque.appendChild(lista);
 
   if (datos.cobertura?.ausentes?.length) {
-    const nota = elemento('p', 'nota-metodologica',
-      `No resuelto en esta carga: ${datos.cobertura.ausentes.map((a) => a.nombre).join(', ')}.`);
+    const nota = elemento('p', 'nota-metodologica', t('mercado.leyenda.ausentes', {
+      instrumentos: datos.cobertura.ausentes.map((a) => a.nombre).join(', '),
+    }));
     bloque.appendChild(nota);
   }
 

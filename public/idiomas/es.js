@@ -853,4 +853,29 @@ export default {
   'catalizadores.dato.recomendacion': 'Recomendación',
   'catalizadores.dato.objetivo': 'Precio objetivo',
   'catalizadores.dato.analista': 'Analista',
+
+  // ═══════════════════════════ Mercado ═════════════════════════════════════
+  'mercado.etiqueta': 'Mercado',
+  'mercado.titulo': 'Mercados',
+  // Dos datos independientes unidos por el separador de lista.
+  'mercado.cobertura': {
+    one: '{n} de {total} instrumento resuelto',
+    other: '{n} de {total} instrumentos resueltos',
+  },
+  'mercado.sinMotivo': 'Dato no disponible',
+
+  // ── Curva de tipos ──
+  'mercado.curva.titulo': 'Pendiente de la curva',
+  // La cifra llega ya formateada: «pb» es la unidad, y va pegada al número.
+  'mercado.curva.puntosBasicos': '{valor} pb',
+  'mercado.curva.invertida': 'Curva invertida (10 a < 2 a)',
+  'mercado.curva.positiva': 'Curva con pendiente positiva (10 a > 2 a)',
+  'mercado.curva.selloNota': 'Diferencia entre los tramos de 10 y 2 años.',
+  'mercado.curva.plazoMeses': '{n} m',
+  'mercado.curva.plazoAnios': '{n} a',
+
+  // ── Leyenda de calidades ──
+  'mercado.leyenda.titulo': 'Calidad del dato',
+  'mercado.leyenda.subtitulo': 'Qué significa cada sello en esta página',
+  'mercado.leyenda.ausentes': 'No resuelto en esta carga: {instrumentos}.',
 };

@@ -287,6 +287,50 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   // comprobación no distinguiría nada. La prueba de que se traducen la da el lado
   // castellano, donde «PRENSA» y «PRESS» sí se separan.
 
+  // ── Mercado ──
+  // Todo el panorama se construye en JavaScript salvo la cabecera. Incluye dos
+  // cosas que antes solo sabían castellano: el sello de calidad, que se pintaba
+  // con su código crudo, y la antigüedad del dato, que era una escalera de
+  // condiciones y ahora la redacta `Intl.RelativeTimeFormat`.
+  await p.goto(`${B}/#/mercado`);
+  // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados.
+  const mercadoPintado = () => p.waitForFunction(
+    () => document.querySelectorAll('#panorama-mercado .tarjeta-mercado').length > 0,
+    null, { timeout: 60000 });
+  await mercadoPintado();
+  await idioma('es');
+  await mercadoPintado();
+
+  console.log('\n  ── mercado · castellano de partida ──');
+  comp('titular', await txt('#seccion-mercado h1'), 'Mercados');
+  comp('antetítulo', await txt('#seccion-mercado .etiqueta-superior'), 'Mercado');
+  comp('cobertura con plural', await txt('#estado-mercado'),
+    (v) => v && /^\d+ de \d+ instrumentos? resueltos?/.test(v));
+  comp('leyenda de calidades',
+    await txt('#panorama-mercado .rejilla-leyenda'), (v) => Boolean(v));
+
+  // Las listas de sellos y `esSello()` los declara el bloque de compañías: es el
+  // mismo vocabulario, y duplicarlo aquí solo daría dos sitios que mantener.
+  // El sello se pintaba con su código: «UNAVAILABLE» en mitad del castellano.
+  comp('sello de calidad traducido',
+    await txt('#panorama-mercado .sello'), esSello(SELLOS_ES));
+  // «hace 5 min» lo redacta el navegador, no una plantilla.
+  if (await p.locator('#panorama-mercado .tarjeta-mercado__pie span').count()) {
+    comp('antigüedad en castellano',
+      await txt('#panorama-mercado .tarjeta-mercado__pie span:nth-child(2)'),
+      (v) => Boolean(v) && !/\bago\b/.test(String(v)));
+  }
+
+  await idioma('en');
+  console.log('\n  ── mercado · repintado al conmutar, sin recargar ──');
+  comp('titular', await txt('#seccion-mercado h1'), 'Markets');
+  comp('cobertura con plural', await txt('#estado-mercado'),
+    (v) => v && /^\d+ of \d+ instruments? resolved/.test(v));
+  comp('sello de calidad traducido',
+    await txt('#panorama-mercado .sello'), esSello(SELLOS_EN));
+  comp('cabecera de la leyenda',
+    await txt('#panorama-mercado .bloque-panel:last-child h2'), 'Data quality');
+
   // ── Noticias ──
   // El listado, las tarjetas y la línea de sindicación se construyen enteros en
   // JavaScript; la categoría y la relevancia llegan del servidor con su rótulo

@@ -745,7 +745,8 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 | 4 | Las nueve secciones · **radar** | hecho |
 | 4 | Las nueve secciones · **compañías** | hecho |
 | 4 | Las nueve secciones · **catalizadores** | hecho |
-| 4 | Las nueve secciones · mercado y opciones | pendiente |
+| 4 | Las nueve secciones · **mercado** | hecho |
+| 4 | Las nueve secciones · opciones | pendiente |
 
 > **Dos etiquetas del historial no dicen la verdad, y se quedan como están.** El commit
 > `8e20efb` se llama «Fase 3: portada e inicio traducidas», pero lo que trae es la fase 4
@@ -753,6 +754,15 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 > quedó por debajo de él en el orden. El contenido de los dos es correcto: lo que falla es
 > el rótulo. Se corrige aquí, y no reescribiendo la historia: mover commits ya publicados
 > cuesta más de lo que aclara una etiqueta.
+
+> **Queda una deuda, y es de `src/`, no de la interfaz.** Hay texto que redacta el
+> servidor y que llega al navegador ya escrito en castellano: el título y la descripción
+> de cada grupo del panorama de mercado, los motivos de carencia, y **los mensajes de
+> error de la API**. El cliente los pinta tal cual —no puede hacer otra cosa— y por eso
+> se ven en castellano aunque la interfaz esté en inglés. Llevarlos al diccionario
+> significa meter la traducción dentro de `src/`, que es otra tarea y de otro tamaño: se
+> aborda **al cerrar la fase 4**, no antes, para no dejar la migración a medias en dos
+> capas a la vez.
 
 ### Las dos decisiones transversales, cerradas
 
