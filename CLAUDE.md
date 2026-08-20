@@ -57,3 +57,29 @@ perdida la condición. Que sea holgado no ralentiza nada —quien cumple, sigue.
 2. lo pintado en JS se afirmaba en un solo idioma, y coincidía con el de partida sin
    repintar;
 3. `sinTicker()` daba una cartera por limpia cuando aún no se había pintado nada.
+
+## Términos de oficio: qué se traduce y qué no
+
+**El criterio:** se traduce lo que un analista diría en castellano hablando con otro; se
+queda en inglés lo que diría en inglés aunque esté hablando en castellano. **Las siglas
+nunca se traducen.** Ante la duda, déjalo en inglés: un término de oficio sin traducir se
+entiende, uno traducido a la fuerza suena a manual.
+
+Tampoco se traducen los **nombres de producto** —`W&C Radar`, `W&C Signal`—, que además
+no llevan `data-i18n`.
+
+La lista resultante, para no redecidirla cada vez:
+
+| Se traduce | Se queda en inglés |
+|---|---|
+| Volume → Volumen | Strike |
+| Open interest → Interés abierto | Premium |
+| Expiration → Vencimiento | IV |
+| Days to expiration → Días a vencimiento | Vol/OI |
+| Strike distance → Distancia al strike | Trade type |
+| Type (call/put) → Tipo | Signal |
+| Contracts → Contratos | Unusual activity score |
+| Underlying → Subyacente | M&A |
+
+«Distancia al strike» traduce el sustantivo y conserva el término: es exactamente lo que
+dice el criterio.

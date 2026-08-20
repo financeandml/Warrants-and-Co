@@ -623,19 +623,23 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Derivados</p>
-          <h1>Options</h1>
+          <p class="etiqueta-superior" data-i18n="opciones.etiqueta">Derivados</p>
+          <h1 data-i18n="opciones.titulo">Opciones</h1>
         </div>
         <div class="estado-datos" id="estado-opciones"></div>
       </div>
 
-      <div class="pestanas" role="tablist" aria-label="Secciones de opciones">
+      <div class="pestanas" role="tablist"
+           data-i18n-attr="aria-label:opciones.pestanas.etiqueta" aria-label="Secciones de opciones">
         <button class="pestana" type="button" role="tab" data-pestana="flujo"
-                id="pestana-flujo" aria-selected="false" aria-controls="panel-flujo">Options flow</button>
+                id="pestana-flujo" aria-selected="false" aria-controls="panel-flujo"
+                data-i18n="opciones.pestana.flujo">Flujo de opciones</button>
         <button class="pestana" type="button" role="tab" data-pestana="inusual"
-                id="pestana-inusual" aria-selected="true" aria-controls="panel-inusual">Unusual activity</button>
+                id="pestana-inusual" aria-selected="true" aria-controls="panel-inusual"
+                data-i18n="opciones.pestana.inusual">Actividad inusual</button>
         <button class="pestana" type="button" role="tab" data-pestana="cadena"
-                id="pestana-cadena" aria-selected="false" aria-controls="panel-cadena">Option chain</button>
+                id="pestana-cadena" aria-selected="false" aria-controls="panel-cadena"
+                data-i18n="opciones.pestana.cadena">Cadena de opciones</button>
       </div>
 
       <div id="alcance-opciones"></div>
@@ -650,81 +654,92 @@
 
         <section class="bloque-panel" aria-labelledby="titulo-destacadas">
           <div class="bloque-panel__cabecera">
-            <h2 id="titulo-destacadas">Top unusual activity</h2>
-            <p>Contratos con mayor puntuación en la sesión</p>
+            <h2 id="titulo-destacadas" data-i18n="opciones.destacadas.titulo">Mayor actividad inusual</h2>
+            <p data-i18n="opciones.destacadas.subtitulo">Contratos con mayor puntuación en la sesión</p>
           </div>
           <div class="rejilla-destacadas" id="rejilla-destacadas"></div>
         </section>
 
         <section class="bloque-panel" aria-labelledby="titulo-tabla-inusual">
           <div class="bloque-panel__cabecera">
-            <h2 id="titulo-tabla-inusual">Contratos</h2>
-            <p>Pulse una fila para ver por qué destaca</p>
+            <h2 id="titulo-tabla-inusual" data-i18n="opciones.contratos.titulo">Contratos</h2>
+            <p data-i18n="opciones.contratos.subtitulo">Pulse una fila para ver por qué destaca</p>
             <span class="enlace-mas" id="resumen-inusual"></span>
           </div>
 
           <form class="filtros-opciones" id="filtros-opciones">
-            <label>Ticker
+            <label><span data-i18n="opciones.col.ticker">Ticker</span>
               <select name="simbolo" id="filtro-op-simbolo"></select>
             </label>
-            <label>Type
+            <label><span data-i18n="opciones.col.tipo">Tipo</span>
               <select name="lado" id="filtro-op-lado">
-                <option value="">Todos</option>
+                <!-- «Call» y «Put» no se traducen: son los dos tipos de opción. -->
+                <option value="" data-i18n="opciones.filtro.todos">Todos</option>
                 <option value="CALL">Call</option>
                 <option value="PUT">Put</option>
               </select>
             </label>
-            <label>Expiration
+            <label><span data-i18n="opciones.col.vencimiento">Vencimiento</span>
               <select name="vencimiento" id="filtro-op-vencimiento"></select>
             </label>
-            <label>Min. premium
+            <label><span data-i18n="opciones.filtro.premiumMin">Premium mín.</span>
               <input type="number" name="minPremium" id="filtro-op-premium" min="0" step="1000" placeholder="0">
             </label>
-            <label>Min. volume
+            <label><span data-i18n="opciones.filtro.volumenMin">Volumen mín.</span>
               <input type="number" name="minVolumen" id="filtro-op-volumen" min="0" step="1" placeholder="0">
             </label>
-            <label>Min. Vol/OI
+            <label><span data-i18n="opciones.filtro.ratioMin">Vol/OI mín.</span>
               <input type="number" name="minRatio" id="filtro-op-ratio" min="0" step="0.5" placeholder="0">
             </label>
-            <label>Min. score
+            <label><span data-i18n="opciones.filtro.scoreMin">Signal mín.</span>
               <input type="number" name="minScore" id="filtro-op-score" min="0" max="100" step="5" placeholder="0">
             </label>
-            <label class="filtro-desactivado" title="Requiere volatilidad implícita del proveedor">
-              IV rank
+            <label class="filtro-desactivado"
+                   data-i18n-attr="title:opciones.filtro.requiereIV.titulo"
+                   title="Requiere volatilidad implícita del proveedor">
+              <span data-i18n="opciones.filtro.ivRank">IV rank</span>
               <select name="ivRank" id="filtro-op-iv" disabled>
-                <option>No disponible</option>
+                <option data-i18n="opciones.filtro.noDisponible">No disponible</option>
               </select>
-              <span class="filtro-nota">Requiere IV del proveedor</span>
+              <span class="filtro-nota" data-i18n="opciones.filtro.requiereIV">Requiere IV del proveedor</span>
             </label>
-            <label class="filtro-desactivado" title="Requiere operaciones individuales">
-              Trade type
+            <label class="filtro-desactivado"
+                   data-i18n-attr="title:opciones.filtro.requiereTimeSales.titulo"
+                   title="Requiere operaciones individuales">
+              <span data-i18n="opciones.filtro.tradeType">Trade type</span>
               <select name="tradeType" id="filtro-op-trade" disabled>
-                <option>No disponible</option>
+                <option data-i18n="opciones.filtro.noDisponible">No disponible</option>
               </select>
-              <span class="filtro-nota">Requiere time &amp; sales</span>
+              <span class="filtro-nota" data-i18n="opciones.filtro.requiereTimeSales">Requiere time &amp; sales</span>
             </label>
-            <label class="filtro-desactivado" title="Requiere el sentido de la operación">
-              Direction
+            <label class="filtro-desactivado"
+                   data-i18n-attr="title:opciones.filtro.requiereSentido"
+                   title="Requiere el sentido de la operación">
+              <span data-i18n="opciones.filtro.direccion">Sentido</span>
               <select name="direccion" id="filtro-op-direccion" disabled>
-                <option>No disponible</option>
+                <option data-i18n="opciones.filtro.noDisponible">No disponible</option>
               </select>
-              <span class="filtro-nota">Requiere sentido de la operación</span>
+              <span class="filtro-nota" data-i18n="opciones.filtro.requiereSentido">Requiere sentido de la operación</span>
             </label>
-            <label class="filtro-desactivado" title="Requiere histórico intradía">
-              Time range
+            <label class="filtro-desactivado"
+                   data-i18n-attr="title:opciones.filtro.requierePeriodo.titulo"
+                   title="Requiere histórico intradía">
+              <span data-i18n="opciones.filtro.periodo">Periodo</span>
               <select name="rango" id="filtro-op-rango" disabled>
-                <option>Sesión actual</option>
+                <option data-i18n="opciones.filtro.sesionActual">Sesión actual</option>
               </select>
-              <span class="filtro-nota">Solo sesión actual</span>
+              <span class="filtro-nota" data-i18n="opciones.filtro.soloSesion">Solo sesión actual</span>
             </label>
 
             <div class="filtros-opciones__acciones">
               <label class="casilla">
                 <input type="checkbox" name="soloInusual" id="filtro-op-solo">
-                <span>Unusual only (Vol/OI ≥ 1)</span>
+                <span data-i18n="opciones.filtro.soloInusual">Solo inusual (Vol/OI ≥ 1)</span>
               </label>
-              <button class="boton boton--contorno" type="button" id="btn-limpiar-opciones">Limpiar</button>
-              <button class="boton boton--contorno" type="button" id="btn-recargar-opciones">Actualizar</button>
+              <button class="boton boton--contorno" type="button" id="btn-limpiar-opciones"
+                      data-i18n="opciones.filtro.limpiar">Limpiar</button>
+              <button class="boton boton--contorno" type="button" id="btn-recargar-opciones"
+                      data-i18n="opciones.filtro.actualizar">Actualizar</button>
             </div>
           </form>
 

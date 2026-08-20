@@ -331,6 +331,57 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   comp('cabecera de la leyenda',
     await txt('#panorama-mercado .bloque-panel:last-child h2'), 'Data quality');
 
+  // ── Opciones (tanda A: flujo y actividad inusual) ──
+  // La tabla, las destacadas y la ficha se construyen enteras en JavaScript. Las
+  // cabeceras de columna son el caso delicado: `COLUMNAS` es una constante de
+  // módulo, así que si guardara el rótulo en vez de la clave se congelaría en el
+  // idioma de arranque y ningún repintado la alcanzaría.
+  await p.goto(`${B}/#/opciones`);
+  const contratosPintados = () => p.waitForFunction(
+    () => document.querySelectorAll('#tabla-inusual .tabla-opciones tbody tr').length > 0
+      || document.querySelectorAll('#tabla-inusual .vacio').length > 0,
+    null, { timeout: 60000 });
+  await contratosPintados();
+  await idioma('es');
+  await contratosPintados();
+
+  console.log('\n  ── opciones · castellano de partida ──');
+  comp('titular', await txt('#seccion-opciones h1'), 'Opciones');
+  comp('pestaña', await txt('#pestana-inusual'), 'Actividad inusual');
+  comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Mayor actividad inusual');
+  comp('rótulo de filtro traducible',
+    await txt('#filtros-opciones label:nth-child(4) span'), 'Premium mín.');
+
+  const hayFilas = await p.locator('#tabla-inusual .tabla-opciones tbody tr').count();
+  if (hayFilas) {
+    // Se traduce: un analista dice «Volumen» hablando en castellano.
+    comp('columna traducida',
+      await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volumen');
+    // No se traduce: lo diría en inglés aunque hable en castellano.
+    comp('columna que se queda en inglés',
+      await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
+    comp('sigla intacta',
+      await txt('#tabla-inusual .tabla-opciones th:nth-child(9)'), 'IV');
+    comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
+      (v) => v && /^Mostrando .+ de \d+ contratos?$/.test(v));
+  }
+
+  await idioma('en');
+  console.log('\n  ── opciones · repintadas al conmutar, sin recargar ──');
+  comp('titular', await txt('#seccion-opciones h1'), 'Options');
+  comp('pestaña', await txt('#pestana-inusual'), 'Unusual activity');
+  comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Top unusual activity');
+  comp('rótulo de filtro traducible',
+    await txt('#filtros-opciones label:nth-child(4) span'), 'Min. premium');
+  if (hayFilas) {
+    comp('columna traducida',
+      await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volume');
+    comp('columna que se queda en inglés',
+      await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
+    comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
+      (v) => v && /^Showing .+ of \d+ contracts?$/.test(v));
+  }
+
   // ── Noticias ──
   // El listado, las tarjetas y la línea de sindicación se construyen enteros en
   // JavaScript; la categoría y la relevancia llegan del servidor con su rótulo

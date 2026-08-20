@@ -55,7 +55,7 @@ const estado = {
   companias: { q: '', sector: '', ficha: null, lista: null, datosFicha: null },
   catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', agenda: null },
   vocabulariosNoticias: null,
-  opciones: { estado: null, inusual: null, cadena: null, pestana: 'inusual', filtros: {} },
+  opciones: { estado: null, inusual: null, cadena: null, flujo: null, pestana: 'inusual', filtros: {} },
 };
 
 // ──────────────────────────────── avisos ─────────────────────────────────
@@ -200,6 +200,7 @@ const MEMORIAS_DERIVADAS = {
     estado.opciones.estado = null;
     estado.opciones.inusual = null;
     estado.opciones.cadena = null;
+    estado.opciones.flujo = null;
   },
   // El radar guarda lo suyo para repintarse por idioma, igual que la portada.
   radar: () => olvidarDatosRadar(),
@@ -1128,10 +1129,12 @@ function repintarVistas() {
   if (estado.noticias) pintarNoticias(estado.noticias);
   pintarEstadoSincronizacion();
 
-  // De la sección de opciones se repinta lo que `app.js` rotula. Sus tablas las
-  // pintan los módulos de `opciones.js`, todavía sin traducir: cuando lo estén,
-  // este repintado ya las alcanza sin tocar nada más.
+  // La sección de opciones se repinta entera desde lo guardado: el aviso de
+  // alcance, la línea de estado, el flujo y —vía `aplicarFiltrosOpciones()`— la
+  // tabla de contratos y las destacadas.
+  pintarAlcance($('#alcance-opciones'), estado.opciones.estado);
   pintarEstadoOpciones();
+  pintarFlujoOpciones();
   if (estado.opciones.inusual) { poblarFiltrosOpciones(); aplicarFiltrosOpciones(); }
   pintarCadenaOpciones();
 
@@ -1343,7 +1346,7 @@ async function cargarCartera({ silencioso = false } = {}) {
   const vigente = () => generacion === generacionCartera;
 
   const tarjetas = [$('#cuadro-mando'), $('.tarjeta--grafico'), $('#rejilla-estadisticos')];
-  if (!silencioso) for (const t of tarjetas) t?.classList.add('cargando');
+  if (!silencioso) for (const tarjeta of tarjetas) tarjeta?.classList.add('cargando');
 
   try {
     const datos = await api(`/api/mercado/cartera?benchmark=${encodeURIComponent(estado.benchmark)}`);
@@ -1365,7 +1368,7 @@ async function cargarCartera({ silencioso = false } = {}) {
   } finally {
     // El indicador de carga lo retira quien siga siendo la carga vigente: si no,
     // la que acaba primero lo apagaría con otra todavía en vuelo.
-    if (vigente()) for (const t of tarjetas) t?.classList.remove('cargando');
+    if (vigente()) for (const tarjeta of tarjetas) tarjeta?.classList.remove('cargando');
   }
 }
 
@@ -1939,7 +1942,7 @@ function construirTarjetaNoticia(n) {
   const propia = n.origen === 'manual' || !n.origen;
   pie.appendChild(elemento('span', `origen${propia ? ' origen--propio' : ''}`,
     propia ? t('noticias.origen.propio') : n.fuente || n.origen));
-  for (const t of n.tickers ?? []) pie.appendChild(elemento('span', 'ficha__ticker', t));
+  for (const tk of n.tickers ?? []) pie.appendChild(elemento('span', 'ficha__ticker', tk));
   tarjeta.appendChild(pie);
 
   return tarjeta;
@@ -2001,13 +2004,13 @@ function construirDetalleNoticia(n) {
     const s = elemento('div', 'detalle__seccion');
     s.appendChild(elemento('h3', null, t('noticias.detalle.valores')));
     const cont = elemento('div', 'detalle__etiquetas');
-    for (const t of n.tickers) {
-      const boton = elemento('button', 'pastilla', t);
+    for (const tk of n.tickers) {
+      const boton = elemento('button', 'pastilla', tk);
       boton.type = 'button';
       boton.addEventListener('click', () => {
         $('#dialogo-detalle-noticia').close();
-        $('#filtro-q').value = t;
-        estado.filtros = { q: t };
+        $('#filtro-q').value = tk;
+        estado.filtros = { q: tk };
         estado.pagina = 1;
         irA('repositorio');
       });
@@ -2289,6 +2292,11 @@ async function cargarOpciones() {
   return cargarInusual();
 }
 
+/** Pinta el flujo a partir de la última carga resuelta. */
+function pintarFlujoOpciones() {
+  if (estado.opciones.flujo) pintarFlujo($('#contenido-flujo'), estado.opciones.flujo);
+}
+
 function pintarEstadoOpciones() {
   const destino = $('#estado-opciones');
   const e = estado.opciones.estado;
@@ -2307,7 +2315,9 @@ async function cargarFlujoOpciones() {
   const destino = $('#contenido-flujo');
   destino.classList.add('cargando');
   try {
-    pintarFlujo(destino, await api('/api/opciones/flujo'));
+    // Se guarda para repintar al cambiar de idioma sin volver a pedirlo.
+    estado.opciones.flujo = await api('/api/opciones/flujo');
+    pintarFlujoOpciones();
   } catch (err) {
     avisar(err.message);
   } finally {

@@ -18,14 +18,14 @@ import { t } from './i18n.js';
  * Redondear 7,50 y 8,00 a cero decimales los mostraría como filas indistinguibles.
  */
 export function formatearStrike(strike) {
-  if (!Number.isFinite(strike)) return 'N/A';
+  if (!Number.isFinite(strike)) return t('general.noDisponible');
   const decimales = Number.isInteger(strike) ? 0 : (Number.isInteger(strike * 10) ? 1 : 2);
   return formatearNumero(strike, decimales);
 }
 
 /** Importe en formato compacto: 420K, 1,2M, 15,4M. */
 export function formatearImporte(v) {
-  if (!Number.isFinite(v)) return 'N/A';
+  if (!Number.isFinite(v)) return t('general.noDisponible');
   const abs = Math.abs(v);
   if (abs >= 1e9) return `${(v / 1e9).toLocaleString(localeFormato(), { maximumFractionDigits: 1 })} B$`;
   if (abs >= 1e6) return `${(v / 1e6).toLocaleString(localeFormato(), { maximumFractionDigits: 1 })} M$`;
@@ -92,28 +92,36 @@ export function pintarAlcance(destino, estado) {
   const ausentes = estado.proveedores?.ausentes ?? [];
   if (!ausentes.length) return;
 
-  const nombres = {
-    volatilidadImplicita: 'volatilidad implícita',
-    griegas: 'griegas (delta, gamma, theta, vega)',
-    multiplicador: 'multiplicador de contrato declarado',
-    operaciones: 'operaciones individuales (time & sales)',
-    contextoCotizacion: 'horquilla en el instante de cada operación',
-    historico: 'histórico propio del proveedor',
+  // Tabla con las claves escritas, no `opciones.campo.${a}`: así quedan a la
+  // vista de quien lea el fichero y de la prueba de paridad.
+  const CLAVES_CAMPO = {
+    volatilidadImplicita: 'opciones.campo.volatilidadImplicita',
+    griegas: 'opciones.campo.griegas',
+    multiplicador: 'opciones.campo.multiplicador',
+    operaciones: 'opciones.campo.operaciones',
+    contextoCotizacion: 'opciones.campo.contextoCotizacion',
+    historico: 'opciones.campo.historico',
   };
+  const nombreCampo = (a) => (CLAVES_CAMPO[a] ? t(CLAVES_CAMPO[a]) : a);
 
   const caja = elemento('div', 'aviso-alcance');
   const cuerpo = document.createElement('div');
   cuerpo.appendChild(elemento('strong', null,
-    `Datos servidos por ${estado.proveedores.activo.nombre}`));
+    t('opciones.alcance.servidos', { proveedor: estado.proveedores.activo.nombre })));
   cuerpo.appendChild(elemento('span', null, estado.proveedores.activo.nota ?? ''));
 
   const lista = document.createElement('ul');
-  lista.appendChild(elemento('li', null, `No publicado: ${ausentes.map((a) => nombres[a] ?? a).join(', ')}.`));
+  lista.appendChild(elemento('li', null,
+    t('opciones.alcance.noPublicado', { campos: ausentes.map(nombreCampo).join(', ') })));
   const h = estado.historico;
+  // El «sesión(es)» de antes era un plural con paréntesis porque el código no
+  // podía elegir; ahora lo elige `Intl.PluralRules` por idioma.
   lista.appendChild(elemento('li', null,
     h?.suficienteParaComparar
-      ? `Archivo propio: ${h.sesiones} sesiones sobre ${h.simbolos} valores.`
-      : `Archivo propio: ${h?.sesiones ?? 0} sesión(es). Hacen falta ${h?.sesionesNecesarias ?? 3} para los factores comparativos del score.`));
+      ? t('opciones.alcance.archivo', { n: h.sesiones, simbolos: h.simbolos })
+      : t('opciones.alcance.archivoCorto', {
+          n: h?.sesiones ?? 0, necesarias: h?.sesionesNecesarias ?? 3,
+        })));
   cuerpo.appendChild(lista);
 
   caja.appendChild(cuerpo);
@@ -122,18 +130,21 @@ export function pintarAlcance(destino, estado) {
 
 // ═══════════════════════════ Actividad inusual ═══════════════════════════
 
+/* La columna declara su CLAVE de diccionario, no su rótulo: el módulo se carga
+   una vez y el idioma cambia después, así que un rótulo resuelto aquí se
+   quedaría congelado en el idioma de arranque. */
 const COLUMNAS = [
-  { clave: 'simbolo', titulo: 'Ticker', tipo: 'texto' },
-  { clave: 'lado', titulo: 'Type', tipo: 'texto' },
-  { clave: 'strike', titulo: 'Strike', tipo: 'num' },
-  { clave: 'vencimiento', titulo: 'Expiration', tipo: 'texto' },
-  { clave: 'importeNegociado', titulo: 'Premium', tipo: 'num' },
-  { clave: 'volumen', titulo: 'Volume', tipo: 'num' },
-  { clave: 'interesAbierto', titulo: 'Open int.', tipo: 'num' },
-  { clave: 'volumenSobreInteres', titulo: 'Vol/OI', tipo: 'num' },
-  { clave: 'volatilidadImplicita', titulo: 'IV', tipo: 'num' },
-  { clave: 'trade', titulo: 'Trade type', tipo: 'texto' },
-  { clave: 'puntuacion', titulo: 'Signal', tipo: 'num' },
+  { clave: 'simbolo', rotulo: 'opciones.col.ticker', tipo: 'texto' },
+  { clave: 'lado', rotulo: 'opciones.col.tipo', tipo: 'texto' },
+  { clave: 'strike', rotulo: 'opciones.col.strike', tipo: 'num' },
+  { clave: 'vencimiento', rotulo: 'opciones.col.vencimiento', tipo: 'texto' },
+  { clave: 'importeNegociado', rotulo: 'opciones.col.premium', tipo: 'num' },
+  { clave: 'volumen', rotulo: 'opciones.col.volumen', tipo: 'num' },
+  { clave: 'interesAbierto', rotulo: 'opciones.col.interesAbierto', tipo: 'num' },
+  { clave: 'volumenSobreInteres', rotulo: 'opciones.col.volOI', tipo: 'num' },
+  { clave: 'volatilidadImplicita', rotulo: 'opciones.col.iv', tipo: 'num' },
+  { clave: 'trade', rotulo: 'opciones.col.tradeType', tipo: 'texto' },
+  { clave: 'puntuacion', rotulo: 'opciones.col.signal', tipo: 'num' },
 ];
 
 const estadoTabla = { orden: 'puntuacion', sentido: 'desc', pagina: 1, porPagina: 25 };
@@ -166,9 +177,8 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
 
   if (!contratos?.length) {
     const vacio = elemento('div', 'vacio');
-    vacio.appendChild(elemento('strong', null, 'Sin resultados'));
-    vacio.appendChild(document.createTextNode(
-      'Ningún contrato cumple los criterios seleccionados.'));
+    vacio.appendChild(elemento('strong', null, t('opciones.tabla.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('opciones.tabla.vacio.motivo')));
     destino.appendChild(vacio);
     return;
   }
@@ -181,7 +191,7 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
   const cabecera = document.createElement('thead');
   const filaCab = document.createElement('tr');
   for (const col of COLUMNAS) {
-    const th = elemento('th', col.tipo === 'num' ? 'num' : null, col.titulo);
+    const th = elemento('th', col.tipo === 'num' ? 'num' : null, t(col.rotulo));
     th.scope = 'col';
     th.dataset.orden = col.clave;
     if (estadoTabla.orden === col.clave) {
@@ -206,7 +216,9 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
     const fila = document.createElement('tr');
     fila.tabIndex = 0;
     fila.setAttribute('role', 'button');
-    fila.setAttribute('aria-label', `Detalle de ${c.simbolo} ${c.lado} ${formatearStrike(c.strike)}`);
+    fila.setAttribute('aria-label', t('opciones.tabla.fila', {
+      simbolo: c.simbolo, lado: c.lado, strike: formatearStrike(c.strike),
+    }));
     const abrir = () => alSeleccionar?.(c);
     fila.addEventListener('click', abrir);
     fila.addEventListener('keydown', (ev) => {
@@ -235,7 +247,10 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
       tdRatio.textContent = `${formatearNumero(c.volumenSobreInteres, 2)}x`;
       if (c.volumenSobreInteres >= 2) tdRatio.classList.add('lectura', 'lectura--aviso');
     } else {
-      tdRatio.textContent = c.calidad?.volumenSobreInteres === 'no_calculable' ? '—' : 'N/A';
+      // Dentro de la tabla densa manda el blanco tipográfico; fuera, «N/A».
+      tdRatio.textContent = c.calidad?.volumenSobreInteres === 'no_calculable'
+        ? '—'
+        : t('general.noDisponible');
       tdRatio.classList.add('lectura--nula');
     }
     fila.appendChild(tdRatio);
@@ -258,8 +273,9 @@ export function pintarTablaInusual(destino, contratos, { alSeleccionar, alReorde
   const pie = elemento('div', 'barra-resultados');
   pie.style.marginTop = '14px';
   const desde = (estadoTabla.pagina - 1) * estadoTabla.porPagina + 1;
-  pie.appendChild(elemento('p', null,
-    `Mostrando ${desde}–${Math.min(estadoTabla.pagina * estadoTabla.porPagina, total)} de ${total} contratos`));
+  pie.appendChild(elemento('p', null, t('opciones.tabla.resumen', {
+    n: total, desde, hasta: Math.min(estadoTabla.pagina * estadoTabla.porPagina, total),
+  })));
   destino.appendChild(pie);
 
   if (paginas > 1) {
@@ -298,10 +314,9 @@ export function pintarDestacadas(destino, contratos, { alSeleccionar } = {}) {
   const conNota = (contratos ?? []).filter((c) => c.puntuacionDisponible).slice(0, 10);
   if (!conNota.length) {
     const vacio = elemento('div', 'pendiente-bloque');
-    vacio.appendChild(elemento('span', 'pendiente-bloque__marca', 'Sin datos'));
-    vacio.appendChild(elemento('strong', null, 'Sin actividad puntuable'));
-    vacio.appendChild(elemento('p', null,
-      'Ningún contrato alcanza la cobertura mínima de la metodología con los datos disponibles.'));
+    vacio.appendChild(elemento('span', 'pendiente-bloque__marca', t('general.sinDatos')));
+    vacio.appendChild(elemento('strong', null, t('opciones.destacadas.vacio.titulo')));
+    vacio.appendChild(elemento('p', null, t('opciones.destacadas.vacio.motivo')));
     destino.appendChild(vacio);
     return;
   }
@@ -320,11 +335,11 @@ export function pintarDestacadas(destino, contratos, { alSeleccionar } = {}) {
     tarjeta.appendChild(superior);
 
     tarjeta.appendChild(elemento('div', 'destacada__contrato',
-      `${formatearStrike(c.strike)} · ${formatearFecha(c.vencimiento)}`));
+      [formatearStrike(c.strike), formatearFecha(c.vencimiento)].join(t('general.separadorLista'))));
     tarjeta.appendChild(elemento('div', 'destacada__contrato', formatearImporte(c.importeNegociado)));
 
     // La explicación procede de las señales calculadas, no de un texto redactado.
-    const motivo = c.senales?.[0]?.texto ?? 'Actividad destacada en la sesión';
+    const motivo = c.senales?.[0]?.texto ?? t('opciones.destacadas.motivo');
     tarjeta.appendChild(elemento('p', 'destacada__motivo', motivo));
 
     destino.appendChild(tarjeta);
@@ -341,24 +356,28 @@ export function construirDetalleInusual(c) {
   superior.appendChild(distintivoLado(c.lado));
   raiz.appendChild(superior);
 
-  raiz.appendChild(elemento('h2', null, 'Why is this unusual?'));
-  raiz.appendChild(elemento('p', 'detalle__subtitulo',
-    `${c.lado} ${formatearStrike(c.strike)} · vencimiento ${formatearFecha(c.vencimiento)}`));
+  raiz.appendChild(elemento('h2', null, t('opciones.detalle.titulo')));
+  // El contrato y su vencimiento son dos datos, no una frase partida.
+  raiz.appendChild(elemento('p', 'detalle__subtitulo', [
+    `${c.lado} ${formatearStrike(c.strike)}`,
+    t('opciones.detalle.vence', { fecha: formatearFecha(c.vencimiento) }),
+  ].join(t('general.separadorLista'))));
 
   // Nota y cobertura
   const bloqueNota = elemento('div', 'detalle-inusual__score');
   if (c.puntuacionDisponible) {
     bloqueNota.appendChild(elemento('strong', 'detalle-inusual__cifra', formatearNumero(c.puntuacion, 1)));
     const meta = document.createElement('div');
-    meta.appendChild(elemento('div', 'signal__etiqueta', 'Unusual activity score'));
+    meta.appendChild(elemento('div', 'signal__etiqueta', t('opciones.detalle.score')));
     meta.appendChild(elemento('div', 'dimension__detalle',
-      `Escala 0–100 · cobertura ${porcentaje(c.cobertura, 0)} de la metodología`));
+      t('opciones.detalle.escala', { cobertura: porcentaje(c.cobertura, 0) })));
     bloqueNota.appendChild(meta);
   } else {
     bloqueNota.appendChild(elemento('strong', 'detalle-inusual__cifra detalle-inusual__cifra--nd', t('general.noDisponible')));
     const meta = document.createElement('div');
-    meta.appendChild(elemento('div', 'signal__etiqueta', 'Unusual activity score'));
-    meta.appendChild(elemento('div', 'dimension__detalle', c.motivoPuntuacion ?? 'Cobertura insuficiente'));
+    meta.appendChild(elemento('div', 'signal__etiqueta', t('opciones.detalle.score')));
+    meta.appendChild(elemento('div', 'dimension__detalle',
+      c.motivoPuntuacion ?? t('opciones.detalle.coberturaInsuficiente')));
     bloqueNota.appendChild(meta);
   }
   raiz.appendChild(bloqueNota);
@@ -371,25 +390,29 @@ export function construirDetalleInusual(c) {
     bloque.appendChild(elemento('dd', null, valor));
     datos.appendChild(bloque);
   };
-  dato('Volume', Number.isFinite(c.volumen) ? formatearNumero(c.volumen, 0) : 'N/A');
-  dato('Open interest', Number.isFinite(c.interesAbierto) ? formatearNumero(c.interesAbierto, 0) : 'N/A');
-  dato('Volume / OI', Number.isFinite(c.volumenSobreInteres)
+  const nd = () => t('general.noDisponible');
+  dato(t('opciones.dato.volumen'), Number.isFinite(c.volumen) ? formatearNumero(c.volumen, 0) : nd());
+  dato(t('opciones.dato.interesAbierto'),
+    Number.isFinite(c.interesAbierto) ? formatearNumero(c.interesAbierto, 0) : nd());
+  dato(t('opciones.dato.volOI'), Number.isFinite(c.volumenSobreInteres)
     ? `${formatearNumero(c.volumenSobreInteres, 2)}x`
-    : (c.calidad?.volumenSobreInteres === 'no_calculable' ? 'No calculable' : 'N/A'));
-  dato('Premium', formatearImporte(c.importeNegociado));
-  dato('IV', Number.isFinite(c.volatilidadImplicita) ? porcentaje(c.volatilidadImplicita, 1) : 'N/A');
-  dato('IV change', 'N/A');
+    : (c.calidad?.volumenSobreInteres === 'no_calculable' ? t('opciones.dato.noCalculable') : nd()));
+  dato(t('opciones.dato.premium'), formatearImporte(c.importeNegociado));
+  dato(t('opciones.dato.iv'),
+    Number.isFinite(c.volatilidadImplicita) ? porcentaje(c.volatilidadImplicita, 1) : nd());
+  dato(t('opciones.dato.ivCambio'), nd());
   const distancia = Number.isFinite(c.precioSubyacente) && c.precioSubyacente > 0
     ? ((c.strike - c.precioSubyacente) / c.precioSubyacente) * 100
     : null;
-  dato('Strike distance', distancia === null ? 'N/A' : formatearPorcentaje(distancia));
+  dato(t('opciones.dato.distanciaStrike'), distancia === null ? nd() : formatearPorcentaje(distancia));
   const factorDte = (c.factores ?? []).find((f) => f.clave === 'diasVencimiento');
-  dato('Days to expiration', factorDte?.disponible ? `${factorDte.lectura} d` : 'N/A');
+  dato(t('opciones.dato.diasVencimiento'),
+    factorDte?.disponible ? t('opciones.dato.dias', { n: factorDte.lectura }) : nd());
   raiz.appendChild(datos);
 
   // Clasificación, siempre con su grado de certeza
   const seccionClase = elemento('div', 'detalle__seccion');
-  seccionClase.appendChild(elemento('h3', null, 'Trade classification'));
+  seccionClase.appendChild(elemento('h3', null, t('opciones.clasificacion.titulo')));
   const clasif = elemento('div', 'factores');
   const linea = (titulo, clasificacion) => {
     const f = elemento('div', 'factor');
@@ -401,15 +424,16 @@ export function construirDetalleInusual(c) {
     f.appendChild(elemento('div', 'factor__detalle', clasificacion?.motivo ?? ''));
     clasif.appendChild(f);
   };
-  linea('Direction', c.sentido);
-  linea('Execution', { sentido: c.modalidad?.modalidad, certeza: c.modalidad?.certeza, motivo: c.modalidad?.motivo });
-  linea('Position status', c.posicion);
+  linea(t('opciones.clasificacion.sentido'), c.sentido);
+  linea(t('opciones.clasificacion.ejecucion'),
+    { sentido: c.modalidad?.modalidad, certeza: c.modalidad?.certeza, motivo: c.modalidad?.motivo });
+  linea(t('opciones.clasificacion.posicion'), c.posicion);
   seccionClase.appendChild(clasif);
   raiz.appendChild(seccionClase);
 
   // Señales calculadas
   const seccionSenales = elemento('div', 'detalle__seccion');
-  seccionSenales.appendChild(elemento('h3', null, 'Key signals'));
+  seccionSenales.appendChild(elemento('h3', null, t('opciones.senales.titulo')));
   if (c.senales?.length) {
     const lista = elemento('div', 'senales-clave');
     for (const s of c.senales) {
@@ -417,24 +441,24 @@ export function construirDetalleInusual(c) {
     }
     seccionSenales.appendChild(lista);
   } else {
-    seccionSenales.appendChild(elemento('p', 'dimension__detalle',
-      'Ningún factor alcanza el umbral para emitir una señal.'));
+    seccionSenales.appendChild(elemento('p', 'dimension__detalle', t('opciones.senales.vacio')));
   }
   raiz.appendChild(seccionSenales);
 
   // Desglose completo de la metodología
   const seccionFactores = elemento('div', 'detalle__seccion');
-  seccionFactores.appendChild(elemento('h3', null, 'Score breakdown'));
+  seccionFactores.appendChild(elemento('h3', null, t('opciones.factores.titulo')));
   const factores = elemento('div', 'factores');
   for (const f of c.factores ?? []) {
     const bloque = elemento('div', `factor${f.disponible ? '' : ' factor--ausente'}`);
     const titulo = document.createElement('div');
     titulo.appendChild(elemento('span', 'factor__titulo', f.titulo));
-    titulo.appendChild(elemento('span', 'factor__peso', `  peso ${porcentaje(Math.round(f.peso * 100), 0)}`));
+    titulo.appendChild(elemento('span', 'factor__peso',
+      `  ${t('opciones.factores.peso', { peso: porcentaje(Math.round(f.peso * 100), 0) })}`));
     bloque.appendChild(titulo);
 
     bloque.appendChild(elemento('div', 'factor__lectura',
-      f.disponible && Number.isFinite(f.puntuacion) ? formatearNumero(f.puntuacion, 0) : 'N/A'));
+      f.disponible && Number.isFinite(f.puntuacion) ? formatearNumero(f.puntuacion, 0) : t('general.noDisponible')));
     bloque.appendChild(elemento('div', 'factor__detalle',
       f.disponible ? (f.detalle ?? '') : (f.motivo ?? f.requiere ?? '')));
     factores.appendChild(bloque);
@@ -605,9 +629,9 @@ export function pintarFlujo(destino, flujo) {
   }
 
   const caja = elemento('div', 'pendiente-bloque');
-  caja.appendChild(elemento('span', 'pendiente-bloque__marca', 'Data unavailable'));
-  caja.appendChild(elemento('strong', null, 'El flujo de operaciones necesita otra fuente'));
-  caja.appendChild(elemento('p', null, flujo?.motivo ?? 'Sin proveedor de operaciones individuales.'));
+  caja.appendChild(elemento('span', 'pendiente-bloque__marca', t('general.sinDatos')));
+  caja.appendChild(elemento('strong', null, t('opciones.flujo.titulo')));
+  caja.appendChild(elemento('p', null, flujo?.motivo ?? t('opciones.flujo.motivo')));
 
   if (flujo?.requiere?.length) {
     const lista = document.createElement('ul');
@@ -620,8 +644,6 @@ export function pintarFlujo(destino, flujo) {
     caja.appendChild(lista);
   }
 
-  caja.appendChild(elemento('p', null,
-    'Mientras tanto, «Unusual activity» sí opera: puntúa los agregados de la sesión con ' +
-    'los factores que sí pueden calcularse.'));
+  caja.appendChild(elemento('p', null, t('opciones.flujo.mientras')));
   destino.appendChild(caja);
 }

@@ -746,7 +746,8 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 | 4 | Las nueve secciones · **compañías** | hecho |
 | 4 | Las nueve secciones · **catalizadores** | hecho |
 | 4 | Las nueve secciones · **mercado** | hecho |
-| 4 | Las nueve secciones · opciones | pendiente |
+| 4 | Las nueve secciones · opciones · **flujo y actividad inusual** | hecho |
+| 4 | Las nueve secciones · opciones · cadena de opciones | pendiente |
 
 > **Dos etiquetas del historial no dicen la verdad, y se quedan como están.** El commit
 > `8e20efb` se llama «Fase 3: portada e inicio traducidas», pero lo que trae es la fase 4

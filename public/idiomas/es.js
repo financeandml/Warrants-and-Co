@@ -878,4 +878,116 @@ export default {
   'mercado.leyenda.titulo': 'Calidad del dato',
   'mercado.leyenda.subtitulo': 'Qué significa cada sello en esta página',
   'mercado.leyenda.ausentes': 'No resuelto en esta carga: {instrumentos}.',
+
+  // ═══════════════════════════ Opciones (A) ════════════════════════════════
+  // Terminología según el criterio de CLAUDE.md: se traduce lo que un analista
+  // diría en castellano; Strike, Premium, IV, Vol/OI, Trade type y Signal se
+  // quedan porque los diría en inglés aunque hable en castellano.
+  'opciones.etiqueta': 'Derivados',
+  'opciones.titulo': 'Opciones',
+  'opciones.pestanas.etiqueta': 'Secciones de opciones',
+  'opciones.pestana.flujo': 'Flujo de opciones',
+  'opciones.pestana.inusual': 'Actividad inusual',
+  'opciones.pestana.cadena': 'Cadena de opciones',
+
+  // ── Alcance del proveedor ──
+  'opciones.alcance.servidos': 'Datos servidos por {proveedor}',
+  'opciones.alcance.noPublicado': 'No publicado: {campos}.',
+  'opciones.alcance.archivo': {
+    one: 'Archivo propio: {n} sesión sobre {simbolos} valores.',
+    other: 'Archivo propio: {n} sesiones sobre {simbolos} valores.',
+  },
+  'opciones.alcance.archivoCorto': {
+    one: 'Archivo propio: {n} sesión. Hacen falta {necesarias} para los factores comparativos del score.',
+    other: 'Archivo propio: {n} sesiones. Hacen falta {necesarias} para los factores comparativos del score.',
+  },
+  'opciones.campo.volatilidadImplicita': 'volatilidad implícita',
+  'opciones.campo.griegas': 'griegas (delta, gamma, theta, vega)',
+  'opciones.campo.multiplicador': 'multiplicador de contrato declarado',
+  'opciones.campo.operaciones': 'operaciones individuales (time & sales)',
+  'opciones.campo.contextoCotizacion': 'horquilla en el instante de cada operación',
+  'opciones.campo.historico': 'histórico propio del proveedor',
+
+  // ── Columnas de la tabla ──
+  'opciones.col.ticker': 'Ticker',
+  'opciones.col.tipo': 'Tipo',
+  'opciones.col.strike': 'Strike',
+  'opciones.col.vencimiento': 'Vencimiento',
+  'opciones.col.premium': 'Premium',
+  'opciones.col.volumen': 'Volumen',
+  'opciones.col.interesAbierto': 'Int. abierto',
+  'opciones.col.volOI': 'Vol/OI',
+  'opciones.col.iv': 'IV',
+  'opciones.col.tradeType': 'Trade type',
+  'opciones.col.signal': 'Signal',
+
+  // ── Tabla ──
+  'opciones.tabla.vacio.titulo': 'Sin resultados',
+  'opciones.tabla.vacio.motivo': 'Ningún contrato cumple los criterios seleccionados.',
+  'opciones.tabla.fila': 'Detalle de {simbolo} {lado} {strike}',
+  'opciones.tabla.resumen': {
+    one: 'Mostrando {desde}–{hasta} de {n} contrato',
+    other: 'Mostrando {desde}–{hasta} de {n} contratos',
+  },
+
+  // ── Destacadas ──
+  'opciones.destacadas.titulo': 'Mayor actividad inusual',
+  'opciones.destacadas.subtitulo': 'Contratos con mayor puntuación en la sesión',
+  'opciones.destacadas.vacio.titulo': 'Sin actividad puntuable',
+  'opciones.destacadas.vacio.motivo': 'Ningún contrato alcanza la cobertura mínima de la metodología con los datos disponibles.',
+  'opciones.destacadas.motivo': 'Actividad destacada en la sesión',
+
+  // ── Ficha «¿por qué destaca?» ──
+  'opciones.detalle.titulo': '¿Por qué destaca?',
+  'opciones.detalle.vence': 'vencimiento {fecha}',
+  'opciones.detalle.score': 'Unusual activity score',
+  'opciones.detalle.escala': 'Escala 0–100 · cobertura {cobertura} de la metodología',
+  'opciones.detalle.coberturaInsuficiente': 'Cobertura insuficiente',
+  'opciones.dato.volumen': 'Volumen',
+  'opciones.dato.interesAbierto': 'Interés abierto',
+  'opciones.dato.volOI': 'Vol/OI',
+  'opciones.dato.premium': 'Premium',
+  'opciones.dato.iv': 'IV',
+  'opciones.dato.ivCambio': 'Cambio de IV',
+  'opciones.dato.distanciaStrike': 'Distancia al strike',
+  'opciones.dato.diasVencimiento': 'Días a vencimiento',
+  'opciones.dato.noCalculable': 'No calculable',
+  'opciones.dato.dias': '{n} d',
+  'opciones.clasificacion.titulo': 'Clasificación de la operación',
+  'opciones.clasificacion.sentido': 'Sentido',
+  'opciones.clasificacion.ejecucion': 'Ejecución',
+  'opciones.clasificacion.posicion': 'Posición',
+  'opciones.senales.titulo': 'Señales clave',
+  'opciones.senales.vacio': 'Ningún factor alcanza el umbral para emitir una señal.',
+  'opciones.factores.titulo': 'Desglose de la puntuación',
+  'opciones.factores.peso': 'peso {peso}',
+
+  // ── Contratos: cabecera y filtros ──
+  'opciones.contratos.titulo': 'Contratos',
+  'opciones.contratos.subtitulo': 'Pulse una fila para ver por qué destaca',
+  'opciones.filtro.premiumMin': 'Premium mín.',
+  'opciones.filtro.volumenMin': 'Volumen mín.',
+  'opciones.filtro.ratioMin': 'Vol/OI mín.',
+  'opciones.filtro.scoreMin': 'Signal mín.',
+  'opciones.filtro.ivRank': 'IV rank',
+  'opciones.filtro.tradeType': 'Trade type',
+  'opciones.filtro.direccion': 'Sentido',
+  'opciones.filtro.periodo': 'Periodo',
+  'opciones.filtro.noDisponible': 'No disponible',
+  'opciones.filtro.sesionActual': 'Sesión actual',
+  'opciones.filtro.soloInusual': 'Solo inusual (Vol/OI ≥ 1)',
+  'opciones.filtro.limpiar': 'Limpiar',
+  'opciones.filtro.actualizar': 'Actualizar',
+  'opciones.filtro.requiereIV': 'Requiere IV del proveedor',
+  'opciones.filtro.requiereIV.titulo': 'Requiere volatilidad implícita del proveedor',
+  'opciones.filtro.requiereTimeSales': 'Requiere time & sales',
+  'opciones.filtro.requiereTimeSales.titulo': 'Requiere operaciones individuales',
+  'opciones.filtro.requiereSentido': 'Requiere sentido de la operación',
+  'opciones.filtro.soloSesion': 'Solo sesión actual',
+  'opciones.filtro.requierePeriodo.titulo': 'Requiere histórico intradía',
+
+  // ── Flujo de operaciones ──
+  'opciones.flujo.titulo': 'El flujo de operaciones necesita otra fuente',
+  'opciones.flujo.motivo': 'Sin proveedor de operaciones individuales.',
+  'opciones.flujo.mientras': 'Mientras tanto, «Actividad inusual» sí opera: puntúa los agregados de la sesión con los factores que sí pueden calcularse.',
 };
