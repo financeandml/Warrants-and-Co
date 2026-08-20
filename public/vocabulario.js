@@ -40,3 +40,50 @@ export function etiquetaSello(calidad) {
 /** Clase del sello. Sigue al código, no al idioma: el atenuado es información. */
 export const claseSello = (calidad) =>
   `sello sello--${String(calidad ?? 'UNAVAILABLE').toLowerCase()}`;
+
+/* Los tipos de evento de la agenda. El código es el valor del filtro y viaja al
+   servidor; lo que se traduce es el rótulo. «M&A» se queda como está: es término
+   de oficio en los dos idiomas, no una sigla inglesa sin traducir. */
+const CLAVES_TIPO_EVENTO = {
+  'OPTIONS EXPIRY': 'evento.tipo.vencimiento',
+  RESEARCH: 'evento.tipo.analisis',
+  PRESS: 'evento.tipo.prensa',
+  EARNINGS: 'evento.tipo.resultados',
+  GUIDANCE: 'evento.tipo.previsiones',
+  'INVESTOR DAY': 'evento.tipo.diaInversor',
+  'M&A': 'evento.tipo.corporativa',
+  PRODUCT: 'evento.tipo.producto',
+  REGULATORY: 'evento.tipo.regulacion',
+};
+
+/* Las cuatro prioridades. El código sigue en `dataset.prioridad`, que es de
+   donde cuelga el color: aquí solo se decide lo que se lee. */
+const CLAVES_PRIORIDAD = {
+  HIGH: 'evento.prioridad.alta',
+  MEDIUM: 'evento.prioridad.media',
+  LOW: 'evento.prioridad.baja',
+  UNKNOWN: 'evento.prioridad.desconocida',
+};
+
+/* Calidad de la fecha y clase de vínculo. Hoy el servidor solo emite un valor de
+   cada uno, y aun así van en tabla: escritos en castellano dentro del servidor,
+   se colaban tal cual en la interfaz inglesa. */
+const CLAVES_CALIDAD_FECHA = { EXACTA: 'evento.fecha.exacta' };
+const CLAVES_VINCULACION = { 'MENCIÓN LITERAL': 'evento.vinculo.mencionLiteral' };
+
+const rotular = (tabla) => (codigo) => {
+  const clave = tabla[String(codigo ?? '').toUpperCase()];
+  return clave ? t(clave) : String(codigo ?? '');
+};
+
+/** Rótulo de un tipo de evento. Un código sin traducir se enseña tal cual. */
+export const etiquetaTipoEvento = rotular(CLAVES_TIPO_EVENTO);
+
+/** Rótulo de una prioridad. */
+export const etiquetaPrioridad = rotular(CLAVES_PRIORIDAD);
+
+/** Rótulo de la calidad de la fecha de un evento. */
+export const etiquetaCalidadFecha = rotular(CLAVES_CALIDAD_FECHA);
+
+/** Rótulo de la clase de vínculo entre un evento y una compañía. */
+export const etiquetaVinculacion = rotular(CLAVES_VINCULACION);

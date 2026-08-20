@@ -733,4 +733,124 @@ export default {
   'sello.calculado': 'Calculado',
   'sello.inferido': 'Inferido',
   'sello.noDisponible': 'No disponible',
+
+  // ════════════════════════════ Compañías ══════════════════════════════════
+  'companias.etiqueta': 'Análisis',
+  'companias.titulo': 'Compañías',
+  'companias.busqueda': 'Buscar compañía',
+  'companias.busqueda.hint': 'Nombre, ticker, sector o tema…',
+  'companias.filtro.sector': 'Sector',
+  'companias.filtro.todosSectores': 'Todos los sectores',
+  'companias.limpiar': 'Limpiar',
+  'companias.volver': '← Todas las compañías',
+
+  // ── Listado ──
+  'companias.estado.consulta': {
+    one: '{n} compañía para «{consulta}»',
+    other: '{n} compañías para «{consulta}»',
+  },
+  'companias.estado.cobertura': {
+    one: '{n} compañía bajo cobertura',
+    other: '{n} compañías bajo cobertura',
+  },
+  'companias.vacio.titulo': 'Sin resultados',
+  'companias.vacio.filtrado': 'Ninguna compañía cubierta coincide con «{consulta}».',
+  'companias.vacio.inicial': 'Todavía no hay informes publicados: la cobertura se construye a partir de ellos.',
+  'companias.tarjeta.abrir': 'Abrir ficha de {empresa}',
+  'companias.enCartera': 'En cartera',
+  'companias.tarjeta.ultimo': 'Último: {fecha}',
+  'companias.tarjeta.documentos': {
+    one: '{n} documento',
+    other: '{n} documentos',
+  },
+
+  // ── Datos, compartidos por la tarjeta y la ficha ──
+  'companias.dato.recomendacion': 'Recomendación',
+  'companias.dato.objetivo': 'Precio objetivo',
+  'companias.dato.informes': 'Informes',
+  'companias.dato.recorrido': 'Recorrido al objetivo',
+  'companias.dato.peso': 'Peso en cartera',
+  'companias.dato.compra': 'Precio de compra',
+  'companias.dato.takeProfit': 'Take profit',
+  'companias.dato.stopLoss': 'Stop loss',
+  'companias.dato.distancia': 'Distancia al take profit',
+
+  // ── Ficha ──
+  'companias.cotizacion.sinDato': 'Sin cotización disponible',
+  'companias.cotizacion.selloNota': 'Dato consolidado con retraso; la plataforma no dispone de tiempo real.',
+  'companias.tesis.titulo': 'Tesis vigente',
+  'companias.tesis.sinResumen': 'Dato no disponible — ningún informe incluye resumen ejecutivo.',
+  'companias.niveles.titulo': 'Niveles operativos',
+  // Sin formas de plural: el número va entre paréntesis y no concuerda con nada.
+  'companias.informes.titulo': 'Análisis publicado ({n})',
+  'companias.informes.tipoReserva': 'Informe',
+  'companias.informes.adjuntos': {
+    one: '{n} doc.',
+    other: '{n} docs.',
+  },
+  'companias.prensa.titulo': 'Menciones en prensa',
+  'companias.prensa.vacio': 'Dato no disponible — ningún teletipo reciente menciona a la compañía.',
+  'companias.verCatalizadores': 'Ver catalizadores de la compañía',
+
+  // ══════════════════ Vocabulario de eventos (agenda) ══════════════════════
+  // Rotulado desde `vocabulario.js`. El código sigue siendo el valor del filtro.
+  'evento.tipo.vencimiento': 'Vencimiento de opciones',
+  'evento.tipo.analisis': 'Análisis',
+  'evento.tipo.prensa': 'Prensa',
+  'evento.tipo.resultados': 'Resultados',
+  'evento.tipo.previsiones': 'Previsiones',
+  'evento.tipo.diaInversor': 'Día del inversor',
+  'evento.tipo.corporativa': 'M&A',
+  'evento.tipo.producto': 'Producto',
+  'evento.tipo.regulacion': 'Regulación',
+  'evento.prioridad.alta': 'Alta',
+  'evento.prioridad.media': 'Media',
+  'evento.prioridad.baja': 'Baja',
+  'evento.prioridad.desconocida': 'Sin determinar',
+  'evento.fecha.exacta': 'exacta',
+  'evento.vinculo.mencionLiteral': 'mención literal',
+
+  // ═════════════════════════ Catalizadores ═════════════════════════════════
+  'catalizadores.etiqueta': 'Análisis',
+  'catalizadores.titulo': 'Catalizadores',
+  'catalizadores.filtros.etiqueta': 'Filtros de agenda',
+  'catalizadores.horizonte.proximos': 'Próximos',
+  'catalizadores.horizonte.pasados': 'Pasados',
+  'catalizadores.filtro.compania': 'Compañía',
+  'catalizadores.filtro.todasCompanias': 'Todas las compañías',
+  'catalizadores.filtro.tipo': 'Tipo de evento',
+  'catalizadores.filtro.todosTipos': 'Todos los tipos',
+  'catalizadores.carencias.titulo': 'Sin fuente conectada',
+  'catalizadores.carencias.subtitulo': 'Categorías que la agenda reconoce pero que hoy nadie alimenta',
+
+  // Tres datos independientes unidos por el separador de lista, no una frase
+  // partida: el orden no cambia de un idioma a otro.
+  'catalizadores.resumen.proximos': { one: '{n} próximo', other: '{n} próximos' },
+  'catalizadores.resumen.pasados': { one: '{n} pasado', other: '{n} pasados' },
+  'catalizadores.resumen.alta': {
+    one: '{n} de prioridad alta',
+    other: '{n} de prioridad alta',
+  },
+
+  'catalizadores.vacio.pasados': 'Sin eventos pasados',
+  'catalizadores.vacio.proximos': 'Sin eventos próximos',
+  'catalizadores.vacio.motivo': 'La agenda solo recoge eventos con fecha verificable de una fuente conectada.',
+  'catalizadores.enCartera': 'En cartera',
+  'catalizadores.parcial': 'Agregado parcial',
+  'catalizadores.sinFecha.eventos': {
+    one: '{n} evento sin fecha',
+    other: '{n} eventos sin fecha',
+  },
+
+  'catalizadores.pie.fuente': 'Fuente: {fuente}',
+  'catalizadores.pie.fecha': 'Fecha {calidad}',
+  'catalizadores.pie.vinculo': 'Vínculo: {vinculo}',
+
+  'catalizadores.dato.interesAbierto': 'Interés abierto',
+  'catalizadores.dato.volumen': 'Volumen',
+  'catalizadores.dato.cuotaOI': 'Cuota del OI',
+  'catalizadores.dato.contratos': 'Contratos',
+  'catalizadores.dato.recomendacion': 'Recomendación',
+  'catalizadores.dato.objetivo': 'Precio objetivo',
+  'catalizadores.dato.analista': 'Analista',
 };

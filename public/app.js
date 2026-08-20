@@ -51,8 +51,8 @@ const estado = {
   grafico: null,
   filtrosNoticias: {},
   paginaNoticias: 1,
-  companias: { q: '', sector: '', ficha: null },
-  catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '' },
+  companias: { q: '', sector: '', ficha: null, lista: null, datosFicha: null },
+  catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', agenda: null },
   vocabulariosNoticias: null,
   opciones: { estado: null, inusual: null, cadena: null, pestana: 'inusual', filtros: {} },
 };
@@ -210,8 +210,11 @@ const MEMORIAS_DERIVADAS = {
   // retirarla, publicar una tesis y conmutar el idioma repintaría la tabla con
   // la lista anterior, que es exactamente lo que este mapa existe para impedir.
   repositorio: () => { estado.informes = null; },
-  companias: () => {},
-  catalizadores: () => {},
+  // La cobertura guarda listado y ficha para repintarse por idioma: publicar una
+  // tesis y conmutar repintaría con la lista anterior si no se retiraran.
+  companias: () => { estado.companias.lista = null; estado.companias.datosFicha = null; },
+  // La agenda guarda su última carga para repintarse por idioma.
+  catalizadores: () => { estado.catalizadores.agenda = null; },
 };
 
 const seccionesCaducadas = new Set();
@@ -1116,6 +1119,8 @@ function repintarVistas() {
   reflejarModoTablaSerie();
 
   repintarRadar();
+  repintarCompanias();
+  pintarAgendaCompleta();
 
   if (estado.vocabulariosNoticias) { poblarFiltrosNoticias(); poblarFormularioNoticia(); }
   if (estado.noticias) pintarNoticias(estado.noticias);
@@ -1173,12 +1178,20 @@ async function cargarCompanias() {
   if (estado.companias.sector) parametros.set('sector', estado.companias.sector);
 
   try {
-    const datos = await api(`/api/companias${parametros.toString() ? `?${parametros}` : ''}`);
-    pintarSectores(datos.sectores, estado.companias.sector);
-    pintarCompanias(datos, (clave) => abrirCompania(clave));
+    // Se guarda la carga para repintar al cambiar de idioma sin volver a pedirla.
+    estado.companias.lista = await api(`/api/companias${parametros.toString() ? `?${parametros}` : ''}`);
+    pintarListaCompanias();
   } catch (err) {
     avisar(t('companias.error', { detalle: err.message }));
   }
+}
+
+/** Pinta el listado a partir de la última carga resuelta. */
+function pintarListaCompanias() {
+  const datos = estado.companias.lista;
+  if (!datos) return;
+  pintarSectores(datos.sectores, estado.companias.sector);
+  pintarCompanias(datos, (clave) => abrirCompania(clave));
 }
 
 /** Abre la ficha de una compañía. */
@@ -1193,16 +1206,12 @@ async function abrirCompania(clave, { empujar = true } = {}) {
   if (raiz) raiz.textContent = t('companias.ficha.cargando');
 
   try {
-    const datos = await api(`/api/companias/${encodeURIComponent(clave)}`);
-    pintarFicha(datos, {
-      alAbrirInforme: (id) => abrirDetalle(id),
-      alVerCatalizadores: (ticker) => {
-        estado.catalizadores.compania = ticker;
-        estado.catalizadores.horizonte = 'UPCOMING';
-        irA('catalizadores');
-      },
-    });
+    estado.companias.datosFicha = await api(`/api/companias/${encodeURIComponent(clave)}`);
+    pintarFichaCompania();
   } catch (err) {
+    // Sin ficha válida no hay nada que repintar: se retira la memoria para que un
+    // cambio de idioma no resucite la última que sí cargó.
+    estado.companias.datosFicha = null;
     if (raiz) {
       raiz.textContent = '';
       const vacio = elemento('div', 'vacio');
@@ -1211,6 +1220,32 @@ async function abrirCompania(clave, { empujar = true } = {}) {
       raiz.appendChild(vacio);
     }
   }
+}
+
+/** Pinta la ficha a partir de la última carga resuelta. */
+function pintarFichaCompania() {
+  const datos = estado.companias.datosFicha;
+  if (!datos) return;
+  pintarFicha(datos, {
+    alAbrirInforme: (id) => abrirDetalle(id),
+    alVerCatalizadores: (ticker) => {
+      estado.catalizadores.compania = ticker;
+      estado.catalizadores.horizonte = 'UPCOMING';
+      irA('catalizadores');
+    },
+  });
+}
+
+/**
+ * Repinta la cobertura desde lo guardado.
+ *
+ * Las dos vistas comparten sección y solo una está a la vista, pero se repintan
+ * las dos: la oculta se mostraría en el idioma anterior en cuanto se navegara a
+ * ella, que es justo lo que este repintado existe para impedir.
+ */
+function repintarCompanias() {
+  pintarListaCompanias();
+  pintarFichaCompania();
 }
 
 function mostrarVistaCompanias(cual) {
@@ -1237,17 +1272,25 @@ async function cargarCatalizadores() {
   if (raiz && !raiz.childElementCount) raiz.textContent = t('catalizadores.cargando');
 
   try {
-    const datos = await api(`/api/catalizadores${parametros.toString() ? `?${parametros}` : ''}`);
-    pintarFiltrosCatalizadores(datos, estado.catalizadores);
-    pintarAgenda(datos, {
-      horizonte: estado.catalizadores.horizonte,
-      alAbrirCompania: (clave) => abrirCompania(clave),
-    });
-    pintarCarencias(datos);
-    marcarHorizonte();
+    // Se guarda la carga para repintar al cambiar de idioma sin volver a pedirla.
+    estado.catalizadores.agenda = await api(`/api/catalizadores${parametros.toString() ? `?${parametros}` : ''}`);
+    pintarAgendaCompleta();
   } catch (err) {
     avisar(t('catalizadores.error', { detalle: err.message }));
   }
+}
+
+/** Pinta la agenda a partir de la última carga resuelta. */
+function pintarAgendaCompleta() {
+  const datos = estado.catalizadores.agenda;
+  if (!datos) return;
+  pintarFiltrosCatalizadores(datos, estado.catalizadores);
+  pintarAgenda(datos, {
+    horizonte: estado.catalizadores.horizonte,
+    alAbrirCompania: (clave) => abrirCompania(clave),
+  });
+  pintarCarencias(datos);
+  marcarHorizonte();
 }
 
 function marcarHorizonte() {

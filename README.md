@@ -742,7 +742,10 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 | 3 | Portada e inicio: hero, manifiesto y los seis bloques | hecho |
 | 4 | Las nueve secciones · **cartera y repositorio** | hecho |
 | 4 | Las nueve secciones · **noticias** | hecho |
-| 4 | Las nueve secciones · radar, compañías, catalizadores, mercado y opciones | pendiente |
+| 4 | Las nueve secciones · **radar** | hecho |
+| 4 | Las nueve secciones · **compañías** | hecho |
+| 4 | Las nueve secciones · **catalizadores** | hecho |
+| 4 | Las nueve secciones · mercado y opciones | pendiente |
 
 > **Dos etiquetas del historial no dicen la verdad, y se quedan como están.** El commit
 > `8e20efb` se llama «Fase 3: portada e inicio traducidas», pero lo que trae es la fase 4

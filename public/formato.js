@@ -94,6 +94,29 @@ export function formatearPorcentaje(v, conSigno = true, dec = 2) {
   return `${signo}${porcentaje(Math.abs(n), dec)}`;
 }
 
+/* ── Tiempo relativo ──
+   «hace 5 min», «hoy» o «dentro de 3 días» los redacta el navegador con
+   `Intl.RelativeTimeFormat`. La unidad, el plural y hasta la palabra que
+   sustituye al número —«hoy», «mañana»— son cosa del idioma: ni una condición
+   en el código ni una entrada del diccionario los deciden.
+
+   Vive aquí, y no dentro de una sección, porque lo comparten la portada y la
+   agenda, y porque solo depende del locale: no necesita el diccionario. */
+const formateadoresRelativos = new Map();
+
+export function relativo(opciones) {
+  const clave = `${locale}|${opciones.numeric}|${opciones.style ?? ''}`;
+  let f = formateadoresRelativos.get(clave);
+  if (!f) {
+    f = new Intl.RelativeTimeFormat(locale, opciones);
+    formateadoresRelativos.set(clave, f);
+  }
+  return f;
+}
+
+/** Distancia en días dicha como la diría el idioma: «hoy», «ayer», «in 3 days». */
+export const distanciaEnDias = (dias) => relativo({ numeric: 'auto' }).format(dias, 'day');
+
 export function formatearFecha(iso) {
   if (!iso) return '—';
   const d = new Date(`${String(iso).slice(0, 10)}T00:00:00`);

@@ -694,4 +694,120 @@ export default {
   'sello.calculado': 'Calculated',
   'sello.inferido': 'Inferred',
   'sello.noDisponible': 'Unavailable',
+
+  // ═══════════════════════════ Companies ══════════════════════════════════
+  'companias.etiqueta': 'Research',
+  'companias.titulo': 'Companies',
+  'companias.busqueda': 'Search companies',
+  'companias.busqueda.hint': 'Name, ticker, sector or theme…',
+  'companias.filtro.sector': 'Sector',
+  'companias.filtro.todosSectores': 'All sectors',
+  'companias.limpiar': 'Clear',
+  'companias.volver': '← All companies',
+
+  // ── List ──
+  'companias.estado.consulta': {
+    one: '{n} company for «{consulta}»',
+    other: '{n} companies for «{consulta}»',
+  },
+  'companias.estado.cobertura': {
+    one: '{n} company under coverage',
+    other: '{n} companies under coverage',
+  },
+  'companias.vacio.titulo': 'No results',
+  'companias.vacio.filtrado': 'No covered company matches «{consulta}».',
+  'companias.vacio.inicial': 'No report has been published yet: coverage is built from them.',
+  'companias.tarjeta.abrir': 'Open the {empresa} profile',
+  'companias.enCartera': 'Holding',
+  'companias.tarjeta.ultimo': 'Latest: {fecha}',
+  'companias.tarjeta.documentos': {
+    one: '{n} document',
+    other: '{n} documents',
+  },
+
+  // ── Data points, shared by the card and the profile ──
+  'companias.dato.recomendacion': 'Recommendation',
+  'companias.dato.objetivo': 'Target price',
+  'companias.dato.informes': 'Reports',
+  'companias.dato.recorrido': 'Upside to target',
+  'companias.dato.peso': 'Portfolio weight',
+  'companias.dato.compra': 'Entry price',
+  'companias.dato.takeProfit': 'Take profit',
+  'companias.dato.stopLoss': 'Stop loss',
+  'companias.dato.distancia': 'Distance to take profit',
+
+  // ── Profile ──
+  'companias.cotizacion.sinDato': 'No quote available',
+  'companias.cotizacion.selloNota': 'Consolidated with a delay; the platform carries no real-time feed.',
+  'companias.tesis.titulo': 'Current thesis',
+  'companias.tesis.sinResumen': 'Data unavailable — no report includes an executive summary.',
+  'companias.niveles.titulo': 'Trading levels',
+  'companias.informes.titulo': 'Published research ({n})',
+  'companias.informes.tipoReserva': 'Report',
+  'companias.informes.adjuntos': {
+    one: '{n} doc.',
+    other: '{n} docs.',
+  },
+  'companias.prensa.titulo': 'Press mentions',
+  'companias.prensa.vacio': 'Data unavailable — no recent wire mentions the company.',
+  'companias.verCatalizadores': 'View the company catalysts',
+
+  // ═══════════════════ Event vocabulary (calendar) ═════════════════════════
+  'evento.tipo.vencimiento': 'Options expiry',
+  'evento.tipo.analisis': 'Research',
+  'evento.tipo.prensa': 'Press',
+  'evento.tipo.resultados': 'Earnings',
+  'evento.tipo.previsiones': 'Guidance',
+  'evento.tipo.diaInversor': 'Investor day',
+  'evento.tipo.corporativa': 'M&A',
+  'evento.tipo.producto': 'Product',
+  'evento.tipo.regulacion': 'Regulatory',
+  'evento.prioridad.alta': 'High',
+  'evento.prioridad.media': 'Medium',
+  'evento.prioridad.baja': 'Low',
+  'evento.prioridad.desconocida': 'Undetermined',
+  'evento.fecha.exacta': 'exact',
+  'evento.vinculo.mencionLiteral': 'literal mention',
+
+  // ════════════════════════════ Catalysts ══════════════════════════════════
+  'catalizadores.etiqueta': 'Research',
+  'catalizadores.titulo': 'Catalysts',
+  'catalizadores.filtros.etiqueta': 'Calendar filters',
+  'catalizadores.horizonte.proximos': 'Upcoming',
+  'catalizadores.horizonte.pasados': 'Past',
+  'catalizadores.filtro.compania': 'Company',
+  'catalizadores.filtro.todasCompanias': 'All companies',
+  'catalizadores.filtro.tipo': 'Event type',
+  'catalizadores.filtro.todosTipos': 'All types',
+  'catalizadores.carencias.titulo': 'No connected source',
+  'catalizadores.carencias.subtitulo': 'Categories the calendar recognises but nothing feeds today',
+
+  'catalizadores.resumen.proximos': { one: '{n} upcoming', other: '{n} upcoming' },
+  'catalizadores.resumen.pasados': { one: '{n} past', other: '{n} past' },
+  'catalizadores.resumen.alta': {
+    one: '{n} high priority',
+    other: '{n} high priority',
+  },
+
+  'catalizadores.vacio.pasados': 'No past events',
+  'catalizadores.vacio.proximos': 'No upcoming events',
+  'catalizadores.vacio.motivo': 'The calendar only carries events with a verifiable date from a connected source.',
+  'catalizadores.enCartera': 'Holding',
+  'catalizadores.parcial': 'Partial aggregate',
+  'catalizadores.sinFecha.eventos': {
+    one: '{n} undated event',
+    other: '{n} undated events',
+  },
+
+  'catalizadores.pie.fuente': 'Source: {fuente}',
+  'catalizadores.pie.fecha': 'Date {calidad}',
+  'catalizadores.pie.vinculo': 'Link: {vinculo}',
+
+  'catalizadores.dato.interesAbierto': 'Open interest',
+  'catalizadores.dato.volumen': 'Volume',
+  'catalizadores.dato.cuotaOI': 'OI share',
+  'catalizadores.dato.contratos': 'Contracts',
+  'catalizadores.dato.recomendacion': 'Recommendation',
+  'catalizadores.dato.objetivo': 'Target price',
+  'catalizadores.dato.analista': 'Analyst',
 };

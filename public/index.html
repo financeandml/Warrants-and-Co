@@ -462,8 +462,8 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Research</p>
-          <h1>Companies</h1>
+          <p class="etiqueta-superior" data-i18n="companias.etiqueta">Análisis</p>
+          <h1 data-i18n="companias.titulo">Compañías</h1>
         </div>
         <div class="estado-datos" id="estado-companias"></div>
       </div>
@@ -471,13 +471,17 @@
       <!-- ── Listado ── -->
       <div id="vista-companias-lista">
         <form class="barra-busqueda" id="form-companias" role="search">
-          <label class="visualmente-oculto" for="busca-compania">Buscar compañía</label>
+          <label class="visualmente-oculto" for="busca-compania"
+                 data-i18n="companias.busqueda">Buscar compañía</label>
           <input type="search" id="busca-compania" autocomplete="off"
+                 data-i18n-attr="placeholder:companias.busqueda.hint"
                  placeholder="Nombre, ticker, sector o tema…">
-          <select id="filtro-sector-compania" aria-label="Sector">
-            <option value="">Todos los sectores</option>
+          <select id="filtro-sector-compania"
+                  data-i18n-attr="aria-label:companias.filtro.sector" aria-label="Sector">
+            <option value="" data-i18n="companias.filtro.todosSectores">Todos los sectores</option>
           </select>
-          <button class="boton boton--texto" type="button" id="btn-limpiar-companias">Limpiar</button>
+          <button class="boton boton--texto" type="button" id="btn-limpiar-companias"
+                  data-i18n="companias.limpiar">Limpiar</button>
         </form>
 
         <div class="rejilla-companias" id="rejilla-companias" aria-live="polite"></div>
@@ -485,7 +489,8 @@
 
       <!-- ── Ficha ── -->
       <div id="vista-compania-ficha" hidden>
-        <button class="boton boton--texto" type="button" id="btn-volver-companias">← Todas las compañías</button>
+        <button class="boton boton--texto" type="button" id="btn-volver-companias"
+                data-i18n="companias.volver">← Todas las compañías</button>
         <div id="ficha-compania" aria-live="polite"></div>
       </div>
 
@@ -498,22 +503,27 @@
 
       <div class="titulo-seccion">
         <div>
-          <p class="etiqueta-superior">Research</p>
-          <h1>Catalysts</h1>
+          <p class="etiqueta-superior" data-i18n="catalizadores.etiqueta">Análisis</p>
+          <h1 data-i18n="catalizadores.titulo">Catalizadores</h1>
         </div>
         <div class="estado-datos" id="estado-catalizadores"></div>
       </div>
 
-      <div class="barra-busqueda barra-busqueda--filtros" role="group" aria-label="Filtros de agenda">
+      <div class="barra-busqueda barra-busqueda--filtros" role="group"
+           data-i18n-attr="aria-label:catalizadores.filtros.etiqueta" aria-label="Filtros de agenda">
         <div class="conmutador" id="conmutador-horizonte" role="tablist">
-          <button type="button" role="tab" data-horizonte="UPCOMING" aria-selected="true">Upcoming</button>
-          <button type="button" role="tab" data-horizonte="PAST" aria-selected="false">Past</button>
+          <button type="button" role="tab" data-horizonte="UPCOMING" aria-selected="true"
+                  data-i18n="catalizadores.horizonte.proximos">Próximos</button>
+          <button type="button" role="tab" data-horizonte="PAST" aria-selected="false"
+                  data-i18n="catalizadores.horizonte.pasados">Pasados</button>
         </div>
-        <select id="filtro-compania-catalizador" aria-label="Compañía">
-          <option value="">Todas las compañías</option>
+        <select id="filtro-compania-catalizador"
+                data-i18n-attr="aria-label:catalizadores.filtro.compania" aria-label="Compañía">
+          <option value="" data-i18n="catalizadores.filtro.todasCompanias">Todas las compañías</option>
         </select>
-        <select id="filtro-tipo-catalizador" aria-label="Tipo de evento">
-          <option value="">Todos los tipos</option>
+        <select id="filtro-tipo-catalizador"
+                data-i18n-attr="aria-label:catalizadores.filtro.tipo" aria-label="Tipo de evento">
+          <option value="" data-i18n="catalizadores.filtro.todosTipos">Todos los tipos</option>
         </select>
       </div>
 
@@ -521,8 +531,9 @@
 
       <section class="bloque-panel" aria-labelledby="titulo-sin-calendario">
         <div class="bloque-panel__cabecera">
-          <h2 id="titulo-sin-calendario">Sin fuente conectada</h2>
-          <p>Categorías que la agenda reconoce pero que hoy nadie alimenta</p>
+          <h2 id="titulo-sin-calendario"
+              data-i18n="catalizadores.carencias.titulo">Sin fuente conectada</h2>
+          <p data-i18n="catalizadores.carencias.subtitulo">Categorías que la agenda reconoce pero que hoy nadie alimenta</p>
         </div>
         <div class="rejilla-carencias" id="carencias-catalizadores"></div>
       </section>

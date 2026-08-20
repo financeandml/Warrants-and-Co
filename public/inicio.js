@@ -13,7 +13,7 @@
    ========================================================================= */
 
 import {
-  $, elemento, formatearNumero, formatearFecha, localeFormato,
+  $, elemento, formatearNumero, formatearFecha, localeFormato, relativo,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t, tLista } from './i18n.js';
 
@@ -33,22 +33,6 @@ const conSigno = (v, dec = 2) =>
 /** Cifra con su divisa. Sin divisa no hay dos piezas que ordenar: va sola. */
 const importe = (v, divisa) =>
   divisa ? t('general.importeDivisa', { importe: cifra(v), divisa }) : cifra(v);
-
-/* ── Tiempo relativo ──
-   «hace 5 min», «hoy» o «dentro de 3 días» los redacta el navegador con
-   `Intl.RelativeTimeFormat`. La unidad, el plural y hasta la palabra que
-   sustituye al número —«hoy», «mañana»— son cosa del idioma: ni una condición
-   en el código ni una entrada del diccionario los deciden. */
-const formateadoresRelativos = new Map();
-function relativo(opciones) {
-  const clave = `${localeFormato()}|${opciones.numeric}|${opciones.style ?? ''}`;
-  let f = formateadoresRelativos.get(clave);
-  if (!f) {
-    f = new Intl.RelativeTimeFormat(localeFormato(), opciones);
-    formateadoresRelativos.set(clave, f);
-  }
-  return f;
-}
 
 /** Clase de lectura direccional, sin que el color sustituya nunca al signo. */
 const claseDireccion = (v) =>
