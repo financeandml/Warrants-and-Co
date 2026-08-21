@@ -272,7 +272,16 @@ const ordenado = (conjunto) => [...conjunto].sort().join(', ');
     }
   }
 
+  /* Los rótulos de los códigos del catálogo no los nombra nadie a la vista:
+     `rotuloError()` arma la clave al vuelo con el código que manda el servidor.
+     Quien decide si sobra uno es `src/errores.js`, y eso lo comprueba
+     `tests/errores.js`, que falla ante un «codigo.…» sin código vivo detrás. La
+     excepción se acota al prefijo para no eximir a `error.red` ni a
+     `error.solicitud`, que sí se nombran a pelo y deben seguir vigiladas. */
+  const RESUELTAS_POR_CODIGO = 'codigo.';
+
   for (const clave of clavesBase) {
+    if (clave.startsWith(RESUELTAS_POR_CODIGO)) continue;
     if (!mencionadas.has(clave)) avisos.push(`«${clave}» está declarada y nadie la nombra`);
   }
 

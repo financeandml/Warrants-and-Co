@@ -1,5 +1,7 @@
 'use strict';
 
+const { API, VALIDACION } = require('./errores');
+
 /** Vocabularios controlados del repositorio documental. */
 const TIPOS_INFORME = [
   'Tesis de inversión',
@@ -33,11 +35,26 @@ const DIVISAS = ['USD', 'EUR', 'GBP', 'CHF', 'JPY'];
 
 class ErrorValidacion extends Error {
   constructor(errores) {
-    super('Los datos remitidos no superan la validación');
+    super(API.VALIDACION.mensaje);
     this.name = 'ErrorValidacion';
-    this.status = 422;
+    this.status = API.VALIDACION.status;
+    this.codigo = 'VALIDACION';
     this.errores = errores;
   }
+}
+
+/* Error de un campo, para acumular en `ErrorValidacion`. Nada que ver con el
+   `fallo` de `errores.js`: aquel arma el Error de una respuesta; este, uno de
+   los muchos reparos que puede llevar dentro.
+
+   El `codigo` viaja junto al `mensaje` porque son para lectores distintos: el
+   código lo rotula la interfaz en el idioma de quien mira; el texto castellano
+   queda de reserva para quien llama por `curl`. Un código ausente del catálogo
+   revienta aquí y no en la respuesta: si no hay frase, no se inventa. */
+function fallo(campo, codigo) {
+  const mensaje = VALIDACION[codigo];
+  if (!mensaje) throw new Error(`Código de validación desconocido: ${codigo}`);
+  return { campo, codigo, mensaje };
 }
 
 const texto = (v, max) => {
@@ -96,7 +113,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
 
   const empresa = texto(cuerpo.empresa, 160);
   if (!parcial || cuerpo.empresa !== undefined) {
-    if (!empresa) e.push({ campo: 'empresa', mensaje: 'La denominación social es obligatoria' });
+    if (!empresa) e.push(fallo('empresa', 'EMPRESA_OBLIGATORIA'));
     else d.empresa = empresa;
   }
 
@@ -105,7 +122,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
     if (t) {
       const limpio = t.toUpperCase().replace(/^\$/, '');
       if (!/^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(limpio))
-        e.push({ campo: 'ticker', mensaje: 'Formato de ticker no válido' });
+        e.push(fallo('ticker', 'TICKER_FORMATO'));
       else d.ticker = limpio;
     } else d.ticker = null;
   }
@@ -115,16 +132,16 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
     if (!f) {
       if (!parcial) d.fecha_publicacion = new Date().toISOString().slice(0, 10);
     } else if (!esFechaISO(f)) {
-      e.push({ campo: 'fecha_publicacion', mensaje: 'La fecha debe seguir el formato AAAA-MM-DD' });
+      e.push(fallo('fecha_publicacion', 'FECHA_FORMATO'));
     } else if (f > new Date().toISOString().slice(0, 10)) {
-      e.push({ campo: 'fecha_publicacion', mensaje: 'La fecha de publicación no puede ser futura' });
+      e.push(fallo('fecha_publicacion', 'FECHA_FUTURA'));
     } else d.fecha_publicacion = f;
   }
 
-  for (const [campo, lista, etiqueta] of [
-    ['tipo_informe', TIPOS_INFORME, 'tipo de informe'],
-    ['recomendacion', RECOMENDACIONES, 'recomendación'],
-    ['nivel_acceso', NIVELES_ACCESO, 'nivel de acceso'],
+  for (const [campo, lista, codigo] of [
+    ['tipo_informe', TIPOS_INFORME, 'TIPO_INFORME_NO_RECONOCIDO'],
+    ['recomendacion', RECOMENDACIONES, 'RECOMENDACION_NO_RECONOCIDA'],
+    ['nivel_acceso', NIVELES_ACCESO, 'NIVEL_ACCESO_NO_RECONOCIDO'],
   ]) {
     if (!parcial || cuerpo[campo] !== undefined) {
       const v = texto(cuerpo[campo], 60);
@@ -132,7 +149,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
         if (campo === 'nivel_acceso' && !parcial) d[campo] = 'publico';
         else d[campo] = null;
       } else if (!lista.includes(v)) {
-        e.push({ campo, mensaje: `Valor de ${etiqueta} no reconocido` });
+        e.push(fallo(campo, codigo));
       } else d[campo] = v;
     }
   }
@@ -145,37 +162,37 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
 
   if (!parcial || cuerpo.divisa !== undefined) {
     const v = (texto(cuerpo.divisa, 3) || 'USD').toUpperCase();
-    if (!DIVISAS.includes(v)) e.push({ campo: 'divisa', mensaje: 'Divisa no soportada' });
+    if (!DIVISAS.includes(v)) e.push(fallo('divisa', 'DIVISA_NO_SOPORTADA'));
     else d.divisa = v;
   }
 
   if (!parcial || cuerpo.precio_objetivo !== undefined) {
     const n = numero(cuerpo.precio_objetivo);
-    if (Number.isNaN(n)) e.push({ campo: 'precio_objetivo', mensaje: 'El precio objetivo debe ser numérico' });
+    if (Number.isNaN(n)) e.push(fallo('precio_objetivo', 'PRECIO_OBJETIVO_NO_NUMERICO'));
     else if (n !== null && (n <= 0 || n > 1_000_000))
-      e.push({ campo: 'precio_objetivo', mensaje: 'El precio objetivo está fuera de rango' });
+      e.push(fallo('precio_objetivo', 'PRECIO_OBJETIVO_FUERA_RANGO'));
     else d.precio_objetivo = n;
   }
 
   if (!parcial || cuerpo.peso_cartera !== undefined) {
     const n = numero(cuerpo.peso_cartera);
-    if (Number.isNaN(n)) e.push({ campo: 'peso_cartera', mensaje: 'El peso debe ser numérico' });
+    if (Number.isNaN(n)) e.push(fallo('peso_cartera', 'PESO_NO_NUMERICO'));
     else if (n !== null && (n <= 0 || n > 100))
-      e.push({ campo: 'peso_cartera', mensaje: 'El peso debe expresarse entre 0 y 100' });
+      e.push(fallo('peso_cartera', 'PESO_FUERA_RANGO'));
     else d.peso_cartera = n;
   }
 
   // Niveles operativos de la posición: precio pagado, toma de beneficios y stop.
-  for (const [campo, etiqueta] of [
-    ['precio_compra', 'precio de compra'],
-    ['take_profit', 'take profit'],
-    ['stop_loss', 'stop loss'],
+  for (const [campo, noNumerico, fueraRango] of [
+    ['precio_compra', 'PRECIO_COMPRA_NO_NUMERICO', 'PRECIO_COMPRA_FUERA_RANGO'],
+    ['take_profit', 'TAKE_PROFIT_NO_NUMERICO', 'TAKE_PROFIT_FUERA_RANGO'],
+    ['stop_loss', 'STOP_LOSS_NO_NUMERICO', 'STOP_LOSS_FUERA_RANGO'],
   ]) {
     if (!parcial || cuerpo[campo] !== undefined) {
       const n = numero(cuerpo[campo]);
-      if (Number.isNaN(n)) e.push({ campo, mensaje: `El ${etiqueta} debe ser numérico` });
+      if (Number.isNaN(n)) e.push(fallo(campo, noNumerico));
       else if (n !== null && (n <= 0 || n > 1_000_000))
-        e.push({ campo, mensaje: `El ${etiqueta} está fuera de rango` });
+        e.push(fallo(campo, fueraRango));
       else d[campo] = n;
     }
   }
@@ -184,9 +201,9 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
   const compra = d.precio_compra;
   if (Number.isFinite(compra)) {
     if (Number.isFinite(d.take_profit) && d.take_profit <= compra)
-      e.push({ campo: 'take_profit', mensaje: 'El take profit debe situarse por encima del precio de compra' });
+      e.push(fallo('take_profit', 'TAKE_PROFIT_BAJO_COMPRA'));
     if (Number.isFinite(d.stop_loss) && d.stop_loss >= compra)
-      e.push({ campo: 'stop_loss', mensaje: 'El stop loss debe situarse por debajo del precio de compra' });
+      e.push(fallo('stop_loss', 'STOP_LOSS_SOBRE_COMPRA'));
   }
 
   if (!parcial || cuerpo.etiquetas !== undefined) d.etiquetas = JSON.stringify(normalizarEtiquetas(cuerpo.etiquetas));
@@ -197,7 +214,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
   const enCartera = d.en_cartera === 1;
   const tickerFinal = d.ticker !== undefined ? d.ticker : null;
   if (!parcial && enCartera && !tickerFinal)
-    e.push({ campo: 'ticker', mensaje: 'Una tesis incorporada a cartera requiere ticker de cotización' });
+    e.push(fallo('ticker', 'TICKER_REQUERIDO_EN_CARTERA'));
 
   if (e.length) throw new ErrorValidacion(e);
   return d;
@@ -218,7 +235,7 @@ function validarNoticia(cuerpo, { parcial = false } = {}) {
 
   if (!parcial || cuerpo.titular !== undefined) {
     const t = texto(cuerpo.titular, 220);
-    if (!t) e.push({ campo: 'titular', mensaje: 'El titular es obligatorio' });
+    if (!t) e.push(fallo('titular', 'TITULAR_OBLIGATORIO'));
     else d.titular = t;
   }
 
@@ -236,7 +253,7 @@ function validarNoticia(cuerpo, { parcial = false } = {}) {
         const parsed = new URL(u);
         valida = parsed.protocol === 'http:' || parsed.protocol === 'https:';
       } catch { valida = false; }
-      if (!valida) e.push({ campo: 'url_fuente', mensaje: 'El enlace debe ser una dirección http o https válida' });
+      if (!valida) e.push(fallo('url_fuente', 'URL_NO_VALIDA'));
       else d.url_fuente = u;
     }
   }
@@ -244,23 +261,23 @@ function validarNoticia(cuerpo, { parcial = false } = {}) {
   if (!parcial || cuerpo.categoria !== undefined) {
     const v = texto(cuerpo.categoria, 60);
     if (!v) { if (!parcial) d.categoria = 'Mercados'; }
-    else if (!CATEGORIAS_NOTICIA.includes(v)) e.push({ campo: 'categoria', mensaje: 'Categoría no reconocida' });
+    else if (!CATEGORIAS_NOTICIA.includes(v)) e.push(fallo('categoria', 'CATEGORIA_NO_RECONOCIDA'));
     else d.categoria = v;
   }
 
   if (!parcial || cuerpo.relevancia !== undefined) {
     const v = texto(cuerpo.relevancia, 20);
     if (!v) { if (!parcial) d.relevancia = 'normal'; }
-    else if (!RELEVANCIAS.includes(v)) e.push({ campo: 'relevancia', mensaje: 'Nivel de relevancia no reconocido' });
+    else if (!RELEVANCIAS.includes(v)) e.push(fallo('relevancia', 'RELEVANCIA_NO_RECONOCIDA'));
     else d.relevancia = v;
   }
 
   if (!parcial || cuerpo.fecha_publicacion !== undefined) {
     const f = texto(cuerpo.fecha_publicacion, 10);
     if (!f) { if (!parcial) d.fecha_publicacion = new Date().toISOString().slice(0, 10); }
-    else if (!esFechaISO(f)) e.push({ campo: 'fecha_publicacion', mensaje: 'La fecha debe seguir el formato AAAA-MM-DD' });
+    else if (!esFechaISO(f)) e.push(fallo('fecha_publicacion', 'FECHA_FORMATO'));
     else if (f > new Date().toISOString().slice(0, 10))
-      e.push({ campo: 'fecha_publicacion', mensaje: 'La fecha de publicación no puede ser futura' });
+      e.push(fallo('fecha_publicacion', 'FECHA_FUTURA'));
     else d.fecha_publicacion = f;
   }
 

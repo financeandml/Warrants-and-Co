@@ -500,6 +500,39 @@ export default {
   'error.red': 'No ha sido posible contactar con el servidor. Verifique que la aplicación sigue en ejecución.',
   'error.solicitud': 'La solicitud ha fallado (código {codigo}).',
 
+  // ═════════════════════ Códigos del catálogo del servidor ═════════════════
+  // Un reparo de validación llega con su código; `rotuloError()` lo resuelve
+  // aquí y solo cae al texto del servidor si el código no tiene rótulo. La
+  // clave repite el código tal cual —MAYUSCULAS_CON_GUION, contra el estilo
+  // del resto del fichero— para que el cotejo con `src/errores.js` sea una
+  // comparación de conjuntos y no una transformación que pueda desviarse.
+  // Los cubre `tests/errores.js`, que falla si falta uno en cualquier idioma.
+  'codigo.EMPRESA_OBLIGATORIA': 'La denominación social es obligatoria',
+  'codigo.TICKER_FORMATO': 'Formato de ticker no válido',
+  'codigo.TICKER_REQUERIDO_EN_CARTERA': 'Una tesis incorporada a cartera requiere ticker de cotización',
+  'codigo.FECHA_FORMATO': 'La fecha debe seguir el formato AAAA-MM-DD',
+  'codigo.FECHA_FUTURA': 'La fecha de publicación no puede ser futura',
+  'codigo.TIPO_INFORME_NO_RECONOCIDO': 'Tipo de informe no reconocido',
+  'codigo.RECOMENDACION_NO_RECONOCIDA': 'Recomendación no reconocida',
+  'codigo.NIVEL_ACCESO_NO_RECONOCIDO': 'Nivel de acceso no reconocido',
+  'codigo.DIVISA_NO_SOPORTADA': 'Divisa no soportada',
+  'codigo.PRECIO_OBJETIVO_NO_NUMERICO': 'El precio objetivo debe ser numérico',
+  'codigo.PRECIO_OBJETIVO_FUERA_RANGO': 'El precio objetivo está fuera de rango',
+  'codigo.PESO_NO_NUMERICO': 'El peso debe ser numérico',
+  'codigo.PESO_FUERA_RANGO': 'El peso debe expresarse entre 0 y 100',
+  'codigo.PRECIO_COMPRA_NO_NUMERICO': 'El precio de compra debe ser numérico',
+  'codigo.PRECIO_COMPRA_FUERA_RANGO': 'El precio de compra está fuera de rango',
+  'codigo.TAKE_PROFIT_NO_NUMERICO': 'El take profit debe ser numérico',
+  'codigo.TAKE_PROFIT_FUERA_RANGO': 'El take profit está fuera de rango',
+  'codigo.STOP_LOSS_NO_NUMERICO': 'El stop loss debe ser numérico',
+  'codigo.STOP_LOSS_FUERA_RANGO': 'El stop loss está fuera de rango',
+  'codigo.TAKE_PROFIT_BAJO_COMPRA': 'El take profit debe situarse por encima del precio de compra',
+  'codigo.STOP_LOSS_SOBRE_COMPRA': 'El stop loss debe situarse por debajo del precio de compra',
+  'codigo.TITULAR_OBLIGATORIO': 'El titular es obligatorio',
+  'codigo.URL_NO_VALIDA': 'El enlace debe ser una dirección http o https válida',
+  'codigo.CATEGORIA_NO_RECONOCIDA': 'Categoría no reconocida',
+  'codigo.RELEVANCIA_NO_RECONOCIDA': 'Nivel de relevancia no reconocido',
+
   // ══════════════════════════ Acceso de analista ═══════════════════════════
   'acceso.credencialInvalida': 'Credencial no válida.',
   'acceso.iniciada': 'Sesión iniciada como analista de Warrants & Co.',

@@ -6,7 +6,7 @@
 
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
-import { iniciarIdioma, t, tNodos } from './i18n.js';
+import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
 import { activarApariciones, pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
 import {
@@ -108,10 +108,30 @@ async function api(ruta, opciones = {}) {
     // de reserva, que es el único que pone el cliente.
     const error = new Error(datos?.error ?? t('error.solicitud', { codigo: respuesta.status }));
     error.status = respuesta.status;
+    error.codigo = datos?.codigo;
     error.errores = datos?.errores;
     throw error;
   }
   return datos;
+}
+
+/**
+ * Rotulo de un error del servidor, en el idioma de la interfaz.
+ *
+ * El servidor redacta en castellano —sirve a quien llama por `curl` y a los
+ * registros—, pero manda ademas un codigo del catalogo de `src/errores.js`. Se
+ * prefiere el codigo: es lo unico estable entre idiomas. Se cae a la frase del
+ * servidor cuando no hay codigo, o cuando lo hay y aun no tiene rotulo —hoy es
+ * el caso de los codigos de API—; asi la reserva es una frase util y nunca la
+ * clave cruda, que es lo que devolveria `t()` a secas.
+ *
+ * @param {string|undefined} codigo
+ * @param {string} reserva  lo que redacto el servidor
+ */
+function rotuloError(codigo, reserva) {
+  if (!codigo) return reserva;
+  const clave = `codigo.${codigo}`;
+  return existe(clave) ? t(clave) : reserva;
 }
 
 // ─────────────────────────────── navegacion ──────────────────────────────
@@ -920,11 +940,11 @@ async function enviarFormulario(ev) {
     await invalidarDerivadasDeInformes();
   } catch (err) {
     panelErrores.textContent = '';
-    panelErrores.appendChild(elemento('strong', null, err.message));
+    panelErrores.appendChild(elemento('strong', null, rotuloError(err.codigo, err.message)));
     if (err.errores?.length) {
       const lista = document.createElement('ul');
       for (const e of err.errores) {
-        lista.appendChild(elemento('li', null, e.mensaje));
+        lista.appendChild(elemento('li', null, rotuloError(e.codigo, e.mensaje)));
         const campo = form.elements[e.campo];
         if (campo) campo.setAttribute('aria-invalid', 'true');
       }
@@ -2124,11 +2144,11 @@ async function enviarFormularioNoticia(ev) {
     await invalidarDerivadasDeNoticias();
   } catch (err) {
     panel.textContent = '';
-    panel.appendChild(elemento('strong', null, err.message));
+    panel.appendChild(elemento('strong', null, rotuloError(err.codigo, err.message)));
     if (err.errores?.length) {
       const lista = document.createElement('ul');
       for (const e of err.errores) {
-        lista.appendChild(elemento('li', null, e.mensaje));
+        lista.appendChild(elemento('li', null, rotuloError(e.codigo, e.mensaje)));
         const campo = form.elements[e.campo];
         if (campo) campo.setAttribute('aria-invalid', 'true');
       }

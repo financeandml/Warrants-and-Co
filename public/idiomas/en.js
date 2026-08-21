@@ -482,6 +482,35 @@ export default {
   'error.red': 'The server could not be reached. Check that the application is still running.',
   'error.solicitud': 'The request failed (status {codigo}).',
 
+  // ══════════════════════ Server catalogue codes ══════════════════════════
+  // See the note in `es.js`: the key repeats the code verbatim so that
+  // `tests/errores.js` can compare sets instead of transforming names.
+  'codigo.EMPRESA_OBLIGATORIA': 'The registered name is required',
+  'codigo.TICKER_FORMATO': 'Invalid ticker format',
+  'codigo.TICKER_REQUERIDO_EN_CARTERA': 'A thesis held in the portfolio requires a listed ticker',
+  'codigo.FECHA_FORMATO': 'The date must follow the YYYY-MM-DD format',
+  'codigo.FECHA_FUTURA': 'The publication date cannot be in the future',
+  'codigo.TIPO_INFORME_NO_RECONOCIDO': 'Report type not recognised',
+  'codigo.RECOMENDACION_NO_RECONOCIDA': 'Recommendation not recognised',
+  'codigo.NIVEL_ACCESO_NO_RECONOCIDO': 'Access level not recognised',
+  'codigo.DIVISA_NO_SOPORTADA': 'Currency not supported',
+  'codigo.PRECIO_OBJETIVO_NO_NUMERICO': 'The target price must be numeric',
+  'codigo.PRECIO_OBJETIVO_FUERA_RANGO': 'The target price is out of range',
+  'codigo.PESO_NO_NUMERICO': 'The portfolio weight must be numeric',
+  'codigo.PESO_FUERA_RANGO': 'The portfolio weight must be between 0 and 100',
+  'codigo.PRECIO_COMPRA_NO_NUMERICO': 'The purchase price must be numeric',
+  'codigo.PRECIO_COMPRA_FUERA_RANGO': 'The purchase price is out of range',
+  'codigo.TAKE_PROFIT_NO_NUMERICO': 'The take profit must be numeric',
+  'codigo.TAKE_PROFIT_FUERA_RANGO': 'The take profit is out of range',
+  'codigo.STOP_LOSS_NO_NUMERICO': 'The stop loss must be numeric',
+  'codigo.STOP_LOSS_FUERA_RANGO': 'The stop loss is out of range',
+  'codigo.TAKE_PROFIT_BAJO_COMPRA': 'The take profit must sit above the purchase price',
+  'codigo.STOP_LOSS_SOBRE_COMPRA': 'The stop loss must sit below the purchase price',
+  'codigo.TITULAR_OBLIGATORIO': 'The headline is required',
+  'codigo.URL_NO_VALIDA': 'The link must be a valid http or https address',
+  'codigo.CATEGORIA_NO_RECONOCIDA': 'Category not recognised',
+  'codigo.RELEVANCIA_NO_RECONOCIDA': 'Relevance level not recognised',
+
   // ═══════════════════════════ Analyst access ═════════════════════════════
   'acceso.credencialInvalida': 'Invalid credentials.',
   'acceso.iniciada': 'Signed in as a Warrants & Co. analyst.',
