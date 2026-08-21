@@ -19,7 +19,7 @@
   <div class="contenedor cabecera__interior">
     <a class="marca" href="#/inicio" data-ruta data-i18n-attr="aria-label:cabecera.marca.ir"
        aria-label="Warrants &amp; Co. — ir al inicio">
-      <img class="marca__sello" id="marca-sello" src="/marca/logo-marca.svg" alt="" aria-hidden="true" role="presentation" width="34" height="34">
+      <img class="marca__sello" id="marca-sello" src="/marca/logo-marca.svg" alt="" aria-hidden="true" role="presentation" width="40" height="40">
       <span class="marca__texto">
         <strong>Warrants &amp; Co.</strong>
         <span data-i18n="cabecera.marca.lema">Análisis e Inversión</span>
@@ -30,10 +30,6 @@
          data-i18n-attr="aria-label:cabecera.nav.etiqueta" aria-label="Navegación principal"></nav>
 
     <div class="cabecera__acciones">
-      <span class="indicador-sesion" id="indicador-sesion" hidden role="status">
-        <span class="punto punto--activo" aria-hidden="true"></span>
-        <span id="indicador-sesion-texto" data-i18n="cabecera.sesion.analista">Analista</span>
-      </span>
       <div class="conmutador-tema" role="group"
            data-i18n-attr="aria-label:cabecera.tema.grupo" aria-label="Tema de la interfaz">
         <button type="button" data-tema="claro" aria-pressed="false"
@@ -49,8 +45,10 @@
       </div>
       <div class="conmutador-idioma" role="group"
            data-i18n-attr="aria-label:idioma.grupo" aria-label="Idioma de la interfaz"></div>
-      <button class="boton boton--contorno" id="btn-acceso" type="button"
-              data-i18n="cabecera.acceso">Área de analistas</button>
+      <button class="boton boton--contorno" id="btn-acceso" type="button">
+        <span class="punto" id="punto-sesion" aria-hidden="true" hidden></span>
+        <span id="btn-acceso-texto" data-i18n="cabecera.acceso">Área de analistas</span>
+      </button>
     </div>
   </div>
 </header>

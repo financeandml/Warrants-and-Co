@@ -233,13 +233,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .marca { display: flex; align-items: center; gap: 12px; text-decoration: none; flex-shrink: 0; }
 
 .marca__sello {
-  width: 34px; height: 34px; flex-shrink: 0;
+  width: 40px; height: 40px; flex-shrink: 0;
   display: block; object-fit: contain;
   background: #000;
 }
 
 .marca__texto { display: flex; flex-direction: column; line-height: 1.15; }
-.marca__texto strong { font-size: 1rem; letter-spacing: -0.01em; }
+.marca__texto strong { font-size: 1.1rem; letter-spacing: -0.01em; }
 .marca__texto span {
   font-size: 0.63rem; letter-spacing: 0.15em;
   text-transform: uppercase; color: var(--tinta-mate);
@@ -259,22 +259,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .cabecera__acciones { display: flex; align-items: center; gap: 12px; }
 
-.indicador-sesion {
-  display: inline-flex; align-items: center; gap: 7px;
-  font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--tinta-secundaria);
-}
-.indicador-sesion .punto {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--tinta); flex-shrink: 0;
-}
+/* El boton de la cabecera se aprieta respecto al de cuerpo: con el relleno
+   general medía 43 px y sobrepasaba en alto a la marca, que son 40. Aquí
+   ningún control puede ser más alto que ella. */
+.cabecera__acciones .boton { padding-block: 8px; }
 
-.indicador-sesion .punto--activo {
-  position: relative;
+/* El punto de sesión vive dentro del botón de acceso, que es el único
+   elemento de la cabecera que habla de la sesión. Antes eran dos —un
+   indicador suelto que decía ANALISTA y un botón que decía «Sesión
+   activa»— y ambos decían lo mismo sin decir nunca la acción. */
+.boton .punto {
+  position: relative; flex-shrink: 0;
+  width: 7px; height: 7px; border-radius: 50%;
   background: var(--verde-sesion);
   box-shadow: 0 0 0 2px var(--verde-halo);
 }
-.indicador-sesion .punto--activo::after {
+.boton .punto::after {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
   background: var(--verde-sesion);
   animation: respirar 2.6s ease-out infinite;
@@ -305,6 +305,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .boton--contorno:hover:not(:disabled) { border-color: var(--tinta); background: var(--superficie-alt); }
 
 .boton--texto    { color: var(--tinta-secundaria); padding-inline: 10px; }
+
+/* Sesión abierta: el control deja de invitar y pasa a informar, así que pierde
+   la caja. Sin sesión conserva `boton--contorno`, porque entonces es una
+   invitación y nada más en la cabecera reclama ese sitio. La caja existe solo
+   en el estado en que significa algo. */
+.boton--sesion {
+  /* El relleno vertical lo fija `.cabecera__acciones .boton`, que es el único
+     sitio donde se usa esta variante; aquí solo se aprieta el horizontal. */
+  gap: 7px; padding-inline: 4px;
+  font-size: 0.72rem; font-weight: 500;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tinta-secundaria);
+}
+.boton--sesion:hover:not(:disabled) { color: var(--tinta); }
 .boton--texto:hover:not(:disabled)    { color: var(--tinta); text-decoration: underline; text-underline-offset: 3px; }
 
 /* ───────────────────────────────── Portada ────────────────────────────── */

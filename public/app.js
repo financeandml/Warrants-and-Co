@@ -975,12 +975,42 @@ async function eliminarInforme() {
 
 // ──────────────────────────────── acceso ─────────────────────────────────
 
+/**
+ * Refleja el estado de sesion en la cabecera.
+ *
+ * El boton es el unico elemento que habla de la sesion: lleva el punto dentro y
+ * cambia de peso segun el estado. Sin sesion conserva su caja —ahi invita a
+ * entrar—; con ella la pierde, porque entonces solo informa y no debe competir
+ * con la marca.
+ *
+ * El rotulo se guarda como CLAVE en `data-i18n`, no como texto: esta funcion
+ * vuelve a correr en `idioma:cambiado`, y una clave se retraduce mientras que un
+ * rotulo ya resuelto se congelaria en el idioma en que se puso.
+ */
 function actualizarIndicadorSesion() {
   const activo = hayCredencial();
   const cabecera = $('#cabecera-acciones');
   if (cabecera) cabecera.hidden = !activo;
-  $('#indicador-sesion').hidden = !activo;
-  $('#btn-acceso').textContent = activo ? t('cabecera.sesionActiva') : t('cabecera.acceso');
+
+  const boton = $('#btn-acceso');
+  boton.classList.toggle('boton--contorno', !activo);
+  boton.classList.toggle('boton--sesion', activo);
+  $('#punto-sesion').hidden = !activo;
+
+  const texto = $('#btn-acceso-texto');
+  texto.dataset.i18n = activo ? 'cabecera.sesion.analista' : 'cabecera.acceso';
+  texto.textContent = t(texto.dataset.i18n);
+
+  // Con sesion el rotulo visible dice quien eres, no que hace el boton. El
+  // nombre accesible si tiene que decir la accion.
+  if (activo) {
+    boton.dataset.i18nAttr = 'aria-label:cabecera.sesion.gestionar';
+    boton.setAttribute('aria-label', t('cabecera.sesion.gestionar'));
+  } else {
+    delete boton.dataset.i18nAttr;
+    boton.removeAttribute('aria-label');
+  }
+
   $('#btn-cerrar-sesion').hidden = !activo;
 }
 
