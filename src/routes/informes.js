@@ -10,6 +10,9 @@ const crypto = require('node:crypto');
 
 const { db, UPLOAD_DIR } = require('../db');
 const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
+const { leerPdf, ErrorLectura, CODIGOS_LECTURA } = require('../extraccion/pdf');
+const { extraerFicha, CAMPOS, CAMPOS_FUERA_DE_EXTRACCION } = require('../extraccion/ficha');
+const { MOTIVOS_PETICION } = require('../extraccion/motivos');
 
 const router = express.Router();
 
@@ -267,6 +270,87 @@ router.get('/:id(\\d+)', (req, res) => {
   const informe = informeCompleto(Number(req.params.id));
   if (!informe) return res.status(404).json({ error: 'El informe solicitado no existe.' });
   res.json(informe);
+});
+
+// ------------------------------------------------------------ extraccion
+
+/**
+ * Analisis de un PDF para proponer la ficha.
+ *
+ * El documento se recibe en memoria y se descarta al terminar: **no baja a
+ * disco**. Lo que se guarda en `data/uploads` es el adjunto del informe, y eso
+ * solo ocurre cuando el informe se guarda de verdad. Analizar no es archivar.
+ *
+ * La respuesta no crea ni modifica nada. Es una propuesta: cada campo llega con
+ * su estado —propuesto, ambiguo, referencia o ausente—, la pagina de la que
+ * sale y el rotulo que lo respalda, y nada de ello cuenta como valido hasta que
+ * el analista lo acepte en el formulario. El guardado sigue pasando por
+ * `validarInforme` sin excepcion alguna.
+ */
+const analisis = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: LIMITE_BYTES, files: 1, fields: 4 },
+  fileFilter: (req, file, cb) => {
+    // Solo PDF: es el unico formato del que esta plataforma sabe leer texto.
+    // Un .docx se aceptaria como adjunto, pero de el no se propone nada.
+    const ext = path.extname(file.originalname).toLowerCase();
+    const tipo = file.mimetype ?? '';
+    if (ext !== '.pdf' || !['application/pdf', 'application/octet-stream', ''].includes(tipo)) {
+      const err = new Error(MOTIVOS_PETICION.FORMATO_NO_ANALIZABLE);
+      err.status = 415;
+      err.codigo = 'FORMATO_NO_ANALIZABLE';
+      return cb(err);
+    }
+    cb(null, true);
+  },
+});
+
+router.post('/extraccion', analisis.single('documento'), (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: MOTIVOS_PETICION.DOCUMENTO_AUSENTE, codigo: 'DOCUMENTO_AUSENTE' });
+  }
+
+  let lectura;
+  try {
+    lectura = leerPdf(req.file.buffer);
+  } catch (err) {
+    /* Los fallos de lectura se responden aqui y no en el manejador general
+       porque el codigo tiene que llegar al cliente: un PDF cifrado y uno
+       escaneado se rotulan distinto, y la interfaz los traduce por codigo. */
+    if (err instanceof ErrorLectura) return res.status(422).json({ error: err.message, codigo: err.codigo });
+    throw err;
+  }
+
+  const { campos, bloques, avisos } = extraerFicha(lectura.paginas);
+
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({
+    documento: {
+      nombre: path.basename(req.file.originalname).slice(0, 200),
+      paginas: lectura.paginas.length,
+      truncado: lectura.truncado,
+    },
+    bloques,
+    campos,
+    avisos,
+    // Lo que el formulario rellena por su cuenta, para que se distinga de lo leido.
+    fueraDeExtraccion: CAMPOS_FUERA_DE_EXTRACCION,
+    orden: CAMPOS,
+  });
+}, (err, req, res, next) => {
+  /* Manejador acotado a esta ruta. El general de `server.js` responde solo con
+     la frase castellana, y aqui el codigo tiene que llegar al cliente para que
+     lo rotule en el idioma de quien mira: es la unica pantalla donde el motivo
+     del rechazo es la informacion util. No se toca el general, que sirve al
+     resto de rutas y tiene su propia pendiente anotada en `errores.js`. */
+  if (err instanceof multer.MulterError) {
+    const codigo = err.code === 'LIMIT_FILE_SIZE' ? 'PDF_DEMASIADO_GRANDE' : null;
+    if (codigo) return res.status(413).json({ error: CODIGOS_LECTURA[codigo], codigo });
+  }
+  if (err.codigo && err.status && err.status < 500) {
+    return res.status(err.status).json({ error: err.message, codigo: err.codigo });
+  }
+  return next(err);
 });
 
 // ------------------------------------------------------------------ alta
