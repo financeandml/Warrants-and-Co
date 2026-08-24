@@ -29,6 +29,9 @@ CSS existentes, nunca un color literal. Tema claro y oscuro. Respeta
 
 - Cambios mínimos. No reescribas ficheros enteros ni reordenes lo no pedido.
 - Antes de un cambio que toque más de dos ficheros, enséñame el plan y espera.
+  **Salvo que yo haya nombrado los ficheros y qué va en cada uno: eso ya es el plan,
+  y ya está aprobado.** La regla existe para que no me sorprendas, no para pedir
+  permiso dos veces por lo mismo.
 - Al terminar: qué ficheros tocaste y qué compruebo en el navegador.
 - Si algo choca con este fichero, dímelo en lugar de obedecer.
 
