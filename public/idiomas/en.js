@@ -195,8 +195,8 @@ export default {
   // with the event and pushes the count into a subordinate clause — an order
   // Spanish does not use, and which concatenation could never have produced.
   'cartera.cierre.aviso': {
-    one: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash until a new thesis reinvests them.',
-    other: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash until new theses reinvest them.',
+    one: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash and are not reinvested.',
+    other: 'Take profit reached · {destacado}. {posiciones} — the proceeds are held as cash and are not reinvested.',
   },
   'cartera.cierre.destacado': {
     one: '{n} position closed',
@@ -314,7 +314,7 @@ export default {
   'informe.campo.takeProfit.hint': 'Exit level',
   'informe.campo.stopLoss': 'Stop loss',
   'informe.campo.stopLoss.hint': 'Optional',
-  'informe.operativa.nota': 'The purchase price sets the real cost of the position and supersedes the close of the publication session. On reaching the take profit, the position is closed automatically at that level, drops out of the portfolio, and its proceeds are held as cash until a new thesis reinvests them.',
+  'informe.operativa.nota': 'The purchase price sets the real cost of the position and supersedes the close of the publication session. On reaching the take profit, the position is closed automatically at that level, drops out of the portfolio, and its proceeds are held as cash, not reinvested: a new thesis buys with its own tranche of capital.',
 
   'informe.grupo.contenido': 'Content and distribution',
   'informe.campo.resumen': 'Executive summary',
@@ -407,7 +407,7 @@ export default {
   // ═════════════════════════ Portfolio · header ═════════════════════════
   'cartera.etiqueta': 'Portfolio management',
   'cartera.titulo': 'Position performance',
-  'cartera.nota': 'The portfolio is constituted automatically from the published investment theses. Each position is dated at the publication date of its report, and entered at that session’s close. The index is computed as a time-weighted return, base 100, with no external contributions or withdrawals.',
+  'cartera.nota': 'The portfolio is constituted automatically from the published investment theses. Each position is dated at the publication date of its report, and entered at the purchase price stated in the thesis or, failing that, at that session’s close. The index, base 100, splits the capital into fixed tranches: each thesis buys its own at inception and holds it until it is liquidated, with no rebalancing. Proceeds from a liquidated position stay in cash and fund no other position. No external contributions or withdrawals.',
 
   'cartera.error.mercado': 'Market data unavailable',
   'cartera.vacia.titulo': 'Portfolio not constituted',
@@ -420,13 +420,16 @@ export default {
   'cartera.indicador.valorIndexado': 'Indexed value',
   'cartera.indicador.valorIndexado.nota': 'Base {base} = invested capital',
   'cartera.indicador.dia': 'Daily change',
-  'cartera.indicador.dia.nota': 'Weighted by position size',
+  'cartera.indicador.dia.nota': 'Weighted by current weight',
   'cartera.indicador.posiciones': 'Positions',
   'cartera.indicador.posiciones.nota': 'Theses held',
   'cartera.indicador.posiciones.liquidadas': {
     one: '{n} closed',
     other: '{n} closed',
   },
+  'cartera.indicador.liquidez': 'Cash',
+  'cartera.indicador.liquidez.nota': 'Of portfolio value · {capital} of capital',
+
   'cartera.indicador.sharpe': 'Sharpe ratio',
   'cartera.indicador.sharpe.nota': 'Risk-free rate {tasa}',
   'cartera.indicador.maximaCaida': 'Maximum drawdown',
@@ -439,6 +442,10 @@ export default {
     one: 'Indexed value · base 100 at {fecha} · {n} session',
     other: 'Indexed value · base 100 at {fecha} · {n} sessions',
   },
+  'cartera.grafico.subtitulo.completa': {
+    one: 'Indexed value · base {base} = invested capital · {n} session',
+    other: 'Indexed value · base {base} = invested capital · {n} sessions',
+  },
   'cartera.grafico.opciones': 'Chart options',
   'cartera.grafico.periodo': 'Period',
   'cartera.grafico.rango.max': 'Max',
@@ -446,6 +453,8 @@ export default {
   'cartera.grafico.verDatos': 'View data',
   'cartera.grafico.ocultarDatos': 'Hide data',
   'cartera.leyenda.cartera': 'Warrants & Co. portfolio',
+  'cartera.leyenda.medida.total': 'Measured from invested capital · this is the total return',
+  'cartera.leyenda.medida.rango': 'Measured from the start of the range, {fecha} · not the total return',
 
   'cartera.serie.caption': 'Historical series of the portfolio and its benchmark',
   'cartera.serie.fecha': 'Date',
@@ -455,10 +464,10 @@ export default {
 
   // ════════════════════════ Portfolio · holdings ════════════════════════
   'cartera.posiciones.titulo': 'Portfolio composition',
-  'cartera.posiciones.subtitulo': 'Quotes refreshed on every page load',
+  'cartera.posiciones.subtitulo': 'Current weight: how much each position is worth today against portfolio value, cash included · quotes refreshed on every page load',
   'cartera.posiciones.caption': 'Breakdown of portfolio positions',
   'cartera.col.valor': 'Holding',
-  'cartera.col.peso': 'Weight',
+  'cartera.col.peso': 'Current weight',
   'cartera.col.alta': 'Opened',
   'cartera.col.compra': 'Entry',
   'cartera.col.cotizacion': 'Last',
@@ -469,6 +478,40 @@ export default {
   'cartera.col.precioObjetivo': 'Target',
   'cartera.col.recomendacion': 'Recommendation',
   'cartera.recorrido.title': '{avance} of the path to take profit',
+
+  'cartera.liquidez.etiqueta': 'Cash',
+  'cartera.liquidez.nota': {
+    one: 'Weight against portfolio value. Of capital it is {capital}: {n} liquidated tranche that is no longer reinvested. The two figures differ because the tranche exited worth more than it cost.',
+    other: 'Weight against portfolio value. Of capital it is {capital}: {n} liquidated tranches that are no longer reinvested. The two figures differ because the tranches exited worth more than they cost.',
+  },
+  'cartera.liquidez.nota.sinLiquidar': 'Weight against portfolio value. It is {capital} of capital, which no thesis has claimed yet.',
+
+  // ════════════════════ Portfolio · reconciliation ════════════════════
+  'cartera.conciliacion.titulo': 'Return reconciliation',
+  'cartera.conciliacion.subtitulo': 'Capital weight: the tranche assigned at inception, which the line answers for. Weight times return is its contribution, and the contributions add up to the total return',
+  'cartera.conciliacion.caption': 'Return reconciliation, position by position',
+  'cartera.conciliacion.col.peso': 'Capital weight',
+  'cartera.conciliacion.col.entrada': 'Entry price',
+  'cartera.conciliacion.col.referencia': 'Reference price',
+  'cartera.conciliacion.col.valorTramo': 'Tranche value',
+  'cartera.conciliacion.col.contribucion': 'Contribution',
+  'cartera.conciliacion.fuente.salida': 'Exit · {fecha}',
+  'cartera.conciliacion.fuente.cotizacion': 'Quote',
+  'cartera.conciliacion.fuente.cierre': 'Close · {fecha}',
+  'cartera.conciliacion.fuente.ausente': 'No price published',
+  'cartera.conciliacion.enCaja': 'In cash',
+  'cartera.conciliacion.sinDesplegar': 'Undeployed capital',
+  'cartera.conciliacion.sinDesplegar.detalle': 'No thesis has claimed it',
+  'cartera.conciliacion.total': 'Total',
+  'cartera.conciliacion.total.nota': {
+    one: '{n} tranche · base {base} = capital',
+    other: '{n} tranches · base {base} = capital',
+  },
+  'cartera.conciliacion.nota': {
+    one: 'Cash carries no line of its own: the proceeds of a liquidated tranche remain within its line, which is the one that answers for them. Today that is {n} tranche —{capital} of capital— worth {importe}, which is {patrimonio} of portfolio value.',
+    other: 'Cash carries no line of its own: the proceeds of a liquidated tranche remain within its line, which is the one that answers for them. Today that is {n} tranches —{capital} of capital— worth {importe}, which is {patrimonio} of portfolio value.',
+  },
+  'cartera.conciliacion.nota.sinCaja': 'No liquidated tranches: all capital remains invested and cash is zero.',
 
   // ════════════════════════ Portfolio · closed ════════════════════════
   'cartera.cerradas.titulo': 'Closed positions',

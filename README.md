@@ -303,8 +303,9 @@ posición cuando tiene ticker y está marcado como «Incorporar a la cartera».
 - **Fecha de alta** — la fecha de publicación del informe.
 - **Precio de entrada** — el **precio de compra** consignado en la ficha. Si no se
   indica, se toma el cierre de la sesión de publicación.
-- **Peso** — el asignado en la ficha; las posiciones sin peso explícito reparten el
-  remanente a partes iguales. La suma se normaliza a 100 %.
+- **Peso de capital** — el asignado en la ficha; las posiciones sin peso explícito
+  reparten el remanente a partes iguales. La suma se normaliza a 100 %. Es el **tramo**
+  de capital que la posición compra en su alta y del que responde mientras viva.
 - **Varios informes sobre un mismo valor** — la publicación más antigua fija la fecha
   de alta y la más reciente aporta la recomendación y el precio objetivo vigentes.
 
@@ -317,28 +318,82 @@ cuyo máximo alcanza ese nivel, al propio nivel fijado. A partir de ese momento:
   con su fecha de cierre, precio de salida y resultado realizado.
 - Su importe permanece como **liquidez**, de modo que una caída posterior del valor ya
   no afecta al índice.
-- Esa liquidez se reinvierte automáticamente en el siguiente rebalanceo, es decir,
-  cuando se incorpore una nueva tesis.
-- Los pesos de las posiciones que siguen vivas se renormalizan a 100 %.
+- Esa liquidez **se queda ahí**: no financia a las posiciones vivas ni a las que entren
+  después, que compran con su propio tramo. Aparece como una línea más de la composición.
+- Los pesos de las posiciones que siguen vivas **no se tocan**: cada una conserva el
+  tramo de capital con el que entró.
 
 La detección usa el **máximo** de cada sesión, que es el nivel al que se ejecutaría una
 orden limitada, y nunca una sesión sin cruce real.
 
 ### Metodología del índice
 
-Rentabilidad ponderada en el tiempo (TWR) encadenada, en base 100. La cartera se
-mantiene sin rebalanceo entre altas; al incorporarse una nueva tesis el patrimonio
-—posiciones vivas más liquidez— se redistribuye a los pesos objetivo. No se computan
-aportaciones ni reembolsos externos, de modo que el índice recoge exclusivamente
-rendimiento y es comparable con el índice de referencia sin sesgo de flujos.
+**Tramos fijos**, en base 100 = capital. El capital arranca íntegro en caja. Cada tesis
+retira de ahí su tramo el día de su alta, lo compra al precio de entrada y lo conserva sin
+volver a dimensionarlo. Lo que ninguna tesis ha reclamado, y lo que devuelve una
+liquidación, es liquidez. No hay rebalanceos ni aportaciones ni reembolsos externos, de
+modo que el índice recoge exclusivamente rendimiento.
+
+De ahí la propiedad que se puede comprobar a mano en la tarjeta **Conciliación de la
+rentabilidad**, y que vigila `npm run test:cartera`:
+
+```
+Σ (peso de capital × rentabilidad de la línea) = rentabilidad total
+```
+
+Las líneas son aditivas porque cada una responde de su propio tramo, y el valor de los
+tramos más la liquidez es el patrimonio.
 
 > La primera sesión del índice puede no valer exactamente 100: si el precio de compra
 > difiere del cierre de esa jornada, la diferencia es rendimiento real y el índice la
-> recoge desde el primer día.
+> recoge desde el primer día. Tampoco valdrá 100 si en esa sesión queda capital sin
+> desplegar, que es lo normal cuando las tesis entran escalonadas.
 
-> El índice y las rentabilidades por posición responden a dos preguntas distintas: el
-> índice mide la cartera con rebalanceos, mientras que la columna «Rentabilidad» de cada
-> línea mide el valor desde su entrada. Sus cifras no son aditivas entre sí.
+#### Qué se hacía antes y por qué cambia
+
+Hasta esta versión el índice era una **TWR encadenada con rebalanceo en cada alta**: al
+incorporarse una tesis, el patrimonio entero —posiciones vivas más liquidez— se
+redistribuía a los pesos objetivo, y esos pesos se renormalizaban a 100 % entre las que
+seguían vivas. La consecuencia no era un matiz metodológico:
+
+- El importe de una posición liquidada **financiaba** a la siguiente en entrar, en
+  contra de lo que este mismo documento declaraba dos párrafos más arriba.
+- El peso de una liquidada **engordaba** a las supervivientes: con dos tesis vivas de las
+  cinco declaradas al 20 %, cada una pasaba a pesar el 50 %.
+- El rebalanceo repartía el patrimonio de la sesión **anterior** a precios de la actual,
+  de modo que el movimiento de las vivas ese día **se perdía**. El 20 de mayo de 2026
+  IOVA —el 100 % de la cartera entonces— subió un 2,31 % y el índice registró un 0,04 %.
+
+Con la cartera real de la plataforma, el índice publicaba **+169,94 %** mientras las
+contribuciones de sus cinco líneas sumaban **+67,85 %**. Esa discrepancia era el síntoma
+visible; el fondo es que aquel índice no medía la cartera descrita en este documento, sino
+otra que se rebalanceaba sola. La regla nueva es la que ya estaba escrita: el importe
+liquidado permanece como liquidez.
+
+> El índice y las rentabilidades por posición siguen respondiendo a preguntas distintas
+> —el índice mide el capital y la columna «Rentabilidad» mide el valor desde su entrada—,
+> pero ya **son conciliables**: peso de capital por rentabilidad da la contribución de la
+> línea, y las contribuciones suman el índice.
+
+### La liquidez, con sus dos cifras
+
+La caja aparece como una línea más de la composición, junto a los sectores, y en el cuadro
+de mando. Lleva **dos porcentajes que no son el mismo y que responden a preguntas
+distintas**, porque por separado parecen contradecirse:
+
+| Cifra | Qué contesta |
+|---|---|
+| **Peso actual** | Qué parte del **patrimonio de hoy** es dinero quieto |
+| **Peso de capital** | Qué parte del **capital** no está invertida: tramos liquidados más los que ninguna tesis reclamó |
+
+Con la cartera real: dos tramos liquidados de cinco son el **40 % del capital**, y como
+salieron valiendo más de lo que costaron, ese dinero es el **60,07 % del patrimonio**. No
+es una contradicción; es exactamente la ganancia realizada. Ambas se rotulan diciendo de
+qué total hablan.
+
+La misma distinción gobierna las dos tablas: la **Composición** ordena por peso actual
+—cuánto pesa hoy cada posición— y la **Conciliación** por peso de capital —de cuánto
+responde—. Solo la segunda es aditiva.
 
 ### Estadísticos
 
@@ -559,7 +614,7 @@ saturar a los proveedores ante recargas repetidas; las series históricas se gua
 | `POST` | `/api/noticias` | Alta (requiere credencial) |
 | `PUT` | `/api/noticias/:id` | Modificación parcial (requiere credencial) |
 | `DELETE` | `/api/noticias/:id` | Baja (requiere credencial) |
-| `GET` | `/api/mercado/cartera` | Composición, liquidadas, serie histórica y estadísticos |
+| `GET` | `/api/mercado/cartera` | Composición, liquidadas, liquidez, serie histórica y estadísticos |
 | `GET` | `/api/mercado/cotizacion/:simbolo` | Cotización puntual |
 | `GET` | `/api/mercado/estado` | Diagnóstico de proveedores |
 | `GET` | `/api/marca` | Recursos de identidad corporativa disponibles |
@@ -846,6 +901,19 @@ de daltonismo.
 
 Ambas series comparten un único eje en base 100 — nunca un doble eje, que induciría a
 leer correlaciones inexistentes.
+
+**La leyenda dice desde dónde mide.** Con el rango completo —MÁX, y también YTD cuando
+abarca toda la serie— la cartera se mide **desde el capital invertido**, de modo que su
+cifra es la rentabilidad total y coincide con el titular del cuadro de mando. Un rango
+parcial se rebasa a 100 en su primer punto, que es lo que lo hace comparable con el
+índice, y entonces la leyenda avisa: «no es la rentabilidad total».
+
+> Rebasar también el rango completo era lo que hacía la versión anterior, y publicaba
+> **+62,68 %** en la leyenda frente a **+67,85 %** en el titular. La diferencia es exacta y
+> tiene nombre: la sesión de alta. El índice arranca en 103,18 porque IOVA se compró a 2,20
+> y cerró a 2,55 ese día, y `1,6268 × 1,0318 = 1,6785`. Rebasando se descartaba ese
+> rendimiento, que es real. `npm run test:repintado` compara ahora las dos cifras de la
+> propia pantalla en los dos idiomas.
 
 ---
 
@@ -1171,6 +1239,29 @@ lo elija, que nombrarlo explícitamente no lo restaure y que la copia siguiente 
 
 Sin navegador ni servidor. Redirige las tres variables de entorno y comprueba al terminar
 que `data/copias` sigue como estaba. 64 comprobaciones.
+
+### Aritmética del motor de cartera
+
+```
+npm run test:cartera
+```
+
+Ni navegador ni servidor ni red: el mercado se simula, de modo que cada caso es una cuenta
+que se puede seguir a mano. La comprobación central no es un valor esperado sino una
+identidad —**Σ (peso × rentabilidad) = rentabilidad total**—, que cuadra si y solo si cada
+posición conserva su tramo y el importe liquidado permanece como caja. Un rebalanceo
+silencioso, una renormalización de pesos o una caja reinvertida la rompen, y la rompen por
+mucho.
+
+Cuatro casos: una salida anterior al alta siguiente, el peso de una liquidada que no debe
+engordar a las vivas, una posición sin precio de compra ni cotización viva —entrada al
+cierre del alta, referencia al último cierre— y una cotización que no coincide con el
+último cierre, que es el resquicio por el que la identidad se rompería sin ruido si el
+titular saliera de la serie de cierres y las contribuciones de la cotización.
+
+Cada caso se vio fallar antes de darlo por bueno, con su propio defecto reintroducido. 21
+comprobaciones, en menos de un segundo. Es la prueba más barata de la casa y habría cazado
+desde el primer día que el índice publicara +169 % mientras sus líneas sumaban +68.
 
 ### Baterías completas
 

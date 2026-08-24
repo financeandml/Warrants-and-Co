@@ -928,6 +928,37 @@
         </div>
       </section>
 
+      <section class="tarjeta" aria-labelledby="titulo-conciliacion">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-conciliacion" data-i18n="cartera.conciliacion.titulo">Conciliación de la rentabilidad</h2>
+            <p data-i18n="cartera.conciliacion.subtitulo">Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total</p>
+          </div>
+        </div>
+        <div class="tabla-envoltorio">
+          <table class="tabla-datos">
+            <caption class="visualmente-oculto"
+                     data-i18n="cartera.conciliacion.caption">Conciliación de la rentabilidad, posición por posición</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.peso">Peso de capital</th>
+                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.entrada">Precio de entrada</th>
+                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.referencia">Precio de referencia</th>
+                <th scope="col" class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
+                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.valorTramo">Valor del tramo</th>
+                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.contribucion">Contribución</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-conciliacion"></tbody>
+            <!-- La fila de total la pinta `pintarConciliacion()`: es la cifra que
+                 tiene que coincidir con el titular del cuadro de mando. -->
+            <tfoot id="pie-conciliacion"></tfoot>
+          </table>
+        </div>
+        <p class="nota-metodologica nota-conciliacion" id="nota-conciliacion"></p>
+      </section>
+
       <section class="tarjeta" aria-labelledby="titulo-estadisticos">
         <div class="tarjeta__cabecera">
           <div>

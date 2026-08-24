@@ -19,7 +19,8 @@
     "test:extraccion-rotulos": "node tests/extraccion-rotulos.js",
     "test:extraccion-corpus": "node tests/extraccion-corpus.js",
     "test:propuesta": "node tests/propuesta.js",
-    "test:copia": "node tests/copia.js"
+    "test:copia": "node tests/copia.js",
+    "test:cartera": "node tests/cartera.js"
   },
   "type": "commonjs",
   "dependencies": {

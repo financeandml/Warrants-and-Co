@@ -203,8 +203,8 @@ export default {
   // declara con las formas que exige el idioma —`one` y `other` en castellano—
   // y lo elige `Intl.PluralRules`, nunca una condición en el código.
   'cartera.cierre.aviso': {
-    one: '{destacado} — {posiciones}. El importe permanece como liquidez hasta que una nueva tesis lo reinvierta.',
-    other: '{destacado} — {posiciones}. Los importes permanecen como liquidez hasta que nuevas tesis los reinviertan.',
+    one: '{destacado} — {posiciones}. El importe permanece como liquidez: no se reinvierte.',
+    other: '{destacado} — {posiciones}. Los importes permanecen como liquidez: no se reinvierten.',
   },
   'cartera.cierre.destacado': {
     one: '{n} posición liquidada por take profit',
@@ -326,7 +326,7 @@ export default {
   'informe.campo.takeProfit.hint': 'Nivel de venta',
   'informe.campo.stopLoss': 'Stop loss',
   'informe.campo.stopLoss.hint': 'Opcional',
-  'informe.operativa.nota': 'El precio de compra fija el coste real de la posición y sustituye al cierre de la sesión de publicación. Al alcanzarse el take profit, la posición se liquida automáticamente a ese nivel, deja de figurar en cartera y su importe permanece como liquidez hasta que una nueva tesis lo reinvierta.',
+  'informe.operativa.nota': 'El precio de compra fija el coste real de la posición y sustituye al cierre de la sesión de publicación. Al alcanzarse el take profit, la posición se liquida automáticamente a ese nivel, deja de figurar en cartera y su importe permanece como liquidez, sin reinvertirse: una tesis nueva compra con su propio tramo de capital.',
 
   'informe.grupo.contenido': 'Contenido y difusión',
   'informe.campo.resumen': 'Resumen ejecutivo',
@@ -419,7 +419,7 @@ export default {
   // ═════════════════════════ Cartera · encabezado ═════════════════════════
   'cartera.etiqueta': 'Gestión de cartera',
   'cartera.titulo': 'Evolución de posiciones',
-  'cartera.nota': 'La cartera se constituye automáticamente a partir de las tesis de inversión publicadas. La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada en el tiempo, en base 100, sin aportaciones ni reembolsos externos.',
+  'cartera.nota': 'La cartera se constituye automáticamente a partir de las tesis de inversión publicadas. La fecha de alta de cada posición corresponde a la fecha de publicación de su informe, y el precio de entrada al de compra consignado en la ficha o, en su defecto, al cierre de esa sesión. El índice, en base 100, reparte el capital en tramos fijos: cada tesis compra el suyo en el alta y lo conserva hasta que se liquida, sin rebalanceos. Lo que sale de una posición liquidada permanece como liquidez y no financia a ninguna otra. Sin aportaciones ni reembolsos externos.',
 
   'cartera.error.mercado': 'Datos de mercado no disponibles',
   'cartera.vacia.titulo': 'Cartera no constituida',
@@ -432,13 +432,16 @@ export default {
   'cartera.indicador.valorIndexado': 'Valor indexado',
   'cartera.indicador.valorIndexado.nota': 'Base {base} = capital invertido',
   'cartera.indicador.dia': 'Variación del día',
-  'cartera.indicador.dia.nota': 'Ponderada por peso',
+  'cartera.indicador.dia.nota': 'Ponderada por peso actual',
   'cartera.indicador.posiciones': 'Posiciones',
   'cartera.indicador.posiciones.nota': 'Tesis en cartera',
   'cartera.indicador.posiciones.liquidadas': {
     one: '{n} liquidada',
     other: '{n} liquidadas',
   },
+  'cartera.indicador.liquidez': 'Liquidez',
+  'cartera.indicador.liquidez.nota': 'Del patrimonio · {capital} del capital',
+
   'cartera.indicador.sharpe': 'Ratio de Sharpe',
   'cartera.indicador.sharpe.nota': 'Tasa libre de riesgo {tasa}',
   'cartera.indicador.maximaCaida': 'Máxima caída',
@@ -451,6 +454,10 @@ export default {
     one: 'Valor indexado · base 100 en {fecha} · {n} sesión',
     other: 'Valor indexado · base 100 en {fecha} · {n} sesiones',
   },
+  'cartera.grafico.subtitulo.completa': {
+    one: 'Valor indexado · base {base} = capital invertido · {n} sesión',
+    other: 'Valor indexado · base {base} = capital invertido · {n} sesiones',
+  },
   'cartera.grafico.opciones': 'Opciones del gráfico',
   'cartera.grafico.periodo': 'Periodo',
   'cartera.grafico.rango.max': 'Máx',
@@ -458,6 +465,8 @@ export default {
   'cartera.grafico.verDatos': 'Ver datos',
   'cartera.grafico.ocultarDatos': 'Ocultar datos',
   'cartera.leyenda.cartera': 'Cartera Warrants & Co.',
+  'cartera.leyenda.medida.total': 'Medido desde el capital invertido · es la rentabilidad total',
+  'cartera.leyenda.medida.rango': 'Medido desde el inicio del rango, {fecha} · no es la rentabilidad total',
 
   'cartera.serie.caption': 'Serie histórica de la cartera y del índice de referencia',
   'cartera.serie.fecha': 'Fecha',
@@ -467,10 +476,10 @@ export default {
 
   // ════════════════════════ Cartera · composición ════════════════════════
   'cartera.posiciones.titulo': 'Composición de la cartera',
-  'cartera.posiciones.subtitulo': 'Cotizaciones actualizadas en cada carga de la página',
+  'cartera.posiciones.subtitulo': 'Peso actual: cuánto pesa hoy cada posición sobre el patrimonio, liquidez incluida · cotizaciones actualizadas en cada carga de la página',
   'cartera.posiciones.caption': 'Detalle de las posiciones en cartera',
   'cartera.col.valor': 'Valor',
-  'cartera.col.peso': 'Peso',
+  'cartera.col.peso': 'Peso actual',
   'cartera.col.alta': 'Alta',
   'cartera.col.compra': 'Compra',
   'cartera.col.cotizacion': 'Cotización',
@@ -481,6 +490,40 @@ export default {
   'cartera.col.precioObjetivo': 'P. objetivo',
   'cartera.col.recomendacion': 'Recomendación',
   'cartera.recorrido.title': '{avance} del recorrido hasta el take profit',
+
+  'cartera.liquidez.etiqueta': 'Liquidez',
+  'cartera.liquidez.nota': {
+    one: 'Peso sobre el patrimonio. Del capital es el {capital}: {n} tramo liquidado que ya no se reinvierte. Las dos cifras difieren porque el tramo salió valiendo más de lo que costó.',
+    other: 'Peso sobre el patrimonio. Del capital es el {capital}: {n} tramos liquidados que ya no se reinvierten. Las dos cifras difieren porque los tramos salieron valiendo más de lo que costaron.',
+  },
+  'cartera.liquidez.nota.sinLiquidar': 'Peso sobre el patrimonio. Es el {capital} del capital, que ninguna tesis ha reclamado todavía.',
+
+  // ════════════════════════ Cartera · conciliación ════════════════════════
+  'cartera.conciliacion.titulo': 'Conciliación de la rentabilidad',
+  'cartera.conciliacion.subtitulo': 'Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total',
+  'cartera.conciliacion.caption': 'Conciliación de la rentabilidad, posición por posición',
+  'cartera.conciliacion.col.peso': 'Peso de capital',
+  'cartera.conciliacion.col.entrada': 'Precio de entrada',
+  'cartera.conciliacion.col.referencia': 'Precio de referencia',
+  'cartera.conciliacion.col.valorTramo': 'Valor del tramo',
+  'cartera.conciliacion.col.contribucion': 'Contribución',
+  'cartera.conciliacion.fuente.salida': 'Salida · {fecha}',
+  'cartera.conciliacion.fuente.cotizacion': 'Cotización',
+  'cartera.conciliacion.fuente.cierre': 'Cierre · {fecha}',
+  'cartera.conciliacion.fuente.ausente': 'Sin precio publicado',
+  'cartera.conciliacion.enCaja': 'En caja',
+  'cartera.conciliacion.sinDesplegar': 'Capital sin desplegar',
+  'cartera.conciliacion.sinDesplegar.detalle': 'Ninguna tesis lo ha reclamado',
+  'cartera.conciliacion.total': 'Total',
+  'cartera.conciliacion.total.nota': {
+    one: '{n} tramo · base {base} = capital',
+    other: '{n} tramos · base {base} = capital',
+  },
+  'cartera.conciliacion.nota': {
+    one: 'La liquidez no lleva línea propia: el importe de un tramo liquidado sigue dentro de la suya, que es la que responde de él. Hoy es {n} tramo —el {capital} del capital—, valorado en {importe}, que es el {patrimonio} del patrimonio.',
+    other: 'La liquidez no lleva línea propia: el importe de un tramo liquidado sigue dentro de la suya, que es la que responde de él. Hoy son {n} tramos —el {capital} del capital—, valorados en {importe}, que es el {patrimonio} del patrimonio.',
+  },
+  'cartera.conciliacion.nota.sinCaja': 'Sin tramos liquidados: todo el capital sigue invertido y la liquidez es cero.',
 
   // ═════════════════════════ Cartera · liquidadas ═════════════════════════
   'cartera.cerradas.titulo': 'Posiciones liquidadas',

@@ -10,15 +10,23 @@
  *                      se toma el cierre de la sesion en que se publico el informe.
  *   Toma de beneficios Si la ficha fija un take profit, la posicion se liquida de
  *                      forma automatica en la primera sesion cuyo maximo lo alcanza.
- *                      El importe realizado permanece como liquidez hasta que una
- *                      nueva tesis lo reinvierte.
+ *                      El importe realizado permanece como caja.
  *
- * Metodologia del indice (base 100):
- *   Rentabilidad ponderada en el tiempo (TWR) mediante encadenamiento. La cartera se
- *   mantiene sin rebalanceo entre altas; al incorporarse una nueva tesis, el patrimonio
- *   —posiciones vivas mas liquidez— se redistribuye a los pesos objetivo. No existen
- *   aportaciones ni reembolsos externos, de modo que el indice recoge exclusivamente
- *   rendimiento.
+ * Metodologia del indice (base 100 = capital):
+ *   Tramos fijos. Cada tesis compra en su alta un tramo del capital —su peso— y lo
+ *   conserva hasta que se liquida; lo que aun no ha entrado, y lo que sale, es caja.
+ *   No hay rebalanceo: ni las vivas se re-dimensionan al entrar otra, ni el importe
+ *   de una salida financia a nadie. No existen aportaciones ni reembolsos externos,
+ *   de modo que el indice recoge exclusivamente rendimiento.
+ *
+ *   De ahi la propiedad que gobierna esta pagina y que `tests/cartera.js` vigila:
+ *
+ *       Σ (peso × rentabilidad de la linea) = rentabilidad total
+ *
+ *   Las lineas son aditivas porque cada una responde de su propio tramo. El motor
+ *   anterior redistribuia todo el patrimonio en cada alta —caja incluida— y
+ *   renormalizaba los pesos entre las vivas: publicaba +169,94 % donde sus lineas
+ *   sumaban +67,85 %.
  */
 
 const mercado = require('./market');
@@ -114,57 +122,49 @@ function alinear(historicos) {
 }
 
 /**
- * Construye el indice encadenado de la cartera aplicando compras, tomas de
- * beneficios y rebalanceos.
+ * Construye el indice de la cartera aplicando compras, tomas de beneficios y caja.
  *
- * @returns {{serie: Array, posiciones: Array}}
+ * Cada tesis compra su tramo de capital en el alta y no se vuelve a tocar. El
+ * importe de una liquidacion regresa a la caja y ahi permanece: quien entre
+ * despues comprara con su propio tramo, no con el dinero de la que salio.
+ *
+ * @returns {{serie: Array, posiciones: Array, liquidez: number}}
  */
 function construirIndice(posiciones, fechas, series) {
   const activas = posiciones.filter((p) => series.has(p.ticker));
-  if (!activas.length) return { serie: [], posiciones: [] };
+  if (!activas.length) return { serie: [], posiciones: [], liquidez: BASE_INDICE };
 
   const primeraAlta = activas.reduce((min, p) => (p.fechaAlta < min ? p.fechaAlta : min), activas[0].fechaAlta);
   const calendario = fechas.filter((f) => f >= primeraAlta);
-  if (!calendario.length) return { serie: [], posiciones: [] };
+  if (!calendario.length) return { serie: [], posiciones: [], liquidez: BASE_INDICE };
 
+  const tramos = new Map(); // ticker -> capital asignado en el alta
   const unidades = new Map(); // ticker -> titulos vigentes
-  const cerradas = new Map(); // ticker -> { fecha, precio, motivo }
   const entradas = new Map(); // ticker -> { fecha, precio } efectivos
-  const incorporadas = new Set();
+  const cerradas = new Map(); // ticker -> { fecha, precio, motivo }
 
-  let liquidez = 0;
-  let patrimonio = BASE_INDICE;
+  // El capital arranca integro en caja: cada alta retira de aqui su tramo, y lo
+  // que ninguna tesis reclama sigue sin invertir en lugar de repartirse solo.
+  let liquidez = BASE_INDICE;
   const serie = [];
 
   for (const fecha of calendario) {
-    const disponibles = activas.filter(
-      (p) => p.fechaAlta <= fecha && series.get(p.ticker).has(fecha) && !cerradas.has(p.ticker)
-    );
+    // 1 · Altas del dia: la tesis compra su tramo con cargo a la caja. Se ejecuta
+    //     primero para que quede valorada y sujeta a toma de beneficios ya en su
+    //     propia sesion de alta.
+    for (const p of activas) {
+      if (entradas.has(p.ticker) || p.fechaAlta > fecha) continue;
+      const datos = series.get(p.ticker).get(fecha);
+      if (!datos || !(datos.cierre > 0)) continue;
 
-    // 1 · Altas del dia: el patrimonio vigente se redistribuye a los pesos objetivo.
-    //     Se ejecuta primero para que la posicion entrante quede valorada y sujeta a
-    //     toma de beneficios ya en su propia sesion de alta.
-    const nuevas = disponibles.filter((p) => !incorporadas.has(p.ticker));
-    if (nuevas.length && patrimonio > 0) {
-      for (const p of nuevas) incorporadas.add(p.ticker);
-      const pesoTotal = disponibles.reduce((a, p) => a + p.peso, 0) || 1;
+      const capital = BASE_INDICE * (p.peso / 100);
+      // La compra usa el precio pagado; si la ficha no lo consigna, el cierre del alta.
+      const precio = Number.isFinite(p.precioCompra) && p.precioCompra > 0 ? p.precioCompra : datos.cierre;
 
-      unidades.clear();
-      liquidez = 0;
-      for (const p of disponibles) {
-        const datos = series.get(p.ticker).get(fecha);
-        if (!datos || !(datos.cierre > 0)) continue;
-        const capital = patrimonio * (p.peso / pesoTotal);
-
-        // La primera compra usa el precio pagado; los rebalanceos, el precio de mercado.
-        const esAlta = !entradas.has(p.ticker);
-        const precioOperacion = esAlta && Number.isFinite(p.precioCompra) && p.precioCompra > 0
-          ? p.precioCompra
-          : datos.cierre;
-
-        unidades.set(p.ticker, capital / precioOperacion);
-        if (esAlta) entradas.set(p.ticker, { fecha, precio: precioOperacion });
-      }
+      tramos.set(p.ticker, capital);
+      unidades.set(p.ticker, capital / precio);
+      entradas.set(p.ticker, { fecha, precio });
+      liquidez -= capital;
     }
 
     // 2 · Toma de beneficios: se liquida al nivel fijado en la primera sesion que lo alcanza.
@@ -180,15 +180,14 @@ function construirIndice(posiciones, fechas, series) {
       }
     }
 
-    // 3 · Valoracion de cierre: posiciones vivas mas la caja de las liquidadas.
-    if (unidades.size || liquidez > 0) {
-      let v = 0;
+    // 3 · Valoracion de cierre: posiciones vivas mas la caja.
+    if (entradas.size) {
+      let v = liquidez;
       for (const [t, u] of unidades) {
         const precio = series.get(t).get(fecha)?.cierre;
         if (typeof precio === 'number') v += u * precio;
       }
-      patrimonio = v + liquidez;
-      serie.push({ fecha, valor: redondear(patrimonio, 4) });
+      serie.push({ fecha, valor: redondear(v, 4) });
     }
   }
 
@@ -199,6 +198,9 @@ function construirIndice(posiciones, fechas, series) {
       ...p,
       fechaEntrada: entrada?.fecha ?? null,
       precioEntrada: entrada?.precio ?? null,
+      // Capital asignado en el alta, en unidades de indice. Es lo que la linea
+      // responde: su contribucion es cuanto vale hoy ese tramo menos lo que costo.
+      tramo: entrada ? BASE_INDICE * (p.peso / 100) : null,
       cerrada: Boolean(cierre),
       fechaCierre: cierre?.fecha ?? null,
       precioCierre: cierre?.precio ?? null,
@@ -206,7 +208,7 @@ function construirIndice(posiciones, fechas, series) {
     };
   });
 
-  return { serie, posiciones: detalle };
+  return { serie, posiciones: detalle, liquidez };
 }
 
 // ------------------------------------------------------------ estadisticos
@@ -422,7 +424,7 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   }
 
   const { fechas, series } = alinear(historicos);
-  const { serie, posiciones: detalladas } = construirIndice(posiciones, fechas, series);
+  const { serie, posiciones: detalladas, liquidez } = construirIndice(posiciones, fechas, series);
 
   // Serie del indice de referencia, rebasada a 100 en la fecha de arranque.
   let serieIndice = [];
@@ -435,16 +437,40 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
     }
   }
 
-  const patrimonioFinal = serie.length ? serie[serie.length - 1].valor : BASE_INDICE;
+  const ultimaSesion = serie.length ? serie[serie.length - 1].fecha : null;
 
   const detalle = detalladas.map((p) => {
     const q = cotizaciones.get(p.ticker) ?? null;
     const precioMercado = q?.precio ?? null;
     const entrada = p.precioEntrada;
+    const ultimoCierre = ultimaSesion ? series.get(p.ticker)?.get(ultimaSesion)?.cierre ?? null : null;
 
-    // En una posicion liquidada la referencia es el precio de salida, no el de mercado.
-    const precioReferencia = p.cerrada ? p.precioCierre : precioMercado;
+    /*
+     * Precio de referencia: el que valora la linea y con el que se calcula su
+     * contribucion. Viaja con su procedencia declarada, porque de eso depende que
+     * la aritmetica se pueda seguir a mano: una liquidada responde a su precio de
+     * salida; una viva, a la cotizacion, y si ningun proveedor la publica, al
+     * ultimo cierre conocido. Nunca se rellena con nada.
+     */
+    let precioReferencia = null;
+    let fuentePrecio = null;
+    if (p.cerrada) {
+      precioReferencia = p.precioCierre;
+      fuentePrecio = 'salida';
+    } else if (Number.isFinite(precioMercado)) {
+      precioReferencia = precioMercado;
+      fuentePrecio = 'cotizacion';
+    } else if (Number.isFinite(ultimoCierre)) {
+      precioReferencia = ultimoCierre;
+      fuentePrecio = 'cierre';
+    }
+
     const rentabilidad = entrada && precioReferencia ? (precioReferencia / entrada - 1) * 100 : null;
+    // Lo que vale hoy el tramo comprado en el alta. Su contribucion es la diferencia
+    // con lo que costo, de modo que las lineas suman el patrimonio por construccion.
+    const valorTramo = Number.isFinite(p.tramo) && rentabilidad !== null
+      ? p.tramo * (1 + rentabilidad / 100)
+      : null;
 
     const potencial = !p.cerrada && precioMercado && p.precioObjetivo
       ? (p.precioObjetivo / precioMercado - 1) * 100
@@ -464,20 +490,25 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
       informes: p.informes,
       fechaAlta: p.fechaAlta,
       fechaEntrada: p.fechaEntrada,
+      // Peso de capital: el tramo que se le asigno en el alta y del que responde.
       peso: redondear(p.peso),
+      tramo: redondear(p.tramo, 4),
       recomendacion: p.recomendacion,
       precioEntrada: redondear(entrada, 4),
       precioCompra: redondear(p.precioCompra, 4),
       precioActual: redondear(precioMercado, 4),
+      precioReferencia: redondear(precioReferencia, 4),
+      fuentePrecio,
       precioObjetivo: p.precioObjetivo,
       takeProfit: p.takeProfit,
       stopLoss: p.stopLoss,
       divisa: q?.divisa ?? p.divisa ?? 'USD',
       variacionDiaPct: p.cerrada ? null : redondear(q?.variacionPct),
       rentabilidadPct: redondear(rentabilidad),
+      valorTramo: redondear(valorTramo, 4),
       potencialPct: redondear(potencial),
       recorridoTakeProfitPct: redondear(recorridoTP),
-      contribucionPct: redondear(rentabilidad !== null ? (rentabilidad * p.peso) / 100 : null),
+      contribucionPct: redondear(valorTramo !== null ? valorTramo - p.tramo : null),
       cerrada: p.cerrada,
       fechaCierre: p.fechaCierre,
       precioCierre: redondear(p.precioCierre, 4),
@@ -491,13 +522,39 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   const abiertas = detalle.filter((p) => !p.cerrada);
   const liquidadas = detalle.filter((p) => p.cerrada);
 
-  // Los pesos vigentes se renormalizan entre las posiciones vivas.
-  const pesoVivo = abiertas.reduce((a, p) => a + (p.peso ?? 0), 0) || 1;
-  for (const p of abiertas) p.pesoVigente = redondear((p.peso / pesoVivo) * 100);
+  /*
+   * Patrimonio a precios de referencia: cada viva vale su tramo actualizado y las
+   * liquidadas ya estan dentro de la caja. Con el se marca la ultima sesion de la
+   * serie, para que grafico, estadisticos y desglose hablen de un unico precio: si
+   * el titular saliera del ultimo cierre y las contribuciones de la cotizacion,
+   * dejarian de sumar por la diferencia entre ambos.
+   */
+  const patrimonio = abiertas.reduce((a, p) => a + (p.valorTramo ?? 0), 0) + liquidez;
+  if (serie.length) serie[serie.length - 1] = { fecha: ultimaSesion, valor: redondear(patrimonio, 4) };
+  const base = patrimonio > 0 ? patrimonio : BASE_INDICE;
+
+  // Peso actual: cuanto pesa hoy la linea sobre el patrimonio, con la caja dentro.
+  for (const p of abiertas) p.pesoVigente = redondear(((p.valorTramo ?? 0) / base) * 100);
 
   const estadisticos = calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, BASE_INDICE);
 
-  // Exposicion agregada por sector sobre las posiciones vivas.
+  /*
+   * La caja responde a dos preguntas distintas y ninguna de las dos sobra:
+   *   pesoCapital  que parte del capital no esta invertida —tramos liquidados mas
+   *                los que ninguna tesis llego a reclamar—;
+   *   pesoActual   que parte del patrimonio de hoy es dinero quieto.
+   * Difieren porque un tramo liquidado vale mas que lo que costo.
+   */
+  const bloqueLiquidez = {
+    importe: redondear(liquidez, 2),
+    pesoActual: redondear((liquidez / base) * 100),
+    pesoCapital: redondear(100 - abiertas.reduce((a, p) => a + (p.peso ?? 0), 0)),
+    tramosLiquidados: liquidadas.length,
+    desde: liquidadas.reduce((max, p) => (p.fechaCierre > max ? p.fechaCierre : max), '') || null,
+  };
+
+  // Exposicion agregada por sector sobre las posiciones vivas. Con la liquidez
+  // aparte, ambas reparten el patrimonio entero.
   const porSector = new Map();
   for (const p of abiertas) porSector.set(p.sector, (porSector.get(p.sector) ?? 0) + (p.pesoVigente ?? 0));
 
@@ -507,11 +564,12 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
     serie,
     serieIndice,
     estadisticos,
+    liquidez: bloqueLiquidez,
     exposicionSectorial: [...porSector]
       .map(([sector, peso]) => ({ sector, peso: redondear(peso) }))
       .sort((a, b) => b.peso - a.peso),
-    valorIndice: redondear(patrimonioFinal, 2),
-    valorIndexado: redondear(patrimonioFinal, 2),
+    valorIndice: redondear(patrimonio, 2),
+    valorIndexado: redondear(patrimonio, 2),
     baseCapital: BASE_INDICE,
     benchmark,
     avisos,

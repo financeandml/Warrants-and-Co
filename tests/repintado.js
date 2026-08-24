@@ -54,8 +54,25 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
   console.log('\n  ── cartera · castellano de partida ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
-  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Peso');
+  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Peso actual');
+  // Pintado en JavaScript: la liquidez de la composición y la nota del total de la
+  // conciliación. Se afirman en los dos idiomas —la nota, por la palabra que cambia—
+  // porque una tabla que no se repintara conservaría el castellano de partida.
+  comp('liquidez en la composición',
+    await txt('#exposicion-sectorial .exposicion__linea--liquidez .exposicion__cabecera span'), 'Liquidez');
+  comp('nota del total de la conciliación',
+    await txt('#pie-conciliacion .celda-total small'), (x) => /\btramos?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Rentabilidad acumulada');
+  /* Con el rango completo, la leyenda mide desde el capital invertido y su cifra
+     ES la del titular. Rebasando la serie a su primer punto salían dos números
+     distintos en la misma pantalla —+62,68 % frente a +67,85 %—, que es justo lo
+     que se lee como un fallo. Se compara con lo que la propia página publica, no
+     con un valor fijo, para que la afirmación no dependa de los datos del día. */
+  comp('la leyenda mide lo mismo que el titular',
+    await txt('#leyenda-grafico .leyenda__elemento:first-child .leyenda__valor'),
+    await txt('#cuadro-mando .indicador--principal .indicador__valor'));
+  comp('la leyenda dice desde dónde mide',
+    await txt('#leyenda-grafico .leyenda__medida'), (v) => v && /capital invertido/.test(v));
   comp('porcentaje con espacio duro',
     await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && / %$/.test(v));
 
@@ -71,8 +88,17 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   await idioma('en');
   console.log('\n  ── cartera · repintada al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
-  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Weight');
+  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Current weight');
+  comp('liquidez en la composición',
+    await txt('#exposicion-sectorial .exposicion__linea--liquidez .exposicion__cabecera span'), 'Cash');
+  comp('nota del total de la conciliación',
+    await txt('#pie-conciliacion .celda-total small'), (x) => /\btranches?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Cumulative return');
+  comp('la leyenda mide lo mismo que el titular',
+    await txt('#leyenda-grafico .leyenda__elemento:first-child .leyenda__valor'),
+    await txt('#cuadro-mando .indicador--principal .indicador__valor'));
+  comp('la leyenda dice desde dónde mide',
+    await txt('#leyenda-grafico .leyenda__medida'), (v) => v && /invested capital/.test(v));
   comp('estadísticos', await txt('#rejilla-estadisticos .estadistico__etiqueta'), 'Total return');
   comp('subtítulo del gráfico', await txt('#subtitulo-grafico'), (v) => v && /^Indexed value/.test(v));
   comp('leyenda del gráfico', await txt('#leyenda-grafico'), (v) => v && /Warrants & Co\. portfolio/.test(v));

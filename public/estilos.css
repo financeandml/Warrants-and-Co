@@ -724,6 +724,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .leyenda__clave { width: 22px; height: 0; border-top: 2px solid var(--serie-cartera); }
 .leyenda__clave--indice { border-top-style: dashed; border-top-color: var(--serie-indice); }
 .leyenda__valor { font-weight: 600; color: var(--tinta); font-variant-numeric: tabular-nums; }
+/* Desde dónde se mide la cifra de la leyenda. Ocupa la línea entera para que se
+   lea como una nota de las dos series, no como una tercera. */
+.leyenda__medida { flex-basis: 100%; font-size: 0.72rem; color: var(--tinta-mate); }
 
 .tabla-serie { border-top: 1px solid var(--linea); padding: 20px 24px 24px; }
 .tabla-serie .tabla-envoltorio { max-height: 340px; overflow-y: auto; }
@@ -746,6 +749,28 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .barra { height: 5px; background: var(--superficie-hundida); overflow: hidden; }
 .barra__relleno { height: 100%; background: var(--tinta); }
+
+/* La liquidez es una línea más de la composición, nunca un resto implícito. El
+   trazado la distingue del sector, pero quien la nombra es su rótulo. */
+.exposicion__linea--liquidez .barra__relleno {
+  background: repeating-linear-gradient(
+    135deg, var(--tinta-mate) 0 2px, transparent 2px 5px);
+}
+.exposicion__nota { font-size: 0.7rem; line-height: 1.5; color: var(--tinta-mate); margin-top: 7px; }
+
+/* Fila de total de la conciliación: cierra la cuenta y por eso se separa. */
+.tabla-datos tfoot td {
+  padding: 14px 16px; font-weight: 600;
+  background: var(--superficie-alt);
+  border-top: 1px solid var(--linea-fuerte);
+}
+.tabla-datos tfoot .celda-total small {
+  display: block; font-weight: 400; font-size: 0.72rem; color: var(--tinta-mate);
+}
+/* Procedencia del precio bajo la cifra: la aritmética no se sigue sin saber
+   de dónde sale cada número. */
+.dato-fuente { display: block; font-weight: 400; font-size: 0.7rem; color: var(--tinta-mate); }
+.nota-conciliacion { margin: 24px 0 0; }
 
 .rejilla-estadisticos {
   display: grid;

@@ -1798,6 +1798,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarGrafico(datos);
   pintarPosiciones(datos);
   pintarCerradas(datos);
+  pintarConciliacion(datos);
   pintarEstadisticos(datos);
   pintarAvisoCierre(datos);
   pintarEstadoDatos(datos);
@@ -1824,9 +1825,13 @@ function pintarCuadroMando(datos) {
   };
 
   const posiciones = datos.posiciones ?? [];
+  /* Se pondera por el peso ACTUAL, no por el de capital: la liquidez no se mueve,
+     y con los pesos de capital una cartera medio en caja publicaría el día entero
+     de sus posiciones vivas como si estuviera invertida del todo. */
   const dia = posiciones.reduce((acc, p) => {
-    if (!Number.isFinite(p.variacionDiaPct) || !Number.isFinite(p.peso)) return acc;
-    return acc + (p.variacionDiaPct * p.peso) / 100;
+    const peso = p.pesoVigente ?? p.peso;
+    if (!Number.isFinite(p.variacionDiaPct) || !Number.isFinite(peso)) return acc;
+    return acc + (p.variacionDiaPct * peso) / 100;
   }, 0);
 
   indicador(t('cartera.indicador.rentabilidad'), formatearPorcentaje(e.rentabilidadTotal),
@@ -1843,6 +1848,15 @@ function pintarCuadroMando(datos) {
     cerradas.length
       ? t('cartera.indicador.posiciones.liquidadas', { n: cerradas.length })
       : t('cartera.indicador.posiciones.nota'));
+  /* La caja se declara en el cuadro de mando o no se declara: es la diferencia
+     entre una cartera invertida y otra que no lo está, y el rótulo dice de qué
+     total habla cada cifra. */
+  const caja = datos.liquidez;
+  if (caja && Number.isFinite(caja.pesoActual)) {
+    indicador(t('cartera.indicador.liquidez'), porcentaje(caja.pesoActual),
+      t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) }));
+  }
+
   indicador(t('cartera.indicador.sharpe'), formatearNumero(e.ratioSharpe),
     t('cartera.indicador.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }));
   indicador(t('cartera.indicador.maximaCaida'), formatearPorcentaje(e.maximaCaida),
@@ -1880,38 +1894,66 @@ function pintarGrafico(datos) {
   const contenedor = $('#grafico');
   if (!estado.grafico) estado.grafico = new GraficoCartera(contenedor);
 
-  const serie = rebasar(filtrarPorRango(datos.serie, estado.rangoGrafico));
+  const filtrada = filtrarPorRango(datos.serie, estado.rangoGrafico);
+  /*
+   * Un rango que abarca la serie entera NO se rebasa. El índice ya está en base
+   * 100 = capital, y rebasarlo a su primer punto descartaría el movimiento de la
+   * sesión de alta —que es rendimiento real, porque el precio de compra no es el
+   * cierre de esa jornada— y publicaría en la leyenda una cifra distinta de la
+   * rentabilidad total. Un rango parcial sí se rebasa: ahí la pregunta es otra,
+   * cuánto ha hecho la cartera en ese tramo, y así se compara con el índice.
+   */
+  const completa = Boolean(filtrada.length) && filtrada[0].fecha === datos.serie?.[0]?.fecha;
+  const baseCapital = datos.baseCapital ?? 100;
+  const serie = completa ? filtrada : rebasar(filtrada);
   const fechas = new Set(serie.map((p) => p.fecha));
   const serieIndice = rebasar((datos.serieIndice ?? []).filter((p) => fechas.has(p.fecha)));
 
   const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark} (${datos.benchmark})`;
   estado.grafico.actualizar(serie, serieIndice, nombreIndice);
 
-  $('#subtitulo-grafico').textContent = t('cartera.grafico.subtitulo.serie', {
-    n: serie.length, fecha: formatearFecha(serie[0]?.fecha),
-  });
+  $('#subtitulo-grafico').textContent = completa
+    ? t('cartera.grafico.subtitulo.completa', {
+      n: serie.length, base: formatearNumero(baseCapital, 0),
+    })
+    : t('cartera.grafico.subtitulo.serie', {
+      n: serie.length, fecha: formatearFecha(serie[0]?.fecha),
+    });
   $('#cabecera-indice').textContent = datos.benchmark;
 
-  pintarLeyenda(serie, serieIndice, nombreIndice);
+  pintarLeyenda(serie, serieIndice, nombreIndice, {
+    base: completa ? baseCapital : null,
+    desde: serie[0]?.fecha,
+  });
   pintarTablaSerie(serie, serieIndice, nombreIndice);
 }
 
-function pintarLeyenda(serie, serieIndice, nombreIndice) {
+function pintarLeyenda(serie, serieIndice, nombreIndice, medida = {}) {
   const leyenda = $('#leyenda-grafico');
   leyenda.textContent = '';
 
-  const entrada = (nombre, valores, esIndice) => {
+  // `base` fija desde dónde se mide. Sin ella, desde el primer punto del rango.
+  const entrada = (nombre, valores, esIndice, base = null) => {
     if (!valores?.length) return;
     const el = elemento('span', 'leyenda__elemento');
     el.appendChild(elemento('span', `leyenda__clave${esIndice ? ' leyenda__clave--indice' : ''}`));
     el.appendChild(elemento('span', null, nombre));
-    const variacion = (valores[valores.length - 1].valor / valores[0].valor - 1) * 100;
+    const partida = base ?? valores[0].valor;
+    const variacion = partida > 0 ? (valores[valores.length - 1].valor / partida - 1) * 100 : null;
     el.appendChild(elemento('strong', `leyenda__valor ${claseVariacion(variacion)}`, formatearPorcentaje(variacion)));
     leyenda.appendChild(el);
   };
 
-  entrada(t('cartera.leyenda.cartera'), serie, false);
+  entrada(t('cartera.leyenda.cartera'), serie, false, medida.base);
   entrada(nombreIndice, serieIndice, true);
+
+  /* Desde dónde se mide, dicho en la propia leyenda: sobre la serie completa la
+     cifra es la rentabilidad total y coincide con el titular, pero en un rango
+     parcial es lo hecho en ese tramo, y sin rótulo se lee como si fuera total. */
+  if (!serie?.length) return;
+  leyenda.appendChild(elemento('span', 'leyenda__medida', medida.base
+    ? t('cartera.leyenda.medida.total')
+    : t('cartera.leyenda.medida.rango', { fecha: formatearFecha(medida.desde) })));
 }
 
 function pintarTablaSerie(serie, serieIndice, nombreIndice) {
@@ -2002,20 +2044,39 @@ function pintarPosiciones(datos) {
 
   const exposicion = $('#exposicion-sectorial');
   exposicion.textContent = '';
-  const maximo = Math.max(...(datos.exposicionSectorial ?? []).map((s) => s.peso), 1);
-  for (const s of datos.exposicionSectorial ?? []) {
-    const linea = elemento('div', 'exposicion__linea');
+
+  const caja = datos.liquidez;
+  const pesoCaja = Number.isFinite(caja?.pesoActual) ? caja.pesoActual : null;
+  const maximo = Math.max(...(datos.exposicionSectorial ?? []).map((s) => s.peso), pesoCaja ?? 0, 1);
+
+  const lineaExposicion = (nombre, peso, { clase = null, nota = null } = {}) => {
+    const linea = elemento('div', `exposicion__linea${clase ? ` ${clase}` : ''}`);
     const cab = elemento('div', 'exposicion__cabecera');
-    cab.appendChild(elemento('span', null, s.sector));
-    cab.appendChild(elemento('strong', null, porcentaje(s.peso)));
+    cab.appendChild(elemento('span', null, nombre));
+    cab.appendChild(elemento('strong', null, porcentaje(peso)));
     linea.appendChild(cab);
 
     const barra = elemento('div', 'barra');
     const relleno = elemento('div', 'barra__relleno');
-    relleno.style.width = `${Math.max((s.peso / maximo) * 100, 1)}%`;
+    relleno.style.width = `${Math.max((peso / maximo) * 100, 1)}%`;
     barra.appendChild(relleno);
     linea.appendChild(barra);
+    if (nota) linea.appendChild(elemento('p', 'exposicion__nota', nota));
     exposicion.appendChild(linea);
+  };
+
+  for (const s of datos.exposicionSectorial ?? []) lineaExposicion(s.sector, s.peso);
+
+  /* La liquidez es una línea de la composición como cualquier sector: si el 40 %
+     del capital está sin invertir, tiene que verse. Va con sus dos cifras porque
+     responden a preguntas distintas —patrimonio de hoy y capital asignado— y por
+     separado cada una parece contradecir a la otra. */
+  if (pesoCaja !== null) {
+    const nota = caja.tramosLiquidados > 0
+      ? t('cartera.liquidez.nota', { n: caja.tramosLiquidados, capital: porcentaje(caja.pesoCapital) })
+      : t('cartera.liquidez.nota.sinLiquidar', { capital: porcentaje(caja.pesoCapital) });
+    lineaExposicion(t('cartera.liquidez.etiqueta'), pesoCaja,
+      { clase: 'exposicion__linea--liquidez', nota });
   }
 }
 
@@ -2050,6 +2111,122 @@ function pintarCerradas(datos) {
 
     cuerpo.appendChild(fila);
   }
+}
+
+/**
+ * Conciliación de la rentabilidad, línea por línea.
+ *
+ * Cada tramo aporta su peso de capital por su rentabilidad, y la fila de total
+ * cierra la cuenta. Esa cifra tiene que ser la misma que encabeza el cuadro de
+ * mando: se suma aquí, a partir de lo que la tabla enseña, y no se copia del
+ * titular; si un día dejan de coincidir, la tabla lo enseñará en vez de taparlo.
+ */
+function pintarConciliacion(datos) {
+  const cuerpo = $('#cuerpo-conciliacion');
+  const pie = $('#pie-conciliacion');
+  const nota = $('#nota-conciliacion');
+  if (!cuerpo || !pie) return;
+
+  cuerpo.textContent = '';
+  pie.textContent = '';
+  if (nota) nota.textContent = '';
+
+  const lineas = [...(datos.posiciones ?? []), ...(datos.cerradas ?? [])]
+    .sort((a, b) => (b.contribucionPct ?? 0) - (a.contribucionPct ?? 0));
+  if (!lineas.length) return;
+
+  /* De dónde sale el precio con el que se valora la línea. Sin eso, la columna es
+     una cifra sin procedencia y la cuenta no se puede seguir a mano. */
+  const rotuloFuente = (p) => {
+    if (p.fuentePrecio === 'salida') {
+      return t('cartera.conciliacion.fuente.salida', { fecha: formatearFecha(p.fechaCierre) });
+    }
+    if (p.fuentePrecio === 'cotizacion') return t('cartera.conciliacion.fuente.cotizacion');
+    if (p.fuentePrecio === 'cierre') {
+      return t('cartera.conciliacion.fuente.cierre', { fecha: formatearFecha(datos.estadisticos?.fin) });
+    }
+    return t('cartera.conciliacion.fuente.ausente');
+  };
+
+  for (const p of lineas) {
+    const fila = document.createElement('tr');
+
+    const valor = elemento('td', 'celda-empresa celda-valor');
+    valor.appendChild(document.createTextNode(p.empresa));
+    valor.appendChild(elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`));
+    if (p.cerrada) valor.appendChild(elemento('span', 'distintivo', t('cartera.conciliacion.enCaja')));
+    fila.appendChild(valor);
+
+    fila.appendChild(elemento('td', 'num', porcentaje(p.peso)));
+    fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioEntrada, p.divisa)));
+
+    const referencia = elemento('td', 'num', formatearMoneda(p.precioReferencia, p.divisa));
+    referencia.appendChild(elemento('small', 'dato-fuente', rotuloFuente(p)));
+    fila.appendChild(referencia);
+
+    fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`,
+      formatearPorcentaje(p.rentabilidadPct)));
+    fila.appendChild(elemento('td', 'num', formatearNumero(p.valorTramo)));
+    fila.appendChild(elemento('td', `num ${claseVariacion(p.contribucionPct)}`,
+      formatearPorcentaje(p.contribucionPct)));
+
+    cuerpo.appendChild(fila);
+  }
+
+  const pesoDesplegado = lineas.reduce((a, p) => a + (p.peso ?? 0), 0);
+  const valorDesplegado = lineas.reduce((a, p) => a + (p.valorTramo ?? 0), 0);
+  const contribuciones = lineas.reduce((a, p) => a + (p.contribucionPct ?? 0), 0);
+  // Capital que ninguna tesis llegó a reclamar: sin su fila, la columna de valor
+  // no cerraría con el patrimonio.
+  const sinDesplegar = Math.max(100 - pesoDesplegado, 0);
+
+  const filaTexto = (celdas) => {
+    const fila = document.createElement('tr');
+    for (const c of celdas) fila.appendChild(c);
+    return fila;
+  };
+
+  if (sinDesplegar > 0.005) {
+    const valor = elemento('td', 'celda-empresa celda-valor');
+    valor.appendChild(document.createTextNode(t('cartera.conciliacion.sinDesplegar')));
+    valor.appendChild(elemento('small', null, t('cartera.conciliacion.sinDesplegar.detalle')));
+    cuerpo.appendChild(filaTexto([
+      valor,
+      elemento('td', 'num', porcentaje(sinDesplegar)),
+      elemento('td', 'num', '—'),
+      elemento('td', 'num', '—'),
+      elemento('td', 'num', '—'),
+      elemento('td', 'num', formatearNumero(sinDesplegar)),
+      elemento('td', `num ${claseVariacion(0)}`, formatearPorcentaje(0)),
+    ]));
+  }
+
+  const rotuloTotal = elemento('td', 'celda-total');
+  rotuloTotal.appendChild(document.createTextNode(t('cartera.conciliacion.total')));
+  rotuloTotal.appendChild(elemento('small', null, t('cartera.conciliacion.total.nota', {
+    n: lineas.length, base: formatearNumero(datos.baseCapital ?? 100, 0),
+  })));
+
+  pie.appendChild(filaTexto([
+    rotuloTotal,
+    elemento('td', 'num', porcentaje(pesoDesplegado + sinDesplegar)),
+    elemento('td', 'num', '—'),
+    elemento('td', 'num', '—'),
+    elemento('td', 'num', '—'),
+    elemento('td', 'num', formatearNumero(valorDesplegado + sinDesplegar)),
+    elemento('td', `num ${claseVariacion(contribuciones)}`, formatearPorcentaje(contribuciones)),
+  ]));
+
+  if (!nota) return;
+  const caja = datos.liquidez;
+  nota.textContent = caja?.tramosLiquidados
+    ? t('cartera.conciliacion.nota', {
+      n: caja.tramosLiquidados,
+      capital: porcentaje(caja.pesoCapital),
+      importe: formatearNumero(caja.importe),
+      patrimonio: porcentaje(caja.pesoActual),
+    })
+    : t('cartera.conciliacion.nota.sinCaja');
 }
 
 function pintarEstadisticos(datos) {
