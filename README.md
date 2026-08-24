@@ -103,6 +103,57 @@ portada, no la del tema. También sus tonos semánticos, porque el fondo de la p
 blanco en ambos temas y el verde y el rojo del tema oscuro —pensados para fondo oscuro—
 caían a 2,3:1 y 3,3:1 sobre el velo. Fijados a su versión clara suben a 5,3:1 y 6,4:1.
 
+**Dónde se recorta la fotografía.** El alto del hero sale de la ventana y el alto al
+que se dibuja la foto sale del **ancho** del hero, porque `cover` escala por el lado que
+se quede corto. Las dos cifras no se hablaban, de modo que **qué fracción de la foto se
+veía era un accidente de la relación de aspecto**: a 1440×900 se veía el 63,7 % y el árbol
+salía entero, pero a 1440×700 —un portátil corriente— la cinta lo partía por la mitad, y a
+1920×880 —un 16:9 de sobremesa— solo asomaba la punta de la copa.
+
+`seguirEncuadreBanner()` (`portada.js`) publica `--encuadre-banner` a partir del hero
+medido, de la cinta medida y de dónde vive el árbol en el fichero, de modo que **la base
+del árbol quede siempre 28 px por encima de la cinta**. De propina entra en cuadro la línea
+del horizonte, que en las ventanas apaisadas se quedaba fuera y dejaba al árbol flotando
+sobre un campo gris.
+
+> **Qué se cede, y en qué orden.** Importa, porque hay ventanas donde no cabe todo:
+>
+> 1. **Se mueve el encuadre.** Mientras sobre foto por abajo no cuesta nada.
+> 2. **Crece el hero**, con `--alto-minimo-banner`, lo justo y solo donde el encuadre no
+>    llega. Medido: a 1920×700 pasa de 460 a 505 px y a 2560×800 de 535 a 588.
+> 3. **La holgura no se cede nunca.** La cinta no se sienta sobre el árbol en ninguna
+>    ventana.
+>
+> **Lo que cuesta crecer, dicho sin adornos.** Se paga en pliegue. Donde el hero no crece
+> asoman 112 px del manifiesto —su etiqueta y la primera línea del titular, que es la
+> condición de la desigualdad de más abajo—; donde crece asoman **76**, bastante para la
+> etiqueta y no siempre para la línea entera. Se aceptó a conciencia y en ese orden: un
+> titular que asoma a medias sigue invitando a bajar, y una cinta sentada sobre el árbol
+> es un fallo de composición que se ve desde el primer segundo. La prueba afirma que algo
+> asoma siempre; no afirma cuánto, porque cuánto depende de la ventana.
+>
+> Sin JavaScript, `--encuadre-banner` vale 0 % y `--alto-minimo-banner` no interviene: la
+> reserva es la composición anclada arriba, que es la correcta cuando sobra alto.
+
+> **Un hecho, una fuente.** La fracción visible, la posición del árbol y la altura de la
+> cinta son el mismo hecho dicho tres veces, y solo una se escribe. **La posición del
+> árbol** se declara en `BANNER` —es un hecho del fichero, no del programa—; **la altura
+> de la cinta** no se escribe, se mide del DOM en cada pasada, igual que `--alto-cabecera`;
+> **la fracción visible** se deriva y se publica en `data-fraccion-banner` para que nadie
+> la recalcule.
+>
+> `npm run test:portada` lo afirma con tres apoyos que no se apoyan entre sí: las
+> fracciones declaradas contra **los píxeles de `banner.jpg`** leídos en un lienzo —si
+> alguien deposita otra fotografía, como invita a hacer `public/marca/LEEME.txt`, dejan de
+> describirla y la prueba lo dice—; dónde cae el árbol de verdad, calculado desde los
+> rectángulos medidos y el `background-position` que **el navegador** dice estar
+> aplicando; y `data-holgura-cinta` contra esa medida.
+>
+> **Ese tercer apoyo cazó el fallo al escribirse.** Con la cinta medida antes de existir
+> —mide 0 mientras no tiene caja—, el módulo publicaba **holgura 28 mientras la cinta
+> acababa 24,5 px por debajo de la base del árbol**. Retirado el `ResizeObserver`, la
+> batería vuelve a caer en doce afirmaciones con ese mismo número.
+
 **Dónde termina el hero.** Al **75,5 %** de la ventana, no al 100 %: antes acababa
 exactamente en el pliegue, la fotografía llegaba al borde inferior y no se veía ni un
 píxel de lo que sigue, así que la portada se leía como final de página. Lo que cede no es
@@ -1275,6 +1326,27 @@ Solo lee: no escribe en la base.
 > conmutador fuera del alcance del ratón *y* del tabulador —comprobado—: con uno abierto no
 > se puede llegar a cambiar el idioma. Repintar su contenido sería código inalcanzable. Si
 > alguno pasara algún día a `show()`, habría que añadirlo a `repintarVistas()`.
+
+### Encuadre del banner de portada
+
+```
+BASE_PRUEBA=http://127.0.0.1:4174 npm run test:portada
+```
+
+Afirma, en seis ventanas —las cuatro con las que se diagnosticó el fallo y dos muy
+apaisadas que fuerzan a crecer el hero—, que el árbol entra entero en cuadro, que los
+accesos no se sientan sobre su copa y que **la cinta le deja siempre sus 28 px**. Y afirma
+la degradación en las dos direcciones: que el hero crece donde el encuadre no llega y que
+**no** crece donde basta.
+
+Los tres apoyos no se apoyan entre sí: las fracciones declaradas contra los píxeles de
+`banner.jpg`; dónde cae el árbol calculado desde los rectángulos medidos y el
+`background-position` que el navegador aplica; y lo publicado en `data-holgura-cinta`
+contra esa medida. Se vio fallar con el defecto original —doce afirmaciones, con la base
+del árbol hasta 391 px por debajo del corte— y sin el `ResizeObserver` —otras doce, con
+«publicada 28 · medida −24,5»—. 52 comprobaciones.
+
+Solo lee: no escribe en la base.
 
 ### Invalidación de vistas derivadas
 

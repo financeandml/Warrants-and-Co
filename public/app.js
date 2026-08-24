@@ -7,7 +7,7 @@
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
-import { activarApariciones, pintarCinta, seguirAlturaCabecera } from './portada.js';
+import { activarApariciones, pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
@@ -3373,6 +3373,7 @@ async function iniciar() {
   enlazarEventos();
   actualizarIndicadorSesion();
   seguirAlturaCabecera();
+  seguirEncuadreBanner();
   activarApariciones();
 
   await cargarMarca();

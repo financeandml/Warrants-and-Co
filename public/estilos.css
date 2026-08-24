@@ -1185,6 +1185,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
    resuelve nada aquí; lo resuelve la posición. */
 .seccion--portada .portada[data-banner="true"] {
   place-items: start center;
+
+  /* ── Cuando el encuadre no da más de sí, crece el hero ──
+     Hay ventanas —muy apaisadas y bajas— en las que el bloque de marca, el
+     cielo hasta la copa, la banda del árbol, su holgura y la cinta no caben a
+     la vez en `75,5 svh`. Ahí no se recorta el árbol ni se le sienta la cinta
+     encima: el hero toma el alto que la foto exige, que lo publica
+     `seguirEncuadreBanner()` y depende solo del ANCHO. Se pierde asomo del
+     manifiesto, que es lo reversible; a 1920×700 el hero pasa de 460 a 523 px y
+     siguen asomando 108. Sin JavaScript el término vale 0 y no interviene. */
+  min-height: max(calc(75.5svh - var(--alto-cabecera)), var(--alto-minimo-banner, 0px));
 }
 
 .portada[data-banner="true"] .portada__interior {
@@ -1286,10 +1296,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background-image: var(--banner);
   background-size: cover;
-  /* Anclado al borde superior: así la banda de cielo vacía queda detrás del
-     título y el árbol cae por debajo del bloque de accesos. Antes estaba en
-     `center 42%`, justo sobre la copa del árbol. */
-  background-position: 50% 0%;
+  /* ── El recorte vertical lo decide la foto, no la ventana ──
+     `--encuadre-banner` lo publica `seguirEncuadreBanner()` (`portada.js`) a
+     partir del hero medido, de la cinta medida y de dónde vive el árbol en el
+     fichero, de modo que la base del árbol siempre quede por encima de la cinta.
+
+     El 0 % de reserva es la composición anterior —anclada al borde superior—,
+     que es la correcta cuando sobra alto y la única posible sin JavaScript.
+     Antes era un `0%` fijo, y con él la fracción visible de la foto quedaba a
+     merced de la relación de aspecto: a 1920×880 se veía el 46,5 % y la cinta
+     le cortaba la copa al árbol. */
+  background-position: 50% var(--encuadre-banner, 0%);
   background-repeat: no-repeat;
   /* La imagen se sirve a resolución nativa y el navegador solo la reduce, nunca
      la amplía: en pantallas de alta densidad conserva el detalle original. */

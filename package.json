@@ -13,6 +13,7 @@
     "test:idiomas": "node tests/idiomas.js",
     "test:errores": "node tests/errores.js",
     "test:repintado": "node tests/repintado.js",
+    "test:portada": "node tests/portada.js",
     "test:derivadas": "node tests/derivadas.js",
     "test:extraccion": "node tests/extraccion.js",
     "test:extraccion-lector": "node tests/extraccion-lector.js",

@@ -37,6 +37,180 @@ export function seguirAlturaCabecera() {
   else window.addEventListener('resize', publicar);
 }
 
+/* ═══════════════════════ Geometría del banner ═══════════════════════════
+ *
+ * UNA SOLA FUENTE. La fracción de la foto que se ve, dónde cae el árbol y qué
+ * altura tiene la cinta son el mismo hecho dicho de tres maneras, y solo una de
+ * las tres se escribe aquí:
+ *
+ *   · la POSICIÓN DEL ÁRBOL se declara —es un hecho del fichero, no del
+ *     programa—, y `tests/portada.js` la confronta con los píxeles de
+ *     `banner.jpg` leídos en un lienzo. Si alguien deposita otra fotografía
+ *     —que es justo lo que invita a hacer `public/marca/LEEME.txt`—, estas
+ *     fracciones dejan de describirla y la prueba lo dice;
+ *   · la ALTURA DE LA CINTA no se escribe: se mide del DOM en cada pasada;
+ *   · la FRACCIÓN VISIBLE no se escribe: se deriva de las dos anteriores y del
+ *     tamaño real del hero, y se publica en `data-fraccion-banner` para que
+ *     nadie tenga que volver a calcularla.
+ *
+ * Medido sobre el fichero con un umbral de luminancia de 100 sobre 255: la nieve
+ * no baja de 216 y el árbol es lo único oscuro del encuadre.
+ */
+export const BANNER = {
+  // Relación de la fotografía. 4506 × 3004 es 3:2 exacto.
+  relacion: 4506 / 3004,
+  // Fracción del ALTO de la foto donde empieza la copa y donde acaba la sombra.
+  copa: 0.3728,
+  base: 0.5430,
+  /*
+   * Aire mínimo entre la base del árbol y el borde superior de la cinta. No es
+   * gusto: por debajo de esto la cinta deja de leerse como una banda apoyada en
+   * la nieve y pasa a leerse como un tajo sobre el árbol.
+   */
+  holguraMinima: 28,
+};
+
+/**
+ * Encuadra la fotografía para que el árbol salga entero y la cinta no lo pise.
+ *
+ * ── El problema ──
+ * El alto del hero sale de la ventana (`75,5 svh − cabecera`) y el alto al que
+ * se dibuja la foto sale del ANCHO del hero, porque `cover` escala por el lado
+ * que se quede corto. Las dos cifras no se hablan, de modo que qué fracción de
+ * la foto se ve era un accidente de la relación de aspecto de la ventana: a
+ * 1440×900 se veía el 63,7 % y el árbol salía entero, pero a 1920×880 solo el
+ * 46,5 % y la cinta le cortaba la copa.
+ *
+ * ── Qué se cede primero ──
+ * El orden importa y es deliberado:
+ *
+ *   1. Se mueve el ENCUADRE. Mientras sobre foto por abajo, bajar el recorte no
+ *      cuesta nada: el árbol desciende hasta dejar su holgura y entra además la
+ *      línea del horizonte, que antes se quedaba fuera.
+ *   2. Si el encuadre no llega —la ventana es tan apaisada que la banda del
+ *      árbol, la cinta y el bloque de marca no caben a la vez—, CRECE EL HERO,
+ *      con `--alto-minimo-banner`, lo justo y solo en esas ventanas.
+ *   3. La holgura NO se cede nunca. La cinta no se sienta sobre el árbol en
+ *      ninguna ventana; antes se pierde pliegue, que es lo reversible.
+ *
+ * Crecer cuesta asomo del manifiesto, y por eso es el segundo recurso y no el
+ * primero. Medido: a 1920×700 el hero pasa de 460 a 523 px y siguen asomando
+ * 108; a 2560×800, de 535 a 596 y asoman 135.
+ *
+ * ── Por qué se mide y no se constantiza ──
+ * Igual que `--alto-cabecera`: la cinta mide 52 px en escritorio y 48 en móvil,
+ * y el bloque de marca cambia con el idioma y con el ancho. Una constante aquí
+ * sería la misma clase de fallo que aquel `69px` de la cabecera.
+ */
+export function seguirEncuadreBanner() {
+  const portada = document.getElementById('portada');
+  const banner = document.getElementById('portada-banner');
+  if (!portada || !banner) return;
+
+  const cinta = document.getElementById('ticker-mercado');
+  const interior = portada.querySelector('.portada__interior');
+
+  // Un elemento oculto no tiene caja: `height` ya vale 0. Mirar ademas `hidden`
+  // invitaba a creer que una cinta sin pintar valia 0 por decision y no por
+  // medida, que es justo la confusion que costo el fallo de abajo.
+  const alto = (el) => (el ? el.getBoundingClientRect().height : 0);
+
+  /*
+   * Dos llegadas tardias, y las dos se ven como un cambio de TAMANO, que es por
+   * lo que basta con observarlo:
+   *
+   *   · la CINTA aparece cuando su fuente contesta —`pintarTicker()` la revela—,
+   *     y hasta entonces mide 0 por no tener caja. Calcular con ella a 0 da un
+   *     resultado correcto para un hero sin cinta y falso para el que se vera;
+   *   · si el hero CRECE al aplicarse `--alto-minimo-banner`, la fraccion visible
+   *     cambia y el encuadre anterior se queda corto.
+   *
+   * No hace falta encadenar pasadas a mano: el observador vuelve a llamar. Y
+   * converge, porque lo exigido depende del ANCHO del hero, de la cinta y del
+   * bloque de marca, nunca de su alto: crecer no vuelve a mover el minimo.
+   *
+   * Que el observador es quien lo sostiene esta comprobado: sin el,
+   * `tests/portada.js` cae en doce afirmaciones y publica holgura 28 mientras la
+   * cinta acaba 24,5 px POR DEBAJO de la base del arbol.
+   */
+  const publicar = () => {
+    if (portada.dataset.banner !== 'true') {
+      delete portada.dataset.fraccionBanner;
+      delete portada.dataset.holguraCinta;
+      return;
+    }
+
+    /*
+     * Solo se encuadra el régimen que este cálculo modela: `cover`. En pantalla
+     * estrecha la hoja de estilos fija `auto 120%` y su propio `50% 0%`, que es
+     * otra composición y ya sale con el árbol entero. Publicar aquí una holgura
+     * calculada con `cover` sería publicar un número que no describe la pantalla.
+     */
+    if (getComputedStyle(banner).backgroundSize !== 'cover') {
+      delete portada.dataset.fraccionBanner;
+      delete portada.dataset.holguraCinta;
+      return;
+    }
+
+    const caja = portada.getBoundingClientRect();
+    if (!(caja.width > 0 && caja.height > 0)) return;
+
+    const cintaAlto = alto(cinta);
+    const interiorAlto = alto(interior);
+
+    // `cover` escala por el lado que se quede corto. Más apaisada que la foto
+    // —todo escritorio—, manda el ancho; si no, la foto entra entera de alto.
+    const mandaElAncho = caja.width / caja.height > BANNER.relacion;
+    const fotoAlto = mandaElAncho ? caja.width / BANNER.relacion : caja.height;
+    const fraccion = caja.height / fotoAlto;
+
+    // Dónde ha de acabar la ventana visible para que la base del árbol quede a
+    // su holgura por encima de la cinta, y de ahí el recorte que hace falta.
+    const abajo = BANNER.base + (cintaAlto + BANNER.holguraMinima) / fotoAlto;
+    const sobrante = 1 - fraccion;
+    const bruto = sobrante > 0 ? (abajo - fraccion) / sobrante : 0;
+    const encuadre = Math.min(Math.max(bruto, 0), 1);
+
+    /*
+     * Alto que la foto exige para que quepan, en este orden y sin solaparse: el
+     * bloque de marca y accesos, el cielo hasta la copa, la banda del árbol, la
+     * holgura y la cinta. Depende del ANCHO del hero y no de su alto, de modo que
+     * publicarlo no puede realimentar el cálculo: crecer no cambia lo exigido.
+     */
+    const minimo = Math.ceil(
+      interiorAlto + (BANNER.base - BANNER.copa) * fotoAlto + BANNER.holguraMinima + cintaAlto);
+
+    // Lo que de verdad queda tras recortar el encuadre a [0, 1]. Es la cifra que
+    // la prueba confronta con lo medido en pantalla; no se deduce del deseo.
+    const baseEnPantalla = (BANNER.base - encuadre * sobrante) * fotoAlto;
+    const holgura = caja.height - cintaAlto - baseEnPantalla;
+
+    fijar(document.documentElement, '--alto-minimo-banner', `${minimo}px`);
+    fijar(portada, '--encuadre-banner', `${(encuadre * 100).toFixed(3)}%`);
+    portada.dataset.fraccionBanner = fraccion.toFixed(4);
+    portada.dataset.holguraCinta = String(Math.round(holgura));
+  };
+
+  publicar();
+
+  if ('ResizeObserver' in window) {
+    const observador = new ResizeObserver(publicar);
+    for (const el of [portada, cinta, interior]) if (el) observador.observe(el);
+  } else {
+    window.addEventListener('resize', publicar);
+  }
+
+  /* El banner es la unica llegada tardia que puede NO cambiar ningun tamano:
+     `app.js` lo activa cuando la imagen ha cargado, y hasta entonces `publicar()`
+     se va de vacio. */
+  new MutationObserver(publicar).observe(portada, { attributeFilter: ['data-banner'] });
+}
+
+/** Escribe una variable solo si cambia: evita realimentar a los observadores. */
+function fijar(nodo, nombre, valor) {
+  if (nodo.style.getPropertyValue(nombre) !== valor) nodo.style.setProperty(nombre, valor);
+}
+
 /** Revela los bloques marcados a medida que entran en el area visible. */
 export function activarApariciones() {
   const elementos = document.querySelectorAll('.aparicion');
