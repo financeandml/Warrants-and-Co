@@ -506,6 +506,84 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       (v) => v && !/Mercados|Compañía|Macroeconomía|Regulación/.test(v));
   }
 
+
+  // ── Portada · fila de cifras ──
+  /* La fila la pinta `pintarCifras()` entera: ni una de sus cifras ni uno de sus
+     rótulos lleva `data-i18n`, de modo que sin entrada en `PINTORES_INICIO` se
+     quedaría en el idioma de partida sin que nada más se notara. */
+  await p.goto(`${B}/#/inicio`);
+  // La espera es por condición y sobre un nodo que solo existe pintado: el
+  // armazón de la portada —hero, manifiesto, pilares— ya está en el documento
+  // mucho antes de que la cartera conteste, y «la sección tiene contenido» daría
+  // por buena una fila vacía.
+  const filaPintada = () => p.waitForFunction(
+    () => document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda').length === 4,
+    null, { timeout: 30000 });
+  await filaPintada();
+
+  const celdas = () => p.$$eval('#cifras-portada-cuerpo .cinta-metricas__celda', (cs) => cs.map((c) => ({
+    valor: c.querySelector('.cinta-metricas__valor')?.textContent.trim() ?? null,
+    etiqueta: c.querySelector('.cinta-metricas__etiqueta')?.textContent.trim() ?? null,
+    nota: c.querySelector('.cinta-metricas__nota')?.textContent.trim() ?? null,
+  })));
+
+  /*
+   * Regla 9 en pantalla. Las dos primeras casillas dicen hoy el mismo número, y
+   * es correcto que lo digan: la cartera nace dentro del año y ambas miden desde
+   * el mismo capital. Lo que se afirma no es la coincidencia —eso caducaría el
+   * 1 de enero— sino la EQUIVALENCIA: coinciden si y solo si la casilla del año
+   * declara que mide desde el capital. Las dos mitades salen de la propia
+   * pantalla, que es lo que ninguna de las tres veces anteriores se comprobó.
+   *
+   * Que las cifras se calculen por separado lo vigila `tests/cartera.js` (caso 7);
+   * aquí se vigila que la pantalla no las contradiga.
+   */
+  const equivalencia = (cs, desdeCapital) => {
+    const mide = desdeCapital.test(cs[0].nota ?? '');
+    const iguales = cs[0].valor === cs[1].valor;
+    return mide === iguales;
+  };
+
+  const RETENIDAS = /sharpe|sortino|calmar|jensen|anualizada|annualised|annualized/i;
+
+  await idioma('es');
+  await filaPintada();
+  console.log('\n  ── portada · fila de cifras en castellano ──');
+  let cs = await celdas();
+  comp('rótulo del año', cs[0].etiqueta, 'Rentabilidad 2026');
+  // El año no es una cantidad: como número, `t()` lo agruparía por millares. En
+  // castellano pasaría inadvertido —«2026»—; solo el inglés lo delata.
+  comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
+  comp('rótulo del total', cs[1].etiqueta, 'Rentabilidad total');
+  comp('rótulo del índice', cs[2].etiqueta, (v) => v && /^Índice \(/.test(v));
+  comp('rótulo de la caída', cs[3].etiqueta, 'Máxima caída');
+  comp('las dos casillas coinciden si y solo si el año mide desde el capital',
+    cs, (v) => equivalencia(v, /desde el capital/i));
+  comp('ninguna cifra retenida por suelo de muestra llega a la portada',
+    (await txt('#cifras-portada-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+  comp('el pie declara el tamaño de la muestra',
+    await txt('.cifras__pie'), (v) => v && /\d+ sesiones/.test(v) && /\d+ tesis/.test(v));
+  comp('el pie lleva a la cartera',
+    await p.locator('.cifras__enlace').first().getAttribute('href'), '#/cartera');
+
+  await idioma('en');
+  await filaPintada();
+  console.log('\n  ── portada · fila repintada al conmutar, sin recargar ──');
+  cs = await celdas();
+  comp('rótulo del año', cs[0].etiqueta, '2026 return');
+  comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
+  comp('rótulo del total', cs[1].etiqueta, 'Total return');
+  comp('rótulo del índice', cs[2].etiqueta, (v) => v && /^Index \(/.test(v));
+  comp('rótulo de la caída', cs[3].etiqueta, 'Maximum drawdown');
+  comp('la nota del año sigue al idioma', cs[0].nota, (v) => v && /^From capital/.test(v));
+  comp('las dos casillas coinciden si y solo si el año mide desde el capital',
+    cs, (v) => equivalencia(v, /from capital/i));
+  comp('ninguna cifra retenida por suelo de muestra llega a la portada',
+    (await txt('#cifras-portada-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+  comp('el pie declara el tamaño de la muestra',
+    await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
+  comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
+
   if (errores.length) {
     fallos++;
     console.log('\n  errores de consola:');

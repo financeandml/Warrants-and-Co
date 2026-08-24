@@ -155,6 +155,24 @@
       </div>
     </div>
 
+    <!-- ── Fila de cifras: lo que ha hecho la cartera ──
+         Va DESPUÉS de los pilares. Dentro del hero rompería la desigualdad de
+         las cuatro alturas: lo que asoma bajo el pliegue es la etiqueta del
+         manifiesto y su primera línea, y está medido.
+
+         Llega vacía a propósito. Las cuatro casillas y el pie los pinta
+         `pintarCifras()` desde `/api/mercado/cartera`, que es la misma llamada
+         que alimenta la cinta y el cuadro de mando. Una cifra escrita aquí
+         sería una segunda fuente del mismo hecho, y no habría prueba capaz de
+         confrontarla con la primera.
+
+         Esta fila es para lo que la cartera ha HECHO. La liquidez y el recuento
+         de posiciones no van en ella —son cómo está montada, no rendimiento—:
+         viven en el cuadro de mando, a un clic del pie. -->
+    <div class="cifras" id="cifras-portada" hidden>
+      <div class="contenedor" id="cifras-portada-cuerpo"></div>
+    </div>
+
     <!-- ═══════════════════════════ MARKET PULSE ═══════════════════════════ -->
     <section class="bloque-home" id="home-pulse" aria-labelledby="titulo-pulse">
       <div class="contenedor">

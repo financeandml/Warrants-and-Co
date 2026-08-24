@@ -124,6 +124,26 @@ export default {
   'portada.pilar.options.texto': 'Actividad en opciones, posicionamiento inusual y señales derivadas del propio mercado.',
   'portada.pilar.explorar': 'Explorar',
 
+  // ── Portada · fila de cifras ──
+  // Lo que ha HECHO la cartera. Ninguna cifra retenida por suelo de muestra
+  // tiene entrada aquí, y es a propósito: sin rótulo no hay casilla que llenar.
+  'portada.cifras.anio': 'Rentabilidad {anio}',
+  'portada.cifras.anio.desdeCapital': 'Desde el capital · {fecha}',
+  'portada.cifras.anio.desdeCierre': 'Desde el cierre de {fecha}',
+  'portada.cifras.total': 'Rentabilidad total',
+  'portada.cifras.total.nota': 'Desde el capital invertido',
+  'portada.cifras.indice': 'Índice ({indice})',
+  'portada.cifras.indice.nota': 'Mismo periodo',
+  'portada.cifras.caida': 'Máxima caída',
+  'portada.cifras.caida.nota': 'Desde máximo previo',
+  'portada.cifras.pie': 'Cartera Warrants & Co. · {desde} — {hasta} · {sesiones} · {tesis}, {vivas}.',
+  'portada.cifras.pie.sesiones': { one: '{n} sesión', other: '{n} sesiones' },
+  'portada.cifras.pie.tesis': { one: '{n} tesis', other: '{n} tesis' },
+  'portada.cifras.pie.vivas': { one: '{n} viva', other: '{n} vivas' },
+  'portada.cifras.pie.enlace': 'Ver la cartera línea por línea',
+  'portada.cifras.vacio.titulo': 'Cartera sin constituir',
+  'portada.cifras.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
+
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
 

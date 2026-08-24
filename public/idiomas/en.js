@@ -116,6 +116,26 @@ export default {
   'portada.pilar.options.texto': 'Options activity, unusual positioning and market-derived signals.',
   'portada.pilar.explorar': 'Explore',
 
+  // ── Home · figures row ──
+  // What the portfolio has DONE. No figure held back by a sample floor has a
+  // label here, deliberately: no label, no cell to fill.
+  'portada.cifras.anio': '{anio} return',
+  'portada.cifras.anio.desdeCapital': 'From capital · {fecha}',
+  'portada.cifras.anio.desdeCierre': 'From the {fecha} close',
+  'portada.cifras.total': 'Total return',
+  'portada.cifras.total.nota': 'From capital invested',
+  'portada.cifras.indice': 'Index ({indice})',
+  'portada.cifras.indice.nota': 'Same period',
+  'portada.cifras.caida': 'Maximum drawdown',
+  'portada.cifras.caida.nota': 'From previous peak',
+  'portada.cifras.pie': 'Warrants & Co. portfolio · {desde} — {hasta} · {sesiones} · {tesis}, {vivas}.',
+  'portada.cifras.pie.sesiones': { one: '{n} session', other: '{n} sessions' },
+  'portada.cifras.pie.tesis': { one: '{n} thesis', other: '{n} theses' },
+  'portada.cifras.pie.vivas': { one: '{n} open', other: '{n} open' },
+  'portada.cifras.pie.enlace': 'See the portfolio line by line',
+  'portada.cifras.vacio.titulo': 'Portfolio not yet constituted',
+  'portada.cifras.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
+
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
 

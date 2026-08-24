@@ -27,7 +27,7 @@ import {
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
 import {
-  pintarTicker, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
 } from './inicio.js';
 
@@ -1439,6 +1439,7 @@ const irARutaInicio = (destino) => {
    mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio. */
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
+  cifras: () => pintarCifras(datosInicio.cartera),
   pulso: () => pintarPulso(datosInicio.indices, api),
   radar: () => pintarRadarHome(datosInicio.radar, irARutaInicio),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
@@ -1472,10 +1473,19 @@ async function cargarInicio() {
   const cartera = api('/api/mercado/cartera').catch(() => null);
 
   await Promise.allSettled([
-    alLlegar(Promise.all([indices, cartera]), (par) => {
+    // Los índices se atrapan aquí dentro para que el par NUNCA se rechace. Si
+    // se dejaran rechazar, un fallo de índices dejaría la cinta sin cartera
+    // —que sí ha llegado— y, peor, borraría `datosInicio.cartera` por debajo de
+    // la fila de cifras: seguiría pintada y se vaciaría al cambiar de idioma.
+    alLlegar(Promise.all([indices.catch(() => null), cartera]), (par) => {
       datosInicio.indices = par?.[0] ?? null;
       datosInicio.cartera = par?.[1] ?? null;
     }, 'ticker'),
+    // La fila de cifras sale de la misma cartera que la cinta. Se le da su
+    // propia entrada —y no se pinta dentro de la del ticker— porque el
+    // repintado por idioma recorre esta lista: un bloque que no figure en ella
+    // se quedaría en el idioma anterior.
+    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
     alLlegar(indices, (d) => { datosInicio.indices = d; }, 'pulso'),
     alLlegar(api('/api/radar'), (d) => { datosInicio.radar = d; }, 'radar'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),

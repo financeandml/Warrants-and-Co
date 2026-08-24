@@ -1,8 +1,9 @@
 /* ============================================================================
    Home — la narrativa de Warrants & Co.
 
-   Siete piezas encadenadas: cinta de mercado, declaración editorial, pulso de
-   mercado, radar, research, catalizadores, options flow y signal. Cada una se
+   Nueve piezas encadenadas: cinta de mercado, declaración editorial, fila de
+   cifras, pulso de mercado, radar, research, catalizadores, options flow y
+   signal. Cada una se
    alimenta de un endpoint real y ninguna fabrica un número: lo que no existe se
    declara, con su motivo, y nunca se sustituye por un cero.
 
@@ -203,7 +204,114 @@ export function animarManifiesto() {
   document.querySelectorAll('.pilar').forEach((p, i) => revelar(p, i * 90));
 }
 
-// ════════════════════════════ 3 · MARKET PULSE ════════════════════════════
+// ═══════════════════════════ 3 · FILA DE CIFRAS ═══════════════════════════
+
+/**
+ * Lo que ha hecho la cartera, en cuatro casillas.
+ *
+ * Se alimenta de `/api/mercado/cartera`, la misma llamada que la cinta: la
+ * portada no pide nada nuevo para pintarla. Y no publica ninguna cifra que el
+ * motor retenga por suelo de muestra —ni anualizada, ni Sharpe, ni Sortino, ni
+ * Calmar, ni alfa de Jensen—: son exactamente las que aquí no aparecen.
+ *
+ * Las dos primeras casillas dicen hoy el mismo número, y es correcto que lo
+ * digan: la cartera nace dentro del año, de modo que ambas miden desde el mismo
+ * capital. Leen campos DISTINTOS —`rentabilidadAnio` y `rentabilidadTotal`—,
+ * calculados por separado en el motor; el día en que la serie cruce un 1 de
+ * enero se separarán solas. De ahí que la casilla del año lleve nota propia con
+ * la fecha desde la que mide: es lo que hace visible en pantalla la diferencia
+ * entre coincidir y ser el mismo campo.
+ *
+ * El pie no es letra pequeña. Dice el tamaño de la muestra —periodo, sesiones y
+ * cuántas tesis la componen— y lleva a la cartera, donde la conciliación enseña
+ * qué línea aporta qué. Sin él, un +67 % de cinco tesis y siete meses se leería
+ * como el de una serie larga.
+ */
+export function pintarCifras(cartera) {
+  const raiz = $('#cifras-portada');
+  const cuerpo = $('#cifras-portada-cuerpo');
+  if (!raiz || !cuerpo) return;
+
+  cuerpo.textContent = '';
+  raiz.hidden = false;
+
+  const e = cartera?.estadisticos;
+  if (!e) {
+    cuerpo.appendChild(bloqueSinDatos(t('portada.cifras.vacio.titulo'),
+      cartera?.mensaje ?? t('portada.cifras.vacio.motivo')));
+    return;
+  }
+
+  const casillas = [
+    {
+      // El año viaja como texto: `t()` formatea los números con el locale, y un
+      // año no es una cantidad. Como número salía «Rentabilidad 2026» en
+      // español —que no agrupa cuatro dígitos— y «2,026 return» en inglés.
+      etiqueta: t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
+      valor: formatearPorcentaje(e.rentabilidadAnio),
+      lectura: e.rentabilidadAnio,
+      // La nota sale del mismo cálculo que la cifra: la casilla no deduce su
+      // propio rótulo, lo recibe resuelto.
+      nota: t(e.anioDesdeCapital ? 'portada.cifras.anio.desdeCapital' : 'portada.cifras.anio.desdeCierre',
+        { fecha: formatearFecha(e.anioDesde) }),
+    },
+    {
+      etiqueta: t('portada.cifras.total'),
+      valor: formatearPorcentaje(e.rentabilidadTotal),
+      lectura: e.rentabilidadTotal,
+      nota: t('portada.cifras.total.nota'),
+    },
+    {
+      etiqueta: t('portada.cifras.indice', { indice: cartera.benchmark }),
+      valor: formatearPorcentaje(e.rentabilidadIndice),
+      lectura: e.rentabilidadIndice,
+      nota: t('portada.cifras.indice.nota'),
+    },
+    {
+      etiqueta: t('portada.cifras.caida'),
+      valor: formatearPorcentaje(e.maximaCaida),
+      lectura: e.maximaCaida,
+      nota: t('portada.cifras.caida.nota'),
+    },
+  ];
+
+  const fila = elemento('div', 'cinta-metricas');
+  for (const [i, c] of casillas.entries()) {
+    const celda = elemento('div', 'cinta-metricas__celda');
+    const valor = elemento('strong', `cinta-metricas__valor ${claseDireccion(c.lectura)}`, c.valor);
+    celda.appendChild(valor);
+    celda.appendChild(elemento('span', 'cinta-metricas__etiqueta', c.etiqueta));
+    celda.appendChild(elemento('span', 'cinta-metricas__nota', c.nota));
+    revelar(celda, i * 80);
+    fila.appendChild(celda);
+  }
+  cuerpo.appendChild(fila);
+
+  // ── El pie: de qué muestra hablan las cuatro cifras, y dónde se desglosa ──
+  const vivas = cartera.posiciones?.length ?? 0;
+  const tesis = vivas + (cartera.cerradas?.length ?? 0);
+  const pie = elemento('p', 'cifras__pie');
+  pie.appendChild(elemento('span', '', t('portada.cifras.pie', {
+    desde: formatearFecha(e.inicio),
+    hasta: formatearFecha(e.fin),
+    sesiones: t('portada.cifras.pie.sesiones', { n: e.sesiones }),
+    tesis: t('portada.cifras.pie.tesis', { n: tesis }),
+    vivas: t('portada.cifras.pie.vivas', { n: vivas }),
+  })));
+
+  const enlace = document.createElement('a');
+  enlace.className = 'cifras__enlace';
+  enlace.href = '#/cartera';
+  enlace.dataset.ruta = '';
+  enlace.appendChild(elemento('span', '', t('portada.cifras.pie.enlace')));
+  enlace.appendChild(elemento('span', 'cifras__flecha', '→'));
+  pie.appendChild(enlace);
+
+  cuerpo.appendChild(pie);
+  revelar(pie);
+}
+
+// ════════════════════════════ 4 · MARKET PULSE ════════════════════════════
 
 /**
  * Instrumentos del pulso.
@@ -459,7 +567,7 @@ function dibujarSerie(svg, datos) {
   figura.addEventListener('pointerleave', salir);
 }
 
-// ══════════════════════════════ 4 · W&C RADAR ══════════════════════════════
+// ══════════════════════════════ 5 · W&C RADAR ══════════════════════════════
 
 /**
  * Señales del radar.
@@ -565,7 +673,7 @@ function filaLectura(l, maximo, familia, alNavegar) {
   return fila;
 }
 
-// ═══════════════════════════════ 5 · RESEARCH ═══════════════════════════════
+// ═══════════════════════════════ 6 · RESEARCH ═══════════════════════════════
 
 let researchActivo = 0;
 let researchTemporizador = null;
@@ -728,7 +836,7 @@ function dato(etiqueta, valor, secundario = null, direccion = null, direccionSec
 
 const recortar = (t, n) => (t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ', n))}…`);
 
-// ═════════════════════════════ 6 · CATALIZADORES ═════════════════════════════
+// ═════════════════════════════ 7 · CATALIZADORES ═════════════════════════════
 
 /** Cronología de los próximos catalizadores, del más cercano al más lejano. */
 export function pintarCatalizadoresHome(agenda, alNavegar) {
@@ -803,7 +911,7 @@ function diaCorto(iso) {
   }).toUpperCase();
 }
 
-// ═══════════════════════════════ 7 · OPTIONS FLOW ═══════════════════════════
+// ═══════════════════════════════ 8 · OPTIONS FLOW ═══════════════════════════
 
 /**
  * Options flow.
@@ -878,7 +986,7 @@ function tablaFlujo(operaciones) {
   return lista;
 }
 
-// ══════════════════════════════ 8 · W&C SIGNAL ══════════════════════════════
+// ══════════════════════════════ 9 · W&C SIGNAL ══════════════════════════════
 
 /**
  * W&C Signal.

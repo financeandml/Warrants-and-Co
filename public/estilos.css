@@ -365,6 +365,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
   text-transform: uppercase; color: var(--tinta-mate);
 }
 
+/* Tercera línea de la celda: desde dónde mide la cifra. No es adorno —es lo que
+   separa dos casillas que hoy publican el mismo número por la misma cuenta—, de
+   modo que se distingue de la etiqueta por caja y no por tamaño, que ya es el
+   mínimo legible. */
+.cinta-metricas__nota {
+  display: block; margin-block-start: 6px;
+  font-size: 0.72rem; line-height: 1.35; color: var(--tinta-mate);
+}
+
 /* ───────────────────────────── Buscador rapido ────────────────────────── */
 
 .buscador-rapido { margin-bottom: 64px; }
@@ -2535,6 +2544,32 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 /* Entrada escalonada, apoyada en el mecanismo que ya usa la portada. */
 .manifiesto .aparicion { transition-delay: calc(var(--i, 0) * 70ms); }
 
+/* ── Fila de cifras ──
+   Va entre los pilares y Market Pulse, que ya trae su propio filete superior:
+   este bloque no lleva el suyo o quedarian dos lineas a un respiro una de otra.
+
+   La retícula es la de `.cinta-metricas`, sin sus margenes: aqui el aire lo pone
+   el bloque, que es quien conoce a sus vecinos. */
+.cifras { padding-block: clamp(56px, 8vh, 92px); }
+.cifras .cinta-metricas { margin-block: 0; }
+
+/* El pie dice de que muestra hablan las cuatro cifras. Cuelga de la retícula sin
+   despegarse de ella: un respiro corto arriba y ninguno abajo. */
+.cifras__pie {
+  margin-block-start: 16px;
+  font-size: 0.82rem; line-height: 1.5; color: var(--tinta-mate);
+  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
+}
+
+.cifras__enlace {
+  display: inline-flex; align-items: baseline; gap: 7px;
+  color: var(--tinta); text-decoration: none;
+  border-block-end: 1px solid var(--linea-fuerte);
+}
+.cifras__enlace:hover { border-block-end-color: var(--tinta); }
+.cifras__flecha { display: inline-block; transition: transform var(--transicion); }
+.cifras__enlace:hover .cifras__flecha { transform: translateX(4px); }
+
 @media (max-width: 900px) {
   /* En tableta, dos columnas. La tercera pasa debajo ocupando la fila entera:
      si se quedara en una sola columna, su filete superior cubriría media
@@ -3081,7 +3116,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   .ticker__pista { animation: none !important; }
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
   .research-panel { transition: none !important; }
-  .enlace-avance__flecha, .pilar__flecha { transition: none !important; }
+  .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }
 }
 
 /* Accesos del pie: una fila sobria, sin repetir la navegación principal. */

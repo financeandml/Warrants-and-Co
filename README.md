@@ -76,7 +76,7 @@ ni el cliente, ni las demás secciones necesitan cambios.
 
 ## El panel de mercado
 
-La portada funciona como cuadro de mando y se compone de siete bloques:
+La portada funciona como cuadro de mando y se compone de ocho bloques:
 
 **1 · Hero** — **La marca es el único texto.** «Warrants & Co.» y tres accesos de igual
 peso —radar, repositorio y LinkedIn—, nada más.
@@ -162,11 +162,57 @@ Escala con `vh` y no es un número fijo porque la condición depende del alto de
 ventana: un `88px` constante se cumple a 900 px de alto y **falla a 700**, donde la línea
 deja de revelarse y vuelve a asomar la caja vacía.
 
-**2 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
+**2 · Fila de cifras** — Cuatro casillas con lo que la cartera **ha hecho**:
+rentabilidad del año en curso, rentabilidad total, el índice de referencia en el mismo
+periodo y la máxima caída. Debajo, un pie que dice de qué muestra hablan —periodo,
+sesiones y cuántas tesis la componen— y lleva a la cartera, donde la conciliación la
+desglosa línea por línea.
+
+Va **después de los pilares**, nunca dentro del hero: ahí rompería la desigualdad de las
+cuatro alturas, porque lo que asoma bajo el pliegue está medido y es la etiqueta del
+manifiesto con su primera línea.
+
+**Lo que la fila no publica.** Ninguna cifra retenida por suelo de muestra —la
+anualizada, el Sharpe, el Sortino, el Calmar y el alfa de Jensen—. No es que salgan
+vacías: no tienen rótulo en el diccionario, de modo que no hay casilla que llenar, y
+`tests/repintado.js` afirma que ninguna de esas palabras aparece en el bloque. Tampoco la
+liquidez ni el recuento de posiciones, que son honestos pero dicen **cómo está montada**
+la cartera, no qué ha hecho; en una fila de portada se leerían como rendimiento. Viven en
+el cuadro de mando, a un clic del pie.
+
+> **Las dos primeras casillas dicen hoy el mismo número, y leen campos distintos.**
+> Coinciden porque la cartera nace el 30-ene-2026, dentro del año: no hay cierre anterior
+> del que partir, así que ambas miden desde el mismo capital. Es una identidad de la
+> aritmética, no una copia.
+>
+> Que las dos leyeran `rentabilidadTotal` habría dado el mismo resultado en pantalla hoy
+> —y **también el 2 de enero de 2027**, cuando ya fuera falso, sin que nada se viera—. Es
+> exactamente la forma en que han llegado los tres fallos de fuente única anteriores. De
+> ahí que el motor calcule `rentabilidadAnio` aparte, desde el último cierre del año
+> anterior cuando lo hay, y que viaje con `anioDesde` y `anioDesdeCapital`: **el rótulo
+> dice desde dónde mide y sale de la misma cuenta que la cifra.**
+>
+> Y de ahí que se afirme en las dos direcciones. `tests/cartera.js` (caso 7) comprueba que
+> una serie nacida dentro del año coincide con la total y que **una que cruza un 1 de
+> enero se separa**, con la cifra recalculada a mano desde la serie publicada; ninguna de
+> las dos sola bastaría, porque la primera la pasa una implementación que copie el campo.
+> `tests/repintado.js` comprueba en pantalla la equivalencia —las dos casillas coinciden
+> **si y solo si** la del año declara que mide desde el capital—, en los dos idiomas.
+>
+> Se vio fallar. Con `rentabilidadAnio: redondear(total * 100)` en el motor, el caso 7 cae
+> en tres afirmaciones mientras el caso de la serie nacida dentro del año sigue verde.
+
+> **El año no es una cantidad.** `t()` formatea con el locale los parámetros numéricos, y
+> el año pasado como número salía «Rentabilidad 2026» en español —que no agrupa cuatro
+> dígitos— y **«2,026 return» en inglés**. Viaja como texto. Es un caso más de la regla de
+> la casa: lo pintado en JavaScript se afirma en los dos idiomas, porque con un solo lado
+> este no se ve.
+
+**3 · Market snapshot** — S&P 500, Nasdaq 100, VIX y bono estadounidense a 10 años.
 **Datos reales** resueltos por la cascada de mercado; un índice que no resuelva se
 rotula `N/A` con su motivo.
 
-**3 · W&C Radar** — Seis familias de señal. Cada una es un módulo independiente que
+**4 · W&C Radar** — Seis familias de señal. Cada una es un módulo independiente que
 declara si tiene fuente:
 
 | Señal | Estado | Origen |
@@ -178,20 +224,20 @@ declara si tiene fuente:
 | Institutional positioning | Pendiente | Requiere fuente de declaraciones 13F |
 | Catalysts | Pendiente | Requiere calendario de eventos corporativos |
 
-**4 · W&C Signal** — Indicador propietario en escala 0–100 sobre siete dimensiones
+**5 · W&C Signal** — Indicador propietario en escala 0–100 sobre siete dimensiones
 (Fundamentals, Options flow, Institutional positioning, Catalysts, Valuation,
 Momentum, Risk) con sus pesos. **La arquitectura está completa; la puntuación no se
 emite.** Mientras falten fuentes, muestra `N/A` y detalla qué le falta a cada
 dimensión: preferimos eso a publicar un número que no podamos justificar.
 
-**5 · Portfolio snapshot** — Portfolio return, benchmark, alfa, Sharpe, máxima caída
+**6 · Portfolio snapshot** — Portfolio return, benchmark, alfa, Sharpe, máxima caída
 y volatilidad, más contribuidores y detractores. Reutiliza íntegramente las cifras
 que ya calcula el motor de cartera, sin duplicar lógica.
 
-**6 · Upcoming catalysts** — Interfaz de línea temporal preparada. Llega vacía
+**7 · Upcoming catalysts** — Interfaz de línea temporal preparada. Llega vacía
 mientras no haya calendario conectado.
 
-**7 · Latest news** — Titulares del repositorio, sindicados desde Investing.com.
+**8 · Latest news** — Titulares del repositorio, sindicados desde Investing.com.
 
 ---
 
@@ -1213,9 +1259,15 @@ construye en JavaScript se quedaría en el idioma anterior si nadie lo repintara
 sección traducida que no se repinta está a medias**: se ve bien al entrar y mal en cuanto
 se pulsa el conmutador. Esta prueba lo pulsa sin recargar y comprueba, en las dos
 direcciones, que siguen al idioma la tabla de posiciones, el cuadro de mando, los
-estadísticos, la leyenda del gráfico y los desplegables del repositorio. Verifica de paso
-dos cosas que el repintado no debe romper: que el porcentaje conserva la convención del
-idioma y que la selección que el usuario tenga hecha en un filtro sobrevive.
+estadísticos, la leyenda del gráfico, la fila de cifras de la portada y los desplegables
+del repositorio. Verifica de paso dos cosas que el repintado no debe romper: que el
+porcentaje conserva la convención del idioma y que la selección que el usuario tenga hecha
+en un filtro sobrevive.
+
+En la fila de cifras afirma además dos cosas que solo se ven mirando los dos idiomas: que
+el año del rótulo **no se agrupa por millares** —como número salía «2,026 return»— y la
+equivalencia de la regla 9, que las dos primeras casillas coinciden **si y solo si** la
+del año declara que mide desde el capital. 152 comprobaciones.
 
 Solo lee: no escribe en la base.
 
@@ -1334,7 +1386,7 @@ suelo justo y una sesión antes; y que por encima vuelvan todas, con el Sharpe a
 contra su definición recalculada allí mismo desde la serie publicada, que es lo que
 distingue el exceso medio del CAGR.
 
-Cada caso se vio fallar antes de darlo por bueno, con su propio defecto reintroducido. 58
+Cada caso se vio fallar antes de darlo por bueno, con su propio defecto reintroducido. 67
 comprobaciones, en menos de un segundo. Es la prueba más barata de la casa y habría cazado
 desde el primer día que el índice publicara +169 % mientras sus líneas sumaban +68.
 

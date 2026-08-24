@@ -274,6 +274,34 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
   const valorFinal = niveles[niveles.length - 1];
   const total = valorFinal / baseCapital - 1;
 
+  /*
+   * Rentabilidad del anio en curso. Se calcula APARTE de la total aunque hoy
+   * coincidan, y esa es toda la razon de que exista este bloque.
+   *
+   * Coinciden porque la cartera nace dentro del anio: no hay cierre anterior del
+   * que partir, de modo que la base de ambas es el mismo capital y el cociente es
+   * el mismo. Es una identidad de la aritmetica, no una copia del campo. El dia en
+   * que la serie cruce un 1 de enero, la base del anio pasa a ser el ultimo cierre
+   * de diciembre y las dos cifras se separan solas.
+   *
+   * Leer `rentabilidadTotal` en las dos casillas de la portada las habria hecho
+   * coincidir tambien ese dia —y sin que se viera en pantalla, que es el modo en
+   * que estos fallos han llegado siempre—. De ahi que viaje ademas `anioDesde`:
+   * el rotulo dice desde donde mide, y sale de la misma cuenta que la cifra.
+   *
+   * El anio lo fija la ultima sesion de la serie, no el reloj: asi la cifra y su
+   * rotulo hablan del anio del que hay datos, y la prueba es determinista.
+   */
+  const anioEnCurso = Number(serie[serie.length - 1].fecha.slice(0, 4));
+  const primeroDelAnio = `${anioEnCurso}-01-01`;
+  let cierreAnterior = null;
+  for (const p of serie) {
+    if (p.fecha >= primeroDelAnio) break;
+    cierreAnterior = p;
+  }
+  const baseAnio = cierreAnterior ? cierreAnterior.valor : baseCapital;
+  const rentAnio = baseAnio > 0 ? valorFinal / baseAnio - 1 : null;
+
   const dias = (new Date(serie[serie.length - 1].fecha) - new Date(serie[0].fecha)) / 86400000;
   const anios = Math.max(dias / 365.25, 1 / 365.25);
 
@@ -387,6 +415,14 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
 
     // Rentabilidad: (valor final / capital invertido − 1) × 100.
     rentabilidadTotal: redondear(total * 100),
+    /*
+     * Rentabilidad del anio en curso, su anio y desde donde mide. Los tres salen
+     * del mismo calculo: la casilla no tiene que deducir su propio rotulo.
+     */
+    rentabilidadAnio: rentAnio === null ? null : redondear(rentAnio * 100),
+    anioEnCurso,
+    anioDesde: cierreAnterior ? cierreAnterior.fecha : serie[0].fecha,
+    anioDesdeCapital: cierreAnterior === null,
     // Valor indexado: el nivel del índice, en la misma base que el capital.
     // Se publica aparte para que nunca se presente como si fuera rentabilidad.
     baseCapital,

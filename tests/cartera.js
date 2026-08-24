@@ -465,11 +465,85 @@ async function caso6() {
     `CAGR daría ${porCagr.toFixed(4)} · publicado ${e.ratioSharpe}`);
 }
 
+/*
+ * Caso 7 — la rentabilidad del anio se calcula, no se copia.
+ *
+ * Dos direcciones, y hacen falta las dos. Por separado, cualquiera de ellas la
+ * pasa una implementacion que publique `rentabilidadTotal` en la casilla del
+ * anio: la primera porque hoy coinciden de verdad, la segunda —sola— porque
+ * nadie afirmaria que la coincidencia es legitima cuando toca.
+ *
+ *   a) La serie nace dentro del anio. No hay cierre anterior, la base de ambas
+ *      cifras es el mismo capital y valen lo mismo. Es el caso de la cartera de
+ *      agosto de 2026, y es el que autoriza las dos casillas de la portada.
+ *   b) La serie cruza un 1 de enero. La base del anio pasa a ser el ultimo cierre
+ *      de diciembre y las dos cifras se separan. La del anio se recalcula aqui a
+ *      mano desde la serie que la propia cartera publica.
+ *
+ * Se vio fallar: con `rentabilidadAnio: redondear(total * 100)` en el motor, (a)
+ * sigue verde y (b) cae en tres afirmaciones —la separacion, el valor recalculado
+ * y `anioDesdeCapital`—.
+ */
+async function caso7() {
+  // ── a) la cartera nace dentro del anio: coinciden, y coinciden por la cuenta ──
+  const cartera = await conSesiones(140);
+  const e = cartera.estadisticos;
+
+  t('anio en curso · el anio sale de la ultima sesion, no del reloj',
+    e.anioEnCurso === Number(e.fin.slice(0, 4)), `${e.anioEnCurso} vs fin ${e.fin}`);
+  t('anio en curso · sin cierre anterior, se mide desde el capital',
+    e.anioDesdeCapital === true && e.anioDesde === e.inicio,
+    `desdeCapital ${e.anioDesdeCapital} · desde ${e.anioDesde} · inicio ${e.inicio}`);
+  t('anio en curso · nacida dentro del anio, coincide con la total',
+    casiIgual(e.rentabilidadAnio, e.rentabilidadTotal),
+    `anio ${e.rentabilidadAnio} vs total ${e.rentabilidadTotal}`);
+
+  // ── b) la serie cruza el 1 de enero: se separan ──
+  const f = sesiones(300, '2025-06-02');
+  let semilla = 23;
+  const siguiente = () => (semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let precio = 100;
+  const cierres = f.map(() => {
+    precio *= 1 + 0.002 + (siguiente() - 0.5) * 0.01;
+    return Number(precio.toFixed(4));
+  });
+  escenario = {
+    barras: { K: barras(f, cierres) },
+    cotizaciones: { K: { precio: cierres[cierres.length - 1], divisa: 'USD', variacionPct: 0 } },
+  };
+  const cruzada = await calcularCartera([
+    linea({ ticker: 'K', fecha_publicacion: f[0], precio_compra: 100 }),
+  ]);
+  const c = cruzada.estadisticos;
+
+  comprobarIdentidad('anio a caballo', cruzada);
+
+  // El ultimo cierre del anio anterior, tomado de la serie publicada por la cartera.
+  const anio = c.anioEnCurso;
+  const anteriores = cruzada.serie.filter((p) => p.fecha < `${anio}-01-01`);
+  const cierreAnterior = anteriores[anteriores.length - 1];
+  const valorFinal = cruzada.serie[cruzada.serie.length - 1].valor;
+  const aMano = (valorFinal / cierreAnterior.valor - 1) * 100;
+
+  t('anio a caballo · la serie cruza de verdad el 1 de enero',
+    anteriores.length > 20 && cruzada.serie.length - anteriores.length > 20,
+    `${anteriores.length} sesiones antes · ${cruzada.serie.length - anteriores.length} despues`);
+  t('anio a caballo · se mide desde el ultimo cierre del anio anterior',
+    c.anioDesdeCapital === false && c.anioDesde === cierreAnterior.fecha,
+    `desdeCapital ${c.anioDesdeCapital} · desde ${c.anioDesde} vs ${cierreAnterior.fecha}`);
+  t('anio a caballo · la cifra del anio es la recalculada a mano',
+    casiIgual(c.rentabilidadAnio, aMano, 0.01),
+    `publicada ${c.rentabilidadAnio} vs a mano ${aMano.toFixed(4)}`);
+  t('anio a caballo · y NO es la rentabilidad total',
+    Math.abs(c.rentabilidadAnio - c.rentabilidadTotal) > 5,
+    `anio ${c.rentabilidadAnio} · total ${c.rentabilidadTotal}`);
+}
+
 // ─────────────────────────────── ejecución ───────────────────────────────
 
 (async () => {
   for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4],
-    ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6]]) {
+    ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6], ['caso 7', caso7]]) {
     try {
       await caso();
     } catch (e) {
