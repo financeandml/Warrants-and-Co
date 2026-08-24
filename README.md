@@ -245,6 +245,54 @@ loss—, permite añadir o retirar documentos y guarda mediante modificación pa
 modo que los campos que no se tocan conservan su valor y los documentos ya adjuntos se
 mantienen.
 
+### Propuesta de ficha a partir del PDF
+
+Al adjuntar un PDF en el alta, la plataforma lo lee y **propone** la ficha. Propone, no
+rellena: cada valor llega al formulario marcado como sin confirmar, con la página de la
+que sale y el rótulo del documento que lo respalda, y **no se puede publicar mientras
+quede uno sin resolver**. El botón dice cuántos quedan y cuáles, porque un botón apagado
+sin explicación es una pared y no una salvaguarda. Resolver es aceptar, vaciar o teclear
+otra cosa: las tres valen, que no puede haber un estado del que solo se salga aceptando.
+
+Cada campo llega en uno de cuatro estados —la distinción de tres estados de la casa, hay
+dato · el dato es cero · no hay dato, aplicada a una ficha—:
+
+| Estado | Qué significa | Qué se ve |
+|---|---|---|
+| `propuesto` | hay valor y viene de un rótulo inequívoco | el valor en el campo, marcado «◇ Sin confirmar» con su página |
+| `ambiguo` | el documento dice algo que no es un valor utilizable: un rango, una divisa no admitida | el campo **vacío** y el literal del PDF, para teclear lo propio sabiendo de dónde sale |
+| `referencia` | el dato está en el documento pero no se copia | dónde está. Es el caso del resumen ejecutivo |
+| `ausente` | no hay nada que proponer | nada, salvo los tres motivos que conviene decir en voz alta |
+
+**Tres campos no se proponen nunca, por decisión y no por falta de dato.** El take profit
+mueve la cartera y en los informes solo vive en prosa condicional, sin un rótulo que lo
+fije, de modo que no se propone de oídas ni aunque el documento lo nombre; la
+recomendación no se infiere del tipo de tesis —que una tesis sea larga no dice si es
+comprar, sobreponderar o mantener—; y el tipo de informe el documento no lo declara.
+Cuando el PDF los nombra igualmente, se dice por qué no se han propuesto en lugar de
+callarlo.
+
+El stop loss, en cambio, **sí** se propone: tiene rótulo propio en el plan de inversión.
+Y se retira si el nivel leído no es coherente con el precio de compra, porque proponer un
+par que la validación ya va a rechazar es hacer perder el tiempo a quien lo acepte.
+
+**Lo tecleado por el analista no lo pisa ninguna propuesta.** Lo que prerrellena el propio
+diálogo —la fecha de hoy, la divisa por omisión— sí se pisa: eso no lo ha escrito nadie.
+Y lo que el formulario ofrece por su cuenta se marca aparte, para que no se confunda con
+lo leído: un valor por defecto solo se ofrece cuando **todos** los informes del
+repositorio coinciden, porque entonces no es una suposición sino lo que la casa viene
+haciendo. En cuanto aparece un segundo valor deja de ofrecerse.
+
+**Analizar no es archivar.** El documento se recibe en memoria y se descarta al terminar;
+lo que baja a `data/uploads` es el adjunto del informe, y solo cuando el informe se guarda
+de verdad. La respuesta de la extracción no crea ni modifica nada, y el guardado sigue
+pasando por `validarInforme` sin excepción alguna.
+
+Los motivos por los que un campo no llega propuesto viven enumerados en
+`src/extraccion/motivos.js` y se rotulan **por código** en el idioma de quien mira; el
+castellano que emite el servidor es la reserva, para quien llame por `curl` y para los
+registros.
+
 ---
 
 ## Cómo se construye la cartera
@@ -497,6 +545,7 @@ saturar a los proveedores ante recargas repetidas; las series históricas se gua
 | `GET` | `/api/informes/destacados` | Portada: destacados, recientes y métricas |
 | `GET` | `/api/informes/vocabularios` | Vocabularios controlados y valores en uso |
 | `POST` | `/api/informes` | Alta (requiere credencial) |
+| `POST` | `/api/informes/extraccion` | Propuesta de ficha leída de un PDF; no crea nada (requiere credencial) |
 | `PUT` | `/api/informes/:id` | Modificación parcial (requiere credencial) |
 | `DELETE` | `/api/informes/:id` | Baja y retirada de documentos (requiere credencial) |
 | `GET` | `/api/informes/:id/adjuntos/:adjuntoId` | Descarga de documento |
@@ -600,6 +649,21 @@ ejecutar pruebas contra una base desechable sin exponer los datos de trabajo:
 ```bash
 WARRANTS_DB=/tmp/prueba.db npm start
 ```
+
+**Redirigir la base no basta: hay que redirigir también el almacén de documentos.**
+`WARRANTS_UPLOADS` mueve el directorio de adjuntos, y sin él una prueba que publique un
+informe deja el PDF cayendo en `data/uploads`, entre los documentos del equipo, donde no
+se distingue de los demás más que por la fecha. No es hipotético —ocurrió, y hubo que ir
+a buscar los dos ficheros por la hora—, y a diferencia de una fila en una base
+desechable, un fichero suelto no lo retira nadie al terminar.
+
+```bash
+WARRANTS_DB=/tmp/prueba.db WARRANTS_UPLOADS=/tmp/prueba-uploads npm start
+```
+
+Por eso `npm run test:propuesta` redirige las dos y comprueba al terminar que
+`data/uploads` ha quedado **exactamente** como estaba: comparando la lista de ficheros, no
+fechas ni prefijos.
 
 ---
 
@@ -863,13 +927,13 @@ falló.
 npm run test:idiomas
 ```
 
-La única prueba que **no** necesita Playwright ni servidor: es aritmética sobre los
-diccionarios y corre en menos de un segundo. Comprueba que los dos idiomas declaran las
-mismas claves, que una misma clave lleva los mismos marcadores `{…}` en ambos —a una
-plantilla a la que le falte `{ticker}` el dato se le cae en silencio—, que las formas de
-plural son categorías reales del idioma y siempre existe `other`, que una entrada
-declarada como lista lo es en los dos, y que toda clave que el documento o el código
-piden existe de verdad. Informa además, sin fallar, de las claves que nadie nombra y de
+No necesita Playwright ni servidor —como tampoco las cuatro de extracción—: es aritmética
+sobre los diccionarios y corre en menos de un segundo. Comprueba que los dos idiomas
+declaran las mismas claves, que una misma clave lleva los mismos marcadores `{…}` en
+ambos —a una plantilla a la que le falte `{ticker}` el dato se le cae en silencio—, que
+las formas de plural son categorías reales del idioma y siempre existe `other`, que una
+entrada declarada como lista lo es en los dos, y que toda clave que el documento o el
+código piden existe de verdad. Informa además, sin fallar, de las claves que nadie nombra y de
 las categorías de plural que una entrada no cubre.
 
 > **El aviso de claves huérfanas estuvo mudo hasta la fase 4.** `clavesMencionadas()`
@@ -938,6 +1002,47 @@ de apuntarse siempre a una instancia de pruebas.
 > vista con la lista anterior. **Quien añada una caché de repintado tiene que darla de alta
 > ahí**, o reintroduce exactamente el fallo que ese mapa existe para impedir.
 
+### Extracción: lector, reglas y rótulos
+
+```
+npm run test:extraccion          # las reglas de ficha, sobre documentos armados al vuelo
+npm run test:extraccion-lector   # el lector de PDF: cifrado, sin capa de texto, sin páginas
+npm run test:extraccion-rotulos  # todo motivo tiene rótulo en los dos idiomas
+npm run test:extraccion-corpus   # las mismas reglas contra los informes reales del equipo
+```
+
+Ninguna necesita Playwright ni servidor. Las tres primeras se bastan solas; la del corpus
+lee los PDF que haya en `data/uploads`, que está en `.gitignore`, de modo que el corpus no
+viaja con el repositorio y la batería se salta sola donde no lo haya.
+
+**`test:extraccion-rotulos` existe por una razón concreta.** `test:idiomas` no puede
+vigilar las claves `extraccion.motivo.…`: se componen en tiempo de ejecución con el código
+que manda el servidor, y allí no hay forma de distinguir el rótulo que sobra del que nadie
+ha cableado todavía —la misma excepción, y por lo mismo, que la de `codigo.…`—. Ésta
+coteja las dos listas en las dos direcciones: código sin rótulo, y rótulo que sobrevive a
+su código. Sin ella la ausencia sería invisible, porque un motivo sin traducir no se ve
+como una clave cruda: se ve como una frase castellana en mitad de la interfaz inglesa.
+
+### Propuesta de ficha en el navegador
+
+```
+npm run test:propuesta
+```
+
+Donde las anteriores comprueban *qué* se lee de un documento, ésta comprueba **que leer no
+rellena**: que el valor propuesto llega marcado y con su página, que un rango deja el campo
+vacío, que el resumen ejecutivo se localiza pero no se copia, que el take profit no se
+propone ni estando en el PDF, que aceptar conserva y descartar vacía, que vaciar o editar a
+mano también resuelven, y que con una propuesta sin revisar el botón de publicar está
+apagado y dice por qué. El recorrido entero se repite en los dos idiomas. 69
+comprobaciones.
+
+**Levanta su propio servidor** en un puerto libre, con `WARRANTS_DB` y `WARRANTS_UPLOADS`
+apuntando a un directorio temporal: es la única batería que escribe, porque publica para
+comprobar que lo aceptado se guarda y lo descartado no. No necesita, en cambio, servidor
+levantado ni corpus —el informe de prueba se arma en la propia batería—, y sus dos últimas
+comprobaciones son las que vigilan la fuga de adjuntos descrita en **Copias de seguridad**.
+
 ### Baterías completas
 
 La entrega se validó con ocho baterías automatizadas sobre navegador real (Chromium),
@@ -963,6 +1068,12 @@ La entrega se validó con ocho baterías automatizadas sobre navegador real (Chr
 - **7** casos deterministas del motor de cartera: coste real de compra, liquidación por
   take profit —incluida la que ocurre en la propia sesión de alta—, permanencia del
   importe como liquidez y su reinversión.
+
+Ese recuento es el de **aquella entrega**. Las baterías de idiomas, repintado, vistas
+derivadas, extracción y propuesta de ficha son posteriores y se documentan cada una en su
+apartado, arriba. Queda una sin documentar, `npm run test:errores`, que coteja los códigos
+de error del servidor con sus rótulos igual que `test:extraccion-rotulos` hace con los
+motivos.
 
 ---
 

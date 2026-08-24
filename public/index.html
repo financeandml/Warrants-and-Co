@@ -1144,12 +1144,19 @@
         <input type="file" name="ficheros" id="campo-ficheros" multiple
                accept=".pdf,.doc,.docx,.xls,.xlsx,.xlsm,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
       </label>
+      <!-- Resumen de lo leído del PDF. Su contenido lo pinta `app.js`: aquí solo
+           está el hueco, porque lo que dice depende de cada documento. -->
+      <div class="extraccion" id="extraccion-resumen" hidden aria-live="polite"></div>
       <ul class="lista-adjuntos" id="lista-adjuntos-existentes"></ul>
     </fieldset>
 
     <div class="dialogo__errores" id="errores-formulario" hidden aria-live="assertive"></div>
 
     <div class="dialogo__pie">
+      <!-- Por qué no se puede publicar todavía. Va DENTRO del pie, que es
+           pegajoso: fuera de él se quedaba fuera de la vista mientras el botón
+           apagado seguía a la vista, que es justo lo que había que evitar. -->
+      <p class="dialogo__pendientes" id="extraccion-pendientes" hidden role="status"></p>
       <button class="boton boton--texto" type="button" id="btn-eliminar-informe" hidden
               data-i18n="informe.eliminar">Eliminar informe</button>
       <div class="dialogo__pie-derecha">

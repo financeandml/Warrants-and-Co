@@ -144,6 +144,9 @@ router.get('/vocabularios', (req, res) => {
     sectores: distintos('sector'),
     paises: distintos('pais'),
     analistas: distintos('analista'),
+    // El periodo se ofrece como valor por defecto del formulario cuando toda la
+    // casa usa el mismo; sin esta lista no hay forma de saber si lo es.
+    periodos: distintos('periodo'),
     tickers: distintos('ticker'),
     etiquetas,
   });

@@ -56,6 +56,13 @@ const estado = {
   catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', agenda: null },
   vocabulariosNoticias: null,
   opciones: { estado: null, inusual: null, cadena: null, flujo: null, pestana: 'inusual', filtros: {} },
+  // Última lectura de un PDF adjunto, con las propuestas que quedan por revisar.
+  extraccion: null,
+  /* Los valores que el formulario tenía al abrirse. Distinguen lo que el
+     analista ha escrito de lo que el propio diálogo prerrellena —la fecha de
+     hoy, la divisa por omisión—, que no es lo mismo en absoluto: una propuesta
+     del PDF debe pisar lo segundo y jamás lo primero. */
+  valoresIniciales: null,
 };
 
 // ──────────────────────────────── avisos ─────────────────────────────────
@@ -837,6 +844,344 @@ function poblarFormulario() {
  * abrirlo se aplican de nuevo con el diccionario vigente. Por eso el modo llega
  * por parámetro y no se guarda en `estado`: nadie lo necesita después.
  */
+/* ══════════════ Propuesta de ficha leída de un PDF adjunto ══════════════
+
+   Extraer es proponer, nunca rellenar en firme. Un valor leído del documento
+   llega al campo marcado como sin confirmar, con la página de la que sale, y
+   no cuenta como válido hasta que el analista lo resuelve: aceptándolo o
+   vaciándolo. Mientras quede alguno sin resolver no se puede publicar, y el
+   botón dice cuántos quedan y cuáles: un botón apagado sin explicación es una
+   pared, no una salvaguarda.
+
+   Lo que el documento dice pero no sirve como valor —un rango, un «pendiente
+   de confirmar», un sector sin equivalencia declarada— no rellena nada: se
+   muestra el literal y la página para que el analista teclee lo suyo sabiendo
+   de dónde sale. Y lo que el formulario pone por su cuenta se marca distinto,
+   para que no se confunda con lo leído.
+
+   Estos rótulos no entran en `repintarVistas()`, y no es un olvido: el diálogo
+   se abre con `showModal()`, que deja el conmutador de idioma fuera de alcance,
+   y al reabrirlo `abrirFormulario()` borra la lectura anterior. Se pintan con
+   el diccionario vigente en el momento de leer el PDF, que es el único que
+   puede estar puesto.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/** Rótulo de cada campo del formulario, para nombrarlo en los avisos. */
+const ROTULO_CAMPO = {
+  empresa: 'informe.campo.empresa', ticker: 'informe.campo.ticker',
+  sector: 'informe.campo.sector', pais: 'informe.campo.pais',
+  tipo_informe: 'informe.campo.tipo', periodo: 'informe.campo.periodo',
+  analista: 'informe.campo.analista', fecha_publicacion: 'informe.campo.fecha',
+  recomendacion: 'informe.campo.recomendacion', precio_objetivo: 'informe.campo.precioObjetivo',
+  divisa: 'informe.campo.divisa', peso_cartera: 'informe.campo.peso',
+  precio_compra: 'informe.campo.precioCompra', take_profit: 'informe.campo.takeProfit',
+  stop_loss: 'informe.campo.stopLoss', resumen_ejecutivo: 'informe.campo.resumen',
+  nivel_acceso: 'informe.campo.nivel', etiquetas: 'informe.campo.etiquetas',
+};
+
+/* Motivos que conviene decir en voz alta aunque no rellenen nada: son los tres
+   campos que uno se pregunta por qué han quedado vacíos. El resto de ausencias
+   —un rótulo que el documento no trae— se callan: enumerarlas sería ruido. */
+const MOTIVOS_QUE_SE_ANUNCIAN = new Set([
+  'SIN_ETIQUETA_INEQUIVOCA', 'RECOMENDACION_NO_SE_INFIERE', 'TIPO_INFORME_NO_FIGURA',
+]);
+
+const nombreCampo = (campo) =>
+  (ROTULO_CAMPO[campo] ? t(ROTULO_CAMPO[campo]) : campo).replace(/\s*\*\s*$/, '');
+
+/** Rótulo de un motivo de extracción; si no lo tiene, el código en crudo. */
+function rotuloMotivo(codigo, reserva = '') {
+  if (!codigo) return reserva;
+  const clave = `extraccion.motivo.${codigo}`;
+  return existe(clave) ? t(clave) : (reserva || codigo);
+}
+
+/* Los motivos están redactados para encajar dentro de una frase —«… — el
+   documento da un rango»—; cuando van solos necesitan su mayúscula. */
+const enMayuscula = (texto) => (texto ? texto[0].toLocaleUpperCase() + texto.slice(1) : texto);
+
+const origenDe = (dato) => (dato.rotulo
+  ? t('extraccion.origen', { pagina: dato.pagina, rotulo: dato.rotulo })
+  : t('extraccion.origen.pagina', { pagina: dato.pagina }));
+
+/**
+ * ¿Está libre este campo?
+ *
+ * Lo está si sigue como lo dejó `abrirFormulario()`: vacío, o con el valor que
+ * el propio diálogo prerrellena. Deja de estarlo en cuanto alguien escribe algo
+ * distinto, y entonces la propuesta del PDF no lo toca.
+ */
+function campoLibre(nombre, control) {
+  const inicial = estado.valoresIniciales?.[nombre];
+  const actual = String(control.value ?? '');
+  if (inicial !== undefined && actual === inicial) return true;
+  return !actual.trim();
+}
+
+/** Control del formulario de informe, o `null` si ese campo no existe. */
+function controlDe(nombre) {
+  const control = $('#form-informe').elements[nombre];
+  return control instanceof Element ? control : null;
+}
+
+function construirMarca(clase, glifo, texto) {
+  const caja = elemento('div', `propuesta propuesta--${clase}`);
+  /* El glifo va dentro del propio texto y no como elemento hermano: suelto, al
+     partirse la línea se quedaba solo en un renglón, separado de lo que rotula. */
+  const cuerpo = elemento('span', 'propuesta__texto');
+  cuerpo.appendChild(elemento('span', 'propuesta__marca', glifo));
+  cuerpo.appendChild(document.createTextNode(` ${texto}`));
+  caja.appendChild(cuerpo);
+  return caja;
+}
+
+/** Coloca la marca de un campo, sustituyendo la que hubiera. */
+function colocarMarca(nombre, marca) {
+  const control = controlDe(nombre);
+  if (!control) return null;
+  const caja = control.closest('.campo') ?? control.parentElement;
+  if (!caja) return null;
+  for (const previa of $$('.propuesta', caja)) previa.remove();
+  caja.appendChild(marca);
+  return marca;
+}
+
+/** Retira toda huella de la lectura anterior. */
+function limpiarPropuestas() {
+  const form = $('#form-informe');
+  for (const marca of $$('.propuesta', form)) marca.remove();
+  for (const control of $$('[data-propuesta]', form)) control.removeAttribute('data-propuesta');
+  const panel = $('#extraccion-resumen');
+  panel.textContent = '';
+  panel.hidden = true;
+  panel.classList.remove('extraccion--leyendo');
+  estado.extraccion = null;
+  reflejarPendientes();
+}
+
+/**
+ * Da por resuelta una propuesta.
+ * Aceptar conserva el valor; descartar vacía el campo. Las dos resuelven: no
+ * existe un estado del que solo se salga aceptando.
+ */
+function resolverPropuesta(nombre, { aceptada }) {
+  const lectura = estado.extraccion;
+  if (!lectura || !lectura.pendientes.has(nombre)) return;
+  lectura.pendientes.delete(nombre);
+
+  const control = controlDe(nombre);
+  const dato = lectura.campos[nombre];
+  if (control) {
+    control.removeAttribute('data-propuesta');
+    if (!aceptada) control.value = '';
+  }
+  colocarMarca(nombre, aceptada
+    ? construirMarca('aceptada', '◆', `${t('extraccion.marca.aceptada')} · ${origenDe(dato)}`)
+    : construirMarca('descartada', '·', `${t('extraccion.marca.descartada')} · ${origenDe(dato)}`));
+  reflejarPendientes();
+}
+
+/** Marca de un campo propuesto, con sus dos botones. */
+function marcarPendiente(nombre, dato) {
+  const marca = construirMarca('pendiente', '◇', `${t('extraccion.marca.pendiente')} · ${origenDe(dato)}`);
+
+  const aceptar = elemento('button', 'propuesta__boton', t('extraccion.aceptar'));
+  aceptar.type = 'button';
+  aceptar.addEventListener('click', () => resolverPropuesta(nombre, { aceptada: true }));
+
+  const descartar = elemento('button', 'propuesta__boton', t('extraccion.descartar'));
+  descartar.type = 'button';
+  descartar.addEventListener('click', () => resolverPropuesta(nombre, { aceptada: false }));
+
+  marca.appendChild(aceptar);
+  marca.appendChild(descartar);
+  colocarMarca(nombre, marca);
+
+  /* Tocar el campo también resuelve: quien lo edita ya lo ha juzgado, y quien
+     lo vacía lo ha rechazado. Es la vía que no obliga a pulsar nada. */
+  const control = controlDe(nombre);
+  if (!control) return;
+  const alTocar = () => resolverPropuesta(nombre, { aceptada: Boolean(String(control.value).trim()) });
+  control.addEventListener('input', alTocar);
+  control.addEventListener('change', alTocar);
+}
+
+/** Cuántas propuestas quedan sin revisar, y por qué eso impide publicar. */
+function reflejarPendientes() {
+  const boton = $('#btn-guardar-informe');
+  const nota = $('#extraccion-pendientes');
+  if (!boton || !nota) return;
+
+  const editando = Boolean($('#form-informe').elements.id.value);
+  const pendientes = [...(estado.extraccion?.pendientes ?? [])];
+
+  if (!pendientes.length) {
+    nota.hidden = true;
+    nota.textContent = '';
+    boton.disabled = false;
+    boton.textContent = t(editando ? 'informe.guardar.cambios' : 'informe.guardar.publicar');
+    return;
+  }
+
+  const campos = pendientes.map(nombreCampo).join(', ');
+  nota.textContent = t('extraccion.pendientes', { n: pendientes.length, campos });
+  nota.hidden = false;
+  boton.disabled = true;
+  boton.textContent = t('extraccion.boton.pendientes', { n: pendientes.length });
+}
+
+/**
+ * Valor por defecto de la casa para un campo que no se extrae.
+ *
+ * Solo lo hay cuando **todos** los informes del repositorio coinciden: eso no
+ * es una suposición, es lo que la casa viene haciendo. En cuanto aparezca un
+ * segundo valor deja de ofrecerse, que es lo correcto: ya no hay convención.
+ */
+function valorPorDefecto(nombre) {
+  const lista = nombre === 'analista'
+    ? estado.vocabularios?.analistas
+    : (nombre === 'periodo' ? estado.vocabularios?.periodos : null);
+  return Array.isArray(lista) && lista.length === 1 ? lista[0] : null;
+}
+
+/** Vuelca la lectura del PDF sobre el formulario. */
+function aplicarPropuesta(datos) {
+  limpiarPropuestas();
+  estado.extraccion = { ...datos, pendientes: new Set() };
+
+  const propuestos = [];
+  const avisados = [];
+  const porDecision = [];
+
+  for (const nombre of datos.orden ?? Object.keys(datos.campos)) {
+    const dato = datos.campos[nombre];
+    if (!dato || !controlDe(nombre)) continue;
+    const control = controlDe(nombre);
+
+    if (dato.estado === 'propuesto') {
+      /* Lo ya tecleado no se pisa nunca: la propuesta pasa a ser un aviso con
+         lo que decía el documento, y el analista compara si quiere. Lo que
+         prerrellena el propio diálogo sí se pisa: no lo ha escrito nadie. */
+      if (!campoLibre(nombre, control)) {
+        colocarMarca(nombre, construirMarca('defecto', '△',
+          t('extraccion.aviso.conservado', { valor: dato.valor, origen: origenDe(dato) })));
+        avisados.push(nombre);
+        continue;
+      }
+      control.value = dato.valor;
+      control.dataset.propuesta = 'pendiente';
+      estado.extraccion.pendientes.add(nombre);
+      marcarPendiente(nombre, dato);
+      propuestos.push(nombre);
+      continue;
+    }
+
+    if (dato.estado === 'ambiguo') {
+      const texto = dato.literal
+        ? `${t('extraccion.aviso.literal', { literal: dato.literal, origen: origenDe(dato) })} — ${rotuloMotivo(dato.motivo)}`
+        : t('extraccion.aviso.motivo', { motivo: enMayuscula(rotuloMotivo(dato.motivo)), origen: origenDe(dato) });
+      colocarMarca(nombre, construirMarca('aviso', '△', texto));
+      avisados.push(nombre);
+      continue;
+    }
+
+    if (dato.estado === 'referencia') {
+      colocarMarca(nombre, construirMarca('aviso', '△',
+        t('extraccion.aviso.motivo', { motivo: enMayuscula(rotuloMotivo(dato.motivo)), origen: origenDe(dato) })));
+      avisados.push(nombre);
+      continue;
+    }
+
+    if (dato.estado === 'ausente' && MOTIVOS_QUE_SE_ANUNCIAN.has(dato.motivo)) {
+      colocarMarca(nombre, construirMarca('aviso', '△', enMayuscula(rotuloMotivo(dato.motivo))));
+      porDecision.push(nombre);
+    }
+  }
+
+  // Lo que pone el formulario, marcado aparte para que no se confunda con el PDF.
+  for (const nombre of datos.fueraDeExtraccion ?? []) {
+    const control = controlDe(nombre);
+    if (!control || !campoLibre(nombre, control)) continue;
+    const valor = valorPorDefecto(nombre);
+    if (!valor) continue;
+    control.value = valor;
+    colocarMarca(nombre, construirMarca('defecto', '·', t('extraccion.marca.defecto')));
+  }
+
+  pintarResumenExtraccion({ propuestos, avisados, porDecision });
+  reflejarPendientes();
+}
+
+function pintarResumenExtraccion({ propuestos, avisados, porDecision }) {
+  const panel = $('#extraccion-resumen');
+  const lectura = estado.extraccion;
+  panel.textContent = '';
+  panel.classList.remove('extraccion--leyendo');
+
+  panel.appendChild(elemento('strong', 'extraccion__titulo',
+    t('extraccion.titulo', { nombre: lectura.documento.nombre })));
+
+  const linea = (texto) => panel.appendChild(elemento('p', 'extraccion__linea', texto));
+
+  linea(t('extraccion.paginas', { n: lectura.documento.paginas }));
+  for (const aviso of lectura.avisos ?? []) linea(enMayuscula(rotuloMotivo(aviso)));
+
+  if (propuestos.length) linea(t('extraccion.resumen.propuestos', { n: propuestos.length }));
+  if (avisados.length) linea(t('extraccion.resumen.avisos', { n: avisados.length }));
+  if (porDecision.length) {
+    linea(t('extraccion.resumen.decision', { campos: porDecision.map(nombreCampo).join(', ') }));
+  }
+  if (!propuestos.length && !avisados.length) linea(t('extraccion.resumen.nada'));
+
+  if (propuestos.length) {
+    const acciones = elemento('div', 'extraccion__acciones');
+    for (const [clave, aceptada] of [['extraccion.aceptarTodas', true], ['extraccion.descartarTodas', false]]) {
+      const boton = elemento('button', 'propuesta__boton', t(clave));
+      boton.type = 'button';
+      boton.addEventListener('click', () => {
+        for (const nombre of [...(estado.extraccion?.pendientes ?? [])]) resolverPropuesta(nombre, { aceptada });
+      });
+      acciones.appendChild(boton);
+    }
+    panel.appendChild(acciones);
+  }
+
+  panel.hidden = false;
+}
+
+/** Pide al servidor la lectura de un PDF recién adjuntado. */
+async function analizarDocumento(fichero) {
+  const panel = $('#extraccion-resumen');
+  panel.textContent = '';
+  panel.classList.add('extraccion--leyendo');
+  panel.appendChild(elemento('p', 'extraccion__linea', t('extraccion.leyendo', { nombre: fichero.name })));
+  panel.hidden = false;
+
+  const cuerpo = new FormData();
+  cuerpo.append('documento', fichero);
+
+  let datos;
+  try {
+    datos = await api('/api/informes/extraccion', { method: 'POST', body: cuerpo });
+  } catch (err) {
+    panel.textContent = '';
+    panel.hidden = true;
+    panel.classList.remove('extraccion--leyendo');
+    // Que la lectura falle no estorba el alta: la ficha se teclea como siempre.
+    avisar(t('extraccion.error', { motivo: rotuloMotivo(err.codigo, err.message) }));
+    return;
+  }
+  aplicarPropuesta(datos);
+}
+
+function alAdjuntarDocumento(ev) {
+  // Solo al dar de alta: sobre un informe ya publicado, lo escrito manda.
+  if ($('#form-informe').elements.id.value) return;
+  const pdf = [...(ev.target.files ?? [])].find((f) => /\.pdf$/i.test(f.name));
+  if (!pdf) return;
+  analizarDocumento(pdf);
+}
+
 function reflejarModoFormulario(editando) {
   $('#titulo-dialogo-informe').textContent =
     t(editando ? 'informe.titulo.editar' : 'informe.titulo.publicar');
@@ -859,6 +1204,9 @@ function abrirFormulario(informe = null) {
   $('#btn-eliminar-informe').hidden = !editando;
 
   form.elements.id.value = editando ? informe.id : '';
+  // Se retira la lectura anterior antes de volcar nada: un diálogo reabierto no
+  // puede conservar propuestas de un informe que ya no es el que se edita.
+  limpiarPropuestas();
 
   if (editando) {
     const asignar = (nombre, valor) => {
@@ -902,6 +1250,11 @@ function abrirFormulario(informe = null) {
     form.elements.en_cartera.checked = true;
     form.elements.nivel_acceso.value = 'publico';
   }
+
+  // Instantánea después de prerrellenar: lo que difiera de aquí lo escribió alguien.
+  estado.valoresIniciales = Object.fromEntries(
+    Object.keys(ROTULO_CAMPO).map((nombre) => [nombre, String(form.elements[nombre]?.value ?? '')])
+  );
 
   dialogo.showModal();
   form.elements.empresa.focus();
@@ -954,7 +1307,8 @@ async function enviarFormulario(ev) {
     panelErrores.scrollIntoView({ behavior: 'smooth', block: 'center' });
   } finally {
     boton.disabled = false;
-    boton.textContent = t(id ? 'informe.guardar.cambios' : 'informe.guardar.publicar');
+    // Devuelve el botón a su rótulo, que depende de si quedan propuestas.
+    reflejarPendientes();
   }
 }
 
@@ -2649,6 +3003,7 @@ function enlazarEventos() {
   $('#btn-nuevo-informe').addEventListener('click', () => abrirFormulario());
   $('#form-informe').addEventListener('submit', enviarFormulario);
   $('#btn-cancelar-informe').addEventListener('click', () => $('#dialogo-informe').close());
+  $('#campo-ficheros').addEventListener('change', alAdjuntarDocumento);
   $('#btn-eliminar-informe').addEventListener('click', eliminarInforme);
 
   // Noticias

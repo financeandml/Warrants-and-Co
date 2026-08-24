@@ -277,11 +277,17 @@ const ordenado = (conjunto) => [...conjunto].sort().join(', ');
      Quien decide si sobra uno es `src/errores.js`, y eso lo comprueba
      `tests/errores.js`, que falla ante un «codigo.…» sin código vivo detrás. La
      excepción se acota al prefijo para no eximir a `error.red` ni a
-     `error.solicitud`, que sí se nombran a pelo y deben seguir vigiladas. */
-  const RESUELTAS_POR_CODIGO = 'codigo.';
+     `error.solicitud`, que sí se nombran a pelo y deben seguir vigiladas.
+
+     Los motivos de la extracción se resuelven igual, con la clave armada al
+     vuelo desde el código que manda el servidor, y quien decide si sobra uno es
+     `src/extraccion/motivos.js`. Su cotejo vive en `tests/extraccion-rotulos.js`
+     por la misma razón que el de los errores: aquí no se puede distinguir el
+     rótulo que sobra del que nadie ha cableado todavía. */
+  const RESUELTAS_POR_CODIGO = ['codigo.', 'extraccion.motivo.'];
 
   for (const clave of clavesBase) {
-    if (clave.startsWith(RESUELTAS_POR_CODIGO)) continue;
+    if (RESUELTAS_POR_CODIGO.some((prefijo) => clave.startsWith(prefijo))) continue;
     if (!mencionadas.has(clave)) avisos.push(`«${clave}» está declarada y nadie la nombra`);
   }
 

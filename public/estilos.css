@@ -844,11 +844,80 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .dialogo__pie {
   position: sticky; bottom: 0;
-  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px;
   padding: 18px 0 24px; margin-top: 8px;
   background: var(--superficie); border-top: 1px solid var(--linea);
 }
 .dialogo__pie-derecha { display: flex; gap: 10px; margin-inline-start: auto; }
+
+/* ─────────────────────── Propuestas leídas de un PDF ───────────────────────
+
+   Extraer es proponer. Un valor leído de un documento llega al formulario
+   marcado, y no cuenta como válido hasta que el analista lo acepta o lo vacía.
+   De ahí que el estado de cada propuesta se transmita por glifo y por rótulo
+   —«◇ Sin confirmar», «◆ Aceptado»— y no por color: el color acompaña, nunca
+   informa solo. Quien no distinga los tonos lee lo mismo que los demás. */
+
+.propuesta {
+  display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 10px;
+  margin-top: 6px; font-size: 0.76rem; line-height: 1.5;
+  color: var(--tinta-secundaria);
+  /* `.campo` viste sus rótulos en versalitas; la propuesta es prosa. */
+  text-transform: none; letter-spacing: normal;
+}
+.propuesta__marca { font-size: 0.9em; font-variant-numeric: tabular-nums; }
+.propuesta__texto { flex: 1 1 auto; min-width: 0; }
+.propuesta__origen { color: var(--tinta-mate); }
+
+/* Sin confirmar: el único estado que impide publicar. */
+.propuesta--pendiente { color: var(--aviso); }
+.propuesta--aceptada { color: var(--alcista); }
+.propuesta--descartada,
+.propuesta--defecto { color: var(--tinta-mate); }
+.propuesta--aviso { color: var(--tinta-secundaria); }
+
+.propuesta__boton {
+  border: 1px solid var(--linea-fuerte); background: var(--superficie);
+  color: var(--tinta); font: inherit; font-size: 0.74rem;
+  padding: 2px 9px; border-radius: var(--radio); cursor: pointer;
+  transition: background var(--transicion), border-color var(--transicion);
+}
+.propuesta__boton:hover { background: var(--superficie-hundida); border-color: var(--tinta-mate); }
+.propuesta__boton:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+
+/* El campo con una propuesta sin confirmar se señala también en el propio
+   control, porque es donde está mirando quien va a decidir. */
+.campo input[data-propuesta="pendiente"],
+.campo select[data-propuesta="pendiente"],
+.campo textarea[data-propuesta="pendiente"] {
+  border-inline-start: 3px solid var(--aviso);
+  background: var(--aviso-tenue);
+}
+
+/* ── Resumen de la lectura ── */
+
+.extraccion {
+  margin-top: 16px; padding: 13px 16px;
+  border: 1px solid var(--linea); border-inline-start-width: 3px;
+  background: var(--superficie-alt); font-size: 0.82rem;
+}
+.extraccion__titulo { display: block; font-weight: 600; margin-bottom: 4px; }
+.extraccion__linea { color: var(--tinta-secundaria); line-height: 1.6; }
+.extraccion__acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.extraccion--leyendo { color: var(--tinta-mate); }
+
+/* ── Por qué no se puede publicar ── */
+
+.dialogo__pendientes {
+  /* Primera fila del pie: el motivo del bloqueo viaja con el botón bloqueado. */
+  flex: 1 0 100%; order: -1;
+  margin: 0; padding: 10px 14px;
+  border: 1px solid var(--aviso); border-inline-start-width: 3px;
+  background: var(--aviso-tenue); color: var(--tinta);
+  font-size: 0.8rem; line-height: 1.55;
+}
+.dialogo__pendientes::before { content: "◇ "; }
+
 
 /* ───────────────────────────── Ficha detalle ──────────────────────────── */
 

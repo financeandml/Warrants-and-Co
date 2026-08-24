@@ -18,8 +18,17 @@ const DB_PATH = process.env.WARRANTS_DB
   ? path.resolve(process.env.WARRANTS_DB)
   : path.join(DATA_DIR, 'warrants.db');
 
+// El almacén de documentos se redirige por lo mismo y hace falta por separado:
+// redirigir solo la base deja los adjuntos cayendo en el directorio de trabajo.
+// No es hipotético —una prueba de publicación dejó ahí un PDF—, y a diferencia
+// de una fila en una base desechable, un fichero suelto no se distingue de los
+// del equipo más que por la fecha.
+const UPLOAD_DIR = process.env.WARRANTS_UPLOADS
+  ? path.resolve(process.env.WARRANTS_UPLOADS)
+  : path.join(DATA_DIR, 'uploads');
+
 fs.mkdirSync(DATA_DIR, { recursive: true });
-fs.mkdirSync(path.join(DATA_DIR, 'uploads'), { recursive: true });
+fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);
 
@@ -188,4 +197,4 @@ db.exec(`
   END
 `);
 
-module.exports = { db, DATA_DIR, UPLOAD_DIR: path.join(DATA_DIR, 'uploads') };
+module.exports = { db, DATA_DIR, UPLOAD_DIR };
