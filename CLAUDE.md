@@ -12,6 +12,13 @@
 6. **SQL siempre parametrizado.**
 7. **No toques `data/warrants.db` ni `data/copias/`** sin avisar antes.
 8. **No añadas dependencias** sin pedírmelo y justificarlo.
+9. **Un hecho, una fuente.** Cuando dos cosas expresan el mismo hecho —una cifra y su
+   rótulo, un total y sus partes, una puerta y su anuncio—, salen de la misma fuente y
+   hay una prueba que afirma que concuerdan. **Van tres fallos así, y los tres eran
+   invisibles en pantalla**: el total de la cartera contra la suma de sus contribuciones,
+   la leyenda del gráfico contra el titular, y la puerta de un suelo de muestra contra el
+   rótulo que anunciaba cuándo se abriría. Cada cifra por separado era verosímil; el
+   desacuerdo solo se ve afirmándolo.
 
 ## Idioma y nomenclatura
 
