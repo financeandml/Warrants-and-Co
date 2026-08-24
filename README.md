@@ -585,7 +585,11 @@ de analista. **La descarga de documentos no requiere credencial.**
 ```
 warrants-co/
 ├── server.js              Servidor, seguridad y gestión de errores
-├── scripts/sembrar.js     Constitución de la cartera inicial
+├── scripts/
+│   ├── sembrar.js         Constitución de la cartera inicial
+│   ├── copia.js           Copia de seguridad: base y adjuntos
+│   ├── restaurar.js       Restauración, con ensayo a un directorio aparte
+│   └── copias-comunes.js  Qué es una copia: lo comparten copia y restaurar
 ├── src/
 │   ├── db.js              SQLite (node:sqlite) e índice FTS5
 │   ├── validacion.js      Vocabularios y validación de la ficha
@@ -639,16 +643,117 @@ usa el SQLite integrado en Node, sin módulos compilados.
 npm run copia
 ```
 
-Genera un volcado consistente en `data/copias/`. Usa `VACUUM INTO` en lugar de copiar
-el fichero, porque con el diario en modo WAL una copia directa puede capturar un
-estado incoherente.
+Copia la base **y los adjuntos**. Un informe sin su PDF no es un informe restaurado, así
+que las dos cosas viajan juntas o no vale de nada.
 
-La ruta de la base de datos puede redirigirse con `WARRANTS_DB`, lo que permite
-ejecutar pruebas contra una base desechable sin exponer los datos de trabajo:
+```
+data/copias/2026-08-24T10-30-00/
+├── warrants.db      volcado consistente de la base
+├── uploads/         un fichero por adjunto
+└── copia.json       manifiesto: es lo que hace que esto sea una copia
+```
+
+La base se vuelca con `VACUUM INTO` en lugar de copiar el fichero, porque con el diario en
+modo WAL una copia directa puede capturar un estado incoherente. El origen se abre en
+**solo lectura**: la copia no puede escribir sobre los datos de trabajo ni por accidente.
+
+### Lo que ya estaba no se vuelve a escribir
+
+Los adjuntos son de escritura única —nacen con nombre irrepetible y nadie los modifica—,
+de modo que los que ya figuraban en la copia anterior se incorporan por **enlace duro**. El
+directorio se ve y se restaura como una copia completa e independiente, pero esos ficheros
+no ocupan disco por segunda vez. Con la cartera actual, la primera copia son 24 MB y la
+siguiente 7,7 MB: lo único que cuesta de verdad es la base más los PDF nuevos.
+
+De ahí salen tres propiedades que conviene tener presentes:
+
+- **Se puede borrar cualquier copia vieja** sin dañar a las demás. El contenido vive
+  mientras quede un enlace apuntándolo, así que un `rm -rf` sobre un directorio fechado es
+  siempre seguro.
+- **Ninguna copia comparte inodo con `data/uploads`.** El primer traslado de un fichero es
+  copia real, nunca enlace al almacén vivo; borrar un adjunto desde la plataforma no toca
+  ningún respaldo.
+- **Al restaurar se copia, nunca se enlaza.** Si lo restaurado compartiera inodo con el
+  respaldo, el primer borrado hecho desde la plataforma mutilaría la copia de seguridad.
+
+Si el enlace no es posible —copias en otro volumen, permisos— se cae a copia real y el
+manifiesto lo anota. La optimización no decide si hay copia o no.
+
+### Nunca una copia a medias con aspecto de completa
+
+La copia se construye en un directorio `.parcial-…` y solo al final recibe su nombre
+definitivo, con un renombrado que es atómico. **Un directorio fechado o existe entero o no
+existe.** Antes de publicarlo se comprueba contra la base que cada fila de `adjuntos` tiene
+su fichero y que pesa lo que la base declara —contra la base, no contra el directorio: una
+copia hecha con el almacén mal apuntado sería coherente consigo misma y aun así estaría
+vacía de documentos—.
+
+Cualquier fallo a mitad, quedarse sin disco incluido, retira el parcial y no publica nada:
+la copia anterior sigue siendo la última buena. Un Ctrl-C tampoco deja restos. Y como lo
+repetido va por enlace, una ejecución solo gasta disco en lo que es nuevo.
+
+Los restos de una copia interrumpida no se ofrecen jamás al restaurar, aunque por dentro
+sean indistinguibles de una copia buena.
+
+### Los tres desenlaces son distintos y se distinguen
+
+| Código | Qué ha pasado |
+|---|---|
+| `0` | copia completa |
+| `1` | **la copia ha fallado**: no se ha creado nada |
+| `2` | **la copia está completa**, pero hay informes que apuntan a adjuntos que no están |
+
+El `2` no es un fallo del respaldo: es un problema de los datos, anterior a la copia, y la
+copia recoge fielmente lo que hay. Sale por el canal de error y con código distinto de cero
+para que llegue —un informe apuntando a un PDF que ya no existe es justo lo que hay que
+saber—, y el mensaje empieza diciendo `LA COPIA ESTA COMPLETA Y ES VALIDA` para que no se
+confunda al leerlo con el de un fallo. El detalle, con informe y empresa, queda en
+`copia.json`.
+
+La retención está deliberadamente fuera: las copias no se borran solas.
+
+## Restauración
+
+Una copia que no se ha probado a restaurar no es una copia.
 
 ```bash
-WARRANTS_DB=/tmp/prueba.db npm start
+npm run restaurar                                  # lista y no toca nada
+npm run restaurar -- --ultima --a /tmp/ensayo      # ensayo, sin riesgo
+npm run restaurar -- 2026-08-24T10-30-00 --forzar  # sobre el directorio de trabajo
 ```
+
+Sin argumentos solo enumera, separando lo que son copias de lo que no: las restaurables,
+los restos de copias interrumpidas y las copias sueltas del esquema anterior —anteriores a
+que existieran los adjuntos, y que por tanto **no los contienen**, cosa que se dice al
+listarlas y al restaurarlas—.
+
+Antes de tocar nada verifica la copia elegida contra su propio manifiesto: la base está y
+pesa lo que decía, cada adjunto está y pesa lo que decía, y la base abre y declara los
+mismos adjuntos que el manifiesto. Una copia que no verifica no se restaura.
+
+Lo restaurado se construye entero al lado y solo después sustituye a lo que hubiera, de
+modo que un fallo a mitad deja el destino como estaba. Sobre el directorio de trabajo exige
+`--forzar`, y aun entonces **no borra**: aparta lo anterior con el sufijo `.previo-<fecha>`.
+El diario `-wal` viejo se aparta con su base, porque dejarlo junto a una base nueva es la
+forma más silenciosa de estropear una restauración.
+
+### El ensayo
+
+`--a` restaura a otro directorio, y eso es lo que permite ensayar sin rozar los datos de
+trabajo:
+
+```bash
+npm run restaurar -- --ultima --a /tmp/ensayo-restauracion
+WARRANTS_DB=/tmp/ensayo-restauracion/warrants.db \
+WARRANTS_UPLOADS=/tmp/ensayo-restauracion/uploads npm start
+```
+
+Y entonces se abre un informe y se descarga su PDF. Eso es la copia probada.
+
+## Redirección por entorno
+
+Tres variables mueven las tres cosas: `WARRANTS_DB` la base, `WARRANTS_UPLOADS` el almacén
+de documentos y `WARRANTS_COPIAS` el directorio de copias.
 
 **Redirigir la base no basta: hay que redirigir también el almacén de documentos.**
 `WARRANTS_UPLOADS` mueve el directorio de adjuntos, y sin él una prueba que publique un
@@ -663,7 +768,8 @@ WARRANTS_DB=/tmp/prueba.db WARRANTS_UPLOADS=/tmp/prueba-uploads npm start
 
 Por eso `npm run test:propuesta` redirige las dos y comprueba al terminar que
 `data/uploads` ha quedado **exactamente** como estaba: comparando la lista de ficheros, no
-fechas ni prefijos.
+fechas ni prefijos. Y `npm run test:copia` redirige las tres, por lo mismo aplicado a
+`data/copias`.
 
 ---
 
@@ -1042,6 +1148,29 @@ apuntando a un directorio temporal: es la única batería que escribe, porque pu
 comprobar que lo aceptado se guarda y lo descartado no. No necesita, en cambio, servidor
 levantado ni corpus —el informe de prueba se arma en la propia batería—, y sus dos últimas
 comprobaciones son las que vigilan la fuga de adjuntos descrita en **Copias de seguridad**.
+
+### Copia de seguridad y restauración
+
+```
+npm run test:copia
+```
+
+No comprueba que la copia «se haga»: hace el viaje entero. Copia, borra el origen, restaura
+a otro directorio y exige que **cada fila de `adjuntos` vuelva a resolver en un fichero con
+sus bytes exactos**. Por el camino verifica que lo repetido se enlaza y comparte inodo con
+la copia anterior, que nada comparte inodo con el almacén vivo ni con el respaldo tras
+restaurar, que borrar una copia vieja no daña a las posteriores, que un adjunto ausente da
+código 2 con un mensaje que no puede confundirse con el de un fallo, y que un fallo de
+verdad no deja ni copia ni parcial.
+
+**Un parcial abandonado tiene su propio bloque**, porque es el caso que de verdad engaña: la
+batería fabrica uno que por dentro es indistinguible de una copia buena —manifiesto
+incluido— y con fecha del año 2099, y exige que no se ofrezca al listar, que `--ultima` no
+lo elija, que nombrarlo explícitamente no lo restaure y que la copia siguiente no enlace de
+él.
+
+Sin navegador ni servidor. Redirige las tres variables de entorno y comprueba al terminar
+que `data/copias` sigue como estaba. 64 comprobaciones.
 
 ### Baterías completas
 

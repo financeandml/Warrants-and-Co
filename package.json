@@ -8,6 +8,7 @@
     "sembrar": "node scripts/sembrar.js",
     "sembrar:forzar": "node scripts/sembrar.js --forzar",
     "copia": "node scripts/copia.js",
+    "restaurar": "node scripts/restaurar.js",
     "test": "node tests/humo.js",
     "test:idiomas": "node tests/idiomas.js",
     "test:errores": "node tests/errores.js",
@@ -17,7 +18,8 @@
     "test:extraccion-lector": "node tests/extraccion-lector.js",
     "test:extraccion-rotulos": "node tests/extraccion-rotulos.js",
     "test:extraccion-corpus": "node tests/extraccion-corpus.js",
-    "test:propuesta": "node tests/propuesta.js"
+    "test:propuesta": "node tests/propuesta.js",
+    "test:copia": "node tests/copia.js"
   },
   "type": "commonjs",
   "dependencies": {
