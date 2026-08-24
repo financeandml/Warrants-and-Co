@@ -728,6 +728,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
    lea como una nota de las dos series, no como una tercera. */
 .leyenda__medida { flex-basis: 100%; font-size: 0.72rem; color: var(--tinta-mate); }
 
+/* Nota de una cifra que la muestra aún no sostiene. La marca es tipográfica, no
+   de color: la cursiva la separa de una nota metodológica corriente. */
+.estadistico__nota--pendiente { font-style: italic; }
+.nota-muestra { margin: 24px 0 0; }
+
 .tabla-serie { border-top: 1px solid var(--linea); padding: 20px 24px 24px; }
 .tabla-serie .tabla-envoltorio { max-height: 340px; overflow-y: auto; }
 

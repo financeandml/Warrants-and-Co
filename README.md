@@ -404,6 +404,73 @@ correlación frente al índice · sesiones positivas · mejor y peor sesión.
 La tasa libre de riesgo por defecto es del 4 % y se ajusta con el parámetro `?rf=` del
 endpoint de cartera. Índices de referencia disponibles: SPY, QQQ, DIA e IWM.
 
+#### Dos suelos de muestra: 252 y 756 sesiones
+
+Ni las cifras **anualizadas** ni los **ratios ajustados por riesgo** se publican con
+cualquier historia detrás, y no esperan lo mismo porque no les falta lo mismo. Mientras
+esperan, la celda no queda muda: dice cuántas sesiones faltan y a partir de cuántas
+aparecerá.
+
+| Suelo | Cifras | Por qué |
+|---|---|---|
+| **252 sesiones · 1 año** | Rentabilidad anualizada (CAGR) | Antes del año, anualizar por composición **extrapola** un tramo que no se ha recorrido: de 7 meses al +67,85 % salía un CAGR del +153,92 %. Cumplido el año es la anualización de un rendimiento ocurrido, y eso es un hecho: retenerlo sería ocultar dato |
+| **756 sesiones · 3 años** | Sharpe · Sortino · Calmar · alfa de Jensen | Es el mínimo del oficio —Morningstar no calcula medidas ajustadas por riesgo por debajo de ese plazo; GIPS exige cinco años de track record— y lo respalda la aritmética del error típico |
+
+Desde el primer día se publican, sin suelo, las cifras que la muestra sí sostiene:
+rentabilidad total, volatilidad anualizada, máxima caída con sus fechas, beta,
+correlación, sesiones positivas y mejor y peor sesión.
+
+**La aritmética del segundo suelo.** El error típico de un Sharpe, con rendimientos iid, es
+
+```
+SE(SR) = √252 · √((1 + SR_d² / 2) / N)
+```
+
+que depende del **plazo** y no de la frecuencia: muestrear a diario en vez de a mes no
+compra precisión. En sesiones: `años = (1 + SR_d²/2) / SE²`.
+
+| Plazo | Sesiones | Error típico |
+|---|---:|---:|
+| 6 meses | 141 | ±1,35 |
+| 1 año | 255 | ±1,01 |
+| **3 años** | **756** | **±0,58** |
+| 5 años | 1 260 | ±0,45 |
+| 10 años | 2 520 | ±0,32 |
+
+Con las 141 sesiones de agosto de 2026, un Sharpe de 2,58 llevaba un intervalo del 95 %
+de **[−0,07 , 5,22]**: incluía el cero. Publicar «2,58» habría sido presentar como
+nivel algo cuyo signo la muestra no establecía. Y la muestra era además peor de lo que
+esa cuenta supone —77 de 141 sesiones con una sola posición, 78 % del rendimiento en
+una línea—, de modo que el ±1,35 es optimista, no conservador.
+
+> **La puerta y el rótulo salen de la misma tabla**, `SUELO_POR_CIFRA`. No es
+> ceremonia: mientras fueron dos expresiones separadas, mover una y no la otra dejaba
+> a la plataforma reteniendo una cifra hasta las 756 sesiones mientras anunciaba que
+> llegaría a las 252. Desde la interfaz eso es invisible —el rótulo, por sí solo, es
+> coherente—, así que lo vigila la batería del motor: en el suelo justo la cifra está,
+> una sesión antes no, y contra el umbral que el propio motor declara, no contra una
+> constante copiada en la prueba.
+
+El motor publica un bloque `muestra` con el recuento, los dos suelos y **qué cifra
+retiene cada uno**, de modo que la interfaz no tiene que saberse la lista ni los
+umbrales.
+
+#### El numerador de Sharpe y Sortino
+
+Es el **exceso medio anualizado**, `(media diaria − rf/252) × 252`, no el CAGR. Son dos
+magnitudes distintas: anualizar por composición extrapola el tramo observado, mientras
+que el denominador ya es una desviación diaria anualizada por √252. Con la cartera de
+agosto de 2026 el CAGR daba 153,92 % frente al 93,54 % de la media, y el Sharpe subía
+de 2,58 a **4,32** sin que nada lo hubiera ganado.
+
+Es un defecto **aparte** del tamaño de muestra: estaría igual de mal con veinte años de
+historia. Calmar sí conserva el CAGR en el numerador —es un rendimiento compuesto sobre
+caída— y por encima del suelo esa anualización ya no extrapola nada.
+
+> Lo que el suelo evita se ve mejor en el extremo: con el mínimo anterior de 30 días,
+> una serie de 30 sesiones al alza publicaba una rentabilidad anualizada del **985,71 %**
+> y un Sharpe de **207,36**. `npm run test:cartera` lo comprueba en los dos sentidos.
+
 ---
 
 ## Options
@@ -614,7 +681,7 @@ saturar a los proveedores ante recargas repetidas; las series históricas se gua
 | `POST` | `/api/noticias` | Alta (requiere credencial) |
 | `PUT` | `/api/noticias/:id` | Modificación parcial (requiere credencial) |
 | `DELETE` | `/api/noticias/:id` | Baja (requiere credencial) |
-| `GET` | `/api/mercado/cartera` | Composición, liquidadas, liquidez, serie histórica y estadísticos |
+| `GET` | `/api/mercado/cartera` | Composición, liquidadas, liquidez, serie histórica y estadísticos con su suelo de muestra |
 | `GET` | `/api/mercado/cotizacion/:simbolo` | Cotización puntual |
 | `GET` | `/api/mercado/estado` | Diagnóstico de proveedores |
 | `GET` | `/api/marca` | Recursos de identidad corporativa disponibles |
@@ -1259,7 +1326,15 @@ cierre del alta, referencia al último cierre— y una cotización que no coinci
 último cierre, que es el resquicio por el que la identidad se rompería sin ruido si el
 titular saliera de la serie de cierres y las contribuciones de la cotización.
 
-Cada caso se vio fallar antes de darlo por bueno, con su propio defecto reintroducido. 21
+Otros cuatro cubren los **suelos de muestra**: que por debajo no salga número y que cada
+cifra declare el suyo; la banda de en medio —cumplido el año, antes de los tres—, que es
+la que justifica que los suelos sean dos, porque con uno solo uno de los dos casos estaría
+mal necesariamente; que el umbral anunciado sea el que de verdad rige, comprobado en el
+suelo justo y una sesión antes; y que por encima vuelvan todas, con el Sharpe afirmado
+contra su definición recalculada allí mismo desde la serie publicada, que es lo que
+distingue el exceso medio del CAGR.
+
+Cada caso se vio fallar antes de darlo por bueno, con su propio defecto reintroducido. 58
 comprobaciones, en menos de un segundo. Es la prueba más barata de la casa y habría cazado
 desde el primer día que el índice publicara +169 % mientras sus líneas sumaban +68.
 

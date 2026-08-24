@@ -175,6 +175,30 @@ export function pintarSignal(datos) {
 
 // ═══════════════════════════ Portfolio snapshot ══════════════════════════
 
+/**
+ * Nota de una cifra que la muestra todavía no sostiene.
+ *
+ * No dice «no hay dato»: dice cuántas sesiones faltan y a partir de cuántas se
+ * publica, que es lo que distingue una cifra pendiente de una que no existirá.
+ * Toma la retención de la propia cifra, no un suelo global, porque hay dos y no
+ * caducan a la vez: la anualizada llega al año y los ratios a los tres.
+ *
+ * Vive aquí, y no en cada vista, porque el panel del radar y la sección de
+ * cartera publican las mismas métricas y tienen que decir lo mismo.
+ */
+export function notaMuestra(retencion) {
+  if (!retencion) return null;
+  return t('cartera.muestra.faltan', {
+    n: retencion.restantes,
+    minimas: formatearNumero(retencion.minimas, 0),
+    plazo: t('cartera.muestra.plazo', { n: retencion.anios }),
+  });
+}
+
+/** La retención de esta cifra, o null si la muestra ya la sostiene. */
+export const retenidaPorMuestra = (muestra, clave) =>
+  (clave && muestra?.retenidas?.[clave]) || null;
+
 export function pintarPanelCartera(cartera) {
   const destino = $('#panel-cartera');
   const aportaciones = $('#aportaciones');
@@ -192,28 +216,32 @@ export function pintarPanelCartera(cartera) {
   // Se reutilizan las métricas ya calculadas por el motor de cartera.
   // La tasa libre de riesgo viaja ya formateada: un «%» dentro de la plantilla
   // del diccionario fijaría la convención de un idioma en los dos.
+  // La quinta posición nombra la cifra: es lo que permite sustituir su nota por las
+  // sesiones que faltan cuando su suelo de muestra la retiene.
   const metricas = [
     [t('radar.metrica.rentabilidad'), formatearPorcentaje(e.rentabilidadTotal),
       t('radar.metrica.rentabilidad.nota'), e.rentabilidadTotal],
     [t('radar.metrica.benchmark', { indice: cartera.benchmark }), formatearPorcentaje(e.rentabilidadIndice),
       t('radar.metrica.benchmark.nota'), e.rentabilidadIndice],
     [t('radar.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
-      t('radar.metrica.alfa.nota'), e.alfaJensen],
+      t('radar.metrica.alfa.nota'), e.alfaJensen, 'alfaJensen'],
     [t('radar.metrica.sharpe'), formatearNumero(e.ratioSharpe),
-      t('radar.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) })],
+      t('radar.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }), undefined, 'ratioSharpe'],
     [t('radar.metrica.caida'), formatearPorcentaje(e.maximaCaida),
       t('radar.metrica.caida.nota'), e.maximaCaida],
     [t('radar.metrica.volatilidad'), formatearPorcentaje(e.volatilidadAnualizada, false),
       t('radar.metrica.volatilidad.nota')],
   ];
 
-  for (const [etiqueta, valor, nota, lectura] of metricas) {
+  for (const [etiqueta, valor, nota, lectura, clave] of metricas) {
+    const retenida = retenidaPorMuestra(e.muestra, clave);
     const bloque = elemento('div', 'indicador');
     bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
     const cifra = elemento('strong', 'indicador__valor', valor);
     if (lectura !== undefined) cifra.className = `indicador__valor ${claseLectura(lectura)}`;
     bloque.appendChild(cifra);
-    if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
+    const alPie = retenida ? notaMuestra(retenida) : nota;
+    if (alPie) bloque.appendChild(elemento('span', 'indicador__nota', alPie));
     destino.appendChild(bloque);
   }
 

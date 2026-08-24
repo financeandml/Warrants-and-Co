@@ -118,6 +118,20 @@ const linea = (campos) => ({
   ...campos,
 });
 
+/** Una cartera de exactamente `n` sesiones, con precio que se mueve. */
+async function conSesiones(n) {
+  const f = sesiones(n);
+  let semilla = 11;
+  const siguiente = () => (semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let precio = 100;
+  const cierres = f.map(() => {
+    precio *= 1 + 0.0008 + (siguiente() - 0.5) * 0.018;
+    return Number(precio.toFixed(4));
+  });
+  escenario = { barras: { Z: barras(f, cierres) }, cotizaciones: {} };
+  return calcularCartera([linea({ ticker: 'Z', fecha_publicacion: f[0], precio_compra: 100 })]);
+}
+
 /** Σ contribuciones = rentabilidad total. La identidad que da nombre a la batería. */
 function comprobarIdentidad(etiqueta, cartera) {
   const lineas = [...cartera.posiciones, ...cartera.cerradas];
@@ -277,10 +291,185 @@ async function caso4() {
     casiIgual(cartera.valorIndexado, 105), `valor indexado ${cartera.valorIndexado}`);
 }
 
+/*
+ * Caso 5 — por debajo del suelo de muestra no se publica número.
+ *
+ * Dos suelos: 252 sesiones —un año— para las cifras anualizadas, y 756 —tres años—
+ * para los ratios ajustados por riesgo. Con menos, la plataforma declara cuántas
+ * sesiones faltan en vez de publicar un nivel que su propia muestra no sostiene: con
+ * 140 observaciones el error típico de un Sharpe es ±1,35 y su intervalo del 95 %
+ * incluye el cero.
+ */
+async function caso5() {
+  const f = sesiones(30);
+  escenario = {
+    barras: { I: barras(f, f.map((_, i) => 100 + i)) },
+    cotizaciones: { I: { precio: 100 + f.length - 1, divisa: 'USD', variacionPct: 0 } },
+  };
+
+  const cartera = await calcularCartera([
+    linea({ ticker: 'I', fecha_publicacion: f[0], precio_compra: 100 }),
+  ]);
+  const e = cartera.estadisticos;
+
+  comprobarIdentidad('muestra corta', cartera);
+  t('muestra corta · la muestra se declara insuficiente', e.muestra?.suficiente === false,
+    JSON.stringify(e.muestra));
+
+  for (const clave of ['rentabilidadAnualizada', 'ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen']) {
+    t(`muestra corta · ${clave} no se publica`, e[clave] === null, String(e[clave]));
+  }
+
+  // Cada cifra declara SU suelo: la anualizada el del año, los ratios el de los tres.
+  const anual = e.muestra?.retenidas?.rentabilidadAnualizada;
+  const sharpe = e.muestra?.retenidas?.ratioSharpe;
+  t('muestra corta · la anualizada espera al año',
+    anual?.minimas === 252 && anual?.anios === 1 && anual?.restantes === 252 - e.muestra.sesiones,
+    JSON.stringify(anual));
+  t('muestra corta · los ratios esperan a los tres años',
+    sharpe?.minimas === 756 && sharpe?.anios === 3 && sharpe?.restantes === 756 - e.muestra.sesiones,
+    JSON.stringify(sharpe));
+  t('muestra corta · los dos suelos no dicen lo mismo',
+    anual?.restantes !== sharpe?.restantes, `${anual?.restantes} vs ${sharpe?.restantes}`);
+
+  // Lo que la muestra sí sostiene sigue publicándose: son hechos, no inferencias.
+  t('muestra corta · la rentabilidad total sigue publicándose', Number.isFinite(e.rentabilidadTotal));
+  t('muestra corta · la volatilidad sigue publicándose', Number.isFinite(e.volatilidadAnualizada));
+  t('muestra corta · la máxima caída sigue publicándose', Number.isFinite(e.maximaCaida));
+}
+
+/*
+ * Caso 5 bis — la banda de en medio: cumplido el año, antes de los tres.
+ *
+ * Es la que justifica que los suelos sean dos. Anualizar un rendimiento de año y
+ * medio ya no extrapola nada —es un hecho ocurrido, y retenerlo sería ocultar
+ * dato—, mientras que un Sharpe con esa misma muestra sigue teniendo un error
+ * típico que desborda a la cifra. Con un suelo único, uno de los dos casos
+ * estaría mal necesariamente.
+ */
+async function caso5bis() {
+  const f = sesiones(400);
+  escenario = {
+    barras: { K: barras(f, f.map((_, i) => Number((100 * (1 + i * 0.001)).toFixed(4)))) },
+    cotizaciones: {},
+  };
+
+  const cartera = await calcularCartera([
+    linea({ ticker: 'K', fecha_publicacion: f[0], precio_compra: 100 }),
+  ]);
+  const e = cartera.estadisticos;
+
+  comprobarIdentidad('banda intermedia', cartera);
+  t('banda intermedia · la anualizada YA se publica', Number.isFinite(e.rentabilidadAnualizada),
+    String(e.rentabilidadAnualizada));
+  t('banda intermedia · y no figura entre las retenidas',
+    e.muestra?.retenidas?.rentabilidadAnualizada === undefined,
+    JSON.stringify(Object.keys(e.muestra?.retenidas ?? {})));
+
+  for (const clave of ['ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen']) {
+    t(`banda intermedia · ${clave} sigue retenido`,
+      e[clave] === null && e.muestra?.retenidas?.[clave]?.minimas === 756,
+      `${e[clave]} · ${JSON.stringify(e.muestra?.retenidas?.[clave])}`);
+  }
+  t('banda intermedia · la muestra no se declara suficiente', e.muestra?.suficiente === false);
+}
+
+/*
+ * Caso 5 ter — el rótulo no puede mentir sobre su propia espera.
+ *
+ * Una cifra retenida anuncia a partir de cuántas sesiones aparecerá. Ese número y la
+ * puerta que la retiene tienen que ser el mismo: si se separan, la plataforma promete
+ * una fecha que no va a cumplir, y desde la interfaz no se ve —el rótulo, por sí solo,
+ * es coherente—. Aquí se comprueba contra el propio umbral que el motor declara, no
+ * contra una constante copiada: en el suelo justo la cifra está, una sesión antes no.
+ */
+async function caso5ter() {
+  // El umbral se lee de lo que el motor publica, para que la prueba siga a la constante.
+  const sonda = await conSesiones(30);
+  const suelos = sonda.estadisticos.muestra.suelos;
+
+  for (const [nombre, clave] of [['anualizada', 'rentabilidadAnualizada'], ['ratios', 'ratioSharpe']]) {
+    const minimas = suelos[nombre].minimas;
+
+    const justo = (await conSesiones(minimas)).estadisticos;
+    t(`suelo de ${nombre} · en ${minimas} sesiones la cifra ya está`,
+      justo.muestra.sesiones === minimas && Number.isFinite(justo[clave])
+        && justo.muestra.retenidas[clave] === undefined,
+      `${justo.muestra.sesiones} sesiones · ${clave} = ${justo[clave]}`);
+
+    const antes = (await conSesiones(minimas - 1)).estadisticos;
+    t(`suelo de ${nombre} · una sesión antes no, y anuncia ese mismo umbral`,
+      antes[clave] === null && antes.muestra.retenidas[clave]?.minimas === minimas
+        && antes.muestra.retenidas[clave]?.restantes === 1,
+      `${antes.muestra.sesiones} sesiones · ${JSON.stringify(antes.muestra.retenidas[clave])}`);
+  }
+}
+
+/*
+ * Caso 6 — con muestra suficiente vuelven, y el numerador es el que toca.
+ *
+ * El Sharpe se afirma contra su definición recalculada aquí mismo desde la serie
+ * publicada: exceso MEDIO anualizado sobre volatilidad. Con el CAGR en el numerador
+ * —lo que hacía la versión anterior— la cifra sale distinta, porque anualizar por
+ * composición extrapola el tramo observado en vez de medirlo.
+ */
+async function caso6() {
+  const f = sesiones(820);
+  // Serie determinista con deriva y ruido: sin varianza no hay ratio que comprobar,
+  // y sin deriva el CAGR y la media coincidirían y la afirmación no distinguiría nada.
+  let semilla = 7;
+  const siguiente = () => (semilla = (semilla * 1103515245 + 12345) % 2147483648) / 2147483648;
+  const cierres = [];
+  let precio = 100;
+  for (let i = 0; i < f.length; i++) {
+    precio *= 1 + 0.0009 + (siguiente() - 0.5) * 0.02;
+    cierres.push(Number(precio.toFixed(4)));
+  }
+  escenario = {
+    barras: { J: barras(f, cierres) },
+    cotizaciones: { J: { precio: cierres[cierres.length - 1], divisa: 'USD', variacionPct: 0 } },
+  };
+
+  const cartera = await calcularCartera([
+    linea({ ticker: 'J', fecha_publicacion: f[0], precio_compra: 100 }),
+  ]);
+  const e = cartera.estadisticos;
+
+  comprobarIdentidad('muestra suficiente', cartera);
+  t('muestra suficiente · la muestra se declara bastante', e.muestra?.suficiente === true,
+    JSON.stringify(e.muestra?.retenidas));
+  t('muestra suficiente · no queda ninguna cifra retenida',
+    Object.keys(e.muestra?.retenidas ?? {}).length === 0, JSON.stringify(e.muestra?.retenidas));
+  for (const clave of ['rentabilidadAnualizada', 'ratioSharpe', 'ratioSortino', 'ratioCalmar']) {
+    t(`muestra suficiente · ${clave} se publica`, Number.isFinite(e[clave]), String(e[clave]));
+  }
+
+  // ── El numerador, recalculado aquí desde la serie que la propia cartera publica ──
+  const niveles = cartera.serie.map((p) => p.valor);
+  const r = [];
+  for (let i = 1; i < niveles.length; i++) r.push(niveles[i] / niveles[i - 1] - 1);
+  const mediaR = r.reduce((a, b) => a + b, 0) / r.length;
+  const varianza = r.reduce((a, x) => a + (x - mediaR) ** 2, 0) / (r.length - 1);
+  const vol = Math.sqrt(varianza) * Math.sqrt(252);
+  const rf = 0.04;
+
+  const porMedia = ((mediaR - rf / 252) * 252) / vol;          // el correcto
+  const anios = (new Date(e.fin) - new Date(e.inicio)) / 86400000 / 365.25;
+  const cagr = (1 + e.rentabilidadTotal / 100) ** (1 / anios) - 1;
+  const porCagr = (cagr - rf) / vol;                            // el de la versión anterior
+
+  t('muestra suficiente · el Sharpe es el exceso medio anualizado sobre volatilidad',
+    casiIgual(e.ratioSharpe, porMedia, 0.011), `publicado ${e.ratioSharpe} · media ${porMedia.toFixed(4)}`);
+  t('muestra suficiente · y NO el CAGR sobre volatilidad',
+    Math.abs(porMedia - porCagr) > 0.05 && Math.abs(e.ratioSharpe - porCagr) > 0.05,
+    `CAGR daría ${porCagr.toFixed(4)} · publicado ${e.ratioSharpe}`);
+}
+
 // ─────────────────────────────── ejecución ───────────────────────────────
 
 (async () => {
-  for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4]]) {
+  for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4],
+    ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6]]) {
     try {
       await caso();
     } catch (e) {

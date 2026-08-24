@@ -34,6 +34,44 @@ const mercado = require('./market');
 const SESIONES_ANIO = 252;
 const BASE_INDICE = 100;
 
+/*
+ * Dos suelos de muestra, y por motivos distintos.
+ *
+ * ANUALIZADA · un anio. Antes de cumplirlo, anualizar por composicion extrapola un
+ * tramo que no se ha recorrido: de 7 meses al +67,85 % salia un CAGR del +153,92 %,
+ * que no es un dato sino una proyeccion. Cumplido el anio, la misma cuenta es la
+ * anualizacion de un rendimiento ocurrido —un hecho—, y retenerla seria ocultar dato.
+ *
+ * RATIOS AJUSTADOS POR RIESGO · tres anios. Es el minimo del oficio —Morningstar no
+ * calcula medidas ajustadas por riesgo por debajo de ese plazo; GIPS exige cinco de
+ * track record— y la aritmetica lo respalda: el error tipico de un Sharpe es
+ *
+ *     SE(SR) = √252 · √((1 + SR_d² / 2) / N)
+ *
+ * de modo que depende del PLAZO y no de la frecuencia —muestrear a diario en vez de
+ * a mes no compra precision—. Con 141 sesiones sale ±1,35 y el intervalo del 95 %
+ * incluye el cero; con 756 baja a ±0,58. Ahi no se publica un numero peor: no se
+ * publica numero, y se declara cuanto falta.
+ */
+const SESIONES_MINIMAS_ANUALIZADA = SESIONES_ANIO;
+const SESIONES_MINIMAS_RATIOS = 3 * SESIONES_ANIO;
+
+/*
+ * Que suelo espera cada cifra. La tabla es la unica fuente: de ella salen tanto la
+ * puerta que decide si se calcula como el rotulo que declara cuanto falta. Cuando
+ * eran dos expresiones separadas, cambiar una y no la otra dejaba a la plataforma
+ * reteniendo una cifra hasta las 756 sesiones mientras anunciaba que llegaria a las
+ * 252 —una cifra retenida que miente sobre su propia espera—, y ninguna prueba de
+ * interfaz podia verlo porque el rotulo, por si solo, era coherente.
+ */
+const SUELO_POR_CIFRA = {
+  rentabilidadAnualizada: SESIONES_MINIMAS_ANUALIZADA,
+  ratioSharpe: SESIONES_MINIMAS_RATIOS,
+  ratioSortino: SESIONES_MINIMAS_RATIOS,
+  ratioCalmar: SESIONES_MINIMAS_RATIOS,
+  alfaJensen: SESIONES_MINIMAS_RATIOS,
+};
+
 // ------------------------------------------------------------- utilidades
 
 const media = (xs) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
@@ -238,21 +276,46 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
 
   const dias = (new Date(serie[serie.length - 1].fecha) - new Date(serie[0].fecha)) / 86400000;
   const anios = Math.max(dias / 365.25, 1 / 365.25);
-  // CAGR solo es informativo con al menos un mes de historico.
-  const anualizada = dias >= 30 ? (1 + total) ** (1 / anios) - 1 : null;
+
+  /*
+   * Muestra: por debajo del suelo, lo anualizado y los ratios no se calculan peor,
+   * no se calculan. Se declara el recuento para que la interfaz pueda decir cuantas
+   * sesiones faltan en lugar de un «no disponible» mudo: la cifra llegara.
+   */
+  const sesiones = serie.length;
+  const alcanza = (clave) => sesiones >= SUELO_POR_CIFRA[clave];
+  const hayAnualizada = alcanza('rentabilidadAnualizada');
+  const hayRatios = alcanza('ratioSharpe');
+
+  const anualizada = hayAnualizada ? (1 + total) ** (1 / anios) - 1 : null;
 
   const volDiaria = desviacionTipica(r);
   const volatilidad = volDiaria * Math.sqrt(SESIONES_ANIO);
 
   const rf = tasaLibreRiesgo / 100;
-  const sharpe = volatilidad > 0 && anualizada !== null ? (anualizada - rf) / volatilidad : null;
+
+  /*
+   * Numerador de Sharpe y Sortino: el exceso MEDIO anualizado, no el CAGR.
+   * Anualizar por composicion extrapola el tramo observado, y el ratio heredaba esa
+   * extrapolacion: con la cartera de agosto de 2026 el CAGR daba 153,92 % frente al
+   * 93,54 % de la media, y el Sharpe subia de 2,58 a 4,32 sin que nada lo hubiera
+   * ganado. El denominador ya es una media anualizada por √252: el numerador tiene
+   * que serlo por 252, o se comparan dos magnitudes distintas.
+   */
+  const excesoAnual = (media(r) - rf / SESIONES_ANIO) * SESIONES_ANIO;
+  const sharpe = hayRatios && volatilidad > 0 ? excesoAnual / volatilidad : null;
 
   const negativos = r.filter((x) => x < 0);
   const volBajista = desviacionTipica(negativos) * Math.sqrt(SESIONES_ANIO);
-  const sortino = volBajista > 0 && anualizada !== null ? (anualizada - rf) / volBajista : null;
+  const sortino = hayRatios && volBajista > 0 ? excesoAnual / volBajista : null;
 
   const dd = maximaCaida(serie);
-  const calmar = dd.caida < 0 && anualizada !== null ? anualizada / Math.abs(dd.caida / 100) : null;
+  // Calmar si conserva el CAGR en el numerador: es un rendimiento compuesto sobre
+  // caida. Pero es un ajustado por riesgo y espera al suelo de los ratios, no al de la
+  // anualizada: la caida maxima de una muestra corta es un unico episodio.
+  const calmar = hayRatios && dd.caida < 0 && anualizada !== null
+    ? anualizada / Math.abs(dd.caida / 100)
+    : null;
 
   // Comparativa con el indice de referencia sobre fechas estrictamente comunes.
   let beta = null;
@@ -280,7 +343,8 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
         rentBenchmark = nivelesB[nivelesB.length - 1] / nivelesB[0] - 1;
         valorIndexadoBenchmark = nivelesB[nivelesB.length - 1];
         // Alfa de Jensen anualizada.
-        if (beta !== null && anualizada !== null) {
+        // El alfa de Jensen es un ajustado por riesgo: mismo suelo que los ratios.
+        if (hayRatios && beta !== null && anualizada !== null) {
           const benchAnual = (1 + rentBenchmark) ** (1 / anios) - 1;
           alfa = anualizada - (rf + beta * (benchAnual - rf));
         }
@@ -290,10 +354,36 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
 
   const positivas = r.filter((x) => x > 0).length;
 
+  /*
+   * Que cifras retiene cada suelo, y cuanto les falta. Viaja resuelto para que la
+   * interfaz no tenga que saberse ni la lista ni los umbrales: una celda nombrada
+   * aqui se rotula con sus sesiones pendientes, y una celda vacia que NO este aqui
+   * sigue siendo un «no disponible» corriente, que es otra cosa.
+   */
+  const suelo = (minimas) => ({
+    minimas,
+    anios: Math.round(minimas / SESIONES_ANIO),
+    restantes: Math.max(minimas - sesiones, 0),
+  });
+  const retenidas = {};
+  for (const [clave, minimas] of Object.entries(SUELO_POR_CIFRA)) {
+    if (sesiones < minimas) retenidas[clave] = suelo(minimas);
+  }
+  const muestra = {
+    sesiones,
+    suficiente: Object.keys(retenidas).length === 0,
+    suelos: {
+      anualizada: suelo(SESIONES_MINIMAS_ANUALIZADA),
+      ratios: suelo(SESIONES_MINIMAS_RATIOS),
+    },
+    retenidas,
+  };
+
   return {
     inicio: serie[0].fecha,
     fin: serie[serie.length - 1].fecha,
     sesiones: serie.length,
+    muestra,
 
     // Rentabilidad: (valor final / capital invertido − 1) × 100.
     rentabilidadTotal: redondear(total * 100),

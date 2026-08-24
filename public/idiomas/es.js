@@ -535,6 +535,16 @@ export default {
   'cartera.cerradas.col.motivo': 'Motivo',
   'cartera.cerradas.motivo': 'Cerrada',
 
+  // ═════════════════════ Cartera · suelo de muestra ═════════════════════
+  'cartera.muestra.faltan': {
+    one: 'Falta {n} sesión · se publica con {minimas} ({plazo})',
+    other: 'Faltan {n} sesiones · se publica con {minimas} ({plazo})',
+  },
+  // El plazo viaja ya redactado: «1 año» y «3 años» concuerdan por su propia cuenta,
+  // no por la de las sesiones que falten.
+  'cartera.muestra.plazo': { one: '{n} año', other: '{n} años' },
+  'cartera.muestra.explicacion': 'Dos suelos distintos, por motivos distintos. Las cifras anualizadas se publican a partir de {anualizada} sesiones, un año: antes de cumplirlo, anualizar por composición extrapola un tramo que no se ha recorrido; a partir de ahí es la anualización de un rendimiento ocurrido, y eso es un hecho, no una inferencia. Los ratios ajustados por riesgo —Sharpe, Sortino, Calmar y el alfa de Jensen— esperan a {ratios} sesiones, tres años: es el mínimo del oficio —Morningstar no calcula medidas ajustadas por riesgo por debajo de ese plazo— y la aritmética lo respalda, porque su error típico depende del plazo y no de la frecuencia con que se muestree. Con {sesiones} sesiones ese error desborda a la propia cifra, de modo que el nivel no significaría nada. Lo que la muestra sí sostiene —rentabilidad total, volatilidad, máxima caída, beta— se publica desde el primer día.',
+
   // ═══════════════════════ Cartera · estadísticos ═══════════════════════
   'cartera.estadisticos.titulo': 'Parámetros y estadísticos',
   'cartera.estadisticos.subtitulo': 'Métricas de riesgo y rentabilidad',

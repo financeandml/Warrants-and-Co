@@ -523,6 +523,14 @@ export default {
   'cartera.cerradas.col.motivo': 'Reason',
   'cartera.cerradas.motivo': 'Closed',
 
+  // ═════════════════════ Portfolio · sample floor ═════════════════════
+  'cartera.muestra.faltan': {
+    one: '{n} session short · published from {minimas} ({plazo})',
+    other: '{n} sessions short · published from {minimas} ({plazo})',
+  },
+  'cartera.muestra.plazo': { one: '{n} year', other: '{n} years' },
+  'cartera.muestra.explicacion': 'Two different floors, for different reasons. Annualised figures are published from {anualizada} sessions, one year: before that, annualising by compounding extrapolates a stretch that has not been travelled; from then on it is the annualisation of a return that actually happened, and that is a fact, not an inference. Risk-adjusted ratios —Sharpe, Sortino, Calmar and Jensen’s alpha— wait for {ratios} sessions, three years: it is the floor the industry uses —Morningstar computes no risk-adjusted measures below that span— and the arithmetic backs it, because their standard error depends on the span, not on how often it is sampled. At {sesiones} sessions that error overwhelms the figure itself, so the level would mean nothing. What the sample does support —total return, volatility, maximum drawdown, beta— is published from day one.',
+
   // ═══════════════════════ Portfolio · statistics ═══════════════════════
   'cartera.estadisticos.titulo': 'Parameters and statistics',
   'cartera.estadisticos.subtitulo': 'Risk and return metrics',

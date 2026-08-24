@@ -15,6 +15,7 @@ import {
 import {
   pintarSnapshot, pintarRadar, pintarSignal, pintarPanelCartera,
   pintarResearch, pintarCatalizadores, pintarUltimasNoticias,
+  notaMuestra, retenidaPorMuestra,
 } from './home.js';
 import {
   pintarAlcance, pintarTablaInusual, pintarDestacadas, construirDetalleInusual,
@@ -1857,8 +1858,11 @@ function pintarCuadroMando(datos) {
       t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) }));
   }
 
+  const sharpePendiente = retenidaPorMuestra(e.muestra, 'ratioSharpe');
   indicador(t('cartera.indicador.sharpe'), formatearNumero(e.ratioSharpe),
-    t('cartera.indicador.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }));
+    sharpePendiente
+      ? notaMuestra(sharpePendiente)
+      : t('cartera.indicador.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }));
   indicador(t('cartera.indicador.maximaCaida'), formatearPorcentaje(e.maximaCaida),
     t('cartera.indicador.maximaCaida.nota'));
 }
@@ -2242,6 +2246,21 @@ function pintarEstadisticos(datos) {
     return;
   }
 
+  /* El suelo de muestra se explica una vez, aquí, y no en cada celda: la celda
+     dice qué le falta y esta nota dice por qué existe ese mínimo. */
+  const avisoMuestra = $('#nota-muestra');
+  if (avisoMuestra) {
+    const corta = e.muestra && !e.muestra.suficiente;
+    avisoMuestra.hidden = !corta;
+    avisoMuestra.textContent = corta
+      ? t('cartera.muestra.explicacion', {
+        anualizada: e.muestra.suelos.anualizada.minimas,
+        ratios: e.muestra.suelos.ratios.minimas,
+        sesiones: e.muestra.sesiones,
+      })
+      : '';
+  }
+
   const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark}`;
   $('#sub-estadisticos').textContent = t('cartera.estadisticos.periodo', {
     n: e.sesiones,
@@ -2257,17 +2276,17 @@ function pintarEstadisticos(datos) {
     [t('cartera.metrica.rentabilidadTotal'), formatearPorcentaje(e.rentabilidadTotal),
       t('cartera.metrica.rentabilidadTotal.nota'), e.rentabilidadTotal],
     [t('cartera.metrica.rentabilidadAnualizada'), formatearPorcentaje(e.rentabilidadAnualizada),
-      t('cartera.metrica.rentabilidadAnualizada.nota'), e.rentabilidadAnualizada],
+      t('cartera.metrica.rentabilidadAnualizada.nota'), e.rentabilidadAnualizada, 'rentabilidadAnualizada'],
     [t('cartera.metrica.rentabilidadIndice', { indice: datos.benchmark }), formatearPorcentaje(e.rentabilidadIndice),
       t('cartera.metrica.rentabilidadIndice.nota'), e.rentabilidadIndice],
     [t('cartera.metrica.volatilidad'), formatearPorcentaje(e.volatilidadAnualizada, false),
       t('cartera.metrica.volatilidad.nota')],
     [t('cartera.metrica.sharpe'), formatearNumero(e.ratioSharpe),
-      t('cartera.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) })],
+      t('cartera.metrica.sharpe.nota', { tasa: porcentaje(e.tasaLibreRiesgo, 1) }), undefined, 'ratioSharpe'],
     [t('cartera.metrica.sortino'), formatearNumero(e.ratioSortino),
-      t('cartera.metrica.sortino.nota')],
+      t('cartera.metrica.sortino.nota'), undefined, 'ratioSortino'],
     [t('cartera.metrica.calmar'), formatearNumero(e.ratioCalmar),
-      t('cartera.metrica.calmar.nota')],
+      t('cartera.metrica.calmar.nota'), undefined, 'ratioCalmar'],
     [t('cartera.metrica.maximaCaida'), formatearPorcentaje(e.maximaCaida),
       t('cartera.metrica.maximaCaida.nota', {
         desde: formatearFecha(e.maximaCaidaDesde), hasta: formatearFecha(e.maximaCaidaHasta),
@@ -2275,7 +2294,7 @@ function pintarEstadisticos(datos) {
     [t('cartera.metrica.beta'), formatearNumero(e.beta),
       t('cartera.metrica.beta.nota', { indice: datos.benchmark })],
     [t('cartera.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
-      t('cartera.metrica.alfa.nota'), e.alfaJensen],
+      t('cartera.metrica.alfa.nota'), e.alfaJensen, 'alfaJensen'],
     [t('cartera.metrica.correlacion'), formatearNumero(e.correlacionIndice),
       t('cartera.metrica.correlacion.nota', { indice: datos.benchmark })],
     [t('cartera.metrica.sesionesPositivas'), formatearPorcentaje(e.sesionesPositivasPct, false),
@@ -2284,13 +2303,18 @@ function pintarEstadisticos(datos) {
     [t('cartera.metrica.peorSesion'), formatearPorcentaje(e.peorSesion), sesion, e.peorSesion],
   ];
 
-  for (const [etiqueta, valor, nota, variacion] of metricas) {
+  /* Una cifra retenida por el suelo de muestra no lleva su nota de siempre —que
+     hablaría de un dato que no está— sino las sesiones que le faltan. La quinta
+     posición de cada métrica la nombra; el resto no la necesita. */
+  for (const [etiqueta, valor, nota, variacion, clave] of metricas) {
+    const retenida = retenidaPorMuestra(e.muestra, clave);
     const bloque = elemento('div', 'estadistico');
     bloque.appendChild(elemento('span', 'estadistico__etiqueta', etiqueta));
     const v = elemento('strong', 'estadistico__valor', valor);
     if (variacion !== undefined) v.className = `estadistico__valor ${claseVariacion(variacion)}`;
     bloque.appendChild(v);
-    if (nota) bloque.appendChild(elemento('span', 'estadistico__nota', nota));
+    const alPie = retenida ? notaMuestra(retenida) : nota;
+    if (alPie) bloque.appendChild(elemento('span', `estadistico__nota${retenida ? ' estadistico__nota--pendiente' : ''}`, alPie));
     rejilla.appendChild(bloque);
   }
 }

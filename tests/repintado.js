@@ -73,6 +73,18 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     await txt('#cuadro-mando .indicador--principal .indicador__valor'));
   comp('la leyenda dice desde dónde mide',
     await txt('#leyenda-grafico .leyenda__medida'), (v) => v && /capital invertido/.test(v));
+  /* Suelo de muestra: la celda retenida no dice «no hay dato», dice cuántas
+     sesiones faltan. Se afirma por la palabra que cambia de idioma y por el
+     recuento, que ha de ser el que publica el motor. */
+  comp('el Sharpe declara lo que le falta',
+    await txt('#cuadro-mando .indicador:has-text("Sharpe") .indicador__nota'),
+    (v) => v && /^Faltan \d+ sesiones · se publica con \d+ \(3 años\)$/.test(v));
+  /* Los suelos son dos y no caducan a la vez: la anualizada espera al año y los
+     ratios a los tres. La segunda celda de la rejilla es la anualizada; si alguna
+     vez los dos rótulos dijeran lo mismo, sobraría uno de los dos suelos. */
+  comp('la anualizada declara un suelo distinto del de los ratios',
+    await txt('#rejilla-estadisticos .estadistico:nth-child(2) .estadistico__nota'),
+    (v) => v && /\(1 año\)/.test(v) && !/756/.test(v));
   comp('porcentaje con espacio duro',
     await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && / %$/.test(v));
 
@@ -99,6 +111,12 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     await txt('#cuadro-mando .indicador--principal .indicador__valor'));
   comp('la leyenda dice desde dónde mide',
     await txt('#leyenda-grafico .leyenda__medida'), (v) => v && /invested capital/.test(v));
+  comp('el Sharpe declara lo que le falta',
+    await txt('#cuadro-mando .indicador:has-text("Sharpe") .indicador__nota'),
+    (v) => v && /^\d+ sessions short · published from \d+ \(3 years\)$/.test(v));
+  comp('la anualizada declara un suelo distinto del de los ratios',
+    await txt('#rejilla-estadisticos .estadistico:nth-child(2) .estadistico__nota'),
+    (v) => v && /\(1 year\)/.test(v) && !/756/.test(v));
   comp('estadísticos', await txt('#rejilla-estadisticos .estadistico__etiqueta'), 'Total return');
   comp('subtítulo del gráfico', await txt('#subtitulo-grafico'), (v) => v && /^Indexed value/.test(v));
   comp('leyenda del gráfico', await txt('#leyenda-grafico'), (v) => v && /Warrants & Co\. portfolio/.test(v));
