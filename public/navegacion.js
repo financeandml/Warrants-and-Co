@@ -19,11 +19,19 @@ import { t } from './i18n.js';
  *
  * Nota: `descripcion` está declarada pero hoy no se pinta en ninguna parte. Se
  * mantiene traducida para que el mapa sea coherente el día que se muestre.
+ *
+ * `oculta` retira un área de la interfaz SIN borrarla del mapa: desaparece del
+ * menú y sus rutas dejan de admitirse, pero el alcance del producto se sigue
+ * declarando aquí. Es un solo campo porque el menú que no la anuncia y la
+ * puerta que no la deja pasar son EL MISMO HECHO: `rutasVisibles()` es la única
+ * fuente de la que salen los dos, y `tests/areas.js` afirma que concuerdan.
+ * Volver a abrir un área es borrar la palabra `oculta` y nada más.
  */
 export const AREAS = [
   {
     clave: 'market',
     titulo: 'nav.market',
+    oculta: true,
     entradas: [
       { titulo: 'nav.market.radar', ruta: 'radar', descripcion: 'nav.market.radar.desc' },
       { titulo: 'nav.market.mercados', ruta: 'mercado', descripcion: 'nav.market.mercados.desc' },
@@ -43,6 +51,7 @@ export const AREAS = [
   {
     clave: 'options',
     titulo: 'nav.options',
+    oculta: true,
     entradas: [
       { titulo: 'nav.options.flujo', ruta: 'opciones', descripcion: 'nav.options.flujo.desc' },
       { titulo: 'nav.options.inusual', ruta: 'opciones', hash: 'inusual', descripcion: 'nav.options.inusual.desc' },
@@ -59,6 +68,20 @@ export const AREAS = [
     ],
   },
 ];
+
+/**
+ * Rutas que la interfaz admite hoy: las de las áreas no ocultas.
+ *
+ * De aquí sale el conjunto de secciones del enrutador. No es una lista aparte
+ * que haya que mantener en paralelo con el menú —eso las dejaría discrepar sin
+ * que se notase en pantalla—, sino la MISMA lectura de `AREAS` que construye el
+ * menú. Una entrada `pendiente` no tiene `ruta` y por eso no entra: anunciarse
+ * como próxima y no ser navegable también es un solo hecho.
+ */
+export function rutasVisibles() {
+  return AREAS.filter((a) => !a.oculta)
+    .flatMap((a) => a.entradas.map((e) => e.ruta).filter(Boolean));
+}
 
 /** Área a la que pertenece una sección, para marcarla como activa. */
 export function areaDeSeccion(seccion) {
@@ -89,6 +112,10 @@ export function construirNavegacion(alNavegar, alPendiente) {
   nav.textContent = '';
 
   for (const area of AREAS) {
+    // Un área oculta no se anuncia. Sigue en el mapa —y en `areaDeSeccion()`—
+    // porque el mapa declara el alcance del producto, no lo que hay abierto.
+    if (area.oculta) continue;
+
     const grupo = elemento('div', 'nav-grupo');
     grupo.dataset.area = area.clave;
     grupo.dataset.abierto = 'false';

@@ -48,13 +48,14 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    tome altura: es la degradación declarada, y se afirma en las dos direcciones
    —que crece donde debe y que NO crece donde no hace falta—. */
 const VENTANAS = [
-  { n: '1440×900',  w: 1440, h: 900,  crece: false },
-  { n: '1680×1050', w: 1680, h: 1050, crece: false },
-  { n: '1440×700',  w: 1440, h: 700,  crece: false },
-  { n: '1920×880',  w: 1920, h: 880,  crece: false },
-  // Muy apaisadas: aquí el encuadre solo no llega y el hero ha de crecer.
-  { n: '1920×700',  w: 1920, h: 700,  crece: true },
-  { n: '2560×800',  w: 2560, h: 800,  crece: true },
+  { n: '1440×900',  w: 1440, h: 900,  crece: false, lineas: true },
+  { n: '1680×1050', w: 1680, h: 1050, crece: false, lineas: true },
+  { n: '1440×700',  w: 1440, h: 700,  crece: true,  lineas: true },
+  { n: '1920×880',  w: 1920, h: 880,  crece: false, lineas: true },
+  // Muy apaisadas: aquí ni el encuadre ni el crecimiento dejan sitio a las dos
+  // líneas del hero, y son ellas las que ceden.
+  { n: '1920×700',  w: 1920, h: 700,  crece: true,  lineas: false },
+  { n: '2560×800',  w: 2560, h: 800,  crece: true,  lineas: false },
 ];
 
 const R = [];
@@ -99,6 +100,14 @@ const medir = (p) => p.evaluate(async () => {
   const cabecera = document.querySelector('.cabecera').getBoundingClientRect().height;
   const etiqueta = document.querySelector('.manifiesto .etiqueta-superior');
 
+  const bloque = po.querySelector('.portada__lineas');
+  const renglones = [...bloque.children].map((l) => Math.round(
+    l.getBoundingClientRect().height / parseFloat(getComputedStyle(l).lineHeight)));
+  // El asomo se acumula con `offsetTop`: el `translateY` de la aparición mueve el
+  // rectángulo y daría una cifra distinta antes y después de revelarse.
+  let yEtiqueta = 0;
+  for (let n = etiqueta; n; n = n.offsetParent) yEtiqueta += n.offsetTop;
+
   return {
     alto: hero.height,
     fraccion,
@@ -115,7 +124,16 @@ const medir = (p) => p.evaluate(async () => {
       .getPropertyValue('--alto-minimo-banner')) || 0,
     porVentana: 0.755 * svh - cabecera,
     // El pliegue: qué asoma del manifiesto por debajo del hero.
-    asomaEtiqueta: etiqueta ? svh - etiqueta.getBoundingClientRect().top : null,
+    asomaEtiqueta: etiqueta ? svh - yEtiqueta : null,
+    // La franja muerta del observador que revela el manifiesto. Se importa de
+    // donde vive el observador: es la misma cifra con la que el hero decide.
+    margenRevelado: (await import('/inicio.js')).MARGEN_REVELADO,
+    // Las dos líneas: si están puestas, si se ven, y si envuelven.
+    lineas: po.dataset.lineas,
+    lineasVisibles: getComputedStyle(bloque).visibility === 'visible',
+    lineasEnFlujo: getComputedStyle(bloque).position === 'static',
+    renglones,
+    textos: [...bloque.children].map((l) => l.textContent.trim()),
   };
 });
 
@@ -241,11 +259,103 @@ const medirFichero = (p) => p.evaluate(async () => {
     t(`${v.n} · el hero ${v.crece ? 'crece porque el encuadre no llega' : 'NO crece: el encuadre basta'}`,
       crecio === v.crece,
       `hero ${m.alto.toFixed(0)} · por ventana ${m.porVentana.toFixed(0)} · exige ${m.minimoBanner}`);
-    // Crecer se paga en pliegue, pero nunca hasta perderlo: el manifiesto sigue asomando.
-    t(`${v.n} · el manifiesto sigue asomando bajo el hero`,
-      m.asomaEtiqueta !== null && m.asomaEtiqueta > 0,
-      `asoman ${m.asomaEtiqueta?.toFixed(0)} px`);
+    /* Crecer se paga en pliegue, y el pago tiene un suelo: lo que asome dentro de
+       la franja muerta del observador NO llega a revelarse y aparecería una caja
+       vacía. Es el invariante que justifica que las líneas cedan, así que se
+       afirma contra la MISMA cifra con la que el hero decide. */
+    t(`${v.n} · el manifiesto asoma lo bastante para revelarse`,
+      m.asomaEtiqueta !== null && m.asomaEtiqueta > m.margenRevelado,
+      `asoman ${m.asomaEtiqueta?.toFixed(0)} px, franja muerta ${m.margenRevelado}`);
 
+    /* ── Las dos líneas del hero, en las dos direcciones ──
+       Se pintan donde caben y desaparecen donde no, y «desaparecer» se comprueba
+       por lo que ve el usuario —visibilidad— y no solo por el atributo. */
+    t(`${v.n} · las líneas ${v.lineas ? 'se pintan porque caben' : 'ceden porque no caben'}`,
+      m.lineas === String(v.lineas), `data-lineas="${m.lineas}"`);
+    t(`${v.n} · y se ven o no se ven en consecuencia`,
+      m.lineasVisibles === v.lineas && m.lineasEnFlujo === v.lineas,
+      `visibles ${m.lineasVisibles} · en flujo ${m.lineasEnFlujo}`);
+
+    /* El presupuesto: envolviendo cuestan 120 px de hero en vez de 50, y con 120
+       no caben en ninguna ventana apaisada. Se afirma sobre el texto realmente
+       pintado, de modo que una traducción larga se caza aquí y no en producción. */
+    if (v.lineas) {
+      t(`${v.n} · ninguna de las dos líneas envuelve`,
+        m.renglones.every((n) => n === 1), `renglones ${m.renglones.join(' y ')}`);
+    }
+
+    await ctx.close();
+  }
+
+  /* ── La decisión no oscila ──
+     En el límite exacto, un píxel de ventana mueve el asomo 0,755 px: sin banda
+     de histéresis las líneas parpadearían al redimensionar. Se barre el umbral
+     píxel a píxel en las dos direcciones y se exige que el cambio ocurra UNA vez
+     en cada sentido, que el punto de vuelta esté por encima del de caída —eso es
+     la banda— y que en el punto justo de caída el estado no se mueva por sí solo.
+
+     Se vio fallar: sin banda, y midiendo el bloque oculto con `display: none`
+     —que lo deja a cero y hace que el coste parezca nulo—, la bajada y la subida
+     acumulan cambios en el mismo píxel. */
+  {
+    const ctx = await navegador.newContext({ viewport: { width: 1440, height: 760 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+    await encuadrada(p);
+
+    const estado = async () => {
+      await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+      return p.evaluate(() => document.getElementById('portada').dataset.lineas);
+    };
+    const barrer = async (desde, hasta, paso) => {
+      const cambios = [];
+      let previo = null;
+      for (let h = desde; paso > 0 ? h <= hasta : h >= hasta; h += paso) {
+        await p.setViewportSize({ width: 1440, height: h });
+        const e = await estado();
+        if (previo !== null && e !== previo) cambios.push({ h, de: previo, a: e });
+        previo = e;
+      }
+      return cambios;
+    };
+
+    console.log('\n  ── la decisión no oscila (barrido a 1440 px de ancho) ──');
+    const bajada = await barrer(720, 660, -1);
+    t('bajando, las líneas ceden una sola vez',
+      bajada.length === 1 && bajada[0].a === 'false',
+      bajada.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
+
+    const subida = await barrer(660, 730, 1);
+    t('subiendo, vuelven una sola vez',
+      subida.length === 1 && subida[0].a === 'true',
+      subida.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
+
+    /* La banda, dicha como la nota quien arrastra el borde de la ventana: tras
+       ceder, devolver la ventana un poco NO las trae de vuelta. Sin banda, el
+       punto de caída y el de vuelta caen en el mismo píxel y esto falla; con el
+       barrido de dos en dos que tenía antes, el propio paso disimulaba la
+       ausencia de banda y la prueba pasaba en verde. */
+    t('vuelven más arriba de donde cedieron, y no por el paso del barrido',
+      bajada.length === 1 && subida.length === 1 && subida[0].h - bajada[0].h > 4,
+      `cede en ${bajada[0]?.h} · vuelve en ${subida[0]?.h}`);
+
+    if (bajada.length === 1) {
+      await p.setViewportSize({ width: 1440, height: bajada[0].h - 1 });
+      await estado();
+      await p.setViewportSize({ width: 1440, height: bajada[0].h + 4 });
+      t('devolver la ventana unos píxeles no las trae de vuelta',
+        (await estado()) === 'false', `a ${bajada[0].h + 4} px de alto`);
+    }
+
+    // Y en el punto justo del cambio, quieto es quieto.
+    if (bajada.length === 1) {
+      await p.setViewportSize({ width: 1440, height: bajada[0].h });
+      const serie = [];
+      for (let i = 0; i < 8; i++) serie.push(await estado());
+      t('en el punto de cambio, el estado no se mueve solo',
+        new Set(serie).size === 1, serie.join(','));
+    }
     await ctx.close();
   }
 

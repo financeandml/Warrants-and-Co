@@ -78,19 +78,43 @@ ni el cliente, ni las demás secciones necesitan cambios.
 
 La portada funciona como cuadro de mando y se compone de ocho bloques:
 
-**1 · Hero** — **La marca es el único texto.** «Warrants & Co.» y tres accesos de igual
-peso —radar, repositorio y LinkedIn—, nada más.
+**1 · Hero** — «Warrants & Co.», dos líneas de texto y tres accesos de igual peso
+—radar, repositorio y LinkedIn—.
 
-La composición no es un descuido: está calculada sobre la fotografía de portada. El
-banner tiene una banda de cielo vacía en su 30 % superior, y el bloque se ancla arriba
+La composición está calculada sobre la fotografía de portada. El banner tiene una banda
+de cielo vacía por encima de la copa del árbol, y el bloque se ancla arriba
 —`place-items: start center`— para caer justo sobre ella, dejando el árbol y la línea del
-horizonte por debajo de los accesos. Un eyebrow y un lema volverían a llenar esa banda y
-duplicarían, además, lo que ya dice el manifiesto.
+horizonte por debajo de los accesos.
 
-Porque el enunciado no se ha perdido: vive en el **manifiesto**, inmediatamente debajo
-—«Market intelligence for investors who think in probabilities» y su entradilla sobre
-research fundamental, market intelligence y options analytics—. El hero abre; el
-manifiesto explica.
+### Por qué el hero llegó a no tener más texto que la marca
+
+**La regla anterior era «la marca es el único texto», y tenía razón.** El argumento no era
+de gusto: un eyebrow y un lema volvían a llenar la banda limpia de cielo —el único espacio
+negativo grande de la foto— y, sobre todo, **duplicaban lo que ya dice el manifiesto**
+inmediatamente debajo. El enunciado no se había perdido: vive ahí, en «Market intelligence
+for investors who think in probabilities» y su entradilla sobre research fundamental,
+market intelligence y options analytics. El hero abría; el manifiesto explicaba.
+
+Queda escrito porque **el riesgo que describe sigue vivo**: quien añada texto al hero ha
+de comprobar antes que no repita al manifiesto, y ha de contar con que cada línea se paga
+en altura.
+
+### Por qué estas dos líneas no incurren en la duplicación
+
+> Las tesis se publican con su precio y su fecha, y de ahí sale la cartera.
+> El historial no se declara: se calcula desde lo publicado.
+
+No enuncian: **describen un mecanismo**, y uno verificable. El manifiesto dice qué clase
+de casa es esta; estas dos dicen cómo se construye lo que hay justo debajo —la fila de
+cifras—, y cualquiera puede abrir la cartera y seguir la cuenta. No comparten con el
+manifiesto ni un sustantivo: ni «inteligencia de mercado», ni «análisis fundamental», ni
+«probabilidades», ni «convicción». Tampoco repiten el lema de la cabecera, «Análisis e
+Inversión».
+
+**Y ceden el sitio cuando no caben**, que es lo que las distingue de aquel eyebrow: no son
+un elemento fijo que compita con la fotografía, sino un término más de la cuenta que
+encuadra el banner. Cómo se decide, y por qué la decisión no oscila, está en «Dónde se
+recorta la fotografía».
 
 **La cinta de cotizaciones cierra el hero.** Va dentro de él, anclada a su borde
 inferior, en fila propia de la rejilla —no en posición absoluta—, de modo que en
@@ -134,6 +158,40 @@ sobre un campo gris.
 >
 > Sin JavaScript, `--encuadre-banner` vale 0 % y `--alto-minimo-banner` no interviene: la
 > reserva es la composición anclada arriba, que es la correcta cuando sobra alto.
+
+> **Y un tercer término: las dos líneas del hero.** Cuestan altura de bloque de marca, y
+> el bloque entra entero en el mínimo, de modo que allí donde el hero ya crecía por la
+> foto ese coste sale del pliegue. Medido: sin envolver son 78–86 px, gratis en cuatro de
+> las seis ventanas de `tests/portada.js` y letales en las otras dos, donde el manifiesto
+> pasaba a asomar 25 y 33 px —por debajo de la franja muerta de su observador, o sea una
+> caja vacía—. **Ceden ellas**, porque de las tres cosas en juego son la única que al
+> faltar no rompe nada: el árbol sin holgura es un fallo de composición y el manifiesto sin
+> revelar es un rectángulo en blanco.
+>
+> **Por qué la decisión no oscila**, que son dos cosas y hacen falta las dos:
+>
+> 1. **La entrada de la decisión no depende de la decisión.** Se calcula lo que asomaría
+>    *con* las líneas, estén como estén ahora. Por eso el bloque oculto sigue maquetado
+>    —fuera de flujo con `visibility: hidden`, no plegado con `display: none`—: plegado
+>    mediría cero, el coste parecería nulo, cabrían siempre, y a la pasada siguiente ya no.
+>    Ese es el bucle, y se cierra midiendo en vez de suponer. Reintroducido el
+>    `display: none`, la batería enseña el parpadeo píxel a píxel: `682: true→false |
+>    680: false→true | 676: true→false…`
+> 2. **Aun así, dos umbrales.** Justo en el límite un píxel de ventana mueve el asomo
+>    0,755 px y bastaría para hacerlas parpadear. Puestas aguantan hasta la franja muerta;
+>    quitadas no vuelven hasta que sobre además **un renglón de la etiqueta**. Esa banda no
+>    es una cifra elegida: es el alto de línea del propio rótulo que ha de asomar, medido.
+>    A 1440 px de ancho ceden a los 682 px de ventana y vuelven a los 712, y repiten.
+>
+> **La franja muerta es una sola cifra.** `MARGEN_REVELADO` se declara en `inicio.js`,
+> donde vive el observador que revela el manifiesto, y de ahí la importan tanto el
+> `rootMargin` de ese observador como el hero para decidir. Escribirla en los dos sitios
+> era dejar que un día dejaran de decir lo mismo sin que se viera en pantalla.
+>
+> **El presupuesto manda sobre el texto.** Envolviendo, las líneas cuestan 120 px en vez de
+> 78 y no caben en ninguna ventana apaisada, así que cada idioma ha de caber en un renglón
+> a 78 ch —unos 72 caracteres—. La batería lo afirma sobre el texto realmente pintado: una
+> traducción larga se caza ahí y no en producción.
 
 > **Un hecho, una fuente.** La fracción visible, la posición del árbol y la altura de la
 > cinta son el mismo hecho dicho tres veces, y solo una se escribe. **La posición del
@@ -1344,7 +1402,14 @@ Los tres apoyos no se apoyan entre sí: las fracciones declaradas contra los pí
 `background-position` que el navegador aplica; y lo publicado en `data-holgura-cinta`
 contra esa medida. Se vio fallar con el defecto original —doce afirmaciones, con la base
 del árbol hasta 391 px por debajo del corte— y sin el `ResizeObserver` —otras doce, con
-«publicada 28 · medida −24,5»—. 52 comprobaciones.
+«publicada 28 · medida −24,5»—.
+
+Afirma además las dos líneas del hero en las dos direcciones —que se pintan donde caben y
+ceden donde no—, que ninguna envuelve en el idioma que se esté pintando, y que la decisión
+no oscila: barrido píxel a píxel en los dos sentidos, un solo cambio en cada uno, el punto
+de vuelta por encima del de caída y el estado quieto en el punto justo del cambio. Se vio
+fallar sin banda de histéresis —«cede en 682 · vuelve en 683»— y con el bloque oculto
+plegado, que devuelve el parpadeo. 73 comprobaciones.
 
 Solo lee: no escribe en la base.
 

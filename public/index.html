@@ -64,10 +64,22 @@
       <div class="contenedor portada__interior">
         <h1 class="portada__marca-principal" id="portada-titulo">Warrants &amp; Co.</h1>
 
+        <!-- ── Las dos líneas del hero ──
+             Dicen qué es esto y de dónde sale, y no repiten al manifiesto: el
+             manifiesto enuncia, estas describen el mecanismo. Su altura la mide
+             `seguirEncuadreBanner()`, que decide si caben; cuando no caben, el
+             bloque sale del flujo pero SIGUE maquetado, porque la decisión se
+             toma sobre lo que costarían y eso no se puede medir en un nodo
+             plegado. -->
+        <div class="portada__lineas">
+          <p class="portada__linea" data-i18n="portada.linea.que">Las tesis se publican con su precio y su fecha, y de ahí sale la cartera.</p>
+          <p class="portada__linea portada__linea--secundaria" data-i18n="portada.linea.como">El historial no se declara: se calcula desde lo publicado.</p>
+        </div>
+
         <nav class="portada__accesos" data-i18n-attr="aria-label:portada.accesos.etiqueta"
              aria-label="Accesos principales">
-          <a class="acceso" href="#/radar" data-ruta
-             data-i18n="portada.acceso.radar">Explorar el radar</a>
+          <a class="acceso" href="#/companias" data-ruta
+             data-i18n="portada.acceso.cobertura">Explorar la cobertura</a>
           <a class="acceso" href="#/repositorio" data-ruta
              data-i18n="portada.acceso.research">Ver el análisis</a>
           <a class="acceso" href="https://www.linkedin.com/company/warrants-co/"
@@ -106,8 +118,8 @@
           <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
           <p class="manifiesto__entrada aparicion" style="--i:2"
              data-i18n="portada.manifiesto.entrada">
-            Análisis fundamental, inteligencia de mercado y analítica de opciones para
-            identificar dónde la convicción se encuentra con la oportunidad.
+            Análisis fundamental de las compañías en cobertura, la agenda de lo que
+            puede moverlas y una cartera cuyo historial se puede comprobar tesis a tesis.
           </p>
         </div>
 
@@ -127,12 +139,12 @@
 
           <article class="pilar aparicion" style="--i:4">
             <span class="pilar__numero" aria-hidden="true">02</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.radar.titulo">Radar</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.radar.texto">
-              Una lectura sistemática del mercado, pensada para hacer emerger las
-              oportunidades y las señales más relevantes.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.catalizadores.titulo">Catalizadores</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.catalizadores.texto">
+              La agenda de lo que puede mover cada tesis: resultados, vencimientos
+              y fechas con impacto sobre la cobertura.
             </p>
-            <a class="pilar__enlace" href="#/radar" data-ruta>
+            <a class="pilar__enlace" href="#/catalizadores" data-ruta>
               <span data-i18n="portada.pilar.explorar">Explorar</span>
               <span class="pilar__flecha" aria-hidden="true">→</span>
             </a>
@@ -140,12 +152,12 @@
 
           <article class="pilar aparicion" style="--i:5">
             <span class="pilar__numero" aria-hidden="true">03</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.options.titulo">Opciones</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.options.texto">
-              Actividad en opciones, posicionamiento inusual y señales derivadas
-              del propio mercado.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.cartera.titulo">Cartera</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.cartera.texto">
+              Lo que las tesis publicadas han hecho: posiciones vivas, cerradas y
+              el historial calculado desde su precio y su fecha.
             </p>
-            <a class="pilar__enlace" href="#/opciones" data-ruta>
+            <a class="pilar__enlace" href="#/cartera" data-ruta>
               <span data-i18n="portada.pilar.explorar">Explorar</span>
               <span class="pilar__flecha" aria-hidden="true">→</span>
             </a>
@@ -174,7 +186,7 @@
     </div>
 
     <!-- ═══════════════════════════ MARKET PULSE ═══════════════════════════ -->
-    <section class="bloque-home" id="home-pulse" aria-labelledby="titulo-pulse">
+    <section class="bloque-home" id="home-pulse" aria-labelledby="titulo-pulse" hidden>
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
@@ -207,7 +219,7 @@
     </section>
 
     <!-- ════════════════════════════ W&C RADAR ═════════════════════════════ -->
-    <section class="bloque-home" id="home-radar" aria-labelledby="titulo-home-radar">
+    <section class="bloque-home" id="home-radar" aria-labelledby="titulo-home-radar" hidden>
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
@@ -260,7 +272,7 @@
     </section>
 
     <!-- ══════════════════════════ OPTIONS FLOW ════════════════════════════ -->
-    <section class="bloque-home" id="home-flujo" aria-labelledby="titulo-home-flujo">
+    <section class="bloque-home" id="home-flujo" aria-labelledby="titulo-home-flujo" hidden>
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
@@ -278,7 +290,7 @@
     </section>
 
     <!-- ════════════════════════════ W&C SIGNAL ════════════════════════════ -->
-    <section class="bloque-home" id="home-signal" aria-labelledby="titulo-home-signal">
+    <section class="bloque-home" id="home-signal" aria-labelledby="titulo-home-signal" hidden>
       <div class="contenedor">
         <header class="bloque-home__cabecera">
           <div>
@@ -1021,9 +1033,7 @@
     <nav class="pie__navegacion"
          data-i18n-attr="aria-label:pie.nav.etiqueta" aria-label="Secciones de Warrants &amp; Co.">
       <a href="#/companias" data-ruta data-i18n="nav.research">Research</a>
-      <a href="#/radar" data-ruta data-i18n="nav.market.radar">Radar</a>
-      <a href="#/mercado" data-ruta data-i18n="nav.market">Market</a>
-      <a href="#/opciones" data-ruta data-i18n="nav.options">Options</a>
+      <a href="#/catalizadores" data-ruta data-i18n="nav.research.catalizadores">Catalizadores</a>
       <a href="#/cartera" data-ruta data-i18n="nav.portfolio">Portfolio</a>
       <a href="#/noticias" data-ruta data-i18n="nav.research.noticias">News</a>
     </nav>

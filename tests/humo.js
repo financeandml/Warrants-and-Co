@@ -1,7 +1,7 @@
 /* ============================================================================
    Comprobación de humo.
 
-   Recorre las nueve secciones en los dos idiomas y verifica cuatro cosas: que
+   Recorre las secciones navegables en los dos idiomas y verifica cuatro cosas: que
    la sección se pinta, que `lang` sigue al idioma elegido, que la página no
    desborda a lo ancho y que no llega ninguna clave de diccionario sin traducir
    a la pantalla.
@@ -20,11 +20,15 @@ const { exigirPlaywright } = require('./dependencias');
 
 const { chromium } = exigirPlaywright('comprobación de humo');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
+/* Rutas navegables. Las de las áreas ocultas —radar, mercado y opciones— no
+   figuran: su sección sigue en el documento, pero el enrutador ya no las admite
+   y `irA()` cae en la portada, de modo que afirmar que se ven sería afirmar lo
+   contrario de lo que ahora debe pasar. `tests/areas.js` cubre ese lado. */
 const RUTAS = [
-  ['inicio', '#seccion-inicio'], ['radar', '#seccion-radar'],
+  ['inicio', '#seccion-inicio'],
   ['repositorio', '#seccion-repositorio'], ['companias', '#seccion-companias'],
-  ['catalizadores', '#seccion-catalizadores'], ['mercado', '#seccion-mercado'],
-  ['opciones', '#seccion-opciones'], ['cartera', '#seccion-cartera'],
+  ['catalizadores', '#seccion-catalizadores'],
+  ['cartera', '#seccion-cartera'],
   ['noticias', '#seccion-noticias'],
 ];
 (async () => {

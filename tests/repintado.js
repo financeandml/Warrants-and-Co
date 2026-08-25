@@ -22,6 +22,16 @@ const { exigirPlaywright } = require('./dependencias');
 const { chromium } = exigirPlaywright('repintado al cambiar de idioma');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
+/* Las tandas de radar, mercado y opciones duermen mientras sus áreas estén
+   ocultas: sus rutas ya no se admiten, de modo que `goto()` aterrizaría en la
+   portada y las comprobaciones fallarían por una razón que no es la suya.
+
+   NO se borran. Cubren repintado que sigue siendo correcto —`COLUMNAS` como
+   constante de módulo, el sello de calidad, la antigüedad relativa— y que
+   volvería sin prueba el día que las áreas vuelvan. Reabrirlas es poner esto a
+   `true` a la vez que se quita `oculta` en `navegacion.js`. */
+const AREAS_OCULTAS = false;
+
 (async () => {
   const navegador = await chromium.launch();
   const ctx = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
@@ -158,68 +168,70 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   comp('el filtro elegido sobrevive al repintado',
     await p.locator('#filtro-sector').inputValue(), elegido);
 
-  // ── Radar ──
-  // Los seis bloques se construyen en JavaScript salvo sus cabeceras. Se
-  // comprueban las dos mitades: los rótulos del documento y lo que pintan los
-  // pintores de `home.js` desde lo que el radar guardó.
-  await p.goto(`${B}/#/radar`);
-  // El radar resuelve seis fuentes y la agenda tarda segundos. Hay que esperar a
-  // que TODAS hayan pintado antes de conmutar: un bloque que llegue después del
-  // cambio pinta ya con el diccionario nuevo, y entonces la prueba pasaría sin
-  // que nadie haya repintado nada. Se espera por condición, no por reloj.
-  const radarPintado = () => p.waitForFunction(() => {
-    const lleno = (sel) => (document.querySelector(sel)?.textContent ?? '').trim().length > 0;
-    return ['#snapshot-mercado', '#rejilla-radar', '#tarjeta-signal', '#agenda-catalizadores',
-      '#rejilla-research', '#lista-titulares', '#panel-cartera'].every(lleno);
-  }, null, { timeout: 60000 });
-  await radarPintado();
-  await idioma('es');
-  await radarPintado();
+  if (AREAS_OCULTAS) {  // área Mercado · radar — dormida, no borrada
+    // ── Radar ──
+    // Los seis bloques se construyen en JavaScript salvo sus cabeceras. Se
+    // comprueban las dos mitades: los rótulos del documento y lo que pintan los
+    // pintores de `home.js` desde lo que el radar guardó.
+    await p.goto(`${B}/#/radar`);
+    // El radar resuelve seis fuentes y la agenda tarda segundos. Hay que esperar a
+    // que TODAS hayan pintado antes de conmutar: un bloque que llegue después del
+    // cambio pinta ya con el diccionario nuevo, y entonces la prueba pasaría sin
+    // que nadie haya repintado nada. Se espera por condición, no por reloj.
+    const radarPintado = () => p.waitForFunction(() => {
+      const lleno = (sel) => (document.querySelector(sel)?.textContent ?? '').trim().length > 0;
+      return ['#snapshot-mercado', '#rejilla-radar', '#tarjeta-signal', '#agenda-catalizadores',
+        '#rejilla-research', '#lista-titulares', '#panel-cartera'].every(lleno);
+    }, null, { timeout: 60000 });
+    await radarPintado();
+    await idioma('es');
+    await radarPintado();
 
-  console.log('\n  ── radar · castellano de partida ──');
-  comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Inteligencia de mercado');
-  comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Cartera');
-  comp('cabecera de análisis', await txt('#titulo-top-research'), 'Análisis destacado');
-  comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Próximos catalizadores');
-  comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Últimas noticias');
-  comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Signal agregado');
-  if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
-    comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'),
-      'Rentabilidad de la cartera');
-  }
-  if (await p.locator('#aportaciones h2').count()) {
-    comp('columna de aportaciones', await txt('#aportaciones h2'), 'Las que más suman');
-  }
-  const recuentoEs = await txt('#estado-radar');
-  if (recuentoEs) {
-    comp('recuento de señales con plural', recuentoEs,
-      (v) => v && /^\d+ de \d+ señales? operativas?$/.test(v));
-  }
+    console.log('\n  ── radar · castellano de partida ──');
+    comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Inteligencia de mercado');
+    comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Cartera');
+    comp('cabecera de análisis', await txt('#titulo-top-research'), 'Análisis destacado');
+    comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Próximos catalizadores');
+    comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Últimas noticias');
+    comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Signal agregado');
+    if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
+      comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'),
+        'Rentabilidad de la cartera');
+    }
+    if (await p.locator('#aportaciones h2').count()) {
+      comp('columna de aportaciones', await txt('#aportaciones h2'), 'Las que más suman');
+    }
+    const recuentoEs = await txt('#estado-radar');
+    if (recuentoEs) {
+      comp('recuento de señales con plural', recuentoEs,
+        (v) => v && /^\d+ de \d+ señales? operativas?$/.test(v));
+    }
 
-  await idioma('en');
-  console.log('\n  ── radar · repintado al conmutar, sin recargar ──');
-  comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Market intelligence');
-  comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Portfolio');
-  comp('cabecera de análisis', await txt('#titulo-top-research'), 'Top research');
-  comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Upcoming catalysts');
-  comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Latest news');
-  comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Aggregate Signal');
+    await idioma('en');
+    console.log('\n  ── radar · repintado al conmutar, sin recargar ──');
+    comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Market intelligence');
+    comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Portfolio');
+    comp('cabecera de análisis', await txt('#titulo-top-research'), 'Top research');
+    comp('cabecera de catalizadores', await txt('#titulo-catalizadores'), 'Upcoming catalysts');
+    comp('cabecera de noticias', await txt('#titulo-ultimas-noticias'), 'Latest news');
+    comp('rótulo de Signal', await txt('#tarjeta-signal .signal__etiqueta'), 'Aggregate Signal');
 
-  // Los nombres de producto no se traducen, y nadie les puso `data-i18n`.
-  comp('«W&C Radar» sigue siendo «W&C Radar»', await txt('#titulo-radar'), 'W&C Radar');
-  comp('«W&C Signal» sigue siendo «W&C Signal»', await txt('#titulo-signal'), 'W&C Signal');
+    // Los nombres de producto no se traducen, y nadie les puso `data-i18n`.
+    comp('«W&C Radar» sigue siendo «W&C Radar»', await txt('#titulo-radar'), 'W&C Radar');
+    comp('«W&C Signal» sigue siendo «W&C Signal»', await txt('#titulo-signal'), 'W&C Signal');
 
-  // Lo que pintan los pintores desde lo guardado, no el documento.
-  if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
-    comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'), 'Portfolio return');
-  }
-  if (await p.locator('#aportaciones h2').count()) {
-    comp('columna de aportaciones', await txt('#aportaciones h2'), 'Top contributors');
-  }
-  const recuento = await txt('#estado-radar');
-  if (recuento) {
-    comp('recuento de señales con plural', recuento,
-      (v) => v && /^\d+ of \d+ signals? live$/.test(v));
+    // Lo que pintan los pintores desde lo guardado, no el documento.
+    if (await p.locator('#panel-cartera .indicador__etiqueta').count()) {
+      comp('métrica del panel', await txt('#panel-cartera .indicador__etiqueta'), 'Portfolio return');
+    }
+    if (await p.locator('#aportaciones h2').count()) {
+      comp('columna de aportaciones', await txt('#aportaciones h2'), 'Top contributors');
+    }
+    const recuento = await txt('#estado-radar');
+    if (recuento) {
+      comp('recuento de señales con plural', recuento,
+        (v) => v && /^\d+ of \d+ signals? live$/.test(v));
+    }
   }
 
   // ── Compañías ──
@@ -331,131 +343,135 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   // comprobación no distinguiría nada. La prueba de que se traducen la da el lado
   // castellano, donde «PRENSA» y «PRESS» sí se separan.
 
-  // ── Mercado ──
-  // Todo el panorama se construye en JavaScript salvo la cabecera. Incluye dos
-  // cosas que antes solo sabían castellano: el sello de calidad, que se pintaba
-  // con su código crudo, y la antigüedad del dato, que era una escalera de
-  // condiciones y ahora la redacta `Intl.RelativeTimeFormat`.
-  await p.goto(`${B}/#/mercado`);
-  // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados.
-  const mercadoPintado = () => p.waitForFunction(
-    () => document.querySelectorAll('#panorama-mercado .tarjeta-mercado').length > 0,
-    null, { timeout: 60000 });
-  await mercadoPintado();
-  await idioma('es');
-  await mercadoPintado();
+  if (AREAS_OCULTAS) {  // área Mercado — dormida, no borrada
+    // ── Mercado ──
+    // Todo el panorama se construye en JavaScript salvo la cabecera. Incluye dos
+    // cosas que antes solo sabían castellano: el sello de calidad, que se pintaba
+    // con su código crudo, y la antigüedad del dato, que era una escalera de
+    // condiciones y ahora la redacta `Intl.RelativeTimeFormat`.
+    await p.goto(`${B}/#/mercado`);
+    // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados.
+    const mercadoPintado = () => p.waitForFunction(
+      () => document.querySelectorAll('#panorama-mercado .tarjeta-mercado').length > 0,
+      null, { timeout: 60000 });
+    await mercadoPintado();
+    await idioma('es');
+    await mercadoPintado();
 
-  console.log('\n  ── mercado · castellano de partida ──');
-  comp('titular', await txt('#seccion-mercado h1'), 'Mercados');
-  comp('antetítulo', await txt('#seccion-mercado .etiqueta-superior'), 'Mercado');
-  comp('cobertura con plural', await txt('#estado-mercado'),
-    (v) => v && /^\d+ de \d+ instrumentos? resueltos?/.test(v));
-  comp('leyenda de calidades',
-    await txt('#panorama-mercado .rejilla-leyenda'), (v) => Boolean(v));
+    console.log('\n  ── mercado · castellano de partida ──');
+    comp('titular', await txt('#seccion-mercado h1'), 'Mercados');
+    comp('antetítulo', await txt('#seccion-mercado .etiqueta-superior'), 'Mercado');
+    comp('cobertura con plural', await txt('#estado-mercado'),
+      (v) => v && /^\d+ de \d+ instrumentos? resueltos?/.test(v));
+    comp('leyenda de calidades',
+      await txt('#panorama-mercado .rejilla-leyenda'), (v) => Boolean(v));
 
-  // Las listas de sellos y `esSello()` los declara el bloque de compañías: es el
-  // mismo vocabulario, y duplicarlo aquí solo daría dos sitios que mantener.
-  // El sello se pintaba con su código: «UNAVAILABLE» en mitad del castellano.
-  comp('sello de calidad traducido',
-    await txt('#panorama-mercado .sello'), esSello(SELLOS_ES));
-  // «hace 5 min» lo redacta el navegador, no una plantilla.
-  if (await p.locator('#panorama-mercado .tarjeta-mercado__pie span').count()) {
-    comp('antigüedad en castellano',
-      await txt('#panorama-mercado .tarjeta-mercado__pie span:nth-child(2)'),
-      (v) => Boolean(v) && !/\bago\b/.test(String(v)));
+    // Las listas de sellos y `esSello()` los declara el bloque de compañías: es el
+    // mismo vocabulario, y duplicarlo aquí solo daría dos sitios que mantener.
+    // El sello se pintaba con su código: «UNAVAILABLE» en mitad del castellano.
+    comp('sello de calidad traducido',
+      await txt('#panorama-mercado .sello'), esSello(SELLOS_ES));
+    // «hace 5 min» lo redacta el navegador, no una plantilla.
+    if (await p.locator('#panorama-mercado .tarjeta-mercado__pie span').count()) {
+      comp('antigüedad en castellano',
+        await txt('#panorama-mercado .tarjeta-mercado__pie span:nth-child(2)'),
+        (v) => Boolean(v) && !/\bago\b/.test(String(v)));
+    }
+
+    await idioma('en');
+    console.log('\n  ── mercado · repintado al conmutar, sin recargar ──');
+    comp('titular', await txt('#seccion-mercado h1'), 'Markets');
+    comp('cobertura con plural', await txt('#estado-mercado'),
+      (v) => v && /^\d+ of \d+ instruments? resolved/.test(v));
+    comp('sello de calidad traducido',
+      await txt('#panorama-mercado .sello'), esSello(SELLOS_EN));
+    comp('cabecera de la leyenda',
+      await txt('#panorama-mercado .bloque-panel:last-child h2'), 'Data quality');
   }
 
-  await idioma('en');
-  console.log('\n  ── mercado · repintado al conmutar, sin recargar ──');
-  comp('titular', await txt('#seccion-mercado h1'), 'Markets');
-  comp('cobertura con plural', await txt('#estado-mercado'),
-    (v) => v && /^\d+ of \d+ instruments? resolved/.test(v));
-  comp('sello de calidad traducido',
-    await txt('#panorama-mercado .sello'), esSello(SELLOS_EN));
-  comp('cabecera de la leyenda',
-    await txt('#panorama-mercado .bloque-panel:last-child h2'), 'Data quality');
+  if (AREAS_OCULTAS) {  // área Opciones — dormida, no borrada
+    // ── Opciones (tanda A: flujo y actividad inusual) ──
+    // La tabla, las destacadas y la ficha se construyen enteras en JavaScript. Las
+    // cabeceras de columna son el caso delicado: `COLUMNAS` es una constante de
+    // módulo, así que si guardara el rótulo en vez de la clave se congelaría en el
+    // idioma de arranque y ningún repintado la alcanzaría.
+    await p.goto(`${B}/#/opciones`);
+    const contratosPintados = () => p.waitForFunction(
+      () => document.querySelectorAll('#tabla-inusual .tabla-opciones tbody tr').length > 0
+        || document.querySelectorAll('#tabla-inusual .vacio').length > 0,
+      null, { timeout: 60000 });
+    await contratosPintados();
+    await idioma('es');
+    await contratosPintados();
 
-  // ── Opciones (tanda A: flujo y actividad inusual) ──
-  // La tabla, las destacadas y la ficha se construyen enteras en JavaScript. Las
-  // cabeceras de columna son el caso delicado: `COLUMNAS` es una constante de
-  // módulo, así que si guardara el rótulo en vez de la clave se congelaría en el
-  // idioma de arranque y ningún repintado la alcanzaría.
-  await p.goto(`${B}/#/opciones`);
-  const contratosPintados = () => p.waitForFunction(
-    () => document.querySelectorAll('#tabla-inusual .tabla-opciones tbody tr').length > 0
-      || document.querySelectorAll('#tabla-inusual .vacio').length > 0,
-    null, { timeout: 60000 });
-  await contratosPintados();
-  await idioma('es');
-  await contratosPintados();
+    console.log('\n  ── opciones · castellano de partida ──');
+    comp('titular', await txt('#seccion-opciones h1'), 'Opciones');
+    comp('pestaña', await txt('#pestana-inusual'), 'Actividad inusual');
+    comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Mayor actividad inusual');
+    comp('rótulo de filtro traducible',
+      await txt('#filtros-opciones label:nth-child(4) span'), 'Premium mín.');
 
-  console.log('\n  ── opciones · castellano de partida ──');
-  comp('titular', await txt('#seccion-opciones h1'), 'Opciones');
-  comp('pestaña', await txt('#pestana-inusual'), 'Actividad inusual');
-  comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Mayor actividad inusual');
-  comp('rótulo de filtro traducible',
-    await txt('#filtros-opciones label:nth-child(4) span'), 'Premium mín.');
+    const hayFilas = await p.locator('#tabla-inusual .tabla-opciones tbody tr').count();
+    if (hayFilas) {
+      // Se traduce: un analista dice «Volumen» hablando en castellano.
+      comp('columna traducida',
+        await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volumen');
+      // No se traduce: lo diría en inglés aunque hable en castellano.
+      comp('columna que se queda en inglés',
+        await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
+      comp('sigla intacta',
+        await txt('#tabla-inusual .tabla-opciones th:nth-child(9)'), 'IV');
+      comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
+        (v) => v && /^Mostrando .+ de \d+ contratos?$/.test(v));
+    }
 
-  const hayFilas = await p.locator('#tabla-inusual .tabla-opciones tbody tr').count();
-  if (hayFilas) {
-    // Se traduce: un analista dice «Volumen» hablando en castellano.
-    comp('columna traducida',
-      await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volumen');
-    // No se traduce: lo diría en inglés aunque hable en castellano.
-    comp('columna que se queda en inglés',
-      await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
-    comp('sigla intacta',
-      await txt('#tabla-inusual .tabla-opciones th:nth-child(9)'), 'IV');
-    comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
-      (v) => v && /^Mostrando .+ de \d+ contratos?$/.test(v));
+    // ── Cadena de opciones (tanda B) ──
+    // Se cambia de pestaña sin recargar: la cadena la pinta su propio módulo, y su
+    // cabecera mezcla lo que se traduce con lo que no.
+    await p.locator('#pestana-cadena').click();
+    const cadenaPintada = () => p.waitForFunction(
+      () => document.querySelectorAll('#tabla-cadena .tabla-opciones thead tr').length > 0
+        || document.querySelectorAll('#tabla-cadena .vacio, #tabla-cadena .pendiente-bloque').length > 0,
+      null, { timeout: 60000 });
+    await cadenaPintada();
+
+    const hayCadena = await p.locator('#tabla-cadena .tabla-opciones thead tr').count();
+    if (hayCadena) {
+      comp('columna traducida de la cadena',
+        await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Último');
+      comp('columna que se queda en inglés',
+        await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
+      comp('griega intacta',
+        await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(7)'), 'Delta');
+    }
+    comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Interés abierto por strike');
+
+    await idioma('en');
+    console.log('\n  ── opciones · repintadas al conmutar, sin recargar ──');
+    comp('titular', await txt('#seccion-opciones h1'), 'Options');
+    comp('pestaña', await txt('#pestana-inusual'), 'Unusual activity');
+    comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Top unusual activity');
+    comp('rótulo de filtro traducible',
+      await txt('#filtros-opciones label:nth-child(4) span'), 'Min. premium');
+    if (hayFilas) {
+      comp('columna traducida',
+        await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volume');
+      comp('columna que se queda en inglés',
+        await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
+      comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
+        (v) => v && /^Showing .+ of \d+ contracts?$/.test(v));
+    }
+
+    console.log('\n  ── opciones · cadena repintada ──');
+    if (hayCadena) {
+      comp('columna traducida de la cadena',
+        await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Last');
+      comp('columna que se queda en inglés',
+        await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
+    }
+    comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Open interest by strike');
+    comp('cabecera de la cadena', await txt('#titulo-cadena'), 'Option chain');
   }
-
-  // ── Cadena de opciones (tanda B) ──
-  // Se cambia de pestaña sin recargar: la cadena la pinta su propio módulo, y su
-  // cabecera mezcla lo que se traduce con lo que no.
-  await p.locator('#pestana-cadena').click();
-  const cadenaPintada = () => p.waitForFunction(
-    () => document.querySelectorAll('#tabla-cadena .tabla-opciones thead tr').length > 0
-      || document.querySelectorAll('#tabla-cadena .vacio, #tabla-cadena .pendiente-bloque').length > 0,
-    null, { timeout: 60000 });
-  await cadenaPintada();
-
-  const hayCadena = await p.locator('#tabla-cadena .tabla-opciones thead tr').count();
-  if (hayCadena) {
-    comp('columna traducida de la cadena',
-      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Último');
-    comp('columna que se queda en inglés',
-      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
-    comp('griega intacta',
-      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(7)'), 'Delta');
-  }
-  comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Interés abierto por strike');
-
-  await idioma('en');
-  console.log('\n  ── opciones · repintadas al conmutar, sin recargar ──');
-  comp('titular', await txt('#seccion-opciones h1'), 'Options');
-  comp('pestaña', await txt('#pestana-inusual'), 'Unusual activity');
-  comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Top unusual activity');
-  comp('rótulo de filtro traducible',
-    await txt('#filtros-opciones label:nth-child(4) span'), 'Min. premium');
-  if (hayFilas) {
-    comp('columna traducida',
-      await txt('#tabla-inusual .tabla-opciones th:nth-child(6)'), 'Volume');
-    comp('columna que se queda en inglés',
-      await txt('#tabla-inusual .tabla-opciones th:nth-child(3)'), 'Strike');
-    comp('recuento con plural', await txt('#tabla-inusual .barra-resultados p'),
-      (v) => v && /^Showing .+ of \d+ contracts?$/.test(v));
-  }
-
-  console.log('\n  ── opciones · cadena repintada ──');
-  if (hayCadena) {
-    comp('columna traducida de la cadena',
-      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Last');
-    comp('columna que se queda en inglés',
-      await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(1)'), 'Bid');
-  }
-  comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Open interest by strike');
-  comp('cabecera de la cadena', await txt('#titulo-cadena'), 'Option chain');
 
   // ── Noticias ──
   // El listado, las tarjetas y la línea de sindicación se construyen enteros en

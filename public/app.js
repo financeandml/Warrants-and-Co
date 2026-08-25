@@ -8,7 +8,7 @@ import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
 import { activarApariciones, pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
-import { construirNavegacion, marcarSeccionActiva } from './navegacion.js';
+import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
@@ -144,16 +144,27 @@ function rotuloError(codigo, reserva) {
 
 // ─────────────────────────────── navegacion ──────────────────────────────
 
-const SECCIONES = new Set([
-  'inicio', 'radar', 'repositorio', 'noticias', 'opciones', 'cartera',
-  'companias', 'catalizadores', 'mercado',
-]);
+/* Secciones que el enrutador admite.
+
+   NO se escriben aquí: se derivan del mapa de áreas. El menú que anuncia un
+   área y la puerta que deja pasar a sus rutas son el mismo hecho, y escribirlo
+   dos veces es exactamente lo que permite que discrepen sin que se vea en
+   pantalla. Ocultar un área es ponerle `oculta` en `navegacion.js`, y sus rutas
+   dejan de admitirse solas. `tests/areas.js` afirma que ambas caras concuerdan.
+
+   La portada no pertenece a ningún área —es la raíz—, de modo que se añade. */
+const SECCIONES = new Set(['inicio', ...rutasVisibles()]);
 
 // La portada era antes la sección del panel; se conserva el destino anterior para
 // que un enlace guardado siga funcionando.
+//
+// Los alias de áreas ocultas se retiran con ellas: mantenerlos sería una segunda
+// puerta a una sección que la primera ya no admite. Un enlace guardado a esas
+// rutas no da error —`irA()` no reconoce la sección y cae en la portada—, que es
+// lo que debe pasar mientras el área esté cerrada.
 const ALIAS_SECCION = {
-  analisis: 'radar', home: 'inicio', '': 'inicio',
-  companies: 'companias', catalysts: 'catalizadores', market: 'mercado', markets: 'mercado',
+  home: 'inicio', '': 'inicio',
+  companies: 'companias', catalysts: 'catalizadores',
 };
 
 function irA(seccion, pestana = null, { empujar = true } = {}) {
@@ -1436,15 +1447,16 @@ const irARutaInicio = (destino) => {
 
 /* Cómo se pinta cada bloque a partir de lo guardado. Los pintores viven aquí
    —y no dentro de la carga— porque el repintado por idioma usa exactamente los
-   mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio. */
+   mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio.
+
+   Los bloques de las áreas ocultas —el pulso, el radar, el flujo y la señal— no
+   figuran aquí ni se piden en `cargarInicio()`. Sus pintores siguen exportados y
+   su HTML sigue en el documento con `hidden`: reabrir el área es devolverles su
+   entrada en este mapa y su llamada abajo. */
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
   cifras: () => pintarCifras(datosInicio.cartera),
-  pulso: () => pintarPulso(datosInicio.indices, api),
-  radar: () => pintarRadarHome(datosInicio.radar, irARutaInicio),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
-  flujo: () => pintarFlujoHome(datosInicio.flujo),
-  signal: () => pintarSignalHome(datosInicio.signal),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
 
@@ -1452,8 +1464,8 @@ const PINTORES_INICIO = {
  * Monta la narrativa de la portada.
  *
  * Cada bloque se pinta en cuanto resuelve su fuente: la agenda consulta cadenas
- * de opciones y tarda segundos, y esperarla dejaría la cinta y el pulso en
- * blanco. Una fuente caída deja su bloque con su estado declarado.
+ * de opciones y tarda segundos, y esperarla dejaría la cinta en blanco. Una
+ * fuente caída deja su bloque con su estado declarado.
  */
 async function cargarInicio() {
   if (inicioMontado) return;
@@ -1468,7 +1480,8 @@ async function cargarInicio() {
     return promesa.then((d) => { guardar(d); pintar(); }, () => { guardar(null); pintar(); });
   };
 
-  // ── Cinta y pulso comparten la llamada de índices ──
+  // Los índices son hoy de la cinta y de nadie más: el pulso, que compartía esta
+  // llamada, se fue con el área de Mercado.
   const indices = api('/api/radar/indices');
   const cartera = api('/api/mercado/cartera').catch(() => null);
 
@@ -1486,11 +1499,7 @@ async function cargarInicio() {
     // repintado por idioma recorre esta lista: un bloque que no figure en ella
     // se quedaría en el idioma anterior.
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
-    alLlegar(indices, (d) => { datosInicio.indices = d; }, 'pulso'),
-    alLlegar(api('/api/radar'), (d) => { datosInicio.radar = d; }, 'radar'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
-    alLlegar(api('/api/opciones/flujo'), (d) => { datosInicio.flujo = d; }, 'flujo'),
-    alLlegar(api('/api/radar/signal'), (d) => { datosInicio.signal = d; }, 'signal'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de
     // modo que se pide con ficha. Una sola llamada trae la cobertura entera:
     // pedirla compañía a compañía multiplicaba los viajes sin ganar nada.
@@ -3382,9 +3391,12 @@ async function iniciar() {
 
   irA(seccionDesdeHash(), null, { empujar: false });
 
-  // El panel se puebla aunque la sección visible sea otra, para que el Radar esté
-  // listo al entrar. La portada ya no depende de estos datos.
-  if (estado.seccion !== 'radar') cargarPanel();
+  // La cartera se precarga aunque la sección visible sea otra. Antes lo hacía
+  // `cargarPanel()` de paso, al poblar el Radar; con el Radar oculto hay que
+  // pedirla aquí, porque `estado.cartera` lo leen el repintado por idioma, el
+  // gráfico al cambiar de modo o de índice, y la cobertura destacada para saber
+  // qué tesis están en cartera. Silenciosa: nadie está mirando esa sección.
+  cargarCartera({ silencioso: true });
 }
 
 if (document.readyState === 'loading') {

@@ -10,6 +10,7 @@
 
 import { localeFormato, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
+import { MARGEN_REVELADO } from './inicio.js';
 
 const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -109,6 +110,7 @@ export function seguirEncuadreBanner() {
 
   const cinta = document.getElementById('ticker-mercado');
   const interior = portada.querySelector('.portada__interior');
+  const lineas = portada.querySelector('.portada__lineas');
 
   // Un elemento oculto no tiene caja: `height` ya vale 0. Mirar ademas `hidden`
   // invitaba a creer que una cinta sin pintar valia 0 por decision y no por
@@ -173,12 +175,64 @@ export function seguirEncuadreBanner() {
 
     /*
      * Alto que la foto exige para que quepan, en este orden y sin solaparse: el
-     * bloque de marca y accesos, el cielo hasta la copa, la banda del árbol, la
-     * holgura y la cinta. Depende del ANCHO del hero y no de su alto, de modo que
-     * publicarlo no puede realimentar el cálculo: crecer no cambia lo exigido.
+     * bloque de marca, el cielo hasta la copa, la banda del árbol, la holgura y la
+     * cinta. Depende del ANCHO del hero y no de su alto, de modo que publicarlo no
+     * puede realimentar el cálculo: crecer no cambia lo exigido.
      */
-    const minimo = Math.ceil(
-      interiorAlto + (BANNER.base - BANNER.copa) * fotoAlto + BANNER.holguraMinima + cintaAlto);
+    const minimoDe = (bloqueDeMarca) => Math.ceil(
+      bloqueDeMarca + (BANNER.base - BANNER.copa) * fotoAlto + BANNER.holguraMinima + cintaAlto);
+
+    /*
+     * ── Las dos líneas del hero: un término más de esta misma cuenta ──
+     *
+     * Cuestan alto de bloque de marca, y el bloque entra entero en el mínimo: allí
+     * donde el hero ya crecía por la foto, ese coste sale del pliegue. Medido: sin
+     * envolver son 50 px, gratis en cuatro de las seis ventanas de
+     * `tests/portada.js` y letales en las otras dos, donde el manifiesto pasaba a
+     * asomar 25 y 33 px —por debajo de `MARGEN_REVELADO`, es decir, una caja
+     * vacía—. Ceden ellas y no la holgura del árbol ni el revelado del manifiesto,
+     * porque son lo único de los tres que al faltar no rompe nada.
+     *
+     * ── Por qué no oscila ──
+     * Son dos cosas distintas, y hacen falta las dos:
+     *
+     *   1. La ENTRADA de la decisión no depende de la decisión. Se calcula lo que
+     *      asomaría CON las líneas, esté como esté ahora, y para eso el bloque
+     *      oculto sigue maquetado —fuera de flujo, no plegado—. Con `display:none`
+     *      mediría cero, el coste parecería nulo, cabrían siempre, y a la pasada
+     *      siguiente ya no: ese es el bucle, y se cierra midiendo en vez de
+     *      suponer.
+     *   2. Aun así, dos umbrales. Justo en el límite, un píxel de ventana mueve el
+     *      asomo 0,755 px y bastaría para hacerlas parpadear. Puestas, aguantan
+     *      hasta `MARGEN_REVELADO`; quitadas, no vuelven hasta que sobre además un
+     *      RENGLÓN de la etiqueta. Esa banda no es una cifra elegida: es el alto de
+     *      línea del propio rótulo que ha de asomar, medido, de modo que vuelven
+     *      cuando se ve una línea entera y no cuando la roza.
+     */
+    const puestas = portada.dataset.lineas !== 'false';
+    const hueco = parseFloat(getComputedStyle(interior).rowGap) || 0;
+    const costeLineas = lineas ? lineas.getBoundingClientRect().height + hueco : 0;
+    // El bloque de marca sin las líneas: la misma cifra las lleve puestas o no.
+    const marcaSola = puestas ? interiorAlto - costeLineas : interiorAlto;
+
+    /*
+     * Cuánto asomaría el manifiesto en cada hipótesis, sin pintar ninguna. El hero
+     * empuja al manifiesto píxel a píxel, así que basta con saber cuánto asoma
+     * ahora y cuánto mediría el hero en cada caso. `--alto-por-ventana` lo publica
+     * la hoja de estilos ya resuelto: la fórmula del hero vive allí y solo allí.
+     */
+    const porVentana = parseFloat(
+      getComputedStyle(portada).getPropertyValue('--alto-por-ventana')) || caja.height;
+    const asomoAhora = asomoDelManifiesto();
+    const altoCon = Math.max(porVentana, minimoDe(marcaSola + costeLineas));
+    const asomoCon = asomoAhora === null ? null : asomoAhora + (caja.height - altoCon);
+
+    const renglon = lineas && lineas.firstElementChild
+      ? parseFloat(getComputedStyle(lineas.firstElementChild).lineHeight) || 0 : 0;
+    const caben = asomoCon === null || asomoCon >= MARGEN_REVELADO + (puestas ? 0 : renglon);
+    portada.dataset.lineas = String(caben);
+
+    const minimo = minimoDe(marcaSola + (caben ? costeLineas : 0));
 
     // Lo que de verdad queda tras recortar el encuadre a [0, 1]. Es la cifra que
     // la prueba confronta con lo medido en pantalla; no se deduce del deseo.
@@ -204,6 +258,22 @@ export function seguirEncuadreBanner() {
      `app.js` lo activa cuando la imagen ha cargado, y hasta entonces `publicar()`
      se va de vacio. */
   new MutationObserver(publicar).observe(portada, { attributeFilter: ['data-banner'] });
+}
+
+/**
+ * Cuánto asoma la etiqueta del manifiesto por debajo del pliegue.
+ *
+ * Se acumula `offsetTop` en lugar de leer `getBoundingClientRect()`: la etiqueta
+ * entra con un `translateY` de 14 px mientras no se ha revelado, y el rectángulo
+ * lo recoge. Medida así, la cifra sería distinta antes y después de revelarse
+ * —y la decisión que se toma con ella, también—.
+ */
+function asomoDelManifiesto() {
+  const etiqueta = document.querySelector('.manifiesto .etiqueta-superior');
+  if (!etiqueta) return null;
+  let y = 0;
+  for (let n = etiqueta; n; n = n.offsetParent) y += n.offsetTop;
+  return window.innerHeight - y;
 }
 
 /** Escribe una variable solo si cambia: evita realimentar a los observadores. */

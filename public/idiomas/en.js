@@ -94,7 +94,10 @@ export default {
 
   // ── Cover · hero ──
   'portada.accesos.etiqueta': 'Main entry points',
+  // `portada.acceso.radar` is unused while the Market area is hidden.
+  // Not deleted: it comes back with it.
   'portada.acceso.radar': 'Explore radar',
+  'portada.acceso.cobertura': 'Explore coverage',
   'portada.acceso.research': 'View research',
 
   // ── Cover · manifesto ──
@@ -106,14 +109,26 @@ export default {
     'for investors who',
     'think in probabilities.',
   ],
-  'portada.manifiesto.entrada': 'Fundamental research, market intelligence and options analytics designed to identify where conviction meets opportunity.',
+  'portada.manifiesto.entrada': 'Fundamental research on the companies under coverage, the calendar of what can move them, and a portfolio whose track record can be checked thesis by thesis.',
+
+  // ── Home · the hero's two lines ──
+  // They do not repeat the manifesto: that one states, these describe the
+  // mechanism the figures row right below comes out of.
+  'portada.linea.que': 'Each thesis is published with its price and date; the portfolio follows.',
+  'portada.linea.como': 'The track record is not stated: it is computed from what was published.',
 
   'portada.pilar.research.titulo': 'Research',
   'portada.pilar.research.texto': 'Deep fundamental analysis focused on companies, catalysts, valuation and investment thesis.',
+  // The Radar and Options pillars are unused while their areas are hidden;
+  // Catalysts and Portfolio take their place. Not deleted: they come back with them.
   'portada.pilar.radar.titulo': 'Radar',
   'portada.pilar.radar.texto': 'A systematic view of the market designed to surface the most relevant opportunities and signals.',
   'portada.pilar.options.titulo': 'Options',
   'portada.pilar.options.texto': 'Options activity, unusual positioning and market-derived signals.',
+  'portada.pilar.catalizadores.titulo': 'Catalysts',
+  'portada.pilar.catalizadores.texto': 'The calendar of what can move each thesis: earnings, expirations and dates that bear on coverage.',
+  'portada.pilar.cartera.titulo': 'Portfolio',
+  'portada.pilar.cartera.texto': 'What the published theses have done: open and closed positions, and a track record computed from their price and date.',
   'portada.pilar.explorar': 'Explore',
 
   // ── Home · figures row ──

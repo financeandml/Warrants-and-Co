@@ -2,8 +2,11 @@
    Invalidación de las vistas derivadas de los informes.
 
    Publica una tesis con ticker nuevo desde la interfaz y comprueba que, SIN
-   recargar la página, aparece en cartera, compañías, radar, portada y
-   catalizadores. Después la retira y comprueba lo contrario.
+   recargar la página, aparece en cartera, compañías, portada y catalizadores.
+   Después la retira y comprueba lo contrario.
+
+   El radar salió de esta lista al ocultarse el área de Mercado. Vuelve cuando
+   vuelva ella: la invalidación en sí nunca dejó de cubrirlo.
 
    ESCRIBE EN LA BASE: apúntelo siempre a una instancia de pruebas.
 
@@ -90,9 +93,14 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
     return !el.innerText.includes(tk);
   }, [sel, listo, TICKER]);
 
-  /** La portada está montada: es la que cachea, y sin ella no hay nada que mirar. */
-  const portadaMontada = () => esperar(() => ['#ticker-pista', '#home-radar-cuerpo',
-    '#home-research-cuerpo', '#home-catalizadores-cuerpo', '#home-signal-cuerpo']
+  /* La portada está montada: es la que cachea, y sin ella no hay nada que mirar.
+
+     Los centinelas han de ser bloques que la portada SIGA pintando. Los de radar
+     y signal se fueron con el área de Mercado: su HTML sigue en el documento,
+     pero ya nadie lo llena, así que esperarlos no fallaba —se agotaba el plazo,
+     que tarda mucho más en decir lo mismo y lo dice peor—. */
+  const portadaMontada = () => esperar(() => ['#ticker-pista',
+    '#home-research-cuerpo', '#home-catalizadores-cuerpo']
     .every((s) => (document.querySelector(s)?.innerText ?? '').trim().length > 0));
 
   await p.goto(`${B}/#/inicio`);
@@ -150,7 +158,6 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
 
   await visita('cartera', '#seccion-cartera', 'CARTERA');
   await visita('companias', '#seccion-companias', 'COMPAÑÍAS');
-  await visita('radar', '#seccion-radar', 'RADAR');
   await visita('inicio', '#seccion-inicio', 'PORTADA');
   await visita('catalizadores', '#seccion-catalizadores', 'CATALIZADORES');
 

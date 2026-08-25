@@ -1166,6 +1166,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .seccion--portada .portada__interior {
+  /* Referencia para las líneas cuando salen del flujo. */
+  position: relative;
   display: flex; flex-direction: column; align-items: center;
   gap: clamp(44px, 7vh, 76px);
   padding-block: clamp(60px, 12vh, 140px);
@@ -1194,13 +1196,55 @@ button, input, select, textarea { font: inherit; color: inherit; }
      `seguirEncuadreBanner()` y depende solo del ANCHO. Se pierde asomo del
      manifiesto, que es lo reversible; a 1920×700 el hero pasa de 460 a 523 px y
      siguen asomando 108. Sin JavaScript el término vale 0 y no interviene. */
-  min-height: max(calc(75.5svh - var(--alto-cabecera)), var(--alto-minimo-banner, 0px));
+  /* El alto que concede la ventana se nombra aquí, y aquí solamente. Está
+     registrado con `@property` para que `getComputedStyle` lo devuelva ya
+     resuelto en píxeles: `seguirEncuadreBanner()` necesita saberlo para decidir
+     si las dos líneas caben, y volver a escribir la fórmula en JavaScript sería
+     una segunda fuente del mismo hecho —la que un día deja de coincidir sin que
+     se vea en pantalla—. */
+  --alto-por-ventana: calc(75.5svh - var(--alto-cabecera));
+  min-height: max(var(--alto-por-ventana), var(--alto-minimo-banner, 0px));
 }
 
 .portada[data-banner="true"] .portada__interior {
-  /* El bloque se mantiene compacto para caber íntegro en la banda limpia. */
-  gap: clamp(26px, 4.5vh, 44px);
+  /* El bloque se mantiene compacto para caber íntegro en la banda limpia. Con las
+     dos líneas dentro son tres piezas y no dos, y el hueco se ciñe por eso: no es
+     estética, es presupuesto. A 1440×700 el hueco antiguo dejaba la decisión a
+     7 px de que las líneas no cupieran; con este cabe con 16 de margen. Ceñirlo no
+     depende de si las líneas están puestas —eso haría que el coste de ponerlas
+     dependiera de si están puestas, y la decisión dejaría de ser estable—. */
+  gap: clamp(18px, 3vh, 30px);
   padding-block: clamp(30px, 6vh, 66px) 0;
+}
+
+/* ── Las dos líneas bajo la marca ──
+   Una sola caja, y no dos hermanas sueltas: como hijo único del flex suman un
+   hueco de la rejilla en vez de dos. El ancho se fija en `ch` y no en píxeles
+   porque lo que hay que evitar es que ENVUELVAN: envolviendo cuestan 120 px de
+   hero y sin envolver 50, y ese es el presupuesto que decide en cuántas ventanas
+   caben. El texto de cada idioma ha de caber en un renglón a este ancho. */
+.portada__lineas {
+  display: flex; flex-direction: column; gap: 2px;
+  max-width: 78ch; text-align: center;
+}
+
+.portada__linea {
+  margin: 0;
+  font-size: 0.98rem; line-height: 1.45;
+  color: var(--tinta-portada, var(--tinta));
+}
+.portada__linea--secundaria { font-size: 0.93rem; color: var(--tinta-mate); }
+
+/* Ocultas: fuera del flujo, pero SIGUEN maquetadas.
+   `display: none` las dejaría a cero de alto, y el alto es justo el dato con el
+   que se decide si vuelven a caber; a cero, volverían siempre y oscilarían. Se
+   conserva el ancho con `inset-inline: 0` para que envuelvan igual que en flujo
+   y la medida valga. `visibility: hidden` las retira del árbol de accesibilidad,
+   que es lo que corresponde a un texto que no se está mostrando. */
+.portada[data-lineas="false"] .portada__lineas {
+  position: absolute; inset-inline: 0; top: 0;
+  margin-inline: auto;
+  visibility: hidden; pointer-events: none;
 }
 
 /* La marca es el único texto de la portada. */
@@ -1286,6 +1330,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .portada[data-banner="true"] .ticker__item:hover {
   background: var(--velo-portada-activo);
+}
+
+@property --alto-por-ventana {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
 }
 
 /* ══════════════════════════ Portada ═════════════════════════════════════ */

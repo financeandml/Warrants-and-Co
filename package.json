@@ -21,7 +21,8 @@
     "test:extraccion-corpus": "node tests/extraccion-corpus.js",
     "test:propuesta": "node tests/propuesta.js",
     "test:copia": "node tests/copia.js",
-    "test:cartera": "node tests/cartera.js"
+    "test:cartera": "node tests/cartera.js",
+    "test:areas": "node tests/areas.js"
   },
   "type": "commonjs",
   "dependencies": {

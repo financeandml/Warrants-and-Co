@@ -100,7 +100,10 @@ export default {
 
   // ── Portada · hero ──
   'portada.accesos.etiqueta': 'Accesos principales',
+  // `portada.acceso.radar` queda sin uso mientras el área de Mercado esté
+  // oculta. No se borra: vuelve con ella.
   'portada.acceso.radar': 'Explorar el radar',
+  'portada.acceso.cobertura': 'Explorar la cobertura',
   'portada.acceso.research': 'Ver el análisis',
 
   // ── Portada · manifiesto ──
@@ -114,14 +117,26 @@ export default {
     'para quien invierte',
     'pensando en probabilidades.',
   ],
-  'portada.manifiesto.entrada': 'Análisis fundamental, inteligencia de mercado y analítica de opciones para identificar dónde la convicción se encuentra con la oportunidad.',
+  'portada.manifiesto.entrada': 'Análisis fundamental de las compañías en cobertura, la agenda de lo que puede moverlas y una cartera cuyo historial se puede comprobar tesis a tesis.',
+
+  // ── Portada · las dos líneas del hero ──
+  // No repiten al manifiesto: aquel enuncia, estas describen el mecanismo del
+  // que sale la fila de cifras que va justo debajo.
+  'portada.linea.que': 'Las tesis se publican con su precio y su fecha, y de ahí sale la cartera.',
+  'portada.linea.como': 'El historial no se declara: se calcula desde lo publicado.',
 
   'portada.pilar.research.titulo': 'Análisis',
   'portada.pilar.research.texto': 'Análisis fundamental profundo, centrado en compañías, catalizadores, valoración y tesis de inversión.',
+  // Los pilares de Radar y Opciones quedan sin uso mientras sus áreas estén
+  // ocultas; los sustituyen Catalizadores y Cartera. No se borran: vuelven con ellas.
   'portada.pilar.radar.titulo': 'Radar',
   'portada.pilar.radar.texto': 'Una lectura sistemática del mercado, pensada para hacer emerger las oportunidades y las señales más relevantes.',
   'portada.pilar.options.titulo': 'Opciones',
   'portada.pilar.options.texto': 'Actividad en opciones, posicionamiento inusual y señales derivadas del propio mercado.',
+  'portada.pilar.catalizadores.titulo': 'Catalizadores',
+  'portada.pilar.catalizadores.texto': 'La agenda de lo que puede mover cada tesis: resultados, vencimientos y fechas con impacto sobre la cobertura.',
+  'portada.pilar.cartera.titulo': 'Cartera',
+  'portada.pilar.cartera.texto': 'Lo que las tesis publicadas han hecho: posiciones vivas, cerradas y el historial calculado desde su precio y su fecha.',
   'portada.pilar.explorar': 'Explorar',
 
   // ── Portada · fila de cifras ──

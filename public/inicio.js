@@ -1,11 +1,15 @@
 /* ============================================================================
    Home — la narrativa de Warrants & Co.
 
-   Nueve piezas encadenadas: cinta de mercado, declaración editorial, fila de
-   cifras, pulso de mercado, radar, research, catalizadores, options flow y
-   signal. Cada una se
-   alimenta de un endpoint real y ninguna fabrica un número: lo que no existe se
-   declara, con su motivo, y nunca se sustituye por un cero.
+   Cinco piezas encadenadas: cinta de mercado, declaración editorial, fila de
+   cifras, research y catalizadores. Cada una se alimenta de un endpoint real y
+   ninguna fabrica un número: lo que no existe se declara, con su motivo, y nunca
+   se sustituye por un cero.
+
+   Siguen aquí, exportados y sin usar, los pintores de las piezas que se fueron
+   con las áreas de Mercado y Opciones —pulso, radar, options flow y signal—.
+   Están vivos a propósito: su HTML sigue en el documento con `hidden`, y
+   reabrir el área es devolverles su entrada en `PINTORES_INICIO`.
 
    El movimiento está al servicio de la lectura, no al revés. Todo entra una vez
    al aparecer en pantalla y se queda quieto; nada parpadea de forma continua
@@ -46,6 +50,19 @@ const claseDireccion = (v) =>
  * al entrar en pantalla, y deja de observarse en cuanto lo ha hecho: no hay
  * ninguna animación que se repita al subir y bajar.
  */
+/*
+ * Franja muerta inferior del observador. Lo que asome dentro de estos píxeles
+ * finales NO llega a revelarse: aparecería una caja vacía, que es peor que el
+ * hueco.
+ *
+ * Se exporta porque no es solo asunto de este observador. El hero lo necesita
+ * para decidir si sus dos líneas caben —`seguirEncuadreBanner()`, en
+ * `portada.js`—: son la misma cifra, «cuánto tiene que asomar el manifiesto para
+ * que se vea», y escribirla en los dos sitios era dejar que un día dejaran de
+ * decir lo mismo sin que se notara en pantalla.
+ */
+export const MARGEN_REVELADO = 60;
+
 const acciones = new WeakMap();
 let observador = null;
 
@@ -65,7 +82,7 @@ function observarEntrada(elemento, alEntrar) {
           observador.unobserve(e.target);
         }
       },
-      { threshold: 0.18, rootMargin: '0px 0px -60px 0px' }
+      { threshold: 0.18, rootMargin: `0px 0px -${MARGEN_REVELADO}px 0px` }
     );
   }
   if (alEntrar) acciones.set(elemento, alEntrar);
@@ -119,7 +136,9 @@ export function pintarTicker(indices, cartera) {
       // Un tipo de interés se enuncia en por ciento; un nivel de índice, no.
       esTipo: i.formato === 'tipo',
       variacion: i.disponible ? i.variacionPct : null,
-      destino: '#/mercado',
+      // Un índice no tiene ficha propia, de modo que el enlace lleva al listado
+      // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
+      destino: '#/companias',
     });
   }
 
