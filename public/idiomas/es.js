@@ -534,6 +534,18 @@ export default {
   'cartera.col.recomendacion': 'Recomendación',
   'cartera.recorrido.title': '{avance} del recorrido hasta el take profit',
 
+  'cartera.mov.rendimiento': 'Rendimiento',
+  'cartera.mov.composicion': 'Composición',
+  'cartera.mov.procedencia': 'Procedencia',
+  'cartera.anillo.titulo': 'Reparto del patrimonio',
+  'cartera.anillo.subtitulo': 'Peso sobre el patrimonio · la caja es un sector más',
+  'cartera.anillo.descripcion': 'Reparto del patrimonio: {partes}.',
+  'cartera.anillo.sinCaja.titulo': 'Composición sin cerrar',
+  'cartera.anillo.sinCaja.motivo': 'No consta el peso de la liquidez, y sin él las partes no suman el todo. Repartir solo las posiciones vivas afirmaría que la cartera está invertida al 100 %.',
+  'cartera.anillo.vacio.titulo': 'Sin composición que repartir',
+  'cartera.anillo.vacio.motivo': 'No hay posiciones vivas ni liquidez que repartir.',
+  'cartera.metodologia.resumen': 'Cómo se calcula todo esto',
+  'cartera.metodologia.remite': 'La conciliación y los estadísticos declaran además sus propios supuestos junto a cada tabla.',
   'cartera.liquidez.etiqueta': 'Liquidez',
   'cartera.liquidez.nota': {
     one: 'Peso sobre el patrimonio. Del capital es el {capital}: {n} tramo liquidado que ya no se reinvierte. Las dos cifras difieren porque el tramo salió valiendo más de lo que costó.',

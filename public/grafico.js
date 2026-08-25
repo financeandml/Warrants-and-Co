@@ -151,7 +151,9 @@ export class GraficoCartera {
     for (const marca of ticks) {
       const py = y(marca);
       if (py < MARGEN.arriba - 1 || py > MARGEN.arriba + altoUtil + 1) continue;
-      svg.appendChild(crear('line', { class: 'grafico__rejilla', x1: MARGEN.izquierda, x2: MARGEN.izquierda + anchoUtil, y1: py, y2: py }));
+      /* Sin línea de retícula: la cifra del eje ya sitúa la altura, y cinco
+         horizontales cruzando la serie competían con ella. La única que se
+         conserva es la base 100, que no es retícula sino referencia. */
       const et = crear('text', { class: 'grafico__texto', x: MARGEN.izquierda - 10, y: py + 3.5, 'text-anchor': 'end' });
       et.textContent = num(marca, 0);
       svg.appendChild(et);
@@ -165,7 +167,8 @@ export class GraficoCartera {
     svg.appendChild(crear('line', { class: 'grafico__eje', x1: MARGEN.izquierda, x2: MARGEN.izquierda + anchoUtil, y1: MARGEN.arriba + altoUtil, y2: MARGEN.arriba + altoUtil }));
 
     // ── Eje temporal: como maximo seis marcas legibles ──
-    const maxMarcas = Math.max(2, Math.min(6, Math.floor(anchoUtil / 96)));
+    // Menos marcas y más aire: cuatro fechas sitúan la serie igual que seis.
+    const maxMarcas = Math.max(2, Math.min(4, Math.floor(anchoUtil / 150)));
     const salto = Math.max(1, Math.ceil(fechas.length / maxMarcas));
     for (let i = 0; i < fechas.length; i += salto) {
       const et = crear('text', { class: 'grafico__texto', x: x(i), y: ALTURA - MARGEN.abajo + 20, 'text-anchor': 'middle' });
@@ -196,7 +199,20 @@ export class GraficoCartera {
     // ── Serie de la cartera: area de acompañamiento y trazo ──
     const dLinea = cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ');
     const base = MARGEN.arriba + altoUtil;
-    svg.appendChild(crear('path', { class: 'grafico__area', d: `${dLinea} L ${x(cartera.length - 1).toFixed(2)} ${base} L ${x(0).toFixed(2)} ${base} Z` }));
+    /* Degradado vertical en vez del relleno plano: el área pesa donde la serie
+       está y se disuelve hacia el eje. Es puramente estético —no porta ninguna
+       información que la línea no lleve ya—, de modo que no toca la regla del
+       color. El id lleva sufijo por si algún día conviven dos gráficos. */
+    const idDeg = 'grafico-degradado';
+    if (!svg.querySelector('defs')) {
+      const defs = crear('defs');
+      const deg = crear('linearGradient', { id: idDeg, x1: 0, y1: 0, x2: 0, y2: 1 });
+      deg.appendChild(crear('stop', { offset: '0%', class: 'grafico__degradado-alto' }));
+      deg.appendChild(crear('stop', { offset: '100%', class: 'grafico__degradado-bajo' }));
+      defs.appendChild(deg);
+      svg.insertBefore(defs, svg.firstChild);
+    }
+    svg.appendChild(crear('path', { class: 'grafico__area', fill: `url(#${idDeg})`, d: `${dLinea} L ${x(cartera.length - 1).toFixed(2)} ${base} L ${x(0).toFixed(2)} ${base} Z` }));
     svg.appendChild(crear('path', { class: 'grafico__linea', d: dLinea }));
 
     // ── Marcadores y etiquetas de extremo (rotulado selectivo) ──

@@ -827,12 +827,8 @@
         <div class="estado-datos" id="estado-datos"></div>
       </div>
 
-      <p class="nota-metodologica" data-i18n="cartera.nota">
-        La cartera se constituye automáticamente a partir de las tesis de inversión publicadas.
-        La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el
-        precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada
-        en el tiempo, en base 100, sin aportaciones ni reembolsos externos.
-      </p>
+      <!-- ══ I · RENDIMIENTO ══ Qué ha hecho la cartera. -->
+      <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
 
       <div class="cuadro-mando" id="cuadro-mando"></div>
 
@@ -900,6 +896,24 @@
         </div>
       </section>
 
+      <!-- ══ II · COMPOSICIÓN ══ De qué está hecha hoy, la caja incluida. -->
+      <h2 class="movimiento" data-i18n="cartera.mov.composicion">Composición</h2>
+
+      <section class="tarjeta" aria-labelledby="titulo-anillo">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-anillo" data-i18n="cartera.anillo.titulo">Reparto del patrimonio</h2>
+            <!-- El subtítulo NO es decorativo: conviven dos pesos en esta sección
+                 —sobre patrimonio y sobre capital— y el anillo tiene que declarar
+                 cuál usa en vez de dejarlo a la interpretación. -->
+            <p data-i18n="cartera.anillo.subtitulo">Peso sobre el patrimonio · la caja es un sector más</p>
+          </div>
+        </div>
+        <!-- Llega vacío: lo pinta `pintarAnillo()` desde la misma respuesta que
+             alimenta a la tabla de abajo y al cuadro de mando. -->
+        <div class="anillo" id="anillo-composicion"></div>
+      </section>
+
       <section class="tarjeta" aria-labelledby="titulo-posiciones">
         <div class="tarjeta__cabecera">
           <div>
@@ -929,8 +943,10 @@
             <tbody id="cuerpo-posiciones"></tbody>
           </table>
         </div>
-        <div class="exposicion" id="exposicion-sectorial"></div>
       </section>
+
+      <!-- ══ III · PROCEDENCIA ══ De dónde sale esa rentabilidad. -->
+      <h2 class="movimiento" data-i18n="cartera.mov.procedencia">Procedencia</h2>
 
       <section class="tarjeta" id="tarjeta-cerradas" aria-labelledby="titulo-cerradas" hidden>
         <div class="tarjeta__cabecera">
@@ -1004,6 +1020,30 @@
              la muestra no llega al suelo; con historia bastante, no existe. -->
         <p class="nota-metodologica nota-muestra" id="nota-muestra" hidden></p>
       </section>
+
+      <!-- ══ PIE ══ Cómo se calcula todo esto.
+           Aquí vive SOLO la metodología general. Las otras dos notas de la
+           sección —la de la conciliación y la de la muestra— se quedan junto a
+           su tabla y no se recogen aquí: son contextuales y dinámicas, y una que
+           dice «faltan N sesiones» separada de los estadísticos que describe
+           deja de significar nada.
+
+           Plegado y no borrado: es lo que hace legible el +67 %, y quien quiera
+           comprobarlo lo tiene a un clic sin que ocupe el sitio que ocupaba. -->
+      <details class="metodologia">
+        <summary data-i18n="cartera.metodologia.resumen">Cómo se calcula todo esto</summary>
+        <div class="metodologia__cuerpo">
+          <p data-i18n="cartera.nota">
+            La cartera se constituye automáticamente a partir de las tesis de inversión publicadas.
+            La fecha de alta de cada posición corresponde a la fecha de publicación de su informe y el
+            precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada
+            en el tiempo, en base 100, sin aportaciones ni reembolsos externos.
+          </p>
+          <p data-i18n="cartera.metodologia.remite">
+            La conciliación y los estadísticos declaran además sus propios supuestos junto a cada tabla.
+          </p>
+        </div>
+      </details>
 
     </div>
   </section>

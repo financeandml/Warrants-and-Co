@@ -37,6 +37,14 @@
   --serie-cartera:     #101011;
   --serie-indice:      #8a8a8a;
   --serie-relleno:     rgba(16, 16, 17, 0.07);
+  /* Rampa del anillo de composición. Cuatro tonos separados lo bastante para
+     distinguirse contiguos, pero NUNCA solos: cada sector lleva su etiqueta
+     directa, y la caja además su trama. */
+  --anillo-1:          #101011;
+  --anillo-2:          #4a4a4c;
+  --anillo-3:          #85858a;
+  --anillo-4:          #b9b9b6;
+  --anillo-trama:      #6e6e72;
 
   /* Verde de sesión */
   --verde-sesion:      #1a9d4b;
@@ -92,6 +100,11 @@
   --serie-cartera:     #f2f2f0;
   --serie-indice:      #85858c;
   --serie-relleno:     rgba(242, 242, 240, 0.08);
+  --anillo-1:          #f2f2f0;
+  --anillo-2:          #b6b6b4;
+  --anillo-3:          #85858c;
+  --anillo-4:          #55555a;
+  --anillo-trama:      #9a9aa0;
 
   --verde-sesion:      #35d07f;
   --verde-halo:        rgba(53, 208, 127, 0.22);
@@ -134,6 +147,11 @@
     --serie-cartera:     #f2f2f0;
     --serie-indice:      #85858c;
     --serie-relleno:     rgba(242, 242, 240, 0.08);
+    --anillo-1:          #f2f2f0;
+    --anillo-2:          #b6b6b4;
+    --anillo-3:          #85858c;
+    --anillo-4:          #55555a;
+    --anillo-trama:      #9a9aa0;
 
     --verde-sesion:      #35d07f;
     --verde-halo:        rgba(53, 208, 127, 0.22);
@@ -669,7 +687,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .grafico { position: relative; padding: 22px 24px 8px; }
 .grafico svg { display: block; width: 100%; height: auto; overflow: visible; }
 
-.grafico__rejilla { stroke: var(--linea-hairline); stroke-width: 1; shape-rendering: crispEdges; }
+/* `.grafico__rejilla` se retiró: la cifra del eje sitúa la altura y cinco
+   horizontales cruzando la serie competían con ella. La base 100 se conserva
+   —abajo—, que no es retícula sino referencia. */
 .grafico__eje     { stroke: var(--linea-fuerte); stroke-width: 1; shape-rendering: crispEdges; }
 
 .grafico__texto {
@@ -677,9 +697,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
   fill: var(--tinta-mate); font-variant-numeric: tabular-nums;
 }
 
+/* El relleno lo pone ahora un degradado, definido en el propio SVG. El `fill`
+   de reserva queda para el caso de que el `<defs>` no llegue. */
 .grafico__area  { fill: var(--serie-relleno); }
+.grafico__degradado-alto { stop-color: var(--serie-cartera); stop-opacity: 0.16; }
+.grafico__degradado-bajo { stop-color: var(--serie-cartera); stop-opacity: 0; }
 .grafico__linea { fill: none; stroke: var(--serie-cartera); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.grafico__linea--indice { stroke: var(--serie-indice); stroke-dasharray: 5 4; }
+/* El trazo discontinuo NO es decorativo: es lo que separa la serie del índice
+   de la de la cartera sin recurrir al tono. Se alarga a `8 5` —más sobrio, menos
+   ruidoso— pero no se retira: sin él, a media serie las dos líneas se
+   distinguirían solo por gris, y la etiqueta directa solo resuelve los extremos. */
+.grafico__linea--indice { stroke: var(--serie-indice); stroke-dasharray: 8 5; stroke-width: 1.5; }
 
 .grafico__marcador { fill: var(--serie-cartera); stroke: var(--superficie); stroke-width: 2; }
 .grafico__marcador--indice { fill: var(--serie-indice); }
@@ -749,28 +777,114 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .tabla-posiciones .celda-valor { min-width: 200px; }
 
-.exposicion {
-  display: flex; flex-wrap: wrap; gap: 24px 40px;
-  padding: 20px 24px; border-top: 1px solid var(--linea);
+/* ── El anillo de composición ──
+   Sustituye a las barras por sector que había aquí. No es un cambio de forma: las
+   barras agregaban por sector y el anillo reparte por posición, con la caja como
+   un sector más. Lo que no cambia es que la caja SE VE: era la razón de las
+   barras y sigue siendo la del anillo. */
+.anillo { padding: 4px 24px 22px; }
+
+.anillo__svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+.anillo__arco { transition: opacity var(--transicion); }
+
+/* La caja lleva trama, no tono: no es una inversión, y distinguirla por
+   naturaleza en vez de por intensidad es lo que hace que «60 % sin invertir» se
+   lea de un golpe. El borde le da contorno donde la trama se adelgaza. */
+.anillo__arco--caja { stroke-linecap: butt; }
+.anillo__trama-fondo { fill: var(--superficie); }
+.anillo__trama-linea { stroke: var(--anillo-trama); stroke-width: 3; }
+
+/* La línea guía es lo que hace ETIQUETA DIRECTA y no leyenda: sin ella habría
+   que contar tonos de gris para saber qué sector es cuál. */
+.anillo__guia {
+  fill: none;
+  stroke: var(--linea-fuerte);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
 }
 
-.exposicion__linea { flex: 1 1 210px; min-width: 190px; }
-.exposicion__cabecera {
-  display: flex; justify-content: space-between; gap: 12px;
-  font-size: 0.79rem; margin-bottom: 7px;
+.anillo__etiqueta {
+  font-family: var(--sans, inherit);
+  font-size: 13px;
+  fill: var(--tinta);
 }
-.exposicion__cabecera strong { font-variant-numeric: tabular-nums; }
+.anillo__etiqueta-nombre { font-weight: 500; }
+.anillo__etiqueta-cifra { font-variant-numeric: tabular-nums; fill: var(--tinta-secundaria); }
+.anillo__etiqueta--caja .anillo__etiqueta-nombre { font-style: italic; }
 
-.barra { height: 5px; background: var(--superficie-hundida); overflow: hidden; }
-.barra__relleno { height: 100%; background: var(--tinta); }
-
-/* La liquidez es una línea más de la composición, nunca un resto implícito. El
-   trazado la distingue del sector, pero quien la nombra es su rótulo. */
-.exposicion__linea--liquidez .barra__relleno {
-  background: repeating-linear-gradient(
-    135deg, var(--tinta-mate) 0 2px, transparent 2px 5px);
+/* Un solo sector al 100 %: la etiqueta va al hueco, porque un anillo entero no
+   tiene a dónde apuntar. */
+.anillo__centro {
+  font-family: var(--sans, inherit);
+  font-size: 15px; font-weight: 500;
+  fill: var(--tinta);
 }
-.exposicion__nota { font-size: 0.7rem; line-height: 1.5; color: var(--tinta-mate); margin-top: 7px; }
+.anillo__centro-cifra {
+  font-family: var(--sans, inherit);
+  font-size: 20px; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  fill: var(--tinta);
+}
+
+/* La nota de la caja: la que reconcilia el peso sobre patrimonio con el de
+   capital. Es la misma que llevaban las barras. */
+.anillo__pie {
+  margin: 14px 0 0;
+  font-size: 0.72rem; line-height: 1.6;
+  color: var(--tinta-mate);
+  max-width: 64ch;
+}
+
+/* Carencia declarada. Nunca un anillo a medias. */
+.anillo__vacio {
+  padding: 28px 0;
+  border-block-start: 1px solid var(--linea-hairline);
+}
+.anillo__vacio strong { display: block; margin-block-end: 6px; }
+.anillo__vacio p { margin: 0; font-size: 0.82rem; line-height: 1.6; color: var(--tinta-mate); }
+
+/* ── Los tres movimientos de la sección ── */
+.movimiento {
+  margin: 52px 0 18px;
+  font-size: 0.72rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.16em;
+  color: var(--tinta-mate);
+  padding-block-end: 10px;
+  border-block-end: 1px solid var(--linea);
+}
+.movimiento:first-of-type { margin-block-start: 34px; }
+
+/* ── La metodología, plegada ──
+   Estaba abierta al principio de la sección y era un ladrillo entre la cabecera
+   y las cifras. Aquí sigue accesible y deja de ocupar ese sitio. */
+.metodologia {
+  margin-block-start: 44px;
+  border-block-start: 1px solid var(--linea);
+  padding-block-start: 18px;
+}
+.metodologia > summary {
+  cursor: pointer;
+  font-size: 0.78rem; font-weight: 500;
+  color: var(--tinta-secundaria);
+  list-style: none;
+  display: flex; align-items: center; gap: 9px;
+}
+.metodologia > summary::-webkit-details-marker { display: none; }
+.metodologia > summary::before {
+  content: "+";
+  font-size: 0.9rem; line-height: 1;
+  color: var(--tinta-mate);
+}
+.metodologia[open] > summary::before { content: "\2212"; }
+.metodologia > summary:hover { color: var(--tinta); }
+.metodologia__cuerpo { padding-block-start: 12px; max-width: 78ch; }
+.metodologia__cuerpo p {
+  margin: 0 0 10px;
+  font-size: 0.78rem; line-height: 1.7;
+  color: var(--tinta-mate);
+}
+.metodologia__cuerpo p:last-child { margin-block-end: 0; }
 
 /* Fila de total de la conciliación: cierra la cuenta y por eso se separa. */
 .tabla-datos tfoot td {

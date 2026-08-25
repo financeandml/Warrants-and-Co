@@ -9,6 +9,7 @@ import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
 import { activarApariciones, pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
+import { pintarAnillo } from './anillo.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
@@ -1831,6 +1832,12 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarEstadisticos(datos);
   pintarAvisoCierre(datos);
   pintarEstadoDatos(datos);
+  /* La composición: el anillo sustituye a las barras por sector que había en la
+     tarjeta de posiciones. Sale de los MISMOS campos que la columna «Peso» de esa
+     tabla —`pesoVigente`— y que el indicador de liquidez del cuadro de mando
+     —`liquidez.pesoActual`—, de modo que las tres cifras de una posición en esta
+     pantalla no pueden discrepar: son la misma. */
+  pintarAnillo($('#anillo-composicion'), datos);
   pintarCinta(datos.posiciones ?? [], datos.cerradas ?? []);
   // El panel de mercado muestra un resumen de las mismas cifras.
   pintarPanelCartera(datos);
@@ -2109,42 +2116,6 @@ function pintarPosiciones(datos) {
     cuerpo.appendChild(fila);
   }
 
-  const exposicion = $('#exposicion-sectorial');
-  exposicion.textContent = '';
-
-  const caja = datos.liquidez;
-  const pesoCaja = Number.isFinite(caja?.pesoActual) ? caja.pesoActual : null;
-  const maximo = Math.max(...(datos.exposicionSectorial ?? []).map((s) => s.peso), pesoCaja ?? 0, 1);
-
-  const lineaExposicion = (nombre, peso, { clase = null, nota = null } = {}) => {
-    const linea = elemento('div', `exposicion__linea${clase ? ` ${clase}` : ''}`);
-    const cab = elemento('div', 'exposicion__cabecera');
-    cab.appendChild(elemento('span', null, nombre));
-    cab.appendChild(elemento('strong', null, porcentaje(peso)));
-    linea.appendChild(cab);
-
-    const barra = elemento('div', 'barra');
-    const relleno = elemento('div', 'barra__relleno');
-    relleno.style.width = `${Math.max((peso / maximo) * 100, 1)}%`;
-    barra.appendChild(relleno);
-    linea.appendChild(barra);
-    if (nota) linea.appendChild(elemento('p', 'exposicion__nota', nota));
-    exposicion.appendChild(linea);
-  };
-
-  for (const s of datos.exposicionSectorial ?? []) lineaExposicion(s.sector, s.peso);
-
-  /* La liquidez es una línea de la composición como cualquier sector: si el 40 %
-     del capital está sin invertir, tiene que verse. Va con sus dos cifras porque
-     responden a preguntas distintas —patrimonio de hoy y capital asignado— y por
-     separado cada una parece contradecir a la otra. */
-  if (pesoCaja !== null) {
-    const nota = caja.tramosLiquidados > 0
-      ? t('cartera.liquidez.nota', { n: caja.tramosLiquidados, capital: porcentaje(caja.pesoCapital) })
-      : t('cartera.liquidez.nota.sinLiquidar', { capital: porcentaje(caja.pesoCapital) });
-    lineaExposicion(t('cartera.liquidez.etiqueta'), pesoCaja,
-      { clase: 'exposicion__linea--liquidez', nota });
-  }
 }
 
 /** Posiciones liquidadas al alcanzar su take profit. */

@@ -522,6 +522,18 @@ export default {
   'cartera.col.recomendacion': 'Recommendation',
   'cartera.recorrido.title': '{avance} of the path to take profit',
 
+  'cartera.mov.rendimiento': 'Performance',
+  'cartera.mov.composicion': 'Composition',
+  'cartera.mov.procedencia': 'Attribution',
+  'cartera.anillo.titulo': 'Portfolio breakdown',
+  'cartera.anillo.subtitulo': 'Weight against portfolio value · cash is one more slice',
+  'cartera.anillo.descripcion': 'Portfolio breakdown: {partes}.',
+  'cartera.anillo.sinCaja.titulo': 'Composition cannot be closed',
+  'cartera.anillo.sinCaja.motivo': 'The cash weight is not available, and without it the parts do not add up to the whole. Splitting only the open positions would claim the portfolio is fully invested.',
+  'cartera.anillo.vacio.titulo': 'Nothing to break down',
+  'cartera.anillo.vacio.motivo': 'There are no open positions and no cash to split.',
+  'cartera.metodologia.resumen': 'How all of this is computed',
+  'cartera.metodologia.remite': 'Reconciliation and statistics also state their own assumptions next to each table.',
   'cartera.liquidez.etiqueta': 'Cash',
   'cartera.liquidez.nota': {
     one: 'Weight against portfolio value. Of capital it is {capital}: {n} liquidated tranche that is no longer reinvested. The two figures differ because the tranche exited worth more than it cost.',

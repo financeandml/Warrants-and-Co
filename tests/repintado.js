@@ -52,6 +52,8 @@ const AREAS_OCULTAS = false;
       (bien ? '' : `  → ${JSON.stringify(real)}`));
   };
   const txt = (sel) => p.locator(sel).first().innerText().catch(() => null);
+  // Los nodos SVG no tienen `innerText`; se leen por `textContent`.
+  const txtSvg = (sel) => p.locator(sel).first().textContent().catch(() => null);
   const opcion = (sel, n) => p.locator(`${sel} option`).nth(n).innerText().catch(() => null);
   const idioma = async (clave) => {
     await p.click(`.conmutador-idioma button[data-idioma="${clave}"]`);
@@ -68,8 +70,12 @@ const AREAS_OCULTAS = false;
   // Pintado en JavaScript: la liquidez de la composición y la nota del total de la
   // conciliación. Se afirman en los dos idiomas —la nota, por la palabra que cambia—
   // porque una tabla que no se repintara conservaría el castellano de partida.
-  comp('liquidez en la composición',
-    await txt('#exposicion-sectorial .exposicion__linea--liquidez .exposicion__cabecera span'), 'Liquidez');
+  /* El rótulo de la caja lo lleva ahora el anillo, que sustituyó a las barras
+     por sector. Se sigue afirmando lo mismo —que sigue al idioma— sobre el nodo
+     que hoy lo porta. El anillo lo pinta en JavaScript y sin `data-i18n`, así que
+     sin entrada en el repintado se quedaría en el idioma de partida. */
+  comp('liquidez en el anillo de composición',
+    await txtSvg('#anillo-composicion .anillo__etiqueta--caja .anillo__etiqueta-nombre'), 'Liquidez');
   comp('nota del total de la conciliación',
     await txt('#pie-conciliacion .celda-total small'), (x) => /\btramos?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Rentabilidad acumulada');
@@ -111,8 +117,8 @@ const AREAS_OCULTAS = false;
   console.log('\n  ── cartera · repintada al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Current weight');
-  comp('liquidez en la composición',
-    await txt('#exposicion-sectorial .exposicion__linea--liquidez .exposicion__cabecera span'), 'Cash');
+  comp('liquidez en el anillo de composición',
+    await txtSvg('#anillo-composicion .anillo__etiqueta--caja .anillo__etiqueta-nombre'), 'Cash');
   comp('nota del total de la conciliación',
     await txt('#pie-conciliacion .celda-total small'), (x) => /\btranches?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Cumulative return');
