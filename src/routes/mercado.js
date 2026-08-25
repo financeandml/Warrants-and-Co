@@ -10,7 +10,37 @@ const { obtenerPanorama } = require('../mercado/panorama');
 
 const router = express.Router();
 
-const BENCHMARKS = new Set(['SPY', 'QQQ', 'DIA', 'IWM']);
+/* ══════════════════════ Catálogo de índices de referencia ═══════════════════
+ *
+ * FUENTE ÚNICA. Qué índices se ofrecen, cómo se llaman y con qué instrumento se
+ * miden sale de aquí y de ningún otro sitio. Antes estaba escrito tres veces —el
+ * conjunto de símbolos aquí, un mapa de nombres en `app.js` y las opciones del
+ * `<select>` a mano en `index.html`— y nada afirmaba que concordasen: añadir uno
+ * al servidor lo dejaba fuera del selector y sin nombre en la leyenda, y las tres
+ * pantallas seguían pareciendo correctas por separado.
+ *
+ * El `nombre` es el ÍNDICE y el `simbolo` es el ETF con el que se replica. Son
+ * dos hechos distintos y el rótulo los dice los dos —«S&P 500 · SPY»— en vez de
+ * hacer pasar uno por otro: la serie que se compara es la del ETF, no la del
+ * índice, igual que en el pulso de la portada.
+ *
+ * Añadir uno aquí basta: el selector, la leyenda del gráfico y los rótulos de las
+ * dos filas de cifras lo recogen solos. `tests/cartera-interfaz.js` lo afirma.
+ * ========================================================================== */
+const BENCHMARKS = [
+  { simbolo: 'SPY', nombre: 'S&P 500' },
+  { simbolo: 'QQQ', nombre: 'Nasdaq 100' },
+  { simbolo: 'DIA', nombre: 'Dow Jones' },
+  { simbolo: 'IWM', nombre: 'Russell 2000' },
+];
+
+const BENCHMARK_POR_DEFECTO = BENCHMARKS[0];
+
+/** El del símbolo pedido, o el de por defecto. Nunca devuelve uno sin nombre. */
+function benchmarkDe(simbolo) {
+  const s = String(simbolo ?? '').toUpperCase();
+  return BENCHMARKS.find((b) => b.simbolo === s) ?? BENCHMARK_POR_DEFECTO;
+}
 
 /** Lineas de cartera: tesis con ticker marcadas para consolidar. */
 function lineasDeCartera() {
@@ -97,9 +127,12 @@ router.get('/serie/:simbolo', async (req, res, next) => {
 
 router.get('/cartera', async (req, res, next) => {
   try {
-    const benchmark = BENCHMARKS.has(String(req.query.benchmark ?? '').toUpperCase())
-      ? String(req.query.benchmark).toUpperCase()
-      : 'SPY';
+    const ref = benchmarkDe(req.query.benchmark);
+    const benchmark = ref.simbolo;
+    /* El catálogo viaja con la cartera y no en una ruta propia: el único que lo
+       necesita es el selector, que vive en esta misma pantalla y ya hace esta
+       llamada. Una ruta más costaría un viaje y no ataría nada mejor. */
+    const referencia = { benchmarkNombre: ref.nombre, benchmarks: BENCHMARKS };
 
     const rfBruto = Number(req.query.rf);
     const tasaLibreRiesgo = Number.isFinite(rfBruto) && rfBruto >= 0 && rfBruto <= 25 ? rfBruto : 4;
@@ -110,14 +143,16 @@ router.get('/cartera', async (req, res, next) => {
         vacia: true,
         mensaje: 'La cartera se constituye automáticamente a partir de las tesis publicadas con ticker asignado.',
         posiciones: [], cerradas: [], serie: [], serieIndice: [], estadisticos: null,
-        benchmark, generadoEn: new Date().toISOString(),
+        benchmark, ...referencia, generadoEn: new Date().toISOString(),
       });
     }
 
     const cartera = await calcularCartera(lineas, { benchmark, tasaLibreRiesgo });
     // Cada recarga debe reflejar la ultima cotizacion disponible.
     res.setHeader('Cache-Control', 'no-store');
-    res.json({ vacia: false, ...cartera });
+    // La referencia se añade AQUÍ y no en `calcularCartera()`: el cálculo no
+    // tiene por qué saber cómo se rotula lo que calcula.
+    res.json({ vacia: false, ...cartera, ...referencia });
   } catch (err) {
     next(err);
   }

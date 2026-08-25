@@ -22,7 +22,8 @@
     "test:propuesta": "node tests/propuesta.js",
     "test:copia": "node tests/copia.js",
     "test:cartera": "node tests/cartera.js",
-    "test:areas": "node tests/areas.js"
+    "test:areas": "node tests/areas.js",
+    "test:cartera-interfaz": "node tests/cartera-interfaz.js"
   },
   "type": "commonjs",
   "dependencies": {

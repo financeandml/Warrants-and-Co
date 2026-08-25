@@ -872,12 +872,11 @@
             </div>
             <label class="selector-indice">
               <span class="visualmente-oculto" data-i18n="cartera.grafico.indice">Índice de referencia</span>
-              <select id="selector-benchmark">
-                <option value="SPY">S&amp;P 500 (SPY)</option>
-                <option value="QQQ">Nasdaq 100 (QQQ)</option>
-                <option value="DIA">Dow Jones (DIA)</option>
-                <option value="IWM">Russell 2000 (IWM)</option>
-              </select>
+              <!-- Sin opciones escritas: las pone `poblarBenchmarks()` desde el
+                   catálogo que manda el servidor con la cartera. Escribirlas aquí
+                   era la tercera copia del mismo hecho, y la que hacía que añadir
+                   un índice al servidor no llegara nunca a esta lista. -->
+              <select id="selector-benchmark"></select>
             </label>
             <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
                     data-i18n="cartera.grafico.verDatos">

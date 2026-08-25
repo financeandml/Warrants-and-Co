@@ -1263,6 +1263,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   gap: clamp(24px, 4.5vw, 56px);
 }
 
+/* En pantalla estrecha las tres casillas no caben en fila y el flex las estruja.
+   Antes que estrujar, se envuelven: aquí el presupuesto del hero no está
+   corriendo —`publicar()` se va de vacío porque el encuadre no es `cover`—, de
+   modo que crecer de alto no le cuesta el pliegue a nadie. */
+@media (max-width: 640px) {
+  .portada__cifras { flex-wrap: wrap; gap: 18px clamp(20px, 6vw, 32px); }
+}
+
 .portada__cifras__celda {
   display: flex; flex-direction: column; gap: 1px;
   text-align: center;
@@ -1271,6 +1279,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada__cifras__valor {
   font-size: 1.3rem; font-weight: 600; line-height: 1.05;
   letter-spacing: -0.02em;
+  /* La cifra no se parte NUNCA. Sin esto, en pantalla estrecha el flex estrujaba
+     la casilla y «▲ +67,00 %» caía en dos renglones, partiendo el número por la
+     mitad. Cuenta el glifo, que va en un `::before` y ensancha lo que hay que
+     medir. */
+  white-space: nowrap;
 }
 
 .portada__cifras__etiqueta {

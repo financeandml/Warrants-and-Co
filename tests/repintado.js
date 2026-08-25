@@ -571,7 +571,13 @@ const AREAS_OCULTAS = false;
   // castellano pasaría inadvertido —«2026»—; solo el inglés lo delata.
   comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
   comp('rótulo del total', cs[1].etiqueta, 'Rentabilidad total');
-  comp('rótulo del índice', cs[2].etiqueta, (v) => v && /^Índice \(/.test(v));
+  /* El rótulo del índice es «nombre · símbolo», y las dos piezas las manda el
+     servidor. Se afirma la FORMA y no el nombre concreto: escribir «S&P 500»
+     aquí sería una copia más del catálogo, que es justo lo que se acaba de
+     retirar del cliente. Que el nombre sea el del benchmark elegido lo afirma
+     `tests/cartera-interfaz.js`, que es donde vive esa pregunta. */
+  comp('rótulo del índice, con nombre y símbolo',
+    cs[2].etiqueta, (v) => v && /^.+ · [A-Z]{1,6}$/.test(v));
   comp('rótulo de la caída', cs[3].etiqueta, 'Máxima caída');
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',
     cs, (v) => equivalencia(v, /desde el capital/i));
@@ -589,7 +595,9 @@ const AREAS_OCULTAS = false;
   comp('rótulo del año', cs[0].etiqueta, '2026 return');
   comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
   comp('rótulo del total', cs[1].etiqueta, 'Total return');
-  comp('rótulo del índice', cs[2].etiqueta, (v) => v && /^Index \(/.test(v));
+  // Los nombres de índice son nombres propios: la forma es la misma en inglés.
+  comp('rótulo del índice, con nombre y símbolo',
+    cs[2].etiqueta, (v) => v && /^.+ · [A-Z]{1,6}$/.test(v));
   comp('rótulo de la caída', cs[3].etiqueta, 'Maximum drawdown');
   comp('la nota del año sigue al idioma', cs[0].nota, (v) => v && /^From capital/.test(v));
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',

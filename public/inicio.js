@@ -39,6 +39,19 @@ const conSigno = (v, dec = 2) =>
 const importe = (v, divisa) =>
   divisa ? t('general.importeDivisa', { importe: cifra(v), divisa }) : cifra(v);
 
+/**
+ * Rótulo del índice de referencia: su nombre y el ETF con el que se mide.
+ *
+ * Las dos piezas vienen del servidor. Si no publicara nombre —hoy no ocurre: el
+ * catálogo obliga a que todos lo lleven— se rotula el símbolo solo, que es lo
+ * único que consta. No se inventa un nombre ni se deja el hueco.
+ */
+const rotuloIndice = (cartera) =>
+  cartera?.benchmarkNombre
+    ? t('cartera.benchmark.rotulo',
+        { nombre: cartera.benchmarkNombre, simbolo: cartera.benchmark })
+    : (cartera?.benchmark ?? noDisponible());
+
 /** Clase de lectura direccional, sin que el color sustituya nunca al signo. */
 const claseDireccion = (v) =>
   !Number.isFinite(v) ? 'lectura--nula' : v > 0 ? 'lectura--alza' : v < 0 ? 'lectura--baja' : 'lectura--plana';
@@ -277,11 +290,13 @@ export function pintarCifrasHero(cartera) {
     // con el locale y un año no es una cantidad.
     { etiqueta: t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
       valor: e.rentabilidadAnio },
-    // El rótulo del índice lo compone el diccionario, que decide el separador.
-    // El nombre del índice sale de `cartera.benchmark`, nunca escrito a mano:
-    // el benchmark es configurable y un rótulo fijo mentiría al cambiarlo.
+    /* El rótulo del índice lo compone el diccionario, que decide los separadores.
+       Nombre Y símbolo salen los dos del servidor —«S&P 500 · SPY»—: el nombre es
+       el índice y el símbolo el ETF con el que se mide, y el cliente no guarda
+       ninguna lista propia que pudiera contradecirlos. Sin nombre publicado se
+       rotula solo el símbolo, que es lo único que consta. */
     { etiqueta: t('portada.cifras.hero.compuesto', {
-        rotulo: t('portada.cifras.indice', { indice: cartera.benchmark }),
+        rotulo: rotuloIndice(cartera),
         nota: t('portada.cifras.indice.nota') }),
       valor: e.rentabilidadIndice },
     { etiqueta: t('portada.cifras.total'), valor: e.rentabilidadTotal },
@@ -331,7 +346,7 @@ export function pintarCifras(cartera) {
       nota: t('portada.cifras.total.nota'),
     },
     {
-      etiqueta: t('portada.cifras.indice', { indice: cartera.benchmark }),
+      etiqueta: rotuloIndice(cartera),
       valor: formatearPorcentaje(e.rentabilidadIndice),
       lectura: e.rentabilidadIndice,
       nota: t('portada.cifras.indice.nota'),

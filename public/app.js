@@ -1808,6 +1808,10 @@ async function cargarCartera({ silencioso = false } = {}) {
  *   pulsa ES o EN convertiría el conmutador en una fuente de ruido.
  */
 function pintarCartera(datos, { avisos = true } = {}) {
+  // Antes del corte por cartera vacía: el selector ha de poder usarse aunque no
+  // haya ninguna tesis todavía, y el catálogo viene igual en las dos respuestas.
+  poblarBenchmarks(datos.benchmarks);
+
   if (datos.vacia) {
     $('#cuadro-mando').textContent = '';
     const vacio = elemento('div', 'vacio');
@@ -1916,7 +1920,42 @@ function rebasar(serie) {
   return serie.map((p) => ({ fecha: p.fecha, valor: (p.valor / base) * 100 }));
 }
 
-const NOMBRES_INDICE = { SPY: 'S&P 500', QQQ: 'Nasdaq 100', DIA: 'Dow Jones', IWM: 'Russell 2000' };
+/**
+ * Puebla el selector de índice desde el catálogo que manda el servidor.
+ *
+ * No hay lista de índices en el cliente. La había —un mapa de nombres aquí y las
+ * cuatro opciones escritas a mano en el documento—, y era la segunda y la tercera
+ * copia de un hecho que ya declaraba `src/routes/mercado.js`: añadir uno al
+ * servidor no lo hacía aparecer aquí, y nada lo decía.
+ *
+ * Conserva la selección vigente: repoblar no debe deshacer lo que el usuario
+ * eligió. Y no se reconstruye por idioma —los nombres de índice son nombres
+ * propios y no se traducen—, de modo que no figura en `repintarVistas()`.
+ */
+function poblarBenchmarks(catalogo) {
+  const sel = $('#selector-benchmark');
+  if (!sel || !catalogo?.length) return;
+
+  const elegido = estado.benchmark;
+  sel.textContent = '';
+  for (const b of catalogo) {
+    const op = document.createElement('option');
+    op.value = b.simbolo;
+    // El mismo rótulo compuesto que llevan las cifras, del mismo diccionario.
+    op.textContent = t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo });
+    sel.appendChild(op);
+  }
+  // Si el elegido ya no está en el catálogo, manda lo que diga el selector.
+  if (catalogo.some((b) => b.simbolo === elegido)) sel.value = elegido;
+  else estado.benchmark = sel.value;
+}
+
+/** Rótulo del índice de referencia: nombre y símbolo, los dos del servidor. */
+function rotuloBenchmark(datos) {
+  return datos.benchmarkNombre
+    ? t('cartera.benchmark.rotulo', { nombre: datos.benchmarkNombre, simbolo: datos.benchmark })
+    : datos.benchmark;
+}
 
 function pintarGrafico(datos) {
   const contenedor = $('#grafico');
@@ -1937,7 +1976,7 @@ function pintarGrafico(datos) {
   const fechas = new Set(serie.map((p) => p.fecha));
   const serieIndice = rebasar((datos.serieIndice ?? []).filter((p) => fechas.has(p.fecha)));
 
-  const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark} (${datos.benchmark})`;
+  const nombreIndice = rotuloBenchmark(datos);
   estado.grafico.actualizar(serie, serieIndice, nombreIndice);
 
   $('#subtitulo-grafico').textContent = completa
@@ -2285,7 +2324,7 @@ function pintarEstadisticos(datos) {
       : '';
   }
 
-  const nombreIndice = `${NOMBRES_INDICE[datos.benchmark] ?? datos.benchmark}`;
+  const nombreIndice = rotuloBenchmark(datos);
   $('#sub-estadisticos').textContent = t('cartera.estadisticos.periodo', {
     n: e.sesiones,
     inicio: formatearFecha(e.inicio),

@@ -147,7 +147,6 @@ export default {
   'portada.cifras.anio.desdeCierre': 'Desde el cierre de {fecha}',
   'portada.cifras.total': 'Rentabilidad total',
   'portada.cifras.total.nota': 'Desde el capital invertido',
-  'portada.cifras.indice': 'Índice ({indice})',
   'portada.cifras.indice.nota': 'Mismo periodo',
   'portada.cifras.caida': 'Máxima caída',
   'portada.cifras.caida.nota': 'Desde máximo previo',
@@ -158,6 +157,10 @@ export default {
   'portada.cifras.pie.enlace': 'Ver la cartera línea por línea',
   // Compone el rótulo del índice en la fila del hero, que no tiene renglón
   // para la nota. El separador lo decide cada idioma, no el código.
+  // Rótulo del índice de referencia: su nombre y el ETF con el que se mide.
+  // Uno solo para las dos filas de cifras, el selector y la leyenda del
+  // gráfico: son el mismo hecho y se escriben una vez.
+  'cartera.benchmark.rotulo': '{nombre} · {simbolo}',
   'portada.cifras.hero.compuesto': '{rotulo} · {nota}',
   'portada.cifras.vacio.titulo': 'Cartera sin constituir',
   'portada.cifras.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
