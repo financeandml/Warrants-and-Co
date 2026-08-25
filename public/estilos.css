@@ -1217,36 +1217,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding-block: clamp(30px, 6vh, 66px) 0;
 }
 
-/* ── Las dos líneas bajo la marca ──
-   Una sola caja, y no dos hermanas sueltas: como hijo único del flex suman un
-   hueco de la rejilla en vez de dos. El ancho se fija en `ch` y no en píxeles
-   porque lo que hay que evitar es que ENVUELVAN: envolviendo cuestan 120 px de
-   hero y sin envolver 50, y ese es el presupuesto que decide en cuántas ventanas
-   caben. El texto de cada idioma ha de caber en un renglón a este ancho. */
-.portada__lineas {
-  display: flex; flex-direction: column; gap: 2px;
-  max-width: 78ch; text-align: center;
-}
-
-.portada__linea {
-  margin: 0;
-  font-size: 0.98rem; line-height: 1.45;
-  color: var(--tinta-portada, var(--tinta));
-}
-.portada__linea--secundaria { font-size: 0.93rem; color: var(--tinta-mate); }
-
-/* Ocultas: fuera del flujo, pero SIGUEN maquetadas.
-   `display: none` las dejaría a cero de alto, y el alto es justo el dato con el
-   que se decide si vuelven a caber; a cero, volverían siempre y oscilarían. Se
-   conserva el ancho con `inset-inline: 0` para que envuelvan igual que en flujo
-   y la medida valga. `visibility: hidden` las retira del árbol de accesibilidad,
-   que es lo que corresponde a un texto que no se está mostrando. */
-.portada[data-lineas="false"] .portada__lineas {
-  position: absolute; inset-inline: 0; top: 0;
-  margin-inline: auto;
-  visibility: hidden; pointer-events: none;
-}
-
 /* ── La fila de tres cifras del hero ──
    Apilada al mínimo legible: cifra sobre rótulo, sin la nota que sí lleva la
    fila completa de abajo. El tamaño no es gusto, es presupuesto — se midió

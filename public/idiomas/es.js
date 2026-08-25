@@ -122,6 +122,8 @@ export default {
   // ── Portada · las dos líneas del hero ──
   // No repiten al manifiesto: aquel enuncia, estas describen el mecanismo del
   // que sale la fila de cifras que va justo debajo.
+  // Las dos líneas del hero se retiraron: el hero es marca, cifras y botones.
+  // Las claves se quedan declaradas por si vuelven; hoy no las nombra nadie.
   'portada.linea.que': 'Análisis de renta variable con cartera publicada.',
   'portada.linea.como': 'Cada tesis lleva su precio y su fecha, y la cartera sale de ellas.',
 

@@ -114,6 +114,8 @@ export default {
   // ── Home · the hero's two lines ──
   // They do not repeat the manifesto: that one states, these describe the
   // mechanism the figures row right below comes out of.
+  // The two hero lines were removed: the hero is brand, figures and buttons.
+  // The keys stay declared in case they come back; nothing names them today.
   'portada.linea.que': 'Equity research with a published portfolio.',
   'portada.linea.como': 'Every thesis carries its price and date, and the portfolio follows from them.',
 

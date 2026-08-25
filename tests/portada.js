@@ -47,23 +47,22 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    extremos del mecanismo. `crece` dice si en esa ventana se espera que el hero
    tome altura: es la degradación declarada, y se afirma en las dos direcciones
    —que crece donde debe y que NO crece donde no hace falta—. */
-/* Las dos piezas cedibles del hero, ventana a ventana. El orden de cesión es
-   deliberado y está medido: **ceden antes las cifras que las líneas**, de modo
-   que la portada nunca abre con tres porcentajes y ninguna frase que diga qué es
-   esto. Con el orden contrario, 1440×700 enseñaría las cifras y perdería las
-   líneas; es la única de las seis en que los dos órdenes difieren.
+/* La fila de cifras, ventana a ventana. Es lo único cedible del hero: la marca y
+   los accesos no se sueltan nunca.
 
-   1920×880 crece por las cifras y no por la foto: sin ellas le sobraban 12 px,
-   que es lo único que la separaba del régimen que crece. */
+   Las dos líneas que había bajo la marca se retiraron, y con ellas su peldaño.
+   Costaban 67-76 px de bloque de marca, y quitarlas devolvió asomo justo donde
+   el hero crecía por ellas: 1920×880 volvió al régimen fijo —+51 px— y en
+   1440×700 la fila dejó de ceder. En las otras cuatro no cambió nada, porque o
+   el hero ya era el de la ventana o la fila ya había cedido. */
 const VENTANAS = [
-  { n: '1440×900',  w: 1440, h: 900,  crece: false, lineas: true,  cifras: true  },
-  { n: '1680×1050', w: 1680, h: 1050, crece: false, lineas: true,  cifras: true  },
-  { n: '1920×880',  w: 1920, h: 880,  crece: true,  lineas: true,  cifras: true  },
-  // Aquí ya no caben las dos cosas: ceden las cifras y se conserva la frase.
-  { n: '1440×700',  w: 1440, h: 700,  crece: true,  lineas: true,  cifras: false },
-  // Muy apaisadas: no cabe ninguna de las dos.
-  { n: '1920×700',  w: 1920, h: 700,  crece: true,  lineas: false, cifras: false },
-  { n: '2560×800',  w: 2560, h: 800,  crece: true,  lineas: false, cifras: false },
+  { n: '1440×900',  w: 1440, h: 900,  crece: false, cifras: true  },
+  { n: '1680×1050', w: 1680, h: 1050, crece: false, cifras: true  },
+  { n: '1920×880',  w: 1920, h: 880,  crece: false, cifras: true  },
+  { n: '1440×700',  w: 1440, h: 700,  crece: true,  cifras: true  },
+  // Muy apaisadas: aquí la fila no cabe y cede.
+  { n: '1920×700',  w: 1920, h: 700,  crece: true,  cifras: false },
+  { n: '2560×800',  w: 2560, h: 800,  crece: true,  cifras: false },
 ];
 
 const R = [];
@@ -108,10 +107,7 @@ const medir = (p) => p.evaluate(async () => {
   const cabecera = document.querySelector('.cabecera').getBoundingClientRect().height;
   const etiqueta = document.querySelector('.manifiesto .etiqueta-superior');
 
-  const bloque = po.querySelector('.portada__lineas');
   const filaCifras = po.querySelector('.portada__cifras');
-  const renglones = [...bloque.children].map((l) => Math.round(
-    l.getBoundingClientRect().height / parseFloat(getComputedStyle(l).lineHeight)));
   // El asomo se acumula con `offsetTop`: el `translateY` de la aparición mueve el
   // rectángulo y daría una cifra distinta antes y después de revelarse.
   let yEtiqueta = 0;
@@ -137,13 +133,7 @@ const medir = (p) => p.evaluate(async () => {
     // La franja muerta del observador que revela el manifiesto. Se importa de
     // donde vive el observador: es la misma cifra con la que el hero decide.
     margenRevelado: (await import('/inicio.js')).MARGEN_REVELADO,
-    // Las dos líneas: si están puestas, si se ven, y si envuelven.
-    lineas: po.dataset.lineas,
-    lineasVisibles: getComputedStyle(bloque).visibility === 'visible',
-    lineasEnFlujo: getComputedStyle(bloque).position === 'static',
-    renglones,
-    textos: [...bloque.children].map((l) => l.textContent.trim()),
-    // La fila de cifras del hero: mismo trato que las líneas.
+    // La fila de cifras del hero: si está puesta, si se ve, y si envuelve.
     cifras: po.dataset.cifras,
     cifrasVisibles: getComputedStyle(filaCifras).visibility === 'visible',
     cifrasEnFlujo: getComputedStyle(filaCifras).position === 'static',
@@ -280,45 +270,22 @@ const medirFichero = (p) => p.evaluate(async () => {
       `hero ${m.alto.toFixed(0)} · por ventana ${m.porVentana.toFixed(0)} · exige ${m.minimoBanner}`);
     /* Crecer se paga en pliegue, y el pago tiene un suelo: lo que asome dentro de
        la franja muerta del observador NO llega a revelarse y aparecería una caja
-       vacía. Es el invariante que justifica que las líneas cedan, así que se
-       afirma contra la MISMA cifra con la que el hero decide. */
+       vacía. Es el invariante que justifica que la fila ceda, así que se afirma
+       contra la MISMA cifra con la que el hero decide. */
     t(`${v.n} · el manifiesto asoma lo bastante para revelarse`,
       m.asomaEtiqueta !== null && m.asomaEtiqueta > m.margenRevelado,
       `asoman ${m.asomaEtiqueta?.toFixed(0)} px, franja muerta ${m.margenRevelado}`);
 
-    /* ── Las dos líneas del hero, en las dos direcciones ──
-       Se pintan donde caben y desaparecen donde no, y «desaparecer» se comprueba
-       por lo que ve el usuario —visibilidad— y no solo por el atributo. */
-    t(`${v.n} · las líneas ${v.lineas ? 'se pintan porque caben' : 'ceden porque no caben'}`,
-      m.lineas === String(v.lineas), `data-lineas="${m.lineas}"`);
-    t(`${v.n} · y se ven o no se ven en consecuencia`,
-      m.lineasVisibles === v.lineas && m.lineasEnFlujo === v.lineas,
-      `visibles ${m.lineasVisibles} · en flujo ${m.lineasEnFlujo}`);
-
-    /* El presupuesto: envolviendo cuestan 120 px de hero en vez de 50, y con 120
-       no caben en ninguna ventana apaisada. Se afirma sobre el texto realmente
-       pintado, de modo que una traducción larga se caza aquí y no en producción. */
-    if (v.lineas) {
-      t(`${v.n} · ninguna de las dos líneas envuelve`,
-        m.renglones.every((n) => n === 1), `renglones ${m.renglones.join(' y ')}`);
-    }
-
     /* ── La fila de cifras del hero, en las dos direcciones ──
-       Cede ANTES que las líneas: donde solo cabe una de las dos, la que se ve es
-       la frase. Se afirma en los dos sentidos, porque «no se pinta nunca» pasaría
-       la mitad de esta prueba sin pintar jamás una cifra. */
+       Se pinta donde cabe y desaparece donde no, y «desaparecer» se comprueba por
+       lo que ve el usuario —visibilidad— y no solo por el atributo. Se afirma en
+       los dos sentidos, porque «no se pinta nunca» pasaría la mitad de esta
+       prueba sin pintar jamás una cifra. */
     t(`${v.n} · las cifras ${v.cifras ? 'se pintan porque caben' : 'ceden porque no caben'}`,
       m.cifras === String(v.cifras), `data-cifras="${m.cifras}"`);
     t(`${v.n} · y se ven o no se ven en consecuencia`,
       m.cifrasVisibles === v.cifras && m.cifrasEnFlujo === v.cifras,
       `visibles ${m.cifrasVisibles} · en flujo ${m.cifrasEnFlujo}`);
-
-    /* El orden de cesión, afirmado como tal: las cifras no pueden estar puestas
-       con las líneas fuera. Es la regla que distingue este orden del contrario, y
-       sin afirmarla el día que alguien invierta los peldaños nadie se entera. */
-    t(`${v.n} · nunca hay cifras sin líneas`,
-      !(m.cifras === 'true' && m.lineas === 'false'),
-      `líneas ${m.lineas} · cifras ${m.cifras}`);
 
     if (v.cifras) {
       t(`${v.n} · ningún rótulo de la fila envuelve`,
@@ -332,14 +299,19 @@ const medirFichero = (p) => p.evaluate(async () => {
 
   /* ── La decisión no oscila ──
      En el límite exacto, un píxel de ventana mueve el asomo 0,755 px: sin banda
-     de histéresis las líneas parpadearían al redimensionar. Se barre el umbral
-     píxel a píxel en las dos direcciones y se exige que el cambio ocurra UNA vez
-     en cada sentido, que el punto de vuelta esté por encima del de caída —eso es
-     la banda— y que en el punto justo de caída el estado no se mueva por sí solo.
+     de histéresis la fila parpadearía al redimensionar. Se barre el umbral píxel
+     a píxel en las dos direcciones y se exige que el cambio ocurra UNA vez en
+     cada sentido, que el punto de vuelta esté por encima del de caída —eso es la
+     banda— y que en el punto justo de caída el estado no se mueva por sí solo.
 
-     Se vio fallar: sin banda, y midiendo el bloque oculto con `display: none`
-     —que lo deja a cero y hace que el coste parezca nulo—, la bajada y la subida
-     acumulan cambios en el mismo píxel. */
+     Se vio fallar dos veces: sin banda, la bajada y la subida caen en el mismo
+     píxel; y midiendo el bloque oculto con `display: none` —que lo deja a cero y
+     hace que el coste parezca nulo— vuelve siempre.
+
+     El rango cubre el peldaño medido: a 1440 de ancho cede sobre los 670 y
+     vuelve sobre los 688. Es holgado a propósito, para que un cambio de tamaño
+     en el hero lo mueva dentro del rango en vez de dejarlo fuera y hacer fallar
+     la prueba por una razón que no es la suya. */
   {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 760 } });
     const p = await ctx.newPage();
@@ -347,17 +319,16 @@ const medirFichero = (p) => p.evaluate(async () => {
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await encuadrada(p);
 
-    // El peldaño se nombra: los dos —cifras y líneas— se barren igual.
-    const estado = async (cual = 'lineas') => {
+    const estado = async () => {
       await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-      return p.evaluate((c) => document.getElementById('portada').dataset[c], cual);
+      return p.evaluate(() => document.getElementById('portada').dataset.cifras);
     };
-    const barrer = async (desde, hasta, paso, cual = 'lineas') => {
+    const barrer = async (desde, hasta, paso) => {
       const cambios = [];
       let previo = null;
       for (let h = desde; paso > 0 ? h <= hasta : h >= hasta; h += paso) {
         await p.setViewportSize({ width: 1440, height: h });
-        const e = await estado(cual);
+        const e = await estado();
         if (previo !== null && e !== previo) cambios.push({ h, de: previo, a: e });
         previo = e;
       }
@@ -366,46 +337,21 @@ const medirFichero = (p) => p.evaluate(async () => {
 
     console.log('\n  ── la decisión no oscila (barrido a 1440 px de ancho) ──');
 
-    /* El peldaño de las cifras, que cede ANTES que el de las líneas y por tanto
-       cae más arriba. Necesita su propia banda: son dos decisiones distintas y
-       una histéresis compartida no impediría que parpadeara la otra. */
-    const bajadaC = await barrer(790, 715, -1, 'cifras');
-    t('bajando, las cifras ceden una sola vez',
-      bajadaC.length === 1 && bajadaC[0].a === 'false',
-      bajadaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
-
-    const subidaC = await barrer(715, 800, 1, 'cifras');
-    t('subiendo, las cifras vuelven una sola vez',
-      subidaC.length === 1 && subidaC[0].a === 'true',
-      subidaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
-
-    t('las cifras vuelven más arriba de donde cedieron',
-      bajadaC.length === 1 && subidaC.length === 1 && subidaC[0].h - bajadaC[0].h > 4,
-      `cede en ${bajadaC[0]?.h} · vuelve en ${subidaC[0]?.h}`);
-
-    if (bajadaC.length === 1) {
-      await p.setViewportSize({ width: 1440, height: bajadaC[0].h });
-      const serie = [];
-      for (let i = 0; i < 8; i++) serie.push(await estado('cifras'));
-      t('en el punto de cambio de las cifras, el estado no se mueve solo',
-        new Set(serie).size === 1, serie.join(','));
-    }
-    const bajada = await barrer(720, 660, -1);
-    t('bajando, las líneas ceden una sola vez',
+    const bajada = await barrer(720, 640, -1);
+    t('bajando, la fila cede una sola vez',
       bajada.length === 1 && bajada[0].a === 'false',
       bajada.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
 
-    const subida = await barrer(660, 730, 1);
-    t('subiendo, vuelven una sola vez',
+    const subida = await barrer(640, 730, 1);
+    t('subiendo, vuelve una sola vez',
       subida.length === 1 && subida[0].a === 'true',
       subida.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
 
     /* La banda, dicha como la nota quien arrastra el borde de la ventana: tras
-       ceder, devolver la ventana un poco NO las trae de vuelta. Sin banda, el
-       punto de caída y el de vuelta caen en el mismo píxel y esto falla; con el
-       barrido de dos en dos que tenía antes, el propio paso disimulaba la
-       ausencia de banda y la prueba pasaba en verde. */
-    t('vuelven más arriba de donde cedieron, y no por el paso del barrido',
+       ceder, devolver la ventana un poco NO la trae de vuelta. Sin banda, el
+       punto de caída y el de vuelta caen en el mismo píxel y esto falla; con un
+       barrido de dos en dos, el propio paso disimularía la ausencia de banda. */
+    t('vuelve más arriba de donde cedió, y no por el paso del barrido',
       bajada.length === 1 && subida.length === 1 && subida[0].h - bajada[0].h > 4,
       `cede en ${bajada[0]?.h} · vuelve en ${subida[0]?.h}`);
 
@@ -413,7 +359,7 @@ const medirFichero = (p) => p.evaluate(async () => {
       await p.setViewportSize({ width: 1440, height: bajada[0].h - 1 });
       await estado();
       await p.setViewportSize({ width: 1440, height: bajada[0].h + 4 });
-      t('devolver la ventana unos píxeles no las trae de vuelta',
+      t('devolver la ventana unos píxeles no la trae de vuelta',
         (await estado()) === 'false', `a ${bajada[0].h + 4} px de alto`);
     }
 
@@ -433,10 +379,10 @@ const medirFichero = (p) => p.evaluate(async () => {
      estrecha— o cuando aún no hay foto. Retira lo que sería mentira: una
      fracción y una holgura calculadas con `cover` no describen esa pantalla.
 
-     Pero `data-lineas` y `data-cifras` se quedaban como estaban, y eso también
-     mentía: decían «cedido» donde no hay presupuesto que pagar. Un hero llegado
-     desde una ventana apaisada aparecía en el móvil sin líneas y sin cifras
-     habiendo sitio de sobra, y no se salía de ahí salvo recargando.
+     Pero `data-cifras` se quedaba como estaba, y eso también mentía: decía
+     «cedida» donde no hay presupuesto que pagar. Un hero llegado desde una
+     ventana apaisada aparecía en el móvil sin la fila habiendo sitio de sobra, y
+     no se salía de ahí salvo recargando.
 
      Se afirma la transición, que es donde vive el fallo: mirar solo una carga
      limpia en móvil no lo caza, porque ahí los atributos nunca llegaron a
@@ -451,11 +397,9 @@ const medirFichero = (p) => p.evaluate(async () => {
 
     const estado = () => p.evaluate(() => {
       const po = document.getElementById('portada');
-      const l = po.querySelector('.portada__lineas');
       const c = po.querySelector('.portada__cifras');
       return {
-        lineas: po.dataset.lineas, cifras: po.dataset.cifras,
-        lineasVis: getComputedStyle(l).visibility === 'visible',
+        cifras: po.dataset.cifras,
         cifrasVis: getComputedStyle(c).visibility === 'visible',
         // Lo que sí debe seguir retirado: mentiría sobre esta pantalla.
         fraccion: po.dataset.fraccionBanner ?? null,
@@ -464,9 +408,8 @@ const medirFichero = (p) => p.evaluate(async () => {
     });
 
     const apaisada = await estado();
-    t('de partida, 1920×700 tiene las dos piezas cedidas',
-      apaisada.lineas === 'false' && apaisada.cifras === 'false',
-      `líneas ${apaisada.lineas} · cifras ${apaisada.cifras}`);
+    t('de partida, 1920×700 tiene la fila cedida',
+      apaisada.cifras === 'false', `cifras ${apaisada.cifras}`);
 
     await p.setViewportSize({ width: 390, height: 844 });
     // Por condición: se espera a que el encuadre deje de ser `cover`, que es lo
@@ -477,10 +420,9 @@ const medirFichero = (p) => p.evaluate(async () => {
     await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
 
     const movil = await estado();
-    t('en móvil vuelven las dos, y se ven',
-      movil.lineas === 'true' && movil.cifras === 'true'
-      && movil.lineasVis && movil.cifrasVis,
-      `líneas ${movil.lineas}/${movil.lineasVis} · cifras ${movil.cifras}/${movil.cifrasVis}`);
+    t('en móvil vuelve la fila, y se ve',
+      movil.cifras === 'true' && movil.cifrasVis,
+      `cifras ${movil.cifras} · se ve ${movil.cifrasVis}`);
     t('y la fracción y la holgura siguen retiradas, que ahí no describen nada',
       movil.fraccion === null && movil.holgura === null,
       `fracción ${movil.fraccion} · holgura ${movil.holgura}`);
@@ -490,17 +432,16 @@ const medirFichero = (p) => p.evaluate(async () => {
     for (let i = 0; i < 8; i++) {
       await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
       const e = await estado();
-      serie.push(`${e.lineas}/${e.cifras}`);
+      serie.push(e.cifras);
     }
-    t('y una vez vueltas, el estado no se mueve solo', new Set(serie).size === 1, serie.join(' '));
+    t('y una vez vuelta, el estado no se mueve solo', new Set(serie).size === 1, serie.join(' '));
 
     // Y es reversible: al volver a la ventana apaisada, vuelven a ceder.
     await p.setViewportSize({ width: 1920, height: 700 });
     await encuadrada(p);
     const vuelta = await estado();
-    t('al volver a 1920×700 vuelven a ceder',
-      vuelta.lineas === 'false' && vuelta.cifras === 'false',
-      `líneas ${vuelta.lineas} · cifras ${vuelta.cifras}`);
+    t('al volver a 1920×700 vuelve a ceder',
+      vuelta.cifras === 'false', `cifras ${vuelta.cifras}`);
 
     await ctx.close();
   }
