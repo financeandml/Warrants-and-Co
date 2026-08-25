@@ -221,18 +221,15 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     const vacio = a.querySelector('.anillo__vacio');
     if (vacio) return { vacio: vacio.querySelector('strong').textContent.trim() };
     const num = (x) => Number(String(x).replace(/[^\d,.-]/g, '').replace(',', '.'));
-    // El rótulo es «NOMBRE12,34 %»: se parte por el último tramo numérico.
-    const partir = (txt) => {
-      const m = txt.trim().match(/^(.*?)(-?[\d.,]+)\s*%$/);
-      return m ? { nombre: m[1].trim(), peso: num(m[2]) } : { nombre: txt.trim(), peso: null };
-    };
     const arcos = [...a.querySelectorAll('.anillo__arco')];
     return {
-      sectores: [...a.querySelectorAll('.anillo__etiqueta')].map((e) => partir(e.textContent)),
-      centro: a.querySelector('.anillo__centro')
-        ? { nombre: a.querySelector('.anillo__centro').textContent.trim(),
-            peso: num(a.querySelector('.anillo__centro-cifra').textContent) }
-        : null,
+      /* La identidad de cada sector la lleva la LISTA, no el dibujo: a 140 px no
+         caben rótulos sobre los arcos. El anillo responde a «cuánto hay
+         invertido» y la lista a «qué y cuánto». */
+      sectores: [...a.querySelectorAll('.anillo__fila')].map((f) => ({
+        nombre: f.querySelector('.anillo__nombre').textContent.trim(),
+        peso: num(f.querySelector('.anillo__cifra').textContent),
+      })),
       arcos: arcos.length,
       // El arco de la caja y su trazo: `url(#…-trama)` frente a un tono.
       trazoCaja: arcos.find((x) => x.classList.contains('anillo__arco--caja'))
@@ -241,7 +238,10 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       largos: arcos.map((x) => ({
         caja: x.classList.contains('anillo__arco--caja'),
         largo: parseFloat(x.getAttribute('stroke-dasharray')) })),
-      guias: a.querySelectorAll('.anillo__guia').length,
+      // Cada fila ha de llevar su nombre ESCRITO: es lo que impide que el tono
+      // del cuadrito sea el único portador de la identidad.
+      conNombre: [...a.querySelectorAll('.anillo__fila')]
+        .filter((f) => (f.querySelector('.anillo__nombre')?.textContent ?? '').trim().length > 0).length,
       descripcion: a.querySelector('title')?.textContent ?? '',
       pie: a.querySelector('.anillo__pie')?.textContent.trim() ?? null,
     };
@@ -322,15 +322,22 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     comp(`[${idioma}] el arco de la caja lleva trama y no un tono`,
       /^url\(#.*trama\)$/.test(anillo.trazoCaja ?? ''), true);
 
-    // Etiqueta directa: una línea guía por sector, no una leyenda aparte.
-    comp(`[${idioma}] cada sector lleva su línea guía`, anillo.guias, anillo.sectores.length);
+    // El color no porta la identidad: cada fila escribe su nombre.
+    comp(`[${idioma}] cada sector lleva su nombre escrito`,
+      anillo.conNombre, anillo.sectores.length);
 
     // La descripción alternativa enumera lo mismo que se ve.
     comp(`[${idioma}] la descripción nombra los cuatro sectores`,
       anillo.sectores.every((s) => anillo.descripcion.includes(s.nombre)), true);
 
-    comp(`[${idioma}] el pie de la caja reconcilia patrimonio y capital`,
-      /(patrimonio|portfolio value)/i.test(anillo.pie ?? ''), true);
+    /* La nota que reconcilia el peso sobre patrimonio con el de capital se movió
+       al plegable de metodología: bajo el anillo repetía lo que la propia casilla
+       ya dice. Se afirma allí, que es donde vive ahora. */
+    const enPlegable = await p.evaluate(() =>
+      [...document.querySelectorAll('#metodologia-dinamica p')].map((x) => x.textContent).join(' '));
+    comp(`[${idioma}] la nota de la caja está en el plegable de metodología`,
+      /(patrimonio|portfolio value)/i.test(enPlegable), true);
+    comp(`[${idioma}] y ya no cuelga del anillo`, anillo.pie, null);
 
     await ctx.close();
   }
@@ -346,8 +353,8 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       espera: (a) => a.sectores.length === 2 && a.arcos === 2 },
     { n: 'ninguna viva · todo caja',
       mutar: (c) => { c.posiciones = []; c.liquidez.pesoActual = 100; },
-      // Un anillo entero no tiene a dónde apuntar: la etiqueta va al hueco.
-      espera: (a) => a.arcos === 1 && a.guias === 0 && a.centro?.peso === 100 },
+      // Un solo sector: un anillo entero y una sola fila en la lista.
+      espera: (a) => a.arcos === 1 && a.sectores.length === 1 && a.sectores[0].peso === 100 },
     { n: 'caja al 0 %',
       mutar: (c) => { c.liquidez.pesoActual = 0;
         c.posiciones.forEach((p, i) => { p.pesoVigente = [40, 35, 25][i]; }); },
@@ -376,19 +383,16 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     const a = await leerAnillo(p);
     comp(`${caso.n} · el anillo responde como debe`, caso.espera(a), true);
 
-    // Y en ningún caso dos etiquetas del mismo lado se pisan.
+    /* Y el anillo no crece con la tarjeta. Escalaba, y a 1440 px salía un disco
+       de 478 px de diámetro. El tamaño se fija en la hoja de estilos, así que
+       esto afirma que sigue fijado. */
     if (!a.vacio) {
-      const solapan = await p.evaluate(() => {
-        const lados = {};
-        for (const e of document.querySelectorAll('#anillo-composicion .anillo__etiqueta')) {
-          (lados[e.getAttribute('text-anchor')] ||= []).push(Number(e.getAttribute('y')));
-        }
-        return Object.values(lados).some((ys) => {
-          ys.sort((x, y) => x - y);
-          return ys.some((v, i) => i > 0 && v - ys[i - 1] < 18);
-        });
+      const lado = await p.evaluate(() => {
+        const r = document.querySelector('.anillo__svg').getBoundingClientRect();
+        return { ancho: Math.round(r.width), alto: Math.round(r.height) };
       });
-      comp(`${caso.n} · ninguna etiqueta se pisa con otra`, solapan, false);
+      comp(`${caso.n} · el anillo mide 140 px y no escala`,
+        lado.ancho === 140 && lado.alto === 140, true);
     }
     await ctx.close();
   }

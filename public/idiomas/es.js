@@ -545,7 +545,7 @@ export default {
   'cartera.anillo.vacio.titulo': 'Sin composición que repartir',
   'cartera.anillo.vacio.motivo': 'No hay posiciones vivas ni liquidez que repartir.',
   'cartera.metodologia.resumen': 'Cómo se calcula todo esto',
-  'cartera.metodologia.remite': 'La conciliación y los estadísticos declaran además sus propios supuestos junto a cada tabla.',
+  'cartera.metodologia.remite': 'La conciliación declara además sus propios supuestos junto a su tabla.',
   'cartera.liquidez.etiqueta': 'Liquidez',
   'cartera.liquidez.nota': {
     one: 'Peso sobre el patrimonio. Del capital es el {capital}: {n} tramo liquidado que ya no se reinvierte. Las dos cifras difieren porque el tramo salió valiendo más de lo que costó.',
@@ -610,6 +610,10 @@ export default {
     other: 'Periodo {inicio} – {fin} · {n} sesiones · referencia {indice}',
   },
 
+  'cartera.grupo.rentabilidad': 'Rentabilidad',
+  'cartera.grupo.riesgo': 'Riesgo',
+  'cartera.grupo.indice': 'Relación con el índice',
+  'cartera.grupo.sesiones': 'Sesiones',
   'cartera.metrica.rentabilidadTotal': 'Rentabilidad total',
   'cartera.metrica.rentabilidadTotal.nota': 'Del periodo completo',
   'cartera.metrica.rentabilidadAnualizada': 'Rentabilidad anualizada',
@@ -649,7 +653,10 @@ export default {
     one: 'Serie de {n} sesión entre el {desde} y el {hasta}. La cartera evoluciona desde {inicial} hasta {final} en base 100, lo que representa una variación del {variacion}. Comparada con {indice}. El detalle numérico completo está disponible en la tabla de datos.',
     other: 'Serie de {n} sesiones entre el {desde} y el {hasta}. La cartera evoluciona desde {inicial} hasta {final} en base 100, lo que representa una variación del {variacion}. Comparada con {indice}. El detalle numérico completo está disponible en la tabla de datos.',
   },
-  'grafico.emergente.cartera': 'Cartera',
+  // Nombre corto de la serie. Lo usan el rótulo del extremo del gráfico y el
+  // emergente: es el mismo nombre para la misma línea, y se escribe una vez.
+  'grafico.serie.cartera': 'Cartera',
+  'grafico.base': 'base 100',
   'grafico.emergente.acumulado': 'Acumulado',
 
   'general.si': 'Sí',

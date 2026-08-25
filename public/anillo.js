@@ -51,18 +51,16 @@ import { t } from './i18n.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
-/** Geometría del dibujo. En unidades de `viewBox`, no en píxeles. */
+/* Geometría del dibujo, en unidades de `viewBox`.
+
+   El anillo mide 140 px y NO escala con el ancho de la tarjeta. Escalaba, y a
+   1440 px salía un disco de 478 px de diámetro: un gráfico de informe, no una
+   pieza de lectura. El tamaño se fija en la hoja de estilos y aquí solo se
+   describe la proporción. */
 const G = {
-  ancho: 460,
-  alto: 260,
-  cx: 130,
-  cy: 130,
-  radio: 82,
-  grosor: 30,
-  // Cuánto sobresale la línea guía del borde exterior antes de doblar.
-  codo: 14,
-  // Separación mínima entre dos etiquetas apiladas, para que no se pisen.
-  separacion: 22,
+  lado: 140,
+  radio: 52,
+  grosor: 18,
 };
 
 function crear(nombre, atributos = {}) {
@@ -135,8 +133,10 @@ export function pintarAnillo(destino, datos) {
   }
 
   const id = `anillo-${++secuencia}`;
+  const cuerpo = elemento('div', 'anillo__cuerpo');
+
   const svg = crear('svg', {
-    viewBox: `0 0 ${G.ancho} ${G.alto}`,
+    viewBox: `0 0 ${G.lado} ${G.lado}`,
     class: 'anillo__svg',
     role: 'img',
     'aria-labelledby': `${id}-desc`,
@@ -153,145 +153,61 @@ export function pintarAnillo(destino, datos) {
   // ── La trama de la caja ──
   const defs = crear('defs');
   const trama = crear('pattern', {
-    id: `${id}-trama`, width: 6, height: 6,
+    id: `${id}-trama`, width: 5, height: 5,
     patternUnits: 'userSpaceOnUse', patternTransform: 'rotate(45)',
   });
-  trama.appendChild(crear('rect', { width: 6, height: 6, class: 'anillo__trama-fondo' }));
-  trama.appendChild(crear('line', { x1: 0, y1: 0, x2: 0, y2: 6, class: 'anillo__trama-linea' }));
+  trama.appendChild(crear('rect', { width: 5, height: 5, class: 'anillo__trama-fondo' }));
+  trama.appendChild(crear('line', { x1: 0, y1: 0, x2: 0, y2: 5, class: 'anillo__trama-linea' }));
   defs.appendChild(trama);
   svg.appendChild(defs);
 
   /* Los arcos se dibujan como trazo sobre una circunferencia, no como sectores
      de camino: así el caso de un sector al 100 % sale un anillo entero sin
      tratar aparte el arco de 360°, que es donde `A` de SVG se vuelve ambiguo. */
+  const centro = G.lado / 2;
   const circunferencia = 2 * Math.PI * G.radio;
   let acumulado = 0;
 
-  const anguloMedio = (desde, peso) => {
-    const fraccion = (desde + peso / 2) / total;
-    // −90° para que el primer sector arranque arriba, no a las tres en punto.
-    return fraccion * 2 * Math.PI - Math.PI / 2;
-  };
-
-  const etiquetas = [];
-
   for (const s of sectores) {
-    const fraccion = s.peso / total;
-    // Un sector de peso cero NO dibuja arco: 0° es invisible. Pero sí etiqueta.
+    // Un sector de peso cero NO dibuja arco: 0° es invisible. Pero sí figura en
+    // la lista, que es donde se afirma que vale cero y no que falte.
     if (s.peso > 0) {
-      const arco = crear('circle', {
+      svg.appendChild(crear('circle', {
         class: `anillo__arco${s.esCaja ? ' anillo__arco--caja' : ''}`,
-        cx: G.cx, cy: G.cy, r: G.radio,
+        cx: centro, cy: centro, r: G.radio,
         fill: 'none',
         stroke: s.esCaja ? `url(#${id}-trama)` : s.relleno,
         'stroke-width': G.grosor,
-        'stroke-dasharray': `${(fraccion * circunferencia).toFixed(3)} ${circunferencia.toFixed(3)}`,
+        'stroke-dasharray': `${((s.peso / total) * circunferencia).toFixed(3)} ${circunferencia.toFixed(3)}`,
         'stroke-dashoffset': `${(-(acumulado / total) * circunferencia).toFixed(3)}`,
-        transform: `rotate(-90 ${G.cx} ${G.cy})`,
-      });
-      svg.appendChild(arco);
+        transform: `rotate(-90 ${centro} ${centro})`,
+      }));
     }
-    etiquetas.push({ ...s, angulo: anguloMedio(acumulado, s.peso), fraccion });
     acumulado += s.peso;
   }
 
-  /* ── Un solo sector al 100 % ──
-     No hay a dónde apuntar: la línea guía de un anillo entero señalaría un punto
-     arbitrario de sí mismo. La etiqueta va al hueco central. */
-  const unico = sectores.filter((s) => s.peso > 0).length === 1;
-  if (unico) {
-    const s = etiquetas.find((e) => e.peso > 0);
-    const centro = crear('text', { class: 'anillo__centro', x: G.cx, y: G.cy - 4, 'text-anchor': 'middle' });
-    centro.textContent = s.etiqueta;
-    svg.appendChild(centro);
-    const cifra = crear('text', { class: 'anillo__centro-cifra', x: G.cx, y: G.cy + 20, 'text-anchor': 'middle' });
-    cifra.textContent = porcentaje(s.peso);
-    svg.appendChild(cifra);
-  } else {
-    for (const el of colocarEtiquetas(etiquetas, id)) svg.appendChild(el);
-  }
+  cuerpo.appendChild(svg);
 
-  destino.appendChild(svg);
-
-  /* El pie de la caja: la nota que ya existe, que reconcilia el peso sobre
-     patrimonio con el de capital. No se redacta aquí ninguna versión propia. */
-  if (caja) {
-    const nota = caja.tramosLiquidados > 0
-      ? t('cartera.liquidez.nota', {
-        n: caja.tramosLiquidados, capital: porcentaje(caja.pesoCapital) })
-      : t('cartera.liquidez.nota.sinLiquidar', { capital: porcentaje(caja.pesoCapital) });
-    destino.appendChild(elemento('p', 'anillo__pie', nota));
-  }
-}
-
-/**
- * Reparte las etiquetas a izquierda y derecha y las separa para que no se pisen.
- *
- * Cada una se une a su arco con una línea guía, que es lo que la hace ETIQUETA
- * DIRECTA y no leyenda: sin ella, con cuatro sectores habría que contar tonos
- * de gris para saber cuál es cuál, y ahí el color sí informaría solo.
- */
-function colocarEtiquetas(sectores, id) {
-  const nodos = [];
-  const lados = { izquierda: [], derecha: [] };
-
+  /* ── La lista ──
+     A este tamaño no caben rótulos sobre el dibujo, de modo que la identidad de
+     cada sector la lleva la lista y no el anillo. Es un reparto deliberado: el
+     ANILLO responde a «cuánto hay invertido» —que se ve de un golpe por la
+     proporción y por la trama de la caja—, y la LISTA responde a «qué y cuánto»,
+     con cada nombre escrito junto a su cifra. El tono del cuadrito acompaña,
+     pero no es lo que porta el dato: eso lo porta el texto de al lado. */
+  const lista = elemento('ul', 'anillo__lista');
   for (const s of sectores) {
-    const cos = Math.cos(s.angulo);
-    const sen = Math.sin(s.angulo);
-    const borde = G.radio + G.grosor / 2;
-    lados[cos >= 0 ? 'derecha' : 'izquierda'].push({
-      ...s,
-      // Punto de arranque en el borde exterior del arco.
-      x0: G.cx + cos * borde,
-      y0: G.cy + sen * borde,
-      // Altura deseada de la etiqueta, antes de repartir.
-      y: G.cy + sen * (borde + G.codo),
-      derecha: cos >= 0,
-    });
+    const fila = elemento('li', `anillo__fila${s.esCaja ? ' anillo__fila--caja' : ''}`);
+    const muestra = elemento('span', `anillo__muestra${s.esCaja ? ' anillo__muestra--caja' : ''}`);
+    if (!s.esCaja) muestra.style.background = s.relleno;
+    muestra.setAttribute('aria-hidden', 'true');
+    fila.appendChild(muestra);
+    fila.appendChild(elemento('span', 'anillo__nombre', s.etiqueta));
+    fila.appendChild(elemento('strong', 'anillo__cifra', porcentaje(s.peso)));
+    lista.appendChild(fila);
   }
-
-  for (const [nombre, grupo] of Object.entries(lados)) {
-    if (!grupo.length) continue;
-    grupo.sort((a, b) => a.y - b.y);
-
-    // Separación mínima: se empuja hacia abajo y luego se corrige por arriba,
-    // de modo que un grupo apretado queda centrado en vez de desplazado.
-    for (let i = 1; i < grupo.length; i++) {
-      if (grupo[i].y - grupo[i - 1].y < G.separacion) grupo[i].y = grupo[i - 1].y + G.separacion;
-    }
-    const desborde = grupo[grupo.length - 1].y - (G.alto - 16);
-    if (desborde > 0) for (const s of grupo) s.y -= desborde;
-    for (let i = grupo.length - 2; i >= 0; i--) {
-      if (grupo[i + 1].y - grupo[i].y < G.separacion) grupo[i].y = grupo[i + 1].y - G.separacion;
-    }
-
-    const xTexto = nombre === 'derecha' ? G.ancho - 12 : 12;
-    const xCodo = nombre === 'derecha' ? G.ancho - 96 : 96;
-
-    for (const s of grupo) {
-      const guia = crear('polyline', {
-        class: 'anillo__guia',
-        points: `${s.x0.toFixed(1)},${s.y0.toFixed(1)} ${xCodo},${s.y.toFixed(1)} ${
-          nombre === 'derecha' ? xCodo + 10 : xCodo - 10},${s.y.toFixed(1)}`,
-      });
-      nodos.push(guia);
-
-      const texto = crear('text', {
-        class: `anillo__etiqueta${s.esCaja ? ' anillo__etiqueta--caja' : ''}`,
-        x: xTexto, y: s.y + 4,
-        'text-anchor': nombre === 'derecha' ? 'end' : 'start',
-      });
-      const nombreSector = crear('tspan', { class: 'anillo__etiqueta-nombre' });
-      nombreSector.textContent = s.etiqueta;
-      const cifra = crear('tspan', { class: 'anillo__etiqueta-cifra', dx: 6 });
-      cifra.textContent = porcentaje(s.peso);
-      // En el lado izquierdo la cifra va delante para que el texto quede alineado.
-      if (nombre === 'derecha') { texto.appendChild(nombreSector); texto.appendChild(cifra); }
-      else { texto.appendChild(nombreSector); texto.appendChild(cifra); }
-      nodos.push(texto);
-    }
-  }
-  return nodos;
+  cuerpo.appendChild(lista);
+  destino.appendChild(cuerpo);
 }
 
 /** Carencia declarada, con su motivo. Nunca un anillo a medias. */

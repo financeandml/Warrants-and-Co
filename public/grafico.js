@@ -11,7 +11,12 @@ import { t } from './i18n.js';
 
 const NS = 'http://www.w3.org/2000/svg';
 
-const MARGEN = { arriba: 22, derecha: 68, abajo: 34, izquierda: 52 };
+/* Sin eje izquierdo: las cifras del eje van a la DERECHA, donde acaba la serie
+   y donde está la mirada. Es la convención de la prensa financiera y ahorra los
+   52 px que el eje izquierdo se llevaba sin dibujar nada. El margen derecho
+   aloja dos cosas: el rótulo de cada serie pegado a su último punto, y las
+   cifras del eje contra el borde. */
+const MARGEN = { arriba: 20, derecha: 148, abajo: 34, izquierda: 10 };
 const ALTURA = 340;
 
 const crear = (nombre, atributos = {}) => {
@@ -131,7 +136,10 @@ export class GraficoCartera {
 
     // Dominio comun a ambas series: un solo eje, sin doble escala.
     const valores = [...cartera.map((p) => p.valor), ...indice.map((p) => p.valor)];
-    const { inicio, fin, ticks } = escalaY(Math.min(...valores), Math.max(...valores));
+    /* Tres marcas de altura, no cinco. Sin retícula que las prolongue, cada
+       cifra es una referencia suelta contra el borde: cinco se leen como una
+       lista de números y tres como una escala. */
+    const { inicio, fin, ticks } = escalaY(Math.min(...valores), Math.max(...valores), 3);
 
     const fechas = cartera.map((p) => p.fecha);
     const x = (i) => MARGEN.izquierda + (anchoUtil * i) / Math.max(fechas.length - 1, 1);
@@ -148,36 +156,64 @@ export class GraficoCartera {
     // ── Rejilla y eje de valores ──
     // `marca`, y no `t`: `t` es el traductor, y usarlo de variable de bucle lo
     // taparia justo donde alguien querria traducir.
-    for (const marca of ticks) {
+    /* Las cifras del eje, contra el borde derecho. Sin retícula y sin eje en L:
+       la cifra sitúa la altura por sí sola, y las líneas que la acompañaban
+       competían con la serie sin añadir nada. */
+    const bordeDerecho = ancho - 8;
+    /* `escalaY` redondea a pasos legibles —20 en 20—, de modo que pedirle tres
+       marcas puede devolver seis. Se aclaran aquí, conservando la primera y la
+       última: cambiar el paso para que salgan tres daría alturas como 87 o 143,
+       que se leen peor que sobrarle marcas a una escala redonda. */
+    const visibles = ticks.length <= 4
+      ? ticks
+      : ticks.filter((_, i) => i === 0 || i === ticks.length - 1
+        || i % Math.ceil((ticks.length - 1) / 3) === 0);
+    for (const marca of visibles) {
       const py = y(marca);
       if (py < MARGEN.arriba - 1 || py > MARGEN.arriba + altoUtil + 1) continue;
-      /* Sin línea de retícula: la cifra del eje ya sitúa la altura, y cinco
-         horizontales cruzando la serie competían con ella. La única que se
-         conserva es la base 100, que no es retícula sino referencia. */
-      const et = crear('text', { class: 'grafico__texto', x: MARGEN.izquierda - 10, y: py + 3.5, 'text-anchor': 'end' });
+      const et = crear('text', { class: 'grafico__texto', x: bordeDerecho, y: py + 3.5, 'text-anchor': 'end' });
       et.textContent = num(marca, 0);
       svg.appendChild(et);
     }
 
-    // Referencia de capital invertido.
+    /* La base 100 es lo ÚNICO horizontal que se conserva, porque no es retícula:
+       es el capital invertido, y decir si la serie va por encima o por debajo de
+       ella es la primera pregunta que se le hace al gráfico. Va rotulada. */
     if (100 >= inicio && 100 <= fin) {
       svg.appendChild(crear('line', { class: 'grafico__base', x1: MARGEN.izquierda, x2: MARGEN.izquierda + anchoUtil, y1: y(100), y2: y(100) }));
+      const etBase = crear('text', {
+        class: 'grafico__base-rotulo', x: MARGEN.izquierda + 2, y: y(100) - 7,
+      });
+      etBase.textContent = t('grafico.base');
+      svg.appendChild(etBase);
     }
 
-    svg.appendChild(crear('line', { class: 'grafico__eje', x1: MARGEN.izquierda, x2: MARGEN.izquierda + anchoUtil, y1: MARGEN.arriba + altoUtil, y2: MARGEN.arriba + altoUtil }));
-
-    // ── Eje temporal: como maximo seis marcas legibles ──
-    // Menos marcas y más aire: cuatro fechas sitúan la serie igual que seis.
-    const maxMarcas = Math.max(2, Math.min(4, Math.floor(anchoUtil / 150)));
-    const salto = Math.max(1, Math.ceil(fechas.length / maxMarcas));
-    for (let i = 0; i < fechas.length; i += salto) {
-      const et = crear('text', { class: 'grafico__texto', x: x(i), y: ALTURA - MARGEN.abajo + 20, 'text-anchor': 'middle' });
+    /* ── Eje temporal: donde cambia el MES, no cada n sesiones ──
+       Un reparto uniforme rotula fechas arbitrarias —«17 mar», «2 jun»— que no
+       significan nada. Marcar el cambio de mes da un eje que se lee como un
+       calendario y que no se mueve al cambiar de rango. */
+    const mesDe = (iso) => String(iso).slice(0, 7);
+    const cambios = [];
+    for (let i = 1; i < fechas.length; i++) {
+      if (mesDe(fechas[i]) !== mesDe(fechas[i - 1])) cambios.push(i);
+    }
+    // Si caben pocos, se toma uno de cada n para que no se apelotonen.
+    // Un mes cada 150 px: por debajo de eso las marcas se leen como una tira.
+    const cabenMarcas = Math.max(2, Math.floor(anchoUtil / 150));
+    const paso = Math.max(1, Math.ceil(cambios.length / cabenMarcas));
+    for (let k = 0; k < cambios.length; k += paso) {
+      const i = cambios[k];
+      const et = crear('text', {
+        class: 'grafico__texto', x: x(i), y: ALTURA - MARGEN.abajo + 20, 'text-anchor': 'middle',
+      });
       et.textContent = fechaCorta(fechas[i]);
       svg.appendChild(et);
     }
-    // La ultima sesion siempre queda rotulada si no colisiona con la anterior.
+
+    // La última sesión queda rotulada si no se pisa con la última marca de mes.
     const ultimo = fechas.length - 1;
-    if ((ultimo % salto) !== 0 && x(ultimo) - x(ultimo - (ultimo % salto)) > 58) {
+    const ultimaMarca = cambios.length ? cambios[cambios.length - 1 - ((cambios.length - 1) % paso)] : 0;
+    if (x(ultimo) - x(ultimaMarca) > 58) {
       const et = crear('text', { class: 'grafico__texto', x: x(ultimo), y: ALTURA - MARGEN.abajo + 20, 'text-anchor': 'middle' });
       et.textContent = fechaCorta(fechas[ultimo]);
       svg.appendChild(et);
@@ -198,51 +234,54 @@ export class GraficoCartera {
 
     // ── Serie de la cartera: area de acompañamiento y trazo ──
     const dLinea = cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ');
-    const base = MARGEN.arriba + altoUtil;
-    /* Degradado vertical en vez del relleno plano: el área pesa donde la serie
-       está y se disuelve hacia el eje. Es puramente estético —no porta ninguna
-       información que la línea no lleve ya—, de modo que no toca la regla del
-       color. El id lleva sufijo por si algún día conviven dos gráficos. */
-    const idDeg = 'grafico-degradado';
-    if (!svg.querySelector('defs')) {
-      const defs = crear('defs');
-      const deg = crear('linearGradient', { id: idDeg, x1: 0, y1: 0, x2: 0, y2: 1 });
-      deg.appendChild(crear('stop', { offset: '0%', class: 'grafico__degradado-alto' }));
-      deg.appendChild(crear('stop', { offset: '100%', class: 'grafico__degradado-bajo' }));
-      defs.appendChild(deg);
-      svg.insertBefore(defs, svg.firstChild);
-    }
-    svg.appendChild(crear('path', { class: 'grafico__area', fill: `url(#${idDeg})`, d: `${dLinea} L ${x(cartera.length - 1).toFixed(2)} ${base} L ${x(0).toFixed(2)} ${base} Z` }));
+    /* Sin área bajo la serie. Un relleno mide superficie, y aquí la superficie
+       no significa nada: lo que se lee es la ALTURA sobre la base 100. Además
+       tapaba la serie del índice justo donde las dos se cruzan, que es el punto
+       más interesante del gráfico. */
     svg.appendChild(crear('path', { class: 'grafico__linea', d: dLinea }));
 
-    // ── Marcadores y etiquetas de extremo (rotulado selectivo) ──
-    const finCartera = cartera[cartera.length - 1];
-    svg.appendChild(crear('circle', { class: 'grafico__marcador', cx: x(cartera.length - 1), cy: y(finCartera.valor), r: 4.5 }));
+    /* ── Rótulo directo al final de cada serie ──
+       Nombre y último nivel pegados al punto donde la serie acaba. Es lo que
+       sustituye a la clave de color: quien mira no tiene que emparejar un
+       cuadradito de una leyenda con una línea del dibujo, porque la línea lleva
+       su nombre escrito al lado. La leyenda de abajo conserva otra cosa —la
+       rentabilidad medida y desde dónde se mide—, que es un hecho distinto. */
+    const rotularFin = (punto, nombre, indice, yRotulo = null) => {
+      const px = x(punto.i);
+      const py = y(punto.v);
+      const yTexto = yRotulo ?? py;
+      svg.appendChild(crear('circle', {
+        class: `grafico__marcador${indice ? ' grafico__marcador--indice' : ''}`,
+        cx: px, cy: py, r: indice ? 3.5 : 4,
+      }));
+      const g = crear('g', { class: `grafico__fin${indice ? ' grafico__fin--indice' : ''}` });
+      const etNombre = crear('text', {
+        class: 'grafico__fin-nombre', x: px + 10, y: yTexto - 3,
+      });
+      etNombre.textContent = nombre;
+      const etValor = crear('text', {
+        class: 'grafico__fin-valor', x: px + 10, y: yTexto + 13,
+      });
+      etValor.textContent = num(punto.v);
+      g.append(etNombre, etValor);
+      svg.appendChild(g);
+      return py;
+    };
 
-    const etCartera = crear('text', {
-      class: 'grafico__etiqueta-final',
-      x: x(cartera.length - 1) + 11,
-      y: y(finCartera.valor) + 4,
-    });
-    etCartera.textContent = num(finCartera.valor);
-    svg.appendChild(etCartera);
+    const finCartera = cartera[cartera.length - 1];
+    const yCartera = rotularFin(
+      { i: cartera.length - 1, v: finCartera.valor }, t('grafico.serie.cartera'), false);
 
     if (puntosIndice.length > 1) {
       const finIndice = puntosIndice[puntosIndice.length - 1];
-      svg.appendChild(crear('circle', { class: 'grafico__marcador grafico__marcador--indice', cx: x(finIndice.i), cy: y(finIndice.v), r: 4 }));
-
-      // Separacion minima entre etiquetas de extremo para evitar solapamiento.
-      let yIndice = y(finIndice.v) + 4;
-      if (Math.abs(yIndice - (y(finCartera.valor) + 4)) < 14) {
-        yIndice = y(finCartera.valor) + 4 + (finIndice.v < finCartera.valor ? 14 : -14);
-      }
-      const etIndice = crear('text', {
-        class: 'grafico__etiqueta-final grafico__etiqueta-final--indice',
-        x: x(finIndice.i) + 11,
-        y: yIndice,
-      });
-      etIndice.textContent = num(finIndice.v);
-      svg.appendChild(etIndice);
+      /* Cada rótulo ocupa dos renglones. Si las series acaban juntas se pisan, de
+         modo que el de abajo se empuja lo justo y su marcador se queda donde de
+         verdad acaba la serie: mover el punto sería mover el dato. */
+      const py = y(finIndice.v);
+      const desplazado = Math.abs(py - yCartera) < 34
+        ? yCartera + (finIndice.v < finCartera.valor ? 34 : -34)
+        : py;
+      rotularFin(finIndice, nombreIndice, true, desplazado);
     }
 
     // ── Capa de interaccion ──
@@ -394,7 +433,7 @@ export class GraficoCartera {
       e.appendChild(f);
     };
 
-    fila(t('grafico.emergente.cartera'), valorCartera, false);
+    fila(t('grafico.serie.cartera'), valorCartera, false);
     if (Number.isFinite(valorIndice)) fila(this.#datos.nombreIndice, valorIndice, true);
 
     const variacion = document.createElement('div');

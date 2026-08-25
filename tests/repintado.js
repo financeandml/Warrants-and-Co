@@ -75,7 +75,7 @@ const AREAS_OCULTAS = false;
      que hoy lo porta. El anillo lo pinta en JavaScript y sin `data-i18n`, así que
      sin entrada en el repintado se quedaría en el idioma de partida. */
   comp('liquidez en el anillo de composición',
-    await txtSvg('#anillo-composicion .anillo__etiqueta--caja .anillo__etiqueta-nombre'), 'Liquidez');
+    await txtSvg('#anillo-composicion .anillo__fila--caja .anillo__nombre'), 'Liquidez');
   comp('nota del total de la conciliación',
     await txt('#pie-conciliacion .celda-total small'), (x) => /\btramos?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Rentabilidad acumulada');
@@ -118,7 +118,7 @@ const AREAS_OCULTAS = false;
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Current weight');
   comp('liquidez en el anillo de composición',
-    await txtSvg('#anillo-composicion .anillo__etiqueta--caja .anillo__etiqueta-nombre'), 'Cash');
+    await txtSvg('#anillo-composicion .anillo__fila--caja .anillo__nombre'), 'Cash');
   comp('nota del total de la conciliación',
     await txt('#pie-conciliacion .celda-total small'), (x) => /\btranches?\b/.test(x ?? ''));
   comp('cuadro de mando', await txt('#cuadro-mando .indicador__etiqueta'), 'Cumulative return');

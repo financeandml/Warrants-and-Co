@@ -1838,6 +1838,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
      —`liquidez.pesoActual`—, de modo que las tres cifras de una posición en esta
      pantalla no pueden discrepar: son la misma. */
   pintarAnillo($('#anillo-composicion'), datos);
+  pintarMetodologia(datos);
   pintarCinta(datos.posiciones ?? [], datos.cerradas ?? []);
   // El panel de mercado muestra un resumen de las mismas cifras.
   pintarPanelCartera(datos);
@@ -2118,6 +2119,42 @@ function pintarPosiciones(datos) {
 
 }
 
+/**
+ * Lo que el plegable de metodología pinta desde los datos.
+ *
+ * Dos notas que estaban sueltas en la sección: la explicación de los suelos de
+ * muestra —que iba bajo los estadísticos— y la de la liquidez —que iba bajo el
+ * anillo—. Se mueven aquí porque en su sitio repetían lo que la propia celda ya
+ * dice: cada estadístico retenido declara ya cuántas sesiones le faltan, y la
+ * casilla de la caja ya lleva su peso. Lo que estas dos añaden es POR QUÉ existe
+ * ese mínimo y por qué las dos cifras de la caja difieren, que es método, no
+ * dato, y el método vive en este bloque.
+ *
+ * Ninguna se redacta aquí: son las mismas claves que ya existían.
+ */
+function pintarMetodologia(datos) {
+  const destino = $('#metodologia-dinamica');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const e = datos.estadisticos;
+  if (e?.muestra && !e.muestra.suficiente) {
+    destino.appendChild(elemento('p', null, t('cartera.muestra.explicacion', {
+      anualizada: e.muestra.suelos.anualizada.minimas,
+      ratios: e.muestra.suelos.ratios.minimas,
+      sesiones: e.muestra.sesiones,
+    })));
+  }
+
+  const caja = datos.liquidez;
+  if (caja && Number.isFinite(caja.pesoActual)) {
+    destino.appendChild(elemento('p', null, caja.tramosLiquidados > 0
+      ? t('cartera.liquidez.nota', {
+        n: caja.tramosLiquidados, capital: porcentaje(caja.pesoCapital) })
+      : t('cartera.liquidez.nota.sinLiquidar', { capital: porcentaje(caja.pesoCapital) })));
+  }
+}
+
 /** Posiciones liquidadas al alcanzar su take profit. */
 function pintarCerradas(datos) {
   const tarjeta = $('#tarjeta-cerradas');
@@ -2280,21 +2317,6 @@ function pintarEstadisticos(datos) {
     return;
   }
 
-  /* El suelo de muestra se explica una vez, aquí, y no en cada celda: la celda
-     dice qué le falta y esta nota dice por qué existe ese mínimo. */
-  const avisoMuestra = $('#nota-muestra');
-  if (avisoMuestra) {
-    const corta = e.muestra && !e.muestra.suficiente;
-    avisoMuestra.hidden = !corta;
-    avisoMuestra.textContent = corta
-      ? t('cartera.muestra.explicacion', {
-        anualizada: e.muestra.suelos.anualizada.minimas,
-        ratios: e.muestra.suelos.ratios.minimas,
-        sesiones: e.muestra.sesiones,
-      })
-      : '';
-  }
-
   const nombreIndice = rotuloBenchmark(datos);
   $('#sub-estadisticos').textContent = t('cartera.estadisticos.periodo', {
     n: e.sesiones,
@@ -2306,13 +2328,29 @@ function pintarEstadisticos(datos) {
   // El ticker del índice no se traduce —es un nombre—, pero la frase que lo
   // rodea sí, de modo que viaja como parámetro de la plantilla.
   const sesion = t('cartera.metrica.sesion.nota');
-  const metricas = [
+  /* Las catorce métricas, agrupadas por lo que preguntan.
+
+     No es adorno de maqueta: eran catorce celdas iguales en una rejilla de seis
+     columnas, o sea dos filas llenas y dos huérfanas, y la asimetría empujaba a
+     inventarse cuatro cifras más para cuadrarla. Agrupadas, la simetría deja de
+     ser la pregunta —nadie cuenta si una banda tiene cuatro o cinco— y no hace
+     falta añadir ninguna cifra que la muestra no sostenga.
+
+     Cinco de las catorce están hoy retenidas por suelo de muestra, y agrupar las
+     reparte por banda en vez de salpicarlas. */
+  const grupos = [
+    [t('cartera.grupo.rentabilidad'), [
     [t('cartera.metrica.rentabilidadTotal'), formatearPorcentaje(e.rentabilidadTotal),
       t('cartera.metrica.rentabilidadTotal.nota'), e.rentabilidadTotal],
     [t('cartera.metrica.rentabilidadAnualizada'), formatearPorcentaje(e.rentabilidadAnualizada),
       t('cartera.metrica.rentabilidadAnualizada.nota'), e.rentabilidadAnualizada, 'rentabilidadAnualizada'],
     [t('cartera.metrica.rentabilidadIndice', { indice: datos.benchmark }), formatearPorcentaje(e.rentabilidadIndice),
       t('cartera.metrica.rentabilidadIndice.nota'), e.rentabilidadIndice],
+    [t('cartera.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
+      t('cartera.metrica.alfa.nota'), e.alfaJensen, 'alfaJensen'],
+    ]],
+
+    [t('cartera.grupo.riesgo'), [
     [t('cartera.metrica.volatilidad'), formatearPorcentaje(e.volatilidadAnualizada, false),
       t('cartera.metrica.volatilidad.nota')],
     [t('cartera.metrica.sharpe'), formatearNumero(e.ratioSharpe),
@@ -2325,31 +2363,44 @@ function pintarEstadisticos(datos) {
       t('cartera.metrica.maximaCaida.nota', {
         desde: formatearFecha(e.maximaCaidaDesde), hasta: formatearFecha(e.maximaCaidaHasta),
       })],
+    ]],
+
+    [t('cartera.grupo.indice'), [
     [t('cartera.metrica.beta'), formatearNumero(e.beta),
       t('cartera.metrica.beta.nota', { indice: datos.benchmark })],
-    [t('cartera.metrica.alfa'), formatearPorcentaje(e.alfaJensen),
-      t('cartera.metrica.alfa.nota'), e.alfaJensen, 'alfaJensen'],
     [t('cartera.metrica.correlacion'), formatearNumero(e.correlacionIndice),
       t('cartera.metrica.correlacion.nota', { indice: datos.benchmark })],
+    ]],
+
+    [t('cartera.grupo.sesiones'), [
     [t('cartera.metrica.sesionesPositivas'), formatearPorcentaje(e.sesionesPositivasPct, false),
       t('cartera.metrica.sesionesPositivas.nota')],
     [t('cartera.metrica.mejorSesion'), formatearPorcentaje(e.mejorSesion), sesion, e.mejorSesion],
     [t('cartera.metrica.peorSesion'), formatearPorcentaje(e.peorSesion), sesion, e.peorSesion],
+    ]],
   ];
 
   /* Una cifra retenida por el suelo de muestra no lleva su nota de siempre —que
      hablaría de un dato que no está— sino las sesiones que le faltan. La quinta
      posición de cada métrica la nombra; el resto no la necesita. */
-  for (const [etiqueta, valor, nota, variacion, clave] of metricas) {
-    const retenida = retenidaPorMuestra(e.muestra, clave);
-    const bloque = elemento('div', 'estadistico');
-    bloque.appendChild(elemento('span', 'estadistico__etiqueta', etiqueta));
-    const v = elemento('strong', 'estadistico__valor', valor);
-    if (variacion !== undefined) v.className = `estadistico__valor ${claseVariacion(variacion)}`;
-    bloque.appendChild(v);
-    const alPie = retenida ? notaMuestra(retenida) : nota;
-    if (alPie) bloque.appendChild(elemento('span', `estadistico__nota${retenida ? ' estadistico__nota--pendiente' : ''}`, alPie));
-    rejilla.appendChild(bloque);
+  for (const [titulo, metricas] of grupos) {
+    const grupo = elemento('section', 'grupo-estadisticos');
+    grupo.appendChild(elemento('h3', 'grupo-estadisticos__titulo', titulo));
+    const celdas = elemento('div', 'rejilla-grupo');
+
+    for (const [etiqueta, valor, nota, variacion, clave] of metricas) {
+      const retenida = retenidaPorMuestra(e.muestra, clave);
+      const bloque = elemento('div', 'estadistico');
+      bloque.appendChild(elemento('span', 'estadistico__etiqueta', etiqueta));
+      const v = elemento('strong', 'estadistico__valor', valor);
+      if (variacion !== undefined) v.className = `estadistico__valor ${claseVariacion(variacion)}`;
+      bloque.appendChild(v);
+      const alPie = retenida ? notaMuestra(retenida) : nota;
+      if (alPie) bloque.appendChild(elemento('span', `estadistico__nota${retenida ? ' estadistico__nota--pendiente' : ''}`, alPie));
+      celdas.appendChild(bloque);
+    }
+    grupo.appendChild(celdas);
+    rejilla.appendChild(grupo);
   }
 }
 

@@ -1016,9 +1016,6 @@
           </div>
         </div>
         <div class="rejilla-estadisticos" id="rejilla-estadisticos"></div>
-        <!-- Por qué faltan cifras. Lo pinta `pintarEstadisticos()` y solo cuando
-             la muestra no llega al suelo; con historia bastante, no existe. -->
-        <p class="nota-metodologica nota-muestra" id="nota-muestra" hidden></p>
       </section>
 
       <!-- ══ PIE ══ Cómo se calcula todo esto.
@@ -1039,8 +1036,14 @@
             precio de entrada al cierre de esa sesión. El índice se calcula como rentabilidad ponderada
             en el tiempo, en base 100, sin aportaciones ni reembolsos externos.
           </p>
+          <!-- Lo que se pinta desde los datos: la explicación de los suelos de
+               muestra y la nota de la liquidez. Estaban sueltas en la sección
+               —un párrafo bajo los estadísticos y otro bajo el anillo— y ahí
+               repetían lo que sus propias celdas ya dicen. Aquí explican el
+               MÉTODO, que es de lo que va este bloque. -->
+          <div id="metodologia-dinamica"></div>
           <p data-i18n="cartera.metodologia.remite">
-            La conciliación y los estadísticos declaran además sus propios supuestos junto a cada tabla.
+            La conciliación declara además sus propios supuestos junto a su tabla.
           </p>
         </div>
       </details>

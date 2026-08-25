@@ -533,7 +533,7 @@ export default {
   'cartera.anillo.vacio.titulo': 'Nothing to break down',
   'cartera.anillo.vacio.motivo': 'There are no open positions and no cash to split.',
   'cartera.metodologia.resumen': 'How all of this is computed',
-  'cartera.metodologia.remite': 'Reconciliation and statistics also state their own assumptions next to each table.',
+  'cartera.metodologia.remite': 'Reconciliation also states its own assumptions next to its table.',
   'cartera.liquidez.etiqueta': 'Cash',
   'cartera.liquidez.nota': {
     one: 'Weight against portfolio value. Of capital it is {capital}: {n} liquidated tranche that is no longer reinvested. The two figures differ because the tranche exited worth more than it cost.',
@@ -596,6 +596,10 @@ export default {
     other: 'Period {inicio} – {fin} · {n} sessions · benchmark {indice}',
   },
 
+  'cartera.grupo.rentabilidad': 'Return',
+  'cartera.grupo.riesgo': 'Risk',
+  'cartera.grupo.indice': 'Against the index',
+  'cartera.grupo.sesiones': 'Sessions',
   'cartera.metrica.rentabilidadTotal': 'Total return',
   'cartera.metrica.rentabilidadTotal.nota': 'Full period',
   'cartera.metrica.rentabilidadAnualizada': 'Annualised return',
@@ -633,7 +637,10 @@ export default {
     one: 'A series of {n} session between {desde} and {hasta}. The portfolio moves from {inicial} to {final} on base 100, a change of {variacion}. Compared against {indice}. The full numeric detail is available in the data table.',
     other: 'A series of {n} sessions between {desde} and {hasta}. The portfolio moves from {inicial} to {final} on base 100, a change of {variacion}. Compared against {indice}. The full numeric detail is available in the data table.',
   },
-  'grafico.emergente.cartera': 'Portfolio',
+  // Short name of the series. Used by the chart's end label and the tooltip:
+  // same name for the same line, written once.
+  'grafico.serie.cartera': 'Portfolio',
+  'grafico.base': 'base 100',
   'grafico.emergente.acumulado': 'Cumulative',
 
   'general.si': 'Yes',

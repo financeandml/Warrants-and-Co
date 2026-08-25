@@ -690,19 +690,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* `.grafico__rejilla` se retiró: la cifra del eje sitúa la altura y cinco
    horizontales cruzando la serie competían con ella. La base 100 se conserva
    —abajo—, que no es retícula sino referencia. */
-.grafico__eje     { stroke: var(--linea-fuerte); stroke-width: 1; shape-rendering: crispEdges; }
+/* `.grafico__eje` se retiró con el eje en L: sin retícula y con las cifras a la
+   derecha, la línea horizontal del pie no delimitaba nada. */
 
 .grafico__texto {
   font-family: var(--sans); font-size: 10.5px;
   fill: var(--tinta-mate); font-variant-numeric: tabular-nums;
 }
 
-/* El relleno lo pone ahora un degradado, definido en el propio SVG. El `fill`
-   de reserva queda para el caso de que el `<defs>` no llegue. */
-.grafico__area  { fill: var(--serie-relleno); }
-.grafico__degradado-alto { stop-color: var(--serie-cartera); stop-opacity: 0.16; }
-.grafico__degradado-bajo { stop-color: var(--serie-cartera); stop-opacity: 0; }
-.grafico__linea { fill: none; stroke: var(--serie-cartera); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+/* `.grafico__area` se retiró: un relleno mide superficie, y aquí lo que se lee
+   es la ALTURA sobre la base 100. Además tapaba la serie del índice justo en los
+   cruces, que es el punto más interesante del gráfico. */
+.grafico__linea { fill: none; stroke: var(--serie-cartera); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
 /* El trazo discontinuo NO es decorativo: es lo que separa la serie del índice
    de la de la cartera sin recurrir al tono. Se alarga a `8 5` —más sobrio, menos
    ruidoso— pero no se retira: sin él, a media serie las dos líneas se
@@ -712,18 +711,37 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .grafico__marcador { fill: var(--serie-cartera); stroke: var(--superficie); stroke-width: 2; }
 .grafico__marcador--indice { fill: var(--serie-indice); }
 
-.grafico__etiqueta-final {
-  font-family: var(--sans); font-size: 11px; font-weight: 600;
-  fill: var(--tinta); font-variant-numeric: tabular-nums;
+/* ── Rótulo directo al final de cada serie ──
+   Dos renglones: el nombre y el nivel. Sustituye a la clave de color de la
+   leyenda —quien mira ya no empareja cuadraditos con líneas— y por eso el
+   nombre va en el peso de la tinta y el nivel en el secundario. */
+.grafico__fin-nombre {
+  font-family: var(--sans, inherit);
+  font-size: 11.5px; font-weight: 600;
+  letter-spacing: 0.01em;
+  fill: var(--serie-cartera);
 }
-.grafico__etiqueta-final--indice { fill: var(--tinta-secundaria); font-weight: 500; }
+.grafico__fin-valor {
+  font-family: var(--sans, inherit);
+  font-size: 12.5px; font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  fill: var(--tinta-secundaria);
+}
+.grafico__fin--indice .grafico__fin-nombre { fill: var(--serie-indice); font-weight: 500; }
+
+/* El rótulo de la base: dice qué es esa línea sin obligar a deducirlo. */
+.grafico__base-rotulo {
+  font-family: var(--sans, inherit);
+  font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+  fill: var(--tinta-mate);
+}
 
 /* La opacidad la gobierna el atributo del elemento: una declaracion aqui
    prevalece sobre el atributo de presentacion y dejaria la guia siempre visible. */
 .grafico__cruz { stroke: var(--tinta); stroke-width: 1; stroke-dasharray: 3 3; }
 .grafico__foco { fill: var(--superficie); stroke-width: 2; }
 
-.grafico__base { stroke: var(--linea-fuerte); stroke-width: 1; stroke-dasharray: 2 3; }
+.grafico__base { stroke: var(--linea-fuerte); stroke-width: 1; }
 
 .emergente {
   position: absolute; z-index: 5; pointer-events: none;
@@ -778,71 +796,83 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tabla-posiciones .celda-valor { min-width: 200px; }
 
 /* ── El anillo de composición ──
-   Sustituye a las barras por sector que había aquí. No es un cambio de forma: las
-   barras agregaban por sector y el anillo reparte por posición, con la caja como
-   un sector más. Lo que no cambia es que la caja SE VE: era la razón de las
-   barras y sigue siendo la del anillo. */
-.anillo { padding: 4px 24px 22px; }
+   Sustituye a las barras por sector que había aquí. Las barras agregaban por
+   sector y el anillo reparte por posición, con la caja como un sector más. Lo
+   que no cambia es que la caja SE VE.
 
-.anillo__svg { display: block; width: 100%; height: auto; overflow: visible; }
+   El anillo mide 140 px y NO escala con la tarjeta. Escalando salía un disco de
+   478 px: el dibujo pesaba más que el hecho que cuenta. A este tamaño la
+   identidad de cada sector la lleva la lista de al lado, no el dibujo —el anillo
+   responde a «cuánto hay invertido», la lista a «qué y cuánto»—. */
+.anillo { padding: 4px 24px 24px; }
 
-.anillo__arco { transition: opacity var(--transicion); }
+.anillo__cuerpo {
+  display: flex; align-items: center;
+  gap: clamp(24px, 4vw, 52px);
+  flex-wrap: wrap;
+}
+
+.anillo__svg {
+  width: 140px; height: 140px;
+  flex: 0 0 auto;
+  display: block;
+}
 
 /* La caja lleva trama, no tono: no es una inversión, y distinguirla por
-   naturaleza en vez de por intensidad es lo que hace que «60 % sin invertir» se
-   lea de un golpe. El borde le da contorno donde la trama se adelgaza. */
-.anillo__arco--caja { stroke-linecap: butt; }
+   naturaleza en vez de por intensidad es lo que hace que «60 % sin invertir»
+   se lea de un golpe. */
 .anillo__trama-fondo { fill: var(--superficie); }
-.anillo__trama-linea { stroke: var(--anillo-trama); stroke-width: 3; }
+.anillo__trama-linea { stroke: var(--anillo-trama); stroke-width: 2.5; }
 
-/* La línea guía es lo que hace ETIQUETA DIRECTA y no leyenda: sin ella habría
-   que contar tonos de gris para saber qué sector es cuál. */
-.anillo__guia {
-  fill: none;
-  stroke: var(--linea-fuerte);
-  stroke-width: 1;
-  vector-effect: non-scaling-stroke;
+.anillo__lista {
+  list-style: none; margin: 0; padding: 0;
+  flex: 1 1 240px; min-width: 220px;
+  max-width: 380px;
 }
 
-.anillo__etiqueta {
-  font-family: var(--sans, inherit);
-  font-size: 13px;
-  fill: var(--tinta);
+.anillo__fila {
+  display: grid;
+  grid-template-columns: 10px 1fr auto;
+  align-items: baseline;
+  gap: 11px;
+  padding-block: 9px;
+  border-block-end: 1px solid var(--linea-hairline);
 }
-.anillo__etiqueta-nombre { font-weight: 500; }
-.anillo__etiqueta-cifra { font-variant-numeric: tabular-nums; fill: var(--tinta-secundaria); }
-.anillo__etiqueta--caja .anillo__etiqueta-nombre { font-style: italic; }
+.anillo__fila:last-child { border-block-end: none; }
 
-/* Un solo sector al 100 %: la etiqueta va al hueco, porque un anillo entero no
-   tiene a dónde apuntar. */
-.anillo__centro {
-  font-family: var(--sans, inherit);
-  font-size: 15px; font-weight: 500;
-  fill: var(--tinta);
+.anillo__muestra {
+  width: 10px; height: 10px;
+  border-radius: 2px;
+  align-self: center;
 }
-.anillo__centro-cifra {
-  font-family: var(--sans, inherit);
-  font-size: 20px; font-weight: 600;
+/* La misma trama que el arco, en el cuadrito. Se dibuja con un degradado
+   repetido porque un `<pattern>` de SVG no se puede referenciar desde CSS. */
+.anillo__muestra--caja {
+  background: repeating-linear-gradient(
+    45deg,
+    var(--anillo-trama) 0 1.5px,
+    var(--superficie) 1.5px 3.5px
+  );
+  outline: 1px solid var(--linea-fuerte);
+  outline-offset: -1px;
+}
+
+.anillo__nombre { font-size: 0.82rem; color: var(--tinta); }
+.anillo__fila--caja .anillo__nombre { font-style: italic; color: var(--tinta-secundaria); }
+
+.anillo__cifra {
+  font-size: 0.86rem; font-weight: 600;
   font-variant-numeric: tabular-nums;
-  fill: var(--tinta);
-}
-
-/* La nota de la caja: la que reconcilia el peso sobre patrimonio con el de
-   capital. Es la misma que llevaban las barras. */
-.anillo__pie {
-  margin: 14px 0 0;
-  font-size: 0.72rem; line-height: 1.6;
-  color: var(--tinta-mate);
-  max-width: 64ch;
+  color: var(--tinta);
 }
 
 /* Carencia declarada. Nunca un anillo a medias. */
 .anillo__vacio {
-  padding: 28px 0;
+  padding: 24px 0;
   border-block-start: 1px solid var(--linea-hairline);
 }
 .anillo__vacio strong { display: block; margin-block-end: 6px; }
-.anillo__vacio p { margin: 0; font-size: 0.82rem; line-height: 1.6; color: var(--tinta-mate); }
+.anillo__vacio p { margin: 0; font-size: 0.82rem; line-height: 1.6; color: var(--tinta-mate); max-width: 62ch; }
 
 /* ── Los tres movimientos de la sección ── */
 .movimiento {
@@ -900,11 +930,26 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .dato-fuente { display: block; font-weight: 400; font-size: 0.7rem; color: var(--tinta-mate); }
 .nota-conciliacion { margin: 24px 0 0; }
 
-.rejilla-estadisticos {
+/* Las catorce métricas van agrupadas por lo que preguntan, no en una matriz
+   uniforme. Catorce celdas iguales en seis columnas daban dos filas llenas y dos
+   huérfanas, y esa asimetría empujaba a inventar cuatro cifras más para
+   cuadrarla. Con bandas rotuladas nadie cuenta si una tiene cuatro o cinco. */
+.rejilla-estadisticos { display: block; background: var(--superficie); }
+
+.grupo-estadisticos { border-block-start: 1px solid var(--linea); }
+.grupo-estadisticos:first-child { border-block-start: none; }
+
+.grupo-estadisticos__titulo {
+  margin: 0;
+  padding: 16px 22px 0;
+  font-size: 0.68rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--tinta-mate);
+}
+
+.rejilla-grupo {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
-  background: var(--superficie);
-  overflow: hidden;
 }
 
 .estadistico {
