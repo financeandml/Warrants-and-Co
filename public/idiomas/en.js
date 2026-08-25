@@ -114,8 +114,8 @@ export default {
   // ── Home · the hero's two lines ──
   // They do not repeat the manifesto: that one states, these describe the
   // mechanism the figures row right below comes out of.
-  'portada.linea.que': 'Each thesis is published with its price and date; the portfolio follows.',
-  'portada.linea.como': 'The track record is not stated: it is computed from what was published.',
+  'portada.linea.que': 'Equity research with a published portfolio.',
+  'portada.linea.como': 'Every thesis carries its price and date, and the portfolio follows from them.',
 
   'portada.pilar.research.titulo': 'Research',
   'portada.pilar.research.texto': 'Deep fundamental analysis focused on companies, catalysts, valuation and investment thesis.',
@@ -148,6 +148,9 @@ export default {
   'portada.cifras.pie.tesis': { one: '{n} thesis', other: '{n} theses' },
   'portada.cifras.pie.vivas': { one: '{n} open', other: '{n} open' },
   'portada.cifras.pie.enlace': 'See the portfolio line by line',
+  // Composes the index label for the hero row, which has no line for the note.
+  // The separator is each language's decision, not the code's.
+  'portada.cifras.hero.compuesto': '{rotulo} · {nota}',
   'portada.cifras.vacio.titulo': 'Portfolio not yet constituted',
   'portada.cifras.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
 

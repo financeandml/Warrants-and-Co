@@ -600,6 +600,66 @@ const AREAS_OCULTAS = false;
     await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
   comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
 
+  /* ── Portada · la fila de cifras del HERO, al conmutar ──
+     La pinta `pintarCifrasHero()`, y tampoco lleva un solo `data-i18n`: sin su
+     entrada en `PINTORES_INICIO` se quedaría en el idioma de partida. Recargar no
+     lo cazaría —al recargar se pinta ya con el diccionario nuevo—, así que se
+     comprueba aquí, donde el idioma se conmuta sin recargar.
+
+     Se afirma en los dos idiomas y contra la fila de abajo: son las mismas tres
+     cifras, y decirlo es lo único que hace legítimo mostrarlas dos veces. */
+  const heroPintado = () => p.waitForFunction(
+    () => document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
+    null, { timeout: 30000 });
+
+  const celdasHero = () => p.$$eval('#cifras-hero .portada__cifras__celda', (cs) => cs.map((c) => ({
+    valor: c.querySelector('.portada__cifras__valor')?.textContent.trim() ?? null,
+    etiqueta: c.querySelector('.portada__cifras__etiqueta')?.textContent.trim() ?? null,
+  })));
+
+  /* 1680×1050 es la ventana donde las cifras del hero caben con las líneas
+     puestas; en las apaisadas ceden y no habría nada que confrontar. Se fija
+     aquí y no se hereda del resto de la prueba, que corre a 1280×900. */
+  await p.setViewportSize({ width: 1680, height: 1050 });
+  await heroPintado();
+
+  // Llega en inglés, que es donde acabó la tanda anterior.
+  const heroEn = await celdasHero();
+  comp('[hero, en] rótulo del año', heroEn[0].etiqueta, (v) => v && /^\d{4} return$/i.test(v));
+  comp('[hero, en] rótulo del índice compuesto con su periodo',
+    heroEn[1].etiqueta, (v) => v && /same period/i.test(v));
+  comp('[hero, en] rótulo del total', heroEn[2].etiqueta, 'Total return');
+
+  await idioma('es');
+  await heroPintado();
+  const heroEs = await celdasHero();
+  comp('[hero, es] el rótulo del año sigue al idioma',
+    heroEs[0].etiqueta, (v) => v && /^rentabilidad \d{4}$/i.test(v));
+  comp('[hero, es] el rótulo del índice sigue al idioma',
+    heroEs[1].etiqueta, (v) => v && /mismo periodo/i.test(v));
+  comp('[hero, es] el rótulo del total sigue al idioma', heroEs[2].etiqueta, 'Rentabilidad total');
+
+  /* El valor también se repinta: el porcentaje sigue la convención del idioma
+     —«+67,00 %» frente a «+67.00%»—, así que un hero sin repintar se delata
+     también en la cifra y no solo en el rótulo. */
+  // El separador es un espacio DURO, que es lo que corresponde en castellano
+  // ante el signo de porcentaje. Un espacio normal aquí sería un fallo de
+  // composición, así que se exige el duro y no `\s`.
+  comp('[hero, es] el porcentaje sigue la convención del idioma',
+    heroEs[0].valor, (v) => v && /,\d+\u00a0%$/.test(v));
+  comp('[hero, en] el porcentaje seguía la suya', heroEn[0].valor, (v) => v && /\.\d+%$/.test(v));
+
+  // Y las tres dicen lo mismo que sus gemelas de abajo, en el idioma vigente.
+  const abajoEs = await celdas();
+  const gemela = (et) => abajoEs.find((c) => c.etiqueta === et || `${c.etiqueta} · ${c.nota}` === et);
+  for (const c of heroEs) {
+    comp(`[hero, es] «${c.etiqueta}» dice lo mismo que su gemela de abajo`,
+      gemela(c.etiqueta)?.valor ?? null, c.valor);
+  }
+
+  comp('ninguna cifra retenida por suelo de muestra llega al hero',
+    (await txt('#cifras-hero')) ?? '', (v) => !RETENIDAS.test(v));
+
   if (errores.length) {
     fallos++;
     console.log('\n  errores de consola:');

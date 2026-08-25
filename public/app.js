@@ -27,7 +27,7 @@ import {
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
 import {
-  pintarTicker, pintarCifras, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
 } from './inicio.js';
 
@@ -1456,6 +1456,10 @@ const irARutaInicio = (destino) => {
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
   cifras: () => pintarCifras(datosInicio.cartera),
+  // La fila del hero sale de la misma cartera. Entrada propia, como la de abajo,
+  // porque el repintado por idioma recorre esta lista: sin figurar se quedaría en
+  // el idioma anterior, y sus rótulos sí se traducen.
+  cifrasHero: () => pintarCifrasHero(datosInicio.cartera),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
@@ -1499,6 +1503,7 @@ async function cargarInicio() {
     // repintado por idioma recorre esta lista: un bloque que no figure en ella
     // se quedaría en el idioma anterior.
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
+    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifrasHero'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de
     // modo que se pide con ficha. Una sola llamada trae la cobertura entera:

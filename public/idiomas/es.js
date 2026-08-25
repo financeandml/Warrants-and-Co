@@ -122,8 +122,8 @@ export default {
   // ── Portada · las dos líneas del hero ──
   // No repiten al manifiesto: aquel enuncia, estas describen el mecanismo del
   // que sale la fila de cifras que va justo debajo.
-  'portada.linea.que': 'Las tesis se publican con su precio y su fecha, y de ahí sale la cartera.',
-  'portada.linea.como': 'El historial no se declara: se calcula desde lo publicado.',
+  'portada.linea.que': 'Análisis de renta variable con cartera publicada.',
+  'portada.linea.como': 'Cada tesis lleva su precio y su fecha, y la cartera sale de ellas.',
 
   'portada.pilar.research.titulo': 'Análisis',
   'portada.pilar.research.texto': 'Análisis fundamental profundo, centrado en compañías, catalizadores, valoración y tesis de inversión.',
@@ -156,6 +156,9 @@ export default {
   'portada.cifras.pie.tesis': { one: '{n} tesis', other: '{n} tesis' },
   'portada.cifras.pie.vivas': { one: '{n} viva', other: '{n} vivas' },
   'portada.cifras.pie.enlace': 'Ver la cartera línea por línea',
+  // Compone el rótulo del índice en la fila del hero, que no tiene renglón
+  // para la nota. El separador lo decide cada idioma, no el código.
+  'portada.cifras.hero.compuesto': '{rotulo} · {nota}',
   'portada.cifras.vacio.titulo': 'Cartera sin constituir',
   'portada.cifras.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
 

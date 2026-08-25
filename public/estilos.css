@@ -1247,6 +1247,48 @@ button, input, select, textarea { font: inherit; color: inherit; }
   visibility: hidden; pointer-events: none;
 }
 
+/* ── La fila de tres cifras del hero ──
+   Apilada al mínimo legible: cifra sobre rótulo, sin la nota que sí lleva la
+   fila completa de abajo. El tamaño no es gusto, es presupuesto — se midió
+   contra el asomo del manifiesto en las seis ventanas de `tests/portada.js`:
+   esta variante cuesta 57-66 px de hero y entra en cuatro; la siguiente talla
+   arriba dejaba 1440×700 a 9 px del umbral de revelado.
+
+   `nowrap` en el rótulo es deliberado: envolviendo, la fila pasa de 36 a 60 px
+   de alto y el presupuesto medido deja de describirla. El rótulo más largo
+   —«Índice (S&P 500) · Mismo periodo»— mide 555 px de los 860 disponibles, de
+   modo que hay holgura de sobra en los dos idiomas. */
+.portada__cifras {
+  display: flex; justify-content: center; flex-wrap: nowrap;
+  gap: clamp(24px, 4.5vw, 56px);
+}
+
+.portada__cifras__celda {
+  display: flex; flex-direction: column; gap: 1px;
+  text-align: center;
+}
+
+.portada__cifras__valor {
+  font-size: 1.3rem; font-weight: 600; line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.portada__cifras__etiqueta {
+  font-size: 0.67rem; line-height: 1.25;
+  text-transform: uppercase; letter-spacing: 0.07em;
+  white-space: nowrap;
+  color: var(--tinta-mate);
+}
+
+/* Oculta: fuera del flujo pero SIGUE maquetada, por la misma razón que las dos
+   líneas. Su alto es el dato con el que se decide si vuelve a caber; con
+   `display: none` mediría cero, el coste parecería nulo y oscilaría. */
+.portada[data-cifras="false"] .portada__cifras {
+  position: absolute; inset-inline: 0; top: 0;
+  margin-inline: auto;
+  visibility: hidden; pointer-events: none;
+}
+
 /* La marca es el único texto de la portada. */
 .portada__marca-principal {
   font-size: clamp(2.3rem, 7vw, 5rem);

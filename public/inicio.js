@@ -246,6 +246,56 @@ export function animarManifiesto() {
  * qué línea aporta qué. Sin él, un +67 % de cinco tesis y siete meses se leería
  * como el de una serie larga.
  */
+/**
+ * Fila de tres cifras del hero: la forma corta de la de abajo.
+ *
+ * Sale del MISMO `cartera.estadisticos` que `pintarCifras()` y con los MISMOS
+ * rótulos de diccionario. No recalcula nada ni redacta nada suyo: si lo hiciera,
+ * el año del hero y el año de abajo serían dos fuentes del mismo hecho y podrían
+ * discrepar sin que se viera —las dos filas rara vez están a la vez en pantalla—.
+ * `tests/portada.js` afirma que las tres coinciden con sus gemelas.
+ *
+ * Tres y no cuatro: la máxima caída se queda abajo. Y sin notas, porque la fila
+ * apilada no tiene renglón para ellas; la única cuya nota es imprescindible es la
+ * del índice —una rentabilidad de índice sin periodo no dice nada—, y por eso esa
+ * viaja compuesta en el propio rótulo.
+ *
+ * Sin dato no se pinta NADA, ni un hueco ni un cero: el hero no es sitio para
+ * declarar una carencia, y de eso ya se ocupa la fila de abajo con su motivo.
+ */
+export function pintarCifrasHero(cartera) {
+  const raiz = $('#cifras-hero');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const e = cartera?.estadisticos;
+  if (!e) { raiz.dataset.vacia = 'true'; return; }
+  delete raiz.dataset.vacia;
+
+  const casillas = [
+    // El año viaja como texto por lo mismo que abajo: `t()` formatea los números
+    // con el locale y un año no es una cantidad.
+    { etiqueta: t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
+      valor: e.rentabilidadAnio },
+    // El rótulo del índice lo compone el diccionario, que decide el separador.
+    // El nombre del índice sale de `cartera.benchmark`, nunca escrito a mano:
+    // el benchmark es configurable y un rótulo fijo mentiría al cambiarlo.
+    { etiqueta: t('portada.cifras.hero.compuesto', {
+        rotulo: t('portada.cifras.indice', { indice: cartera.benchmark }),
+        nota: t('portada.cifras.indice.nota') }),
+      valor: e.rentabilidadIndice },
+    { etiqueta: t('portada.cifras.total'), valor: e.rentabilidadTotal },
+  ];
+
+  for (const c of casillas) {
+    const celda = elemento('div', 'portada__cifras__celda');
+    celda.appendChild(elemento('strong',
+      `portada__cifras__valor ${claseDireccion(c.valor)}`, formatearPorcentaje(c.valor)));
+    celda.appendChild(elemento('span', 'portada__cifras__etiqueta', c.etiqueta));
+    raiz.appendChild(celda);
+  }
+}
+
 export function pintarCifras(cartera) {
   const raiz = $('#cifras-portada');
   const cuerpo = $('#cifras-portada-cuerpo');

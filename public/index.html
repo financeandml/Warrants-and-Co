@@ -72,9 +72,23 @@
              toma sobre lo que costarían y eso no se puede medir en un nodo
              plegado. -->
         <div class="portada__lineas">
-          <p class="portada__linea" data-i18n="portada.linea.que">Las tesis se publican con su precio y su fecha, y de ahí sale la cartera.</p>
-          <p class="portada__linea portada__linea--secundaria" data-i18n="portada.linea.como">El historial no se declara: se calcula desde lo publicado.</p>
+          <p class="portada__linea" data-i18n="portada.linea.que">Análisis de renta variable con cartera publicada.</p>
+          <p class="portada__linea portada__linea--secundaria" data-i18n="portada.linea.como">Cada tesis lleva su precio y su fecha, y la cartera sale de ellas.</p>
         </div>
+
+        <!-- ── Fila de cifras del hero ──
+             Las mismas tres cifras que la fila de abajo, en su forma corta. NO
+             lleva ninguna escrita: las pinta `pintarCifrasHero()` desde
+             `/api/mercado/cartera`, que es la misma llamada que alimenta a su
+             gemela tras los pilares. Una cifra escrita aquí sería una segunda
+             fuente del mismo hecho, y `tests/portada.js` afirma que las tres
+             coinciden con las de abajo precisamente porque salen de una sola.
+
+             Cede antes que las dos líneas: donde no caben las dos cosas, se
+             conserva la frase que dice qué es esto y se sueltan los números.
+             Ceder al revés dejaba la portada abriendo con porcentajes desnudos
+             a 1440×700, que es de los tamaños más frecuentes. -->
+        <div class="portada__cifras" id="cifras-hero"></div>
 
         <nav class="portada__accesos" data-i18n-attr="aria-label:portada.accesos.etiqueta"
              aria-label="Accesos principales">

@@ -47,15 +47,23 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    extremos del mecanismo. `crece` dice si en esa ventana se espera que el hero
    tome altura: es la degradación declarada, y se afirma en las dos direcciones
    —que crece donde debe y que NO crece donde no hace falta—. */
+/* Las dos piezas cedibles del hero, ventana a ventana. El orden de cesión es
+   deliberado y está medido: **ceden antes las cifras que las líneas**, de modo
+   que la portada nunca abre con tres porcentajes y ninguna frase que diga qué es
+   esto. Con el orden contrario, 1440×700 enseñaría las cifras y perdería las
+   líneas; es la única de las seis en que los dos órdenes difieren.
+
+   1920×880 crece por las cifras y no por la foto: sin ellas le sobraban 12 px,
+   que es lo único que la separaba del régimen que crece. */
 const VENTANAS = [
-  { n: '1440×900',  w: 1440, h: 900,  crece: false, lineas: true },
-  { n: '1680×1050', w: 1680, h: 1050, crece: false, lineas: true },
-  { n: '1440×700',  w: 1440, h: 700,  crece: true,  lineas: true },
-  { n: '1920×880',  w: 1920, h: 880,  crece: false, lineas: true },
-  // Muy apaisadas: aquí ni el encuadre ni el crecimiento dejan sitio a las dos
-  // líneas del hero, y son ellas las que ceden.
-  { n: '1920×700',  w: 1920, h: 700,  crece: true,  lineas: false },
-  { n: '2560×800',  w: 2560, h: 800,  crece: true,  lineas: false },
+  { n: '1440×900',  w: 1440, h: 900,  crece: false, lineas: true,  cifras: true  },
+  { n: '1680×1050', w: 1680, h: 1050, crece: false, lineas: true,  cifras: true  },
+  { n: '1920×880',  w: 1920, h: 880,  crece: true,  lineas: true,  cifras: true  },
+  // Aquí ya no caben las dos cosas: ceden las cifras y se conserva la frase.
+  { n: '1440×700',  w: 1440, h: 700,  crece: true,  lineas: true,  cifras: false },
+  // Muy apaisadas: no cabe ninguna de las dos.
+  { n: '1920×700',  w: 1920, h: 700,  crece: true,  lineas: false, cifras: false },
+  { n: '2560×800',  w: 2560, h: 800,  crece: true,  lineas: false, cifras: false },
 ];
 
 const R = [];
@@ -101,6 +109,7 @@ const medir = (p) => p.evaluate(async () => {
   const etiqueta = document.querySelector('.manifiesto .etiqueta-superior');
 
   const bloque = po.querySelector('.portada__lineas');
+  const filaCifras = po.querySelector('.portada__cifras');
   const renglones = [...bloque.children].map((l) => Math.round(
     l.getBoundingClientRect().height / parseFloat(getComputedStyle(l).lineHeight)));
   // El asomo se acumula con `offsetTop`: el `translateY` de la aparición mueve el
@@ -134,6 +143,16 @@ const medir = (p) => p.evaluate(async () => {
     lineasEnFlujo: getComputedStyle(bloque).position === 'static',
     renglones,
     textos: [...bloque.children].map((l) => l.textContent.trim()),
+    // La fila de cifras del hero: mismo trato que las líneas.
+    cifras: po.dataset.cifras,
+    cifrasVisibles: getComputedStyle(filaCifras).visibility === 'visible',
+    cifrasEnFlujo: getComputedStyle(filaCifras).position === 'static',
+    // Que la fila no envuelva es presupuesto, no estética: envolviendo pasa de
+    // 36 a 60 px de alto y el hero medido deja de describirla.
+    cifrasRenglones: [...filaCifras.querySelectorAll('.portada__cifras__etiqueta')]
+      .map((e) => Math.round(e.getBoundingClientRect().height
+        / parseFloat(getComputedStyle(e).lineHeight))),
+    cifrasDesborda: filaCifras.scrollWidth > interior.width + 1,
   };
 });
 
@@ -284,6 +303,30 @@ const medirFichero = (p) => p.evaluate(async () => {
         m.renglones.every((n) => n === 1), `renglones ${m.renglones.join(' y ')}`);
     }
 
+    /* ── La fila de cifras del hero, en las dos direcciones ──
+       Cede ANTES que las líneas: donde solo cabe una de las dos, la que se ve es
+       la frase. Se afirma en los dos sentidos, porque «no se pinta nunca» pasaría
+       la mitad de esta prueba sin pintar jamás una cifra. */
+    t(`${v.n} · las cifras ${v.cifras ? 'se pintan porque caben' : 'ceden porque no caben'}`,
+      m.cifras === String(v.cifras), `data-cifras="${m.cifras}"`);
+    t(`${v.n} · y se ven o no se ven en consecuencia`,
+      m.cifrasVisibles === v.cifras && m.cifrasEnFlujo === v.cifras,
+      `visibles ${m.cifrasVisibles} · en flujo ${m.cifrasEnFlujo}`);
+
+    /* El orden de cesión, afirmado como tal: las cifras no pueden estar puestas
+       con las líneas fuera. Es la regla que distingue este orden del contrario, y
+       sin afirmarla el día que alguien invierta los peldaños nadie se entera. */
+    t(`${v.n} · nunca hay cifras sin líneas`,
+      !(m.cifras === 'true' && m.lineas === 'false'),
+      `líneas ${m.lineas} · cifras ${m.cifras}`);
+
+    if (v.cifras) {
+      t(`${v.n} · ningún rótulo de la fila envuelve`,
+        m.cifrasRenglones.length === 3 && m.cifrasRenglones.every((n) => n === 1),
+        `renglones ${m.cifrasRenglones.join(', ')}`);
+      t(`${v.n} · la fila cabe de ancho`, !m.cifrasDesborda);
+    }
+
     await ctx.close();
   }
 
@@ -304,16 +347,17 @@ const medirFichero = (p) => p.evaluate(async () => {
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await encuadrada(p);
 
-    const estado = async () => {
+    // El peldaño se nombra: los dos —cifras y líneas— se barren igual.
+    const estado = async (cual = 'lineas') => {
       await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-      return p.evaluate(() => document.getElementById('portada').dataset.lineas);
+      return p.evaluate((c) => document.getElementById('portada').dataset[c], cual);
     };
-    const barrer = async (desde, hasta, paso) => {
+    const barrer = async (desde, hasta, paso, cual = 'lineas') => {
       const cambios = [];
       let previo = null;
       for (let h = desde; paso > 0 ? h <= hasta : h >= hasta; h += paso) {
         await p.setViewportSize({ width: 1440, height: h });
-        const e = await estado();
+        const e = await estado(cual);
         if (previo !== null && e !== previo) cambios.push({ h, de: previo, a: e });
         previo = e;
       }
@@ -321,6 +365,31 @@ const medirFichero = (p) => p.evaluate(async () => {
     };
 
     console.log('\n  ── la decisión no oscila (barrido a 1440 px de ancho) ──');
+
+    /* El peldaño de las cifras, que cede ANTES que el de las líneas y por tanto
+       cae más arriba. Necesita su propia banda: son dos decisiones distintas y
+       una histéresis compartida no impediría que parpadeara la otra. */
+    const bajadaC = await barrer(790, 715, -1, 'cifras');
+    t('bajando, las cifras ceden una sola vez',
+      bajadaC.length === 1 && bajadaC[0].a === 'false',
+      bajadaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
+
+    const subidaC = await barrer(715, 800, 1, 'cifras');
+    t('subiendo, las cifras vuelven una sola vez',
+      subidaC.length === 1 && subidaC[0].a === 'true',
+      subidaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
+
+    t('las cifras vuelven más arriba de donde cedieron',
+      bajadaC.length === 1 && subidaC.length === 1 && subidaC[0].h - bajadaC[0].h > 4,
+      `cede en ${bajadaC[0]?.h} · vuelve en ${subidaC[0]?.h}`);
+
+    if (bajadaC.length === 1) {
+      await p.setViewportSize({ width: 1440, height: bajadaC[0].h });
+      const serie = [];
+      for (let i = 0; i < 8; i++) serie.push(await estado('cifras'));
+      t('en el punto de cambio de las cifras, el estado no se mueve solo',
+        new Set(serie).size === 1, serie.join(','));
+    }
     const bajada = await barrer(720, 660, -1);
     t('bajando, las líneas ceden una sola vez',
       bajada.length === 1 && bajada[0].a === 'false',
@@ -355,6 +424,68 @@ const medirFichero = (p) => p.evaluate(async () => {
       for (let i = 0; i < 8; i++) serie.push(await estado());
       t('en el punto de cambio, el estado no se mueve solo',
         new Set(serie).size === 1, serie.join(','));
+    }
+    await ctx.close();
+  }
+
+  /* ── Regla 9 · las cifras del hero y sus gemelas de abajo ──
+     Las tres del hero están también en la fila completa que va tras los pilares.
+     Es duplicación deliberada, y lo único que la hace legítima es que salgan de
+     una sola fuente: el mismo `cartera.estadisticos` y los mismos rótulos de
+     diccionario. Afirmarlo es el punto entero del asunto — cada cifra por
+     separado es verosímil, y el desacuerdo no se ve navegando porque las dos
+     filas casi nunca están a la vez en pantalla.
+
+     Se comprueba en LOS DOS IDIOMAS: los rótulos se pintan en JavaScript, y con
+     un solo lado un valor que nunca se repinta puede coincidir por casualidad
+     con el de partida. */
+  {
+    // Una ventana donde las cifras del hero se pintan, para tener las dos filas.
+    const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+
+    // Listas: se espera a que las DOS filas tengan sus casillas pintadas.
+    const pintadas = () => p.waitForFunction(() =>
+      document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3
+      && document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda').length === 4,
+      null, { timeout: 60000 });
+
+    const leer = () => p.evaluate(() => {
+      const norm = (x) => x.trim().replace(/\s+/g, ' ');
+      const hero = [...document.querySelectorAll('#cifras-hero .portada__cifras__celda')]
+        .map((c) => ({ valor: norm(c.querySelector('.portada__cifras__valor').textContent),
+                       etiqueta: norm(c.querySelector('.portada__cifras__etiqueta').textContent) }));
+      const abajo = [...document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda')]
+        .map((c) => ({ valor: norm(c.querySelector('.cinta-metricas__valor').textContent),
+                       etiqueta: norm(c.querySelector('.cinta-metricas__etiqueta').textContent),
+                       nota: norm(c.querySelector('.cinta-metricas__nota')?.textContent ?? '') }));
+      return { hero, abajo };
+    });
+
+    for (const idioma of ['en', 'es']) {
+      await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
+      await p.reload({ waitUntil: 'domcontentloaded' });
+      await pintadas();
+      const { hero, abajo } = await leer();
+
+      // Las cuatro de abajo son año, total, índice y caída, en ese orden; el hero
+      // lleva año, índice y total. Se emparejan por rótulo, no por posición.
+      const gemela = (etiqueta) => abajo.find((c) =>
+        c.etiqueta === etiqueta || `${c.etiqueta} · ${c.nota}` === etiqueta);
+
+      for (const c of hero) {
+        const g = gemela(c.etiqueta);
+        t(`[${idioma}] «${c.etiqueta}» tiene gemela abajo`, Boolean(g),
+          `rótulos abajo: ${abajo.map((x) => x.etiqueta).join(' / ')}`);
+        if (g) {
+          t(`[${idioma}] «${c.etiqueta}» dice lo mismo en las dos filas`,
+            g.valor === c.valor, `hero ${c.valor} · abajo ${g.valor}`);
+        }
+      }
+      t(`[${idioma}] el hero lleva exactamente tres cifras`, hero.length === 3,
+        `lleva ${hero.length}`);
     }
     await ctx.close();
   }
