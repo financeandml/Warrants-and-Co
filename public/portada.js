@@ -136,12 +136,36 @@ export function seguirEncuadreBanner() {
    * `tests/portada.js` cae en doce afirmaciones y publica holgura 28 mientras la
    * cinta acaba 24,5 px POR DEBAJO de la base del arbol.
    */
+  /* Solo escribe si cambia: reescribir el mismo atributo despierta al observador
+     de mutaciones sin que nada se haya movido. Misma disciplina que `fijar()`. */
+  const marcar = (nombre, valor) => {
+    if (portada.dataset[nombre] !== valor) portada.dataset[nombre] = valor;
+  };
+
+  /*
+   * Salir del cálculo devolviendo las dos piezas cedibles.
+   *
+   * Los `delete` retiran lo que sería mentira: una fracción y una holgura
+   * calculadas con `cover` no describen una pantalla que no usa `cover`. Pero
+   * `data-lineas` y `data-cifras` también mentían al quedarse como estaban:
+   * decían «cedido» donde no hay presupuesto que pagar. Un hero llegado desde
+   * una ventana apaisada aparecía en el móvil sin líneas y sin cifras habiendo
+   * sitio de sobra, y no había forma de salir de ahí salvo recargando.
+   *
+   * Fuera del régimen que las hace ceder, NADA las cede: la banda del árbol, la
+   * holgura y la cinta —los tres términos que se pagan con pliegue— son de este
+   * cálculo y de ningún otro. De modo que se restituyen, no se dejan.
+   */
+  const sinPresupuesto = () => {
+    delete portada.dataset.fraccionBanner;
+    delete portada.dataset.holguraCinta;
+    marcar('lineas', 'true');
+    marcar('cifras', 'true');
+  };
+
   const publicar = () => {
-    if (portada.dataset.banner !== 'true') {
-      delete portada.dataset.fraccionBanner;
-      delete portada.dataset.holguraCinta;
-      return;
-    }
+    // Sin foto no hay banda de árbol que pagar, y el hero es el de la ventana.
+    if (portada.dataset.banner !== 'true') { sinPresupuesto(); return; }
 
     /*
      * Solo se encuadra el régimen que este cálculo modela: `cover`. En pantalla
@@ -149,11 +173,7 @@ export function seguirEncuadreBanner() {
      * otra composición y ya sale con el árbol entero. Publicar aquí una holgura
      * calculada con `cover` sería publicar un número que no describe la pantalla.
      */
-    if (getComputedStyle(banner).backgroundSize !== 'cover') {
-      delete portada.dataset.fraccionBanner;
-      delete portada.dataset.holguraCinta;
-      return;
-    }
+    if (getComputedStyle(banner).backgroundSize !== 'cover') { sinPresupuesto(); return; }
 
     const caja = portada.getBoundingClientRect();
     if (!(caja.width > 0 && caja.height > 0)) return;
@@ -276,8 +296,8 @@ export function seguirEncuadreBanner() {
       if (a === null || a >= exigido) { conLineas = L; conCifras = C; break; }
     }
 
-    portada.dataset.lineas = String(conLineas);
-    portada.dataset.cifras = String(conCifras);
+    marcar('lineas', String(conLineas));
+    marcar('cifras', String(conCifras));
 
     const minimo = minimoDe(
       marcaSola + (conLineas ? costeLineas : 0) + (conCifras ? costeCifras : 0));

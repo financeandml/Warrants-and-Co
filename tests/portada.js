@@ -428,6 +428,83 @@ const medirFichero = (p) => p.evaluate(async () => {
     await ctx.close();
   }
 
+  /* ── Fuera del régimen que las cede, las piezas vuelven ──
+     `publicar()` se va de vacío cuando el encuadre no es `cover` —pantalla
+     estrecha— o cuando aún no hay foto. Retira lo que sería mentira: una
+     fracción y una holgura calculadas con `cover` no describen esa pantalla.
+
+     Pero `data-lineas` y `data-cifras` se quedaban como estaban, y eso también
+     mentía: decían «cedido» donde no hay presupuesto que pagar. Un hero llegado
+     desde una ventana apaisada aparecía en el móvil sin líneas y sin cifras
+     habiendo sitio de sobra, y no se salía de ahí salvo recargando.
+
+     Se afirma la transición, que es donde vive el fallo: mirar solo una carga
+     limpia en móvil no lo caza, porque ahí los atributos nunca llegaron a
+     ponerse a `false`. */
+  {
+    console.log('\n  ── fuera del régimen `cover`, las piezas vuelven ──');
+    const ctx = await navegador.newContext({ viewport: { width: 1920, height: 700 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+    await encuadrada(p);
+
+    const estado = () => p.evaluate(() => {
+      const po = document.getElementById('portada');
+      const l = po.querySelector('.portada__lineas');
+      const c = po.querySelector('.portada__cifras');
+      return {
+        lineas: po.dataset.lineas, cifras: po.dataset.cifras,
+        lineasVis: getComputedStyle(l).visibility === 'visible',
+        cifrasVis: getComputedStyle(c).visibility === 'visible',
+        // Lo que sí debe seguir retirado: mentiría sobre esta pantalla.
+        fraccion: po.dataset.fraccionBanner ?? null,
+        holgura: po.dataset.holguraCinta ?? null,
+      };
+    });
+
+    const apaisada = await estado();
+    t('de partida, 1920×700 tiene las dos piezas cedidas',
+      apaisada.lineas === 'false' && apaisada.cifras === 'false',
+      `líneas ${apaisada.lineas} · cifras ${apaisada.cifras}`);
+
+    await p.setViewportSize({ width: 390, height: 844 });
+    // Por condición: se espera a que el encuadre deje de ser `cover`, que es lo
+    // que marca la entrada en el otro régimen.
+    await p.waitForFunction(() => getComputedStyle(
+      document.getElementById('portada-banner')).backgroundSize !== 'cover',
+      null, { timeout: 30000 });
+    await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+
+    const movil = await estado();
+    t('en móvil vuelven las dos, y se ven',
+      movil.lineas === 'true' && movil.cifras === 'true'
+      && movil.lineasVis && movil.cifrasVis,
+      `líneas ${movil.lineas}/${movil.lineasVis} · cifras ${movil.cifras}/${movil.cifrasVis}`);
+    t('y la fracción y la holgura siguen retiradas, que ahí no describen nada',
+      movil.fraccion === null && movil.holgura === null,
+      `fracción ${movil.fraccion} · holgura ${movil.holgura}`);
+
+    // Ocho lecturas seguidas: restituir no puede realimentar al observador.
+    const serie = [];
+    for (let i = 0; i < 8; i++) {
+      await p.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+      const e = await estado();
+      serie.push(`${e.lineas}/${e.cifras}`);
+    }
+    t('y una vez vueltas, el estado no se mueve solo', new Set(serie).size === 1, serie.join(' '));
+
+    // Y es reversible: al volver a la ventana apaisada, vuelven a ceder.
+    await p.setViewportSize({ width: 1920, height: 700 });
+    await encuadrada(p);
+    const vuelta = await estado();
+    t('al volver a 1920×700 vuelven a ceder',
+      vuelta.lineas === 'false' && vuelta.cifras === 'false',
+      `líneas ${vuelta.lineas} · cifras ${vuelta.cifras}`);
+
+    await ctx.close();
+  }
+
   /* ── Regla 9 · las cifras del hero y sus gemelas de abajo ──
      Las tres del hero están también en la fila completa que va tras los pilares.
      Es duplicación deliberada, y lo único que la hace legítima es que salgan de
