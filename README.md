@@ -9,50 +9,80 @@ catalizadores y seguimiento de cartera.
 
 ```bash
 cd ~/Desktop/Negocios/warrants-co
-npm install          # solo la primera vez
-npm run sembrar      # constituye la cartera inicial (ORCL, QCOM, IOVA, RDDT)
-npm start
+npm install                          # solo la primera vez
+cp .env.example .env                 # y edite .env con sus valores
+npm run sembrar                      # constituye la cartera inicial
+node --env-file=.env server.js
 ```
 
 La aplicación queda disponible en **http://127.0.0.1:4173**
 
-### Clave de analista
+`--env-file` es de Node y no requiere ninguna dependencia: lee el fichero y
+exporta lo que declara. Necesita **Node 20.6 o superior**; el proyecto ya exige
+22.5 en `package.json`.
 
-El acceso al área de analistas —alta y modificación de informes, incluidos precio de
-compra, take profit y stop loss— se acredita con esta clave:
-
-```
-WCo-2026-Analistas-K7m4Qx92RtVb
-```
-
-Quien la introduce queda identificado como analista de Warrants & Co. y ve aparecer, en
-la esquina superior derecha, el rótulo **ANALISTA** con una **luz verde** que confirma la
-sesión abierta. La luz se apaga al cerrar sesión.
-
-La clave también se imprime en la consola al arrancar. Para cambiarla:
+`npm start` sigue existiendo y no lee `.env`: espera las variables ya en el
+entorno. Sirve para una orden puntual —así arrancan las baterías—:
 
 ```bash
-WARRANTS_CLAVE=su_nueva_clave npm start
+WARRANTS_CLAVE="$(openssl rand -base64 24)" npm start
 ```
 
-La comparación se hace en tiempo constante y la clave nunca viaja en la URL ni queda
-registrada en los accesos.
+### Clave de analista
 
-Otras variables de entorno:
+El acceso al área de analistas —alta y modificación de informes, incluidos precio
+de compra, take profit y stop loss— se acredita con `WARRANTS_CLAVE`.
+
+**No tiene valor por defecto, y el servidor no arranca sin ella.** Antes había uno
+escrito en `server.js`, y eso no es un valor por defecto: es una credencial
+publicada, que además queda en el historial de git aunque se borre de la línea.
+Caer en una clave conocida es quedarse sin puerta creyendo tenerla.
+
+Si falta, el arranque se detiene y dice cómo generar una.
+
+Genere la suya con:
+
+```bash
+openssl rand -base64 24
+```
+
+y déjela en `.env`, que `.gitignore` excluye. **Nunca en un fichero versionado.**
+
+Quien la introduce queda identificado como analista y ve aparecer, en la esquina
+superior derecha, el rótulo **ANALISTA** con una **luz verde** que confirma la
+sesión abierta. La luz se apaga al cerrar sesión.
+
+La comparación se hace en tiempo constante y la clave nunca viaja en la URL ni
+queda registrada en los accesos. **Tampoco se imprime al arrancar**: la consola
+acaba en registros y en capturas, de modo que solo se anuncia su longitud, que
+basta para ver si se pasó la que uno creía.
+
+### Variables de entorno
+
+Las declara todas `.env.example`, que es la plantilla a copiar. Solo una es
+obligatoria; el resto tienen valor de servicio.
 
 | Variable | Efecto | Valor por defecto |
 |---|---|---|
+| **`WARRANTS_CLAVE`** | **Clave del área de analistas** | **ninguno — obligatoria** |
 | `PORT` | Puerto de escucha | `4173` |
 | `HOST` | Interfaz de escucha | `127.0.0.1` |
-| `WARRANTS_CLAVE` | Clave del área de analistas | `WCo-2026-Analistas-K7m4Qx92RtVb` |
+| `WARRANTS_DB` | Ruta de la base | `data/warrants.db` |
+| `WARRANTS_UPLOADS` | Ruta de los adjuntos | `data/uploads` |
+| `WARRANTS_COPIAS` | Ruta de las copias | `data/copias` |
+| `WARRANTS_MAX_PETICIONES` | Límite por IP y minuto sobre `/api` | `300` |
 | `TTL_COTIZACION_MS` | Vigencia de la caché de cotizaciones | `15000` |
 | `TTL_HISTORICO_MS` | Vigencia de la caché de series históricas | `1800000` |
 | `INTERVALO_NOTICIAS_MS` | Frecuencia de sindicación de noticias | `900000` (15 min) |
 | `RETENCION_NOTICIAS_DIAS` | Antigüedad máxima de la sindicación | `60` |
+| `NOTICIAS_AUTOMATICAS` | `false` desactiva la sindicación automática | activada |
 | `OPCIONES_PROVEEDOR` | Proveedor de datos de opciones | `nasdaq` |
 | `TTL_OPCIONES_MS` | Vigencia de la caché de cadenas | `300000` (5 min) |
 | `RETENCION_OPCIONES_DIAS` | Antigüedad máxima del archivo de opciones | `180` |
-| `NOTICIAS_AUTOMATICAS` | `false` desactiva la sindicación automática | activada |
+| `THETADATA_CLAVE` | Credencial del proveedor ThetaData | ninguno (opcional) |
+
+Las dos credenciales —`WARRANTS_CLAVE` y `THETADATA_CLAVE`— van en `.env` y
+nunca en el repositorio.
 
 ---
 

@@ -26,10 +26,45 @@ const app = express();
 const PUERTO = Number(process.env.PORT ?? 4173);
 const HOST = process.env.HOST ?? '127.0.0.1';
 
-// Clave del area de redaccion. Si no se define, se genera una por arranque y se
-// muestra en consola: el repositorio nunca queda abierto a escritura por defecto.
-const CLAVE_ANALISTAS = process.env.WARRANTS_CLAVE ?? 'WCo-2026-Analistas-K7m4Qx92RtVb';
-const CLAVE_PERSONALIZADA = Boolean(process.env.WARRANTS_CLAVE);
+/*
+ * Clave del area de redaccion. SIN valor por defecto, y a proposito.
+ *
+ * Antes habia uno escrito aqui. Una credencial en el codigo no es un valor por
+ * defecto: es una credencial publicada. Queda en el repositorio, queda en cada
+ * copia que alguien clone y —esto es lo que no se deshace— queda en el historial
+ * de git aunque se borre de la linea. Y como todo el mundo que lea el fichero la
+ * conoce, la puerta de escritura del area de analistas estaba abierta de par en
+ * par para cualquiera que hubiese visto el codigo.
+ *
+ * De modo que el servidor NO ARRANCA sin ella. Negarse es la unica respuesta
+ * honesta: caer en una clave conocida es quedarse sin puerta creyendo tenerla, y
+ * eso es peor que no tenerla, porque no se nota.
+ */
+const CLAVE_ANALISTAS = process.env.WARRANTS_CLAVE ?? '';
+
+if (!CLAVE_ANALISTAS) {
+  console.error('');
+  console.error('  WARRANTS & CO.  ·  el servidor no puede arrancar');
+  console.error('  ' + '-'.repeat(58));
+  console.error('  Falta WARRANTS_CLAVE, la credencial del area de analistas.');
+  console.error('');
+  console.error('  No hay valor por defecto a proposito: una clave escrita en el');
+  console.error('  codigo queda publicada en el repositorio y en su historial.');
+  console.error('');
+  console.error('  Genere una y arranque con ella:');
+  console.error('');
+  console.error('      WARRANTS_CLAVE="$(openssl rand -base64 24)" npm start');
+  console.error('');
+  console.error('  O deje sus variables en un fichero .env —que .gitignore ya');
+  console.error('  excluye— y arranque con:');
+  console.error('');
+  console.error('      node --env-file=.env server.js');
+  console.error('');
+  console.error('  Hay una plantilla con todas las variables en .env.example.');
+  console.error('  ' + '-'.repeat(58));
+  console.error('');
+  process.exit(1);
+}
 
 app.disable('x-powered-by');
 app.set('trust proxy', false);
@@ -207,10 +242,11 @@ const servidor = app.listen(PUERTO, HOST, () => {
   console.log('  WARRANTS & CO.  ·  Plataforma de análisis e inversión');
   console.log('  ' + '-'.repeat(58));
   console.log(`  Servidor operativo      ${url}`);
-  console.log(`  Clave de analistas      ${CLAVE_ANALISTAS}${CLAVE_PERSONALIZADA ? '  (definida por entorno)' : ''}`);
-  if (!CLAVE_PERSONALIZADA) {
-    console.log('  Para cambiarla:         WARRANTS_CLAVE=su_clave npm start');
-  }
+  /* La clave NO se imprime. Confirmar que se recibio es util; enseñarla es la
+     misma fuga por otra via: la consola acaba en registros, en capturas y en la
+     salida de la integracion continua. Se dice su longitud, que basta para ver
+     si se paso la que uno creia y no revela cual es. */
+  console.log(`  Clave de analistas      definida por entorno (${CLAVE_ANALISTAS.length} caracteres)`);
   console.log('  ' + '-'.repeat(58));
   console.log('');
 

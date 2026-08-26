@@ -6,3 +6,8 @@ data/uploads/*
 !data/uploads/.gitkeep
 .DS_Store
 data/copias/
+
+# Credenciales. `.env.example` es la plantilla y SÍ se versiona; este no.
+.env
+.env.*
+!.env.example

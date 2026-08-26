@@ -24,12 +24,15 @@
    dejar que aparezca disfrazado de invalidación rota.
 
    Lo mismo con la CREDENCIAL, que es el otro modo de fallo que se disfraza. La
-   clave de `CLAVE_PRUEBA` ha de ser la misma con la que se levantó el servidor:
-   sin `WARRANTS_CLAVE`, el servidor usa la suya de serie, responde 401 al alta y
-   desde aquí se ve exactamente igual que una invalidación rota —el alta no entra
-   y el ticker no aparece en ninguna vista—. Apuntada a una instancia sin
-   configurar, esta batería daba siete rojas seguidas y ni una decía por qué.
-   Ahora lo dice en su propia línea y arrastra el motivo que redacta el diálogo.
+   clave de `CLAVE_PRUEBA` ha de ser la misma con la que se levantó el servidor.
+
+   El servidor ya no tiene clave de serie: sin `WARRANTS_CLAVE` no arranca, de
+   modo que el caso «apuntada a una instancia con OTRA clave» dejó de poder
+   ocurrir por descuido —hay que dar una a propósito—. Sigue pudiendo ocurrir por
+   discrepancia: dar una al servidor y otra distinta a la prueba. Desde aquí eso
+   se ve exactamente igual que una invalidación rota —el alta no entra y el ticker
+   no aparece en ninguna vista—, así que la comprobación se queda: dice el motivo
+   en su propia línea y arrastra el que redacta el diálogo.
 
    Requiere Playwright, que NO es dependencia del proyecto. Sin él la prueba no
    se ejecuta y termina con error, nunca con un aprobado.
@@ -66,10 +69,12 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
      que dejó esta batería en rojo sin que nadie mirase el motivo — y el motivo no
      estaba en la plataforma, sino en la instancia contra la que se apuntaba.
 
-     `CLAVE_PRUEBA` vale `PRUEBA123` por omisión, pero el servidor solo la acepta
-     si se levantó con `WARRANTS_CLAVE=PRUEBA123`; sin esa variable usa su clave
-     de serie y responde 401. Se vigila aparte, por la misma razón que el 429:
-     vale más una línea que nombre la causa que siete rojas sin explicación. */
+     `CLAVE_PRUEBA` vale `PRUEBA123` por omisión, y el servidor solo la acepta si
+     se levantó con `WARRANTS_CLAVE=PRUEBA123`. Sin esa variable el servidor ya
+     no arranca —no hay clave de serie en la que caer—, así que el fallo llega
+     antes y más claro; con una clave DISTINTA, en cambio, arranca y responde 401.
+     Se vigila aparte, por la misma razón que el 429: vale más una línea que
+     nombre la causa que siete rojas sin explicación. */
   let credenciales = 0;
   p.on('response', (r) => {
     if ((r.status() === 401 || r.status() === 403) && /\/api\//.test(r.url())) credenciales++;
