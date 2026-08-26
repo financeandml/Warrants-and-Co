@@ -302,13 +302,33 @@ export function pintarCifrasHero(cartera) {
     { etiqueta: t('portada.cifras.total'), valor: e.rentabilidadTotal },
   ];
 
-  for (const c of casillas) {
+  /* La entrada se hace UNA VEZ y no vuelve. `pintarCifrasHero()` se llama de
+     nuevo en cada cambio de idioma, y repetir el pase entonces sería movimiento
+     sin dato nuevo: los rótulos cambian de lengua, las cifras son las mismas.
+
+     La marca vive en la fila y no en una variable del módulo porque es la fila
+     la que sobrevive: aquí arriba se vacía con `textContent = ''`, que se lleva
+     las casillas pero deja el contenedor —y con él su `data-entrada`—. */
+  const primera = raiz.dataset.entrada !== 'hecha';
+
+  for (const [i, c] of casillas.entries()) {
     const celda = elemento('div', 'portada__cifras__celda');
     celda.appendChild(elemento('strong',
       `portada__cifras__valor ${claseDireccion(c.valor)}`, formatearPorcentaje(c.valor)));
     celda.appendChild(elemento('span', 'portada__cifras__etiqueta', c.etiqueta));
+    if (primera) {
+      // El escalonado lo aplica la hoja de estilos; aquí solo va el orden.
+      celda.style.setProperty('--i', String(i));
+      celda.classList.add('portada__cifras__celda--entra');
+    }
     raiz.appendChild(celda);
   }
+
+  /* Se marca aunque el sistema pida movimiento reducido: la decisión de no
+     animar es de la hoja de estilos, y este guion no la duplica. Si la marca
+     dependiera de ella, cambiar la preferencia a mitad de sesión dispararía una
+     entrada tardía sobre unas cifras que llevan ahí desde el principio. */
+  if (primera) raiz.dataset.entrada = 'hecha';
 }
 
 export function pintarCifras(cartera) {

@@ -1,11 +1,28 @@
 /* ============================================================================
    Portada — movimiento discreto al servicio del contenido.
 
-   Dos piezas: la aparicion escalonada de los bloques y la cinta de
-   cotizaciones. Ambas se desactivan si el sistema pide movimiento reducido.
+   Tres piezas: la aparicion escalonada de los bloques, la cinta de cotizaciones
+   y la entrada de las tres cifras del hero. Las tres se desactivan si el sistema
+   pide movimiento reducido.
 
-   El hero no anima. Con la fotografia detras, la quietud sostiene mejor la
-   composicion que cualquier entrada escalonada.
+   ── Que el hero anime, y como ──
+   Antes no animaba nada, y aqui se leia que la quietud sostenia la composicion
+   mejor que cualquier entrada. Ya no es cierto: las tres cifras se descubren al
+   pintarse. Lo que sigue siendo cierto es el limite, y por eso se escribe.
+
+   La entrada es UN SOLO PASE y no cuenta la cifra. Esos numeros salen de cierres
+   de sesion y no cambian durante el dia: repetirlos en bucle anunciaria dato vivo
+   donde no lo hay, y contarlos de cero enseñaria cuarenta rentabilidades que
+   nunca fueron ciertas antes de llegar a la buena. Se descubre la definitiva.
+
+   La entrada vive entera en `estilos.css` —`portada-cifra-entra`—, y lo unico
+   que pone `pintarCifrasHero()` es el orden y la marca de que ya se hizo. El
+   contador que hubo aqui se retiro: estaba exportado, no lo importaba nadie, y
+   era lo unico que escribia el `data-contando` que la hoja de estilos miraba.
+
+   Lo que el hero sigue sin hacer es moverse DESPUES de entrar. Con la fotografia
+   detras, la quietud sostiene la composicion; una cifra que se reanima sola seria
+   ademas una promesa de dato vivo que este bloque no puede cumplir.
    ========================================================================= */
 
 import { localeFormato, formatearPorcentaje } from './formato.js';
@@ -393,35 +410,6 @@ export function activarApariciones() {
     { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
   );
   for (const el of elementos) observador.observe(el);
-}
-
-/** Cuenta hasta el valor final de una metrica. */
-export function contarHasta(elemento, destino, duracion = 900) {
-  const objetivo = Number(destino);
-  if (!Number.isFinite(objetivo)) {
-    elemento.textContent = String(destino ?? '—');
-    return;
-  }
-  if (sinMovimiento() || objetivo === 0) {
-    elemento.textContent = objetivo.toLocaleString(localeFormato());
-    return;
-  }
-
-  elemento.dataset.contando = 'true';
-  const inicio = performance.now();
-  const paso = (ahora) => {
-    // `avance`, no `t`: `t()` es la traduccion y en este fichero no se tapa.
-    const avance = Math.min((ahora - inicio) / duracion, 1);
-    // Desaceleracion suave hacia el valor final.
-    const suave = 1 - (1 - avance) ** 3;
-    elemento.textContent = Math.round(objetivo * suave).toLocaleString(localeFormato());
-    if (avance < 1) requestAnimationFrame(paso);
-    else {
-      elemento.textContent = objetivo.toLocaleString(localeFormato());
-      delete elemento.dataset.contando;
-    }
-  };
-  requestAnimationFrame(paso);
 }
 
 /**

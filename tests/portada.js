@@ -620,6 +620,133 @@ const medirFichero = (p) => p.evaluate(async () => {
     await ctx.close();
   }
 
+  /* ══════════ La entrada de las tres cifras: un solo pase, sin coste ══════════
+     Tres cosas, y ninguna se deduce de la hoja de estilos —eso sería
+     preguntarle a la misma fuente—: se miran los estilos CALCULADOS y la caja
+     medida en pantalla.
+
+       1 · que entra escalonada al pintarse;
+       2 · que NO vuelve a entrar al cambiar de idioma. Es la garantía de
+           producto: estas cifras salen de cierres de sesión y no cambian
+           durante el día, de modo que un pase repetido anunciaría dato vivo
+           donde no lo hay;
+       3 · que la entrada no toca la maquetación. Es lo que protege el
+           presupuesto del hero: si `clip-path` u `opacity` movieran un píxel de
+           alto, `seguirEncuadreBanner()` mediría una fila distinta durante la
+           animación y la decisión de ceder saldría de un hero que ya no existe
+           medio segundo después. */
+  {
+    const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+
+    const pintadas = () => p.waitForFunction(() =>
+      document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
+      null, { timeout: 45000 });
+
+    const estado = () => p.evaluate(() => {
+      const raiz = document.getElementById('cifras-hero');
+      const celdas = [...raiz.querySelectorAll('.portada__cifras__celda')];
+      return {
+        alto: raiz.getBoundingClientRect().height,
+        entrada: raiz.dataset.entrada,
+        celdas: celdas.map((c) => {
+          const cs = getComputedStyle(c);
+          return {
+            entra: c.classList.contains('portada__cifras__celda--entra'),
+            animacion: cs.animationName,
+            retardo: parseFloat(cs.animationDelay) || 0,
+            iteraciones: cs.animationIterationCount,
+          };
+        }),
+      };
+    });
+
+    await pintadas();
+    const alEntrar = await estado();
+
+    t('la entrada se aplica a las tres casillas',
+      alEntrar.celdas.length === 3 && alEntrar.celdas.every((c) => c.entra
+        && c.animacion === 'portada-cifra-entra'),
+      JSON.stringify(alEntrar.celdas.map((c) => c.animacion)));
+
+    // Escalonada y creciente: 0, 80 y 160 ms. Sin esto entrarían las tres a la vez.
+    const retardos = alEntrar.celdas.map((c) => c.retardo);
+    t('entra escalonada, y en orden',
+      retardos.every((r, i) => i === 0 ? r === 0 : r > retardos[i - 1]),
+      `retardos: ${retardos.join(' · ')}`);
+
+    /* Una sola pasada. Con `infinite` —o con cualquier número mayor— la fila
+       latiría sola, que es exactamente lo que estas cifras no deben sugerir. */
+    t('cada casilla entra una sola vez',
+      alEntrar.celdas.every((c) => c.iteraciones === '1'),
+      `iteraciones: ${alEntrar.celdas.map((c) => c.iteraciones).join(' · ')}`);
+
+    // Terminada la entrada —160 de retardo más 520 de recorrido—, la fila mide lo
+    // mismo que mientras corría. La cifra se mira en los dos momentos.
+    await p.waitForTimeout(1200);
+    const alReposo = await estado();
+    t('la entrada no cambia el alto de la fila',
+      Math.abs(alEntrar.alto - alReposo.alto) < 0.5,
+      `entrando ${alEntrar.alto.toFixed(1)} · en reposo ${alReposo.alto.toFixed(1)}`);
+
+    /* Y no vuelve. Se cambia de idioma con el conmutador de la interfaz, que es
+       lo que repinta de verdad; una recarga sería una carga nueva y entrar
+       entonces es lo correcto. Se afirma en los dos idiomas: repintar al inglés
+       y volver al castellano son dos repintados, y el pase no ha de volver en
+       ninguno de los dos. */
+    for (const idioma of ['en', 'es']) {
+      await p.click(`.conmutador-idioma button[data-idioma="${idioma}"]`);
+      await p.waitForFunction((lg) => document.documentElement.lang === lg, idioma, { timeout: 20000 });
+      await pintadas();
+      const tras = await estado();
+      t(`[${idioma}] la entrada no se repite al repintar`,
+        tras.celdas.length === 3 && tras.celdas.every((c) => !c.entra),
+        `${tras.celdas.filter((c) => c.entra).length} de 3 volvieron a entrar`);
+    }
+    await ctx.close();
+  }
+
+  /* Con movimiento reducido la casilla NO se queda a medio descubrir. El bloque
+     general de la hoja acorta toda animación a 0,01 ms, lo que bastaría por sí
+     solo; se afirma igualmente el estado final, porque lo que no puede pasar
+     —una cifra recortada por la mitad— es peor que la falta de entrada. */
+  {
+    const ctx = await navegador.newContext({
+      viewport: { width: 1680, height: 1050 }, reducedMotion: 'reduce',
+    });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+    await p.waitForFunction(() =>
+      document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
+      null, { timeout: 45000 });
+
+    const visibles = await p.evaluate(() =>
+      [...document.querySelectorAll('#cifras-hero .portada__cifras__celda')].map((c) => {
+        const cs = getComputedStyle(c);
+        return { recorte: cs.clipPath, opacidad: cs.opacity,
+                 animacion: cs.animationName, duracion: parseFloat(cs.animationDuration) || 0 };
+      }));
+
+    /* Que se vean enteras no basta como afirmación: también se ven enteras sin
+       neutralizar nada, en cuanto la animación termina, de modo que esa sola
+       comprobación pasaría con el movimiento reducido roto. Lo que se afirma es
+       que NO HAY RECORRIDO —animación retirada, o acortada a nada—, que es la
+       propiedad que la preferencia del sistema pide. */
+    t('con movimiento reducido no hay recorrido',
+      visibles.length === 3 && visibles.every((v) =>
+        v.animacion === 'none' || v.duracion <= 0.001),
+      JSON.stringify(visibles.map((v) => `${v.animacion} ${v.duracion}s`)));
+
+    t('con movimiento reducido las cifras se ven enteras',
+      visibles.length === 3 && visibles.every((v) =>
+        (v.recorte === 'none' || v.recorte === 'inset(0px)') && Number(v.opacidad) === 1),
+      JSON.stringify(visibles.map((v) => `${v.recorte} ${v.opacidad}`)));
+    await ctx.close();
+  }
+
   if (errores.length) {
     t('sin errores de consola', false, errores.slice(0, 3).join(' | '));
   } else {

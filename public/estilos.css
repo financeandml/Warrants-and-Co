@@ -1487,6 +1487,41 @@ button, input, select, textarea { font: inherit; color: inherit; }
   text-align: center;
 }
 
+/* ── La entrada de las tres cifras ──
+   Se descubren de arriba abajo, escalonadas, UNA SOLA VEZ al pintarse. No
+   cuentan: la cifra está completa y es la definitiva desde el primer fotograma,
+   y lo único que se mueve es el borde que la descubre.
+
+   Que no cuente es la decisión, y el motivo no es estético. Un conteo de 0 a
+   +67,94 % dedica unos cuarenta fotogramas a mostrar rentabilidades que nunca
+   fueron ciertas —pasa por «+0,00 %», que se lee como plano, y por cifras que
+   serían un historial mediocre—. En un contador de unidades eso es inocuo; en el
+   historial de una cartera, no.
+
+   Tampoco se repite. Estos números salen de cierres de sesión y no cambian
+   durante el día: animarlos en bucle anunciaría dato vivo donde no lo hay. El
+   pase único lo guarda `data-entrada` sobre la fila, que sobrevive a los
+   repintados porque `pintarCifrasHero()` vacía la fila pero no la sustituye.
+
+   `clip-path` y `opacity` NO tocan la maquetación: el alto de la fila es el
+   mismo en todo momento, de modo que `seguirEncuadreBanner()` mide lo mismo
+   esté la entrada corriendo o terminada, y el presupuesto del hero no se entera.
+
+   `backwards` importa: sin él la casilla se vería un fotograma en su estado
+   final antes de empezar. Y con él, una casilla a la que nunca se le añada la
+   clase queda visible y correcta —el estado de reposo es «a la vista», no
+   «oculta»—, que es la única forma segura de escribir esto: si el guion muriese
+   entre pintar y animar, las cifras seguirían leyéndose. */
+@keyframes portada-cifra-entra {
+  from { clip-path: inset(0 0 100% 0); opacity: 0; }
+  to   { clip-path: inset(0 0 0 0);    opacity: 1; }
+}
+
+.portada__cifras__celda--entra {
+  animation: portada-cifra-entra 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
+  animation-delay: calc(var(--i, 0) * 80ms);
+}
+
 /* ── Separadores entre casillas ──
    Un filete vertical entre casilla y casilla, como el de la composición de
    referencia. Cuesta CERO alto: se dibuja en el borde de la casilla, dentro del
@@ -1708,9 +1743,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
               transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 .aparicion[data-visible="true"] { opacity: 1; transform: none; }
-
-/* La cifra de las métricas se compone con dígitos de anchura fija mientras cuenta. */
-.cinta-metricas__valor[data-contando="true"] { font-variant-numeric: tabular-nums; }
 
 /* ══════════════════════════ Noticias ════════════════════════════════════ */
 
@@ -1954,11 +1986,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-variant-numeric: tabular-nums;
 }
 
-/* `.cinta-metricas__valor` lo tenía SOLO mientras contaba —`[data-contando]`— y
-   lo soltaba al terminar. Con dígitos de ancho fijo eso daba igual; con Inter, la
-   cifra cambiaba de ancho en el instante de detenerse el contador, que es
-   justo cuando el ojo está mirándola. Ahora lo lleva siempre y la regla de
-   contar sobra, pero se conserva por si alguien la busca: dice lo mismo. */
+/* `.cinta-metricas__valor` lo tenía SOLO bajo `[data-contando]`, que ningún
+   guion llegaba a escribir: el contador que lo ponía estaba exportado y sin
+   importar. De modo que la clase nunca componía tabular, y el salto de ancho que
+   aquella regla decía evitar no llegaba a ocurrir porque no había conteo. Ahora
+   lo lleva siempre, y la regla condicional se ha retirado con su contador. */
 
 /* ════════════════ Lectura de mercado: alza, baja, aviso ═════════════════ */
 
@@ -2464,6 +2496,11 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
      Esa linea de datos partida por el borde es la que invita a bajar, y no
      depende del movimiento para hacerlo. */
   .ticker__pista { animation: none !important; }
+  /* Sin recorrido, pero enteras: una casilla a medio descubrir sería una cifra
+     cortada, que es peor que una cifra sin entrada. */
+  .portada__cifras__celda--entra {
+    animation: none !important; clip-path: none !important; opacity: 1 !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
