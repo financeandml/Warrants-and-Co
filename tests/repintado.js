@@ -51,6 +51,42 @@ const AREAS_OCULTAS = false;
     console.log(`    ${bien ? 'OK   ' : 'FALLO'} ${nombre}` +
       (bien ? '' : `  → ${JSON.stringify(real)}`));
   };
+  /* ── El tercer estado: ni bien, ni mal, SIN DATO ──
+     `txt()` devuelve `null` ante cualquier nodo que no esté, y con eso una
+     comprobación no puede distinguir dos cosas muy distintas: que el dato esté y
+     sea el equivocado, o que no haya nada que medir porque la base contra la que
+     se corre no tiene esas filas.
+
+     Es la segunda batería en dos días que falla así —`derivadas.js` fue la
+     otra—: roja, sin decir por qué, y por un motivo que no estaba en la
+     plataforma sino en contra qué instancia se apuntaba. Una prueba roja
+     permanente deja de mirarse.
+
+     Lo que NO se hace es dar por buena la ausencia. Un contenedor que falta
+     entero es regresión y se denuncia como fallo; solo se declara pendiente el
+     contenedor que existe y está legítimamente vacío. Y se dice contra qué base
+     se está corriendo, que es el dato que faltaba para diagnosticarlo. */
+  let sinDato = 0;
+  const pendiente = (nombre, motivo) => {
+    sinDato++;
+    console.log(`    SIN DATO ${nombre}  → ${motivo}\n             base: ${B}`);
+  };
+
+  /**
+   * Comprueba algo que solo existe cuando la base tiene datos.
+   *
+   * `contenedor` ha de existir SIEMPRE: si falta, la sección dejó de pintarse y
+   * eso es un fallo. `dentro` es lo que solo hay cuando hay filas que medir.
+   */
+  const compConDatos = async (nombre, contenedor, dentro, sel, esperado, queFalta) => {
+    if (await p.locator(contenedor).count() === 0) {
+      comp(`${nombre} · el contenedor ${contenedor} existe`, null, () => false);
+      return;
+    }
+    if (await p.locator(dentro).count() === 0) { pendiente(nombre, queFalta); return; }
+    comp(nombre, await txt(sel), esperado);
+  };
+
   const txt = (sel) => p.locator(sel).first().innerText().catch(() => null);
   // Los nodos SVG no tienen `innerText`; se leen por `textContent`.
   const txtSvg = (sel) => p.locator(sel).first().textContent().catch(() => null);
@@ -101,8 +137,10 @@ const AREAS_OCULTAS = false;
   comp('la anualizada declara un suelo distinto del de los ratios',
     await txt('#rejilla-estadisticos .estadistico:nth-child(2) .estadistico__nota'),
     (v) => v && /\(1 año\)/.test(v) && !/756/.test(v));
-  comp('porcentaje con espacio duro',
-    await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && / %$/.test(v));
+  await compConDatos('porcentaje con espacio duro',
+    '#cuerpo-posiciones', '#cuerpo-posiciones tr',
+    '#cuerpo-posiciones tr:first-child td:nth-child(2)', (v) => v && / %$/.test(v),
+    'la cartera de esta base no tiene posiciones abiertas que medir');
 
   // El conmutador de la tabla del gráfico lleva `data-i18n`, que la pasada
   // sobre el DOM devolvería a «Ver datos». Se deja la tabla abierta antes de
@@ -137,8 +175,10 @@ const AREAS_OCULTAS = false;
   comp('subtítulo del gráfico', await txt('#subtitulo-grafico'), (v) => v && /^Indexed value/.test(v));
   comp('leyenda del gráfico', await txt('#leyenda-grafico'), (v) => v && /Warrants & Co\. portfolio/.test(v));
   comp('periodo de estadísticos', await txt('#sub-estadisticos'), (v) => v && /^Period /.test(v));
-  comp('porcentaje sin espacio',
-    await txt('#cuerpo-posiciones tr:first-child td:nth-child(2)'), (v) => v && /\d%$/.test(v));
+  await compConDatos('porcentaje sin espacio',
+    '#cuerpo-posiciones', '#cuerpo-posiciones tr',
+    '#cuerpo-posiciones tr:first-child td:nth-child(2)', (v) => v && /\d%$/.test(v),
+    'la cartera de esta base no tiene posiciones abiertas que medir');
 
   comp('el conmutador sigue al estado de la tabla, no al de partida',
     await txt('#btn-tabla-serie'), 'Hide data');
@@ -681,6 +721,16 @@ const AREAS_OCULTAS = false;
   }
 
   await navegador.close();
-  console.log(fallos ? `\n  ${fallos} problemas\n` : `\n  ${ok}/${ok} correctas\n`);
-  process.exit(fallos ? 1 : 0);
+
+  /* Tres salidas y no dos, por la misma razón que `dependencias.js` reserva el 2
+     a «no se ha podido ejecutar»: una comprobación que no llegó a hacerse no es
+     un aprobado, y anunciarla como tal es presentar por bueno un resultado que
+     nadie puede justificar —el mismo defecto que la plataforma evita con los
+     datos de mercado—. Verde solo cuando todo se midió. */
+  if (fallos) console.log(`\n  ${fallos} problemas${sinDato ? ` · ${sinDato} sin dato` : ''}\n`);
+  else if (sinDato) {
+    console.log(`\n  ${ok} correctas · ${sinDato} SIN DATO: no se pudieron comprobar.`);
+    console.log(`  La base de ${B} no trae las filas que necesitan. No es un aprobado.\n`);
+  } else console.log(`\n  ${ok}/${ok} correctas\n`);
+  process.exit(fallos ? 1 : (sinDato ? 2 : 0));
 })();
