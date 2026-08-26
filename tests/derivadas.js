@@ -23,6 +23,14 @@
    Si aun así se topa con el límite, la prueba lo dice por su nombre en vez de
    dejar que aparezca disfrazado de invalidación rota.
 
+   Lo mismo con la CREDENCIAL, que es el otro modo de fallo que se disfraza. La
+   clave de `CLAVE_PRUEBA` ha de ser la misma con la que se levantó el servidor:
+   sin `WARRANTS_CLAVE`, el servidor usa la suya de serie, responde 401 al alta y
+   desde aquí se ve exactamente igual que una invalidación rota —el alta no entra
+   y el ticker no aparece en ninguna vista—. Apuntada a una instancia sin
+   configurar, esta batería daba siete rojas seguidas y ni una decía por qué.
+   Ahora lo dice en su propia línea y arrastra el motivo que redacta el diálogo.
+
    Requiere Playwright, que NO es dependencia del proyecto. Sin él la prueba no
    se ejecuta y termina con error, nunca con un aprobado.
    ========================================================================= */
@@ -51,6 +59,21 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
      línea que nombre la causa que ocho comprobaciones rojas sin explicación. */
   let limitadas = 0;
   p.on('response', (r) => { if (r.status() === 429) limitadas++; });
+
+  /* Una credencial que el servidor no reconoce se ve desde aquí IGUAL que una
+     invalidación rota: el alta no entra, el ticker no aparece en ninguna vista y
+     caen siete comprobaciones seguidas sin decir por qué. Ese es el modo de fallo
+     que dejó esta batería en rojo sin que nadie mirase el motivo — y el motivo no
+     estaba en la plataforma, sino en la instancia contra la que se apuntaba.
+
+     `CLAVE_PRUEBA` vale `PRUEBA123` por omisión, pero el servidor solo la acepta
+     si se levantó con `WARRANTS_CLAVE=PRUEBA123`; sin esa variable usa su clave
+     de serie y responde 401. Se vigila aparte, por la misma razón que el 429:
+     vale más una línea que nombre la causa que siete rojas sin explicación. */
+  let credenciales = 0;
+  p.on('response', (r) => {
+    if ((r.status() === 401 || r.status() === 403) && /\/api\//.test(r.url())) credenciales++;
+  });
 
   /* Se espera por CONDICIÓN, no por reloj.
 
@@ -144,7 +167,17 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   await esperar(() => !document.querySelector('#dialogo-informe')?.open);
   await conTicker('#cuerpo-tabla-informes');
 
-  t('El alta se acepta', await p.locator('#dialogo-informe').evaluate(d => !d.open));
+  /* El diálogo redacta su propio motivo cuando el alta no entra —credencial
+     inválida, campo mal, conflicto—. Se arrastra hasta aquí en vez de dejar el
+     fallo en blanco: sin él, esta línea decía «El alta se acepta — » y no había
+     forma de saber si el problema era la clave, el formulario o la plataforma. */
+  const motivoAlta = await p.locator('#dialogo-informe').evaluate((d) => {
+    if (!d.open) return '';
+    const e = d.querySelector('.dialogo__errores');
+    return (e?.textContent ?? '').trim().replace(/\s+/g, ' ').slice(0, 140)
+      || 'el diálogo sigue abierto y no muestra motivo';
+  });
+  t('El alta se acepta', !motivoAlta, motivoAlta);
   t('Aparece en el repositorio (sección visible)',
     (await p.locator('#cuerpo-tabla-informes').innerText()).includes(TICKER));
 
@@ -162,6 +195,10 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   await visita('catalizadores', '#seccion-catalizadores', 'CATALIZADORES');
 
   t('Sin errores de consola', err.length === 0, err.slice(0, 2).join(' | '));
+  t('La credencial de analista es válida', credenciales === 0,
+    `${credenciales} peticiones rechazadas con 401/403 — la clave de CLAVE_PRUEBA no es ` +
+    'la del servidor. Levante la instancia con WARRANTS_CLAVE igual a esa clave.');
+
   t('Sin rechazos por límite de peticiones', limitadas === 0,
     `${limitadas} peticiones rechazadas con 429 — levante la instancia con ` +
     'WARRANTS_MAX_PETICIONES=100000');
