@@ -347,7 +347,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
     linear-gradient(180deg, var(--superficie-alt) 0%, var(--superficie) 100%);
 }
 
-.portada__interior { padding-block: clamp(56px, 8vw, 96px); max-width: 860px; }
+/* 1024 px es la medida de la composición de referencia. No cuesta alto: lo que
+   ensancha es la caja, y las piezas que la llenan siguen midiendo lo que medían.
+   A cambio, los rótulos `nowrap` de la fila de cifras ganan 164 px de holgura. */
+.portada__interior { padding-block: clamp(56px, 8vw, 96px); max-width: 1024px; }
 
 /* `.portada__entradilla` no es residuo del hero: `app.js` la usa para la
    entradilla de las noticias. No retirar. */
@@ -1376,6 +1379,42 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding-block: clamp(30px, 6vh, 66px) 0;
 }
 
+/* ── Las dos líneas bajo la marca ──
+   Una sola caja, y no dos hermanas sueltas: como hijo único del flex suman un
+   hueco de la rejilla en vez de dos. El ancho se fija en `ch` y no en píxeles
+   porque lo que hay que evitar es que ENVUELVAN: envolviendo cuestan 120 px de
+   hero y sin envolver 50, y ese es el presupuesto que decide en cuántas ventanas
+   caben. El texto de cada idioma ha de caber en un renglón a este ancho. */
+.portada__lineas {
+  display: flex; flex-direction: column; gap: 2px;
+  /* 672 px, la columna de lectura de la referencia. Sustituye a un `78ch` que se
+     medía contra la fuente y por tanto cambiaba de ancho con ella; en píxeles, el
+     renglón único que este bloque necesita no depende de con qué se componga.
+     Sigue siendo la restricción de siempre: lo que hay que evitar es que ENVUELVA
+     —envolviendo cuesta 120 px de hero y sin envolver 50—, y el texto de cada
+     idioma ha de caber en un renglón a este ancho. */
+  max-width: 672px; text-align: center;
+}
+
+.portada__linea {
+  margin: 0;
+  font-size: 0.98rem; line-height: 1.45;
+  color: var(--tinta-portada, var(--tinta));
+}
+.portada__linea--secundaria { font-size: 0.93rem; color: var(--tinta-mate); }
+
+/* Ocultas: fuera del flujo, pero SIGUEN maquetadas.
+   `display: none` las dejaría a cero de alto, y el alto es justo el dato con el
+   que se decide si vuelven a caber; a cero, volverían siempre y oscilarían. Se
+   conserva el ancho con `inset-inline: 0` para que envuelvan igual que en flujo
+   y la medida valga. `visibility: hidden` las retira del árbol de accesibilidad,
+   que es lo que corresponde a un texto que no se está mostrando. */
+.portada[data-lineas="false"] .portada__lineas {
+  position: absolute; inset-inline: 0; top: 0;
+  margin-inline: auto;
+  visibility: hidden; pointer-events: none;
+}
+
 /* ── La fila de tres cifras del hero ──
    Apilada al mínimo legible: cifra sobre rótulo, sin la nota que sí lleva la
    fila completa de abajo. El tamaño no es gusto, es presupuesto — se midió
@@ -1403,6 +1442,35 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada__cifras__celda {
   display: flex; flex-direction: column; gap: 1px;
   text-align: center;
+}
+
+/* ── Separadores entre casillas ──
+   Un filete vertical entre casilla y casilla, como el de la composición de
+   referencia. Cuesta CERO alto: se dibuja en el borde de la casilla, dentro del
+   hueco que la rejilla ya reservaba, y no añade nodo ni caja al flujo —de modo
+   que `costeCifras` mide lo mismo con ellos que sin ellos y el presupuesto del
+   hero no se entera—. Van en el borde de entrada de la segunda y la tercera, no
+   en el de salida de la primera, para que no cuelgue ninguno al final.
+
+   El `padding` aparta el texto del filete y el margen negativo devuelve
+   exactamente lo que el `padding` ocupó. Lo que NO devuelve es el borde: la fila
+   acaba 2 px más ancha, uno por filete. En alto sigue costando cero, que es lo
+   único que paga el pliegue, y 2 px sobre 1024 no aprietan a nadie. Quien retire
+   el margen y deje el `padding` ensancha la fila 56 px de golpe, y eso solo se ve
+   como un apretón: lo afirma `tests/portada.js`. */
+.portada__cifras__celda + .portada__cifras__celda {
+  border-inline-start: 1px solid var(--linea-portada, var(--linea));
+  padding-inline-start: clamp(12px, 2.25vw, 28px);
+  margin-inline-start: calc(-1 * clamp(12px, 2.25vw, 28px));
+}
+
+/* Envolviendo, un filete vertical entre renglones no separa nada: señala un
+   límite que ya no existe. Con la fila envuelta se retira. */
+@media (max-width: 640px) {
+  .portada__cifras__celda + .portada__cifras__celda {
+    border-inline-start: none;
+    padding-inline-start: 0; margin-inline-start: 0;
+  }
 }
 
 .portada__cifras__valor {

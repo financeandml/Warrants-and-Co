@@ -64,6 +64,18 @@
       <div class="contenedor portada__interior">
         <h1 class="portada__marca-principal" id="portada-titulo">Warrants &amp; Co.</h1>
 
+        <!-- ── Las dos líneas del hero ──
+             Dicen qué es esto y de dónde sale, y no repiten al manifiesto: el
+             manifiesto enuncia, estas describen el mecanismo. Su altura la mide
+             `seguirEncuadreBanner()`, que decide si caben; cuando no caben, el
+             bloque sale del flujo pero SIGUE maquetado, porque la decisión se
+             toma sobre lo que costarían y eso no se puede medir en un nodo
+             plegado. -->
+        <div class="portada__lineas">
+          <p class="portada__linea" data-i18n="portada.linea.que">Análisis de renta variable con cartera publicada.</p>
+          <p class="portada__linea portada__linea--secundaria" data-i18n="portada.linea.como">Cada tesis lleva su precio y su fecha, y la cartera sale de ellas.</p>
+        </div>
+
         <!-- ── Fila de cifras del hero ──
              Las mismas tres cifras que la fila de abajo, en su forma corta. NO
              lleva ninguna escrita: las pinta `pintarCifrasHero()` desde

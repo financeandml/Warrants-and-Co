@@ -1,10 +1,10 @@
 /* ============================================================================
    Home — la narrativa de Warrants & Co.
 
-   Seis piezas encadenadas: cinta de mercado, la fila de tres cifras del hero,
-   declaración editorial, la fila completa de cifras, research y catalizadores.
-   Cada una se alimenta de un endpoint real y ninguna fabrica un número: lo que no
-   existe se declara, con su motivo, y nunca se sustituye por un cero.
+   Cinco piezas encadenadas: cinta de mercado, declaración editorial, fila de
+   cifras, research y catalizadores. Cada una se alimenta de un endpoint real y
+   ninguna fabrica un número: lo que no existe se declara, con su motivo, y nunca
+   se sustituye por un cero.
 
    Siguen aquí, exportados y sin usar, los pintores de las piezas que se fueron
    con las áreas de Mercado y Opciones —pulso, radar, options flow y signal—.
