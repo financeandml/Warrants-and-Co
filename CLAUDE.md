@@ -10,7 +10,10 @@
 4. **Nada de `innerHTML`.** Contenido dinámico con `elemento()` y `textContent`.
 5. **CSP estricta**: sin scripts en línea, sin `eval`, sin `onclick=`, sin CDN.
 6. **SQL siempre parametrizado.**
-7. **No toques `data/warrants.db` ni `data/copias/`** sin avisar antes.
+7. **No toques `data/warrants.db` ni `data/copias/`** sin avisar antes. Tampoco
+   levantes un servidor contra ellas: basta con que corra para que SQLite vuelque
+   el WAL y el fichero cambie. Toda prueba que escriba va contra base aislada —la
+   línea de arranque está en «Pruebas que escriben».
 8. **No añadas dependencias** sin pedírmelo y justificarlo.
 9. **Un hecho, una fuente.** Cuando dos cosas expresan el mismo hecho —una cifra y su
    rótulo, un total y sus partes, una puerta y su anuncio—, salen de la misma fuente y
@@ -67,6 +70,38 @@ perdida la condición. Que sea holgado no ralentiza nada —quien cumple, sigue.
 2. lo pintado en JS se afirmaba en un solo idioma, y coincidía con el de partida sin
    repintar;
 3. `sinTicker()` daba una cartera por limpia cuando aún no se había pintado nada.
+
+## Pruebas que escriben
+
+`derivadas.js` da de alta y de baja una tesis por formulario. **Nunca contra
+`data/warrants.db`**, y tampoco contra un servidor levantado sobre ella: con que el
+servidor corra, SQLite vuelca el WAL y el fichero cambia de tamaño y de fecha aunque
+no se escriba un solo dato. Instancia aparte, siempre, con su propia base sembrada:
+
+```
+S=/tmp/warrants-prueba && mkdir -p $S/subidas
+WARRANTS_DB=$S/prueba.db WARRANTS_UPLOADS=$S/subidas npm run sembrar
+
+WARRANTS_DB=$S/prueba.db WARRANTS_UPLOADS=$S/subidas \
+WARRANTS_MAX_PETICIONES=100000 WARRANTS_CLAVE=PRUEBA123 PORT=4174 npm start
+
+BASE_PRUEBA=http://127.0.0.1:4174 CLAVE_PRUEBA=PRUEBA123 npm run test:derivadas
+```
+
+Las tres variables del servidor hacen falta las tres, y omitir cualquiera no da un
+error claro sino una batería roja que parece decir otra cosa:
+
+- **`WARRANTS_CLAVE`** ha de ser la misma que `CLAVE_PRUEBA`. Sin ella el servidor usa
+  su clave de serie y responde 401 al alta, que desde la prueba se ve idéntico a una
+  invalidación rota. Ya costó dar por rota una batería que estaba sana.
+- **`WARRANTS_MAX_PETICIONES`** sube el límite por IP: una pasada abre medio centenar
+  de peticiones en segundos y el límite de serie las rechaza con 429, que también se
+  ve como una vista que no se actualiza.
+- **`WARRANTS_DB` y `WARRANTS_UPLOADS`** aíslan la base y los adjuntos.
+
+Las dos primeras causas las nombra hoy `derivadas.js` en su propia línea. Que las
+nombre no las hace opcionales: nombrar la causa evita el diagnóstico equivocado, no
+la pérdida de tiempo.
 
 ## Términos de oficio: qué se traduce y qué no
 
