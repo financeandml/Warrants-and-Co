@@ -23,7 +23,8 @@
     "test:copia": "node tests/copia.js",
     "test:cartera": "node tests/cartera.js",
     "test:areas": "node tests/areas.js",
-    "test:cartera-interfaz": "node tests/cartera-interfaz.js"
+    "test:cartera-interfaz": "node tests/cartera-interfaz.js",
+    "test:tipografia": "node tests/tipografia.js"
   },
   "type": "commonjs",
   "dependencies": {

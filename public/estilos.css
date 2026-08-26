@@ -68,9 +68,24 @@
   --velo-modal:        rgba(16, 16, 17, 0.42);
   --destello:          rgba(16, 16, 17, 0.04);
 
-  /* Tipografia */
-  --sans: "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
-  --serif: Georgia, "Times New Roman", serif;
+  /* ── Tipografia ──
+     Inter para el texto y Playfair Display para los titulares y las insignias.
+     Las dos se sirven desde este dominio —`marca/fuentes/`—, y por eso la CSP no
+     cambia: sin directiva `font-src`, la peticion cae en `default-src 'self'`,
+     que ya las autoriza. Un origen de terceros habria obligado a abrir la
+     politica y a dos handshakes mas en la ruta critica.
+
+     La cadena de respaldo se conserva entera y no es decorativa: sostiene el
+     primer pintado mientras la fuente llega, y resuelve los glifos que el
+     subconjunto `latin` no trae. Los de esta plataforma son ▲ y ▼ —U+25B2 y
+     U+25BC—, que quedan fuera del rango y salen del sistema, hoy igual que
+     antes. Quien recorte esta cadena se queda sin las flechas de variacion, y
+     el color pasaria a cargar solo. */
+  --sans: Inter, "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
+  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Se invocaba en seis sitios como `var(--mono, monospace)` y no estaba
+     declarada en ninguno: caia siempre en el `monospace` de respaldo. */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
 
   /* Metrica */
   --ancho-maximo: 1240px;
@@ -172,6 +187,34 @@
 
     color-scheme: dark;
   }
+}
+
+/* ── Las dos familias ──
+   Ficheros variables, subconjunto `latin` —que cubre el español entero: se
+   comprobó glifo a glifo que están ñ, las cinco vocales acentuadas, la diéresis
+   y los signos de apertura—. Un solo fichero por familia cubre todo el eje de
+   pesos, de modo que 400, 500, 600 y 700 no cuestan cuatro descargas.
+
+   `swap`: el texto se pinta desde el primer instante con la familia de respaldo
+   y cambia cuando la real llega. Nunca hay texto invisible.
+
+   El rango de `font-weight` se declara como lo trae el fichero, no como se usa.
+   Declarar de menos deja al navegador SINTETIZANDO los pesos que faltan
+   —engordando los trazos por cuenta propia—, que es peor que no tenerlos. */
+@font-face {
+  font-family: 'Inter';
+  src: url('marca/fuentes/inter.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Playfair Display';
+  src: url('marca/fuentes/playfair-display.woff2') format('woff2');
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -584,7 +627,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .celda-empresa small { display: block; font-weight: 400; font-size: 0.76rem; color: var(--tinta-mate); }
 
 .mono {
-  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-family: var(--mono);
   font-size: 0.82rem; letter-spacing: 0.02em;
 }
 
@@ -1501,8 +1544,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* La marca es el único texto de la portada. */
 .portada__marca-principal {
+  font-family: var(--serif);
   font-size: clamp(2.3rem, 7vw, 5rem);
-  font-weight: 600; letter-spacing: -0.035em; line-height: 1.02;
+  /* El apretado baja de -0.035 a -0.025em. No es gusto: en una serif de alto
+     contraste los trazos finos son lo primero que se pierde al juntar las letras,
+     y -0.035 estaba medido contra una grotesca que no los tiene. -0.025em es el
+     de la composición de referencia. */
+  font-weight: 600; letter-spacing: -0.025em; line-height: 1.02;
   margin: 0;
 }
 
@@ -1844,6 +1892,73 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-size: 0.82rem; font-variant-numeric: tabular-nums;
 }
 .snapshot__nota { display: block; margin-top: 6px; font-size: 0.7rem; color: var(--tinta-mate); }
+
+/* ══════════════════ Cifras alineadas: dígitos tabulares ═════════════════ */
+
+/* ── Por qué existe este bloque ──
+   Inter dibuja los dígitos con ANCHOS DISTINTOS: medido en el fichero, el `1`
+   ocupa 0,407 em y el `4` 0,646 —un 36 % de diferencia—. Helvetica Neue y Arial,
+   que es lo que había antes, los dibujan todos iguales, de modo que cualquier
+   columna de cifras cuadraba sola y `font-variant-numeric` era casi decorativo.
+   Con Inter deja de serlo: una columna sin él queda con el borde mellado, y dos
+   cifras que deberían leerse una bajo otra dejan de hacerlo.
+
+   No es un fallo que dé error ni que ninguna prueba de «tiene contenido» vea.
+   Es de los que solo se aprecian afirmando que dos cosas concuerdan.
+
+   ── Lo que NO entra aquí, y a propósito ──
+   La prosa. «Faltan 2 días», «5 compañías en cobertura», los titulares con una
+   fecha dentro. Los dígitos proporcionales existen precisamente para el texto
+   corrido: puestos tabulares, el `1` arrastra un blanco a cada lado y abre un
+   boquete en mitad de la frase. Entra lo que se lee EN COLUMNA o lo que se
+   REPINTA en su sitio; no entra lo que se lee como una frase.
+
+   La lista de lo que se queda fuera, y por qué cada uno, está en el mensaje del
+   commit que introdujo este bloque.
+
+   ── Dos que parecían entrar y no entran ──
+   `.celda-valor` NO es una columna de cifras: «valor» ahí es el título cotizado,
+   no un número, y la celda lleva el nombre de la compañía. Entró en una primera
+   versión de esta lista por su nombre y la denunció la prueba.
+
+   `.tabla-opciones td` sobraba por ancho y por redundante: las celdas numéricas
+   de esa tabla llevan clase `.num`, que ya compone tabular desde antes, y el
+   selector alcanzaba además el símbolo y la insignia de lado. */
+.portada__cifras__valor,
+.cinta-metricas__valor,
+.cinta-metricas__nota,
+.dato__valor,
+.indicador__valor,
+.par-dato__valor,
+.aportacion__valor,
+.estadistico__nota,
+.ficha-cotizacion__precio,
+.ficha-cotizacion__var,
+.grupo-agenda__fecha,
+.cronologia__fecha,
+.emergente__fecha,
+.grafico-linea__fecha,
+.mapa-oi__strike,
+.factor__peso,
+.curva-tipos__lectura,
+.nota-score__cifra,
+.detalle-inusual__cifra,
+.detalle-inusual__score,
+.signal__cifra,
+.lectura--alza,
+.lectura--baja,
+.lectura--aviso,
+.lectura--info,
+.lectura--nula,
+.lectura--plana {
+  font-variant-numeric: tabular-nums;
+}
+
+/* `.cinta-metricas__valor` lo tenía SOLO mientras contaba —`[data-contando]`— y
+   lo soltaba al terminar. Con dígitos de ancho fijo eso daba igual; con Inter, la
+   cifra cambiaba de ancho en el instante de detenerse el contador, que es
+   justo cuando el ojo está mirándola. Ahora lo lleva siempre y la regla de
+   contar sobra, pero se conserva por si alguien la busca: dice lo mismo. */
 
 /* ════════════════ Lectura de mercado: alza, baja, aviso ═════════════════ */
 
@@ -2797,9 +2912,10 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .manifiesto__enunciado { max-width: 62ch; }
 
 .manifiesto__titular {
+  font-family: var(--serif);
   margin-block: 26px 0;
   font-size: clamp(1.85rem, 4.2vw, 3.15rem);
-  font-weight: 600; letter-spacing: -0.028em; line-height: 1.14;
+  font-weight: 600; letter-spacing: -0.02em; line-height: 1.14;
   text-wrap: balance;
 }
 

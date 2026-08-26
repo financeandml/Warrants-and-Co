@@ -326,6 +326,28 @@ export function seguirEncuadreBanner() {
      `app.js` lo activa cuando la imagen ha cargado, y hasta entonces `publicar()`
      se va de vacio. */
   new MutationObserver(publicar).observe(portada, { attributeFilter: ['data-banner'] });
+
+  /* ── El cambio de familia es otra llegada tardia ──
+     Las fuentes se declaran con `font-display: swap`: el hero se maqueta primero
+     con la familia de respaldo y cambia a Inter cuando el fichero llega. La
+     primera pasada de `publicar()` mide, por tanto, un hero compuesto con OTRA
+     tipografia.
+
+     El ALTO no cambia al cambiar la familia —todos los `line-height` del hero son
+     sin unidad, de modo que cada caja mide su `font-size` por su factor y no
+     depende de con que se componga—. Lo que cambia es el ANCHO, y el ancho decide
+     si las dos lineas envuelven: envolviendo cuestan 120 px de bloque de marca y
+     sin envolver 50, que es la diferencia entre cederlas y no cederlas.
+
+     Cuando estan en flujo, el `ResizeObserver` sobre `interior` ya lo recoge. Pero
+     cuando han cedido salen del flujo, `interior` no se entera, y su coste —que es
+     con lo que se decide si vuelven— se habria medido con la familia equivocada y
+     nadie volveria a mirarlo. De ahi este enganche.
+
+     `document.fonts` no existe en navegadores muy antiguos; alli no hay fuente que
+     cambiar y el respaldo es lo definitivo, de modo que no medir de nuevo es
+     exactamente lo correcto. */
+  if (document.fonts?.ready) document.fonts.ready.then(publicar);
 }
 
 /**

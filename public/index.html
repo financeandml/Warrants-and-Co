@@ -6,6 +6,14 @@
 <title data-i18n="documento.titulo">Warrants &amp; Co. — Análisis e Inversión</title>
 <meta name="description" data-i18n-attr="content:documento.descripcion"
       content="Plataforma de análisis e inversión de Warrants &amp; Co. Repositorio de tesis de inversión, cobertura de valores y seguimiento de cartera.">
+<!-- Las dos familias se precargan porque el navegador no las descubre hasta
+     haber descargado y analizado `estilos.css`, que es quien las nombra: sin esto
+     la peticion sale un viaje tarde y el cambio de familia se ve a mitad de
+     lectura. `crossorigin` no sobra aunque sean del mismo origen — las fuentes se
+     piden SIEMPRE en modo CORS, y sin el atributo la precarga no vale para la
+     peticion real y el fichero se descarga dos veces. -->
+<link rel="preload" href="/marca/fuentes/inter.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/marca/fuentes/playfair-display.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilos.css">
 <script src="/tema-inicial.js"></script>
 <script src="/idioma-inicial.js"></script>
