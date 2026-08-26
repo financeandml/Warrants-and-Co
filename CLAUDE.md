@@ -45,6 +45,27 @@ CSS existentes, nunca un color literal. Tema claro y oscuro. Respeta
 - Al terminar: qué ficheros tocaste y qué compruebo en el navegador.
 - Si algo choca con este fichero, dímelo en lugar de obedecer.
 
+## Somos dos en esta rama
+
+Dos personas escribimos en `main` a la vez. El detalle está en
+[`COLABORAR.md`](COLABORAR.md) —fuente única, no lo repitas aquí—; lo que cambia tu
+forma de trabajar es esto:
+
+- **El repositorio se mueve solo.** Un hook baja al abrir sesión y otro sube al cerrar
+  la tarea (`.claude/sincronizar.sh` y `.claude/auto-push.sh`). Si al arrancar te
+  llegan commits ajenos, míralos antes de editar los ficheros que tocaron: puede que
+  lo que ibas a escribir ya no encaje.
+- **Commits pequeños, y ahora.** No acumules una tarea entera sin commitear. Con
+  rebase, lo caro es tardar.
+- **`public/idiomas/es.js` y `public/idiomas/en.js` van SIEMPRE en el mismo commit.**
+  Son un hecho contado dos veces, y separarlos deja una clave sin traducir que no se
+  ve en pantalla. Es la regla 9 aplicada al caso que más veces se da.
+- **Antes de una reforma amplia de `public/app.js`, `public/estilos.css` o
+  `public/index.html`, avísame.** Son los tres monolitos y es donde chocamos. No es
+  la regla de «más de dos ficheros»: es que ahí puede haber alguien más dentro.
+- **Si un hook se para por conflicto, no lo resuelvas por tu cuenta.** Aborta ya lo ha
+  hecho él y nada se ha perdido. Dímelo y lo miramos.
+
 ## Pruebas de navegador
 
 En `tests/repintado.js` y `tests/derivadas.js`, esperar a que una vista esté lista se
