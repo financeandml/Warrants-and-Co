@@ -1,0 +1,58 @@
+[client]
+# Oculta el menu hamburguesa y el boton "Deploy" nativos de Streamlit --
+# sin esto, la esquina superior derecha delata que es una demo de Streamlit
+# en vez de una herramienta institucional.
+toolbarMode = "minimal"
+
+# ---------------------------------------------------------------------------
+# Tema: informe institucional de banca de inversion
+# ---------------------------------------------------------------------------
+# Fondo claro, azul marino como unico color de marca, mucha tabla y poca
+# decoracion. La paleta de series es deliberadamente desaturada y anclada en
+# azules: en un informe de research el color transporta dato, no adorno.
+[theme]
+base = "light"
+
+primaryColor = "#0f2a4d"              # navy institucional
+backgroundColor = "#ffffff"           # lienzo blanco de informe
+secondaryBackgroundColor = "#f5f7fa"  # gris azulado muy claro
+textColor = "#0d1b2e"                 # casi negro, con sesgo azul
+borderColor = "#dbe1ea"               # reglas finas azul-gris
+linkColor = "#1a4d80"
+linkUnderline = false
+
+# Semanticos sobrios: verde bosque / ambar / granate, nunca colores de semaforo.
+blueColor = "#2e6da4"
+greenColor = "#1f7a4d"
+orangeColor = "#b8860b"
+redColor = "#9b2226"
+yellowColor = "#8a6d3b"
+violetColor = "#5b4b6b"
+grayColor = "#7d8a9a"
+
+# Series de grafico: navy -> azul acero -> azules medios -> neutros con acento.
+chartCategoricalColors = ["#0f2a4d", "#2e6da4", "#6f9bc3", "#3d6b5c", "#8a6d3b", "#5b4b6b", "#9aa9b8", "#9b2226"]
+
+# Tablas: cabecera gris azulada y reglas finas. Son el elemento protagonista.
+dataframeHeaderBackgroundColor = "#eef2f7"
+dataframeBorderColor = "#dbe1ea"
+
+# Tipografia: serif editorial en titulares (registro de informe impreso) +
+# grotesca institucional en datos, con cifras tabulares muy legibles.
+headingFont = "Source Serif 4:https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600;700&display=swap"
+font = "IBM Plex Sans:https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+codeFont = "IBM Plex Mono:https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+
+baseFontSize = 14
+baseRadius = "2px"        # esquinas casi rectas: menos decoracion
+buttonRadius = "2px"
+showWidgetBorder = true
+showSidebarBorder = true
+
+metricValueFontSize = "1.65rem"
+metricValueFontWeight = 600
+
+[theme.sidebar]
+backgroundColor = "#f5f7fa"
+secondaryBackgroundColor = "#eef2f7"
+borderColor = "#dbe1ea"
