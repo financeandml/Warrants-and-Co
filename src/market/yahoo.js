@@ -201,6 +201,13 @@ async function obtenerCotizacion(simbolo) {
     mercado: m.fullExchangeName || m.exchangeName || null,
     estadoMercado: m.marketState || null,
     momento: m.regularMarketTime ? new Date(m.regularMarketTime * 1000).toISOString() : new Date().toISOString(),
+    /* Que `momento` sea la hora a la que el MERCADO imprimio este precio, y no la
+       hora a la que nosotros lo preguntamos. La diferencia no es cosmetica: con el
+       mercado cerrado, la de mercado se queda quieta y la de consulta avanza en
+       cada peticion. Quien enseñe frescura al lector necesita saber cual de las
+       dos tiene delante, porque «hace 8 s» sobre una hora de consulta es falso.
+       Aqui es de mercado siempre que el proveedor publique `regularMarketTime`. */
+    momentoDeMercado: Boolean(m.regularMarketTime),
     fuente: 'Yahoo Finance',
   };
 }

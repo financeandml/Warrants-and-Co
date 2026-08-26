@@ -167,6 +167,18 @@ export default {
 
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
+  /* ── Frescura de la cinta ──
+     Dos formas, y la diferencia no es de estilo: «cotizado» dice cuándo imprimió
+     el MERCADO el precio, y «consultado» cuándo lo pedimos nosotros. Solo el
+     primero es frescura de verdad; el segundo avanza aunque el mercado lleve
+     horas cerrado, y llamarlo cotizado sería mentir. El proveedor de respaldo
+     solo publica el segundo. */
+  'inicio.ticker.frescura.mercado': 'Cotizado {cuanto}',
+  'inicio.ticker.frescura.consulta': 'Consultado {cuanto}',
+  'inicio.ticker.frescura.sinHora': 'Sin hora publicada',
+  'inicio.ticker.frescura.segundos': 'hace {n} s',
+  'inicio.ticker.frescura.minutos': 'hace {n} min',
+  'inicio.ticker.frescura.horas': 'hace {n} h',
 
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',

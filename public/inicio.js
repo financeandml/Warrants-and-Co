@@ -129,16 +129,11 @@ function contarHasta(nodo, destino, { decimales = 0, duracion = 1100, sufijo = '
 
 // ═══════════════════════════════ 1 · TICKER ═══════════════════════════════
 
-/**
- * Cinta de mercado. Índices y posiciones abiertas, con sus cifras reales.
- * La pista se duplica y la animación recorre exactamente la mitad, de modo que
- * el ciclo encaja sin salto. El duplicado se oculta al lector de pantalla.
- */
-export function pintarTicker(indices, cartera) {
-  const cinta = $('#ticker-mercado');
-  const pista = $('#ticker-pista');
-  if (!cinta || !pista) return;
-
+/* Las líneas de la cinta, construidas UNA vez.
+   Las usan el primer pintado y el refresco. Dos constructores distintos serían
+   dos fuentes del mismo hecho, y el día que discreparan la cinta refrescada
+   diría algo que la recién pintada no dice —sin que nada diera error—. */
+function lineasDeTicker(indices, cartera) {
   const lineas = [];
 
   for (const i of indices?.indices ?? []) {
@@ -152,6 +147,7 @@ export function pintarTicker(indices, cartera) {
       // Un índice no tiene ficha propia, de modo que el enlace lleva al listado
       // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
       destino: '#/companias',
+      clave: `i:${i.clave ?? i.simbolo ?? i.nombre}`,
     });
   }
 
@@ -164,9 +160,191 @@ export function pintarTicker(indices, cartera) {
       variacion: Number.isFinite(p.variacionDiaPct) ? p.variacionDiaPct : null,
       // Cada valor en cartera tiene ficha propia: la cinta lleva a ella.
       destino: `#/companias?t=${encodeURIComponent(p.ticker)}`,
+      clave: `p:${p.ticker}`,
     });
   }
 
+  return lineas;
+}
+
+/* ── El texto de cada celda, escrito UNA vez ──
+   Las usan el primer pintado y el refresco. Si cada uno formateara por su cuenta,
+   dos formas del mismo número —«1.234,5» y «1234.50»— se leerían como un cambio
+   y la cinta se movería sin que el mercado hubiera hecho nada. El refresco decide
+   comparando texto contra texto, de modo que la comparación solo significa algo
+   si el texto sale del mismo sitio en los dos casos. */
+const textoValor = (l) => (l.valor === null ? noDisponible()
+  : l.esTipo ? porcentaje(l.valor, l.decimales) : formatearNumero(l.valor, l.decimales));
+
+const textoVariacion = (l) => (l.variacion === null ? noDisponible()
+  : formatearPorcentaje(l.variacion));
+
+/**
+ * Sustituye un valor que ha cambiado: sale hacia arriba, entra desde abajo.
+ *
+ * Devuelve si hubo cambio. Los dos tramos se encadenan por `animationend` y no
+ * por temporizador: con la pestaña de fondo el reloj se estira y el texto
+ * cambiaría fuera de tiempo.
+ *
+ * Con movimiento reducido NO se anima, y el texto se pone de una vez. No es solo
+ * cortesía: la hoja apaga esa animación con `animation: none`, y sin animación
+ * `animationend` NO SE DISPARA. Encadenado a él, el valor se quedaría congelado
+ * en la cifra vieja para siempre, que es peor que cualquier movimiento.
+ */
+function sustituirValor(nodo, texto, prefijo) {
+  if (!nodo || nodo.textContent === texto) return false;
+
+  if (sinMovimiento()) { nodo.textContent = texto; return true; }
+
+  const sale = `${prefijo}--sale`;
+  const entra = `${prefijo}--entra`;
+  nodo.classList.remove(entra);
+  nodo.classList.add(sale);
+  nodo.addEventListener('animationend', function salida() {
+    nodo.removeEventListener('animationend', salida);
+    nodo.textContent = texto;
+    nodo.classList.remove(sale);
+    nodo.classList.add(entra);
+    nodo.addEventListener('animationend', function llegada() {
+      nodo.removeEventListener('animationend', llegada);
+      nodo.classList.remove(entra);
+    });
+  }, { once: false });
+  return true;
+}
+
+/**
+ * Rótulo de frescura, anclado al borde de la cinta y fuera del flujo.
+ *
+ * Dice cuándo imprimió el MERCADO el precio, no cuándo lo pedimos nosotros, y
+ * cuando el proveedor no publica esa hora lo rotula distinto —hoy el proveedor
+ * activo es el de respaldo, que solo sabe la hora de la consulta—. Con el
+ * mercado cerrado el instante deja de avanzar y el rótulo acaba diciendo «hace
+ * 3 h», que es la verdad y es más honesto que fingir pulso.
+ */
+function pintarFrescura(cinta, cartera, indices) {
+  let caja = cinta.querySelector('.ticker__frescura');
+  if (!caja) {
+    caja = elemento('div', 'ticker__frescura');
+    caja.appendChild(elemento('span', 'ticker__frescura__punto'));
+    caja.appendChild(elemento('span', 'ticker__frescura__texto'));
+    cinta.appendChild(caja);
+  }
+
+  /* El instante más reciente de los publicados, y si alguno de ellos es de
+     mercado de verdad. Se mira la cartera y los índices: basta uno fiable para
+     poder hablar de la hora del mercado. */
+  const momentos = [
+    ...(cartera?.posiciones ?? []),
+    ...(indices?.indices ?? []),
+  ].filter((x) => x?.momento);
+
+  const texto = caja.querySelector('.ticker__frescura__texto');
+  if (!momentos.length) {
+    delete caja.dataset.vivo;
+    texto.textContent = t('inicio.ticker.frescura.sinHora');
+    caja.dataset.deMercado = 'false';
+    return;
+  }
+
+  const deMercado = momentos.some((x) => x.momentoDeMercado === true);
+  const ultimo = momentos.reduce((a, b) =>
+    (new Date(b.momento) > new Date(a.momento) ? b : a));
+
+  caja.dataset.deMercado = String(deMercado);
+  caja.dataset.momento = ultimo.momento;
+  rotularFrescura(caja);
+}
+
+/** Reescribe el «hace X» sin volver a pedir nada. */
+export function rotularFrescura(caja = document.querySelector('.ticker__frescura')) {
+  if (!caja?.dataset.momento) return;
+  const texto = caja.querySelector('.ticker__frescura__texto');
+  if (!texto) return;
+
+  const segundos = Math.max(0, Math.round((Date.now() - new Date(caja.dataset.momento)) / 1000));
+  const deMercado = caja.dataset.deMercado === 'true';
+
+  /* El punto solo se enciende con hora de mercado reciente. Nunca carga solo: el
+     rótulo dice el tiempo con palabras y el punto únicamente lo acompaña. */
+  if (deMercado && segundos < 120) caja.dataset.vivo = 'true';
+  else delete caja.dataset.vivo;
+
+  const cuanto = segundos < 60 ? t('inicio.ticker.frescura.segundos', { n: segundos })
+    : segundos < 3600 ? t('inicio.ticker.frescura.minutos', { n: Math.round(segundos / 60) })
+      : t('inicio.ticker.frescura.horas', { n: Math.round(segundos / 3600) });
+
+  texto.textContent = deMercado
+    ? t('inicio.ticker.frescura.mercado', { cuanto })
+    : t('inicio.ticker.frescura.consulta', { cuanto });
+}
+
+/**
+ * Refresca la cinta SIN reconstruirla.
+ *
+ * Reconstruirla reiniciaría el traslado de la pista —la cinta daría un salto
+ * visible cada 20 s— y no habría con qué comparar para saber qué cambió. Aquí
+ * se cambian solo las celdas cuyo texto es distinto.
+ *
+ * Si el CONJUNTO de claves cambia —una posición que se abre o se cierra— no hay
+ * refresco que valga y se repinta entero: la cinta ya no habla de las mismas
+ * cosas. Devuelve cuántos valores cambiaron, que es lo que el sondeo mira para
+ * decidir si el mercado sigue imprimiendo.
+ */
+export function refrescarTicker(indices, cartera) {
+  const cinta = $('#ticker-mercado');
+  const pista = $('#ticker-pista');
+  if (!cinta || !pista || cinta.hidden) return null;
+
+  const lineas = lineasDeTicker(indices, cartera);
+  const clavesAhora = [...pista.querySelectorAll('.ticker__grupo:first-child .ticker__item')]
+    .map((n) => n.dataset.clave).join('|');
+  if (!lineas.length || lineas.map((l) => l.clave).join('|') !== clavesAhora) {
+    pintarTicker(indices, cartera);
+    return null;
+  }
+
+  let cambios = 0;
+  for (const l of lineas) {
+    // Los DOS items de esa clave: el original y el duplicado del bucle.
+    for (const item of pista.querySelectorAll(`[data-clave="${CSS.escape(l.clave)}"]`)) {
+      const valor = item.querySelector('.ticker__valor');
+      const varia = item.querySelector('.ticker__var');
+      let movido = false;
+      movido = sustituirValor(valor, textoValor(l), 'ticker__valor') || movido;
+      movido = sustituirValor(varia, textoVariacion(l), 'ticker__var') || movido;
+      if (varia) varia.className = `ticker__var ${claseDireccion(l.variacion)}`
+        + (varia.classList.contains('ticker__var--sale') ? ' ticker__var--sale' : '')
+        + (varia.classList.contains('ticker__var--entra') ? ' ticker__var--entra' : '');
+      if (movido) {
+        cambios++;
+        /* Marca persistente de «este cambió». Es la que sostiene la información
+           cuando el sistema pide movimiento reducido y no hay deslizamiento que
+           ver: movimiento reducido no es información reducida. */
+        item.dataset.cambiado = 'true';
+        clearTimeout(Number(item.dataset.temporizador) || 0);
+        item.dataset.temporizador = String(setTimeout(() => {
+          delete item.dataset.cambiado; delete item.dataset.temporizador;
+        }, 4000));
+      }
+    }
+  }
+
+  pintarFrescura(cinta, cartera, indices);
+  return cambios;
+}
+
+/**
+ * Cinta de mercado. Índices y posiciones abiertas, con sus cifras reales.
+ * La pista se duplica y la animación recorre exactamente la mitad, de modo que
+ * el ciclo encaja sin salto. El duplicado se oculta al lector de pantalla.
+ */
+export function pintarTicker(indices, cartera) {
+  const cinta = $('#ticker-mercado');
+  const pista = $('#ticker-pista');
+  if (!cinta || !pista) return;
+
+  const lineas = lineasDeTicker(indices, cartera);
   if (!lineas.length) { cinta.hidden = true; return; }
   cinta.hidden = false;
   pista.textContent = '';
@@ -179,15 +357,16 @@ export function pintarTicker(indices, cartera) {
       const item = elemento('a', 'ticker__item');
       item.href = l.destino;
       item.dataset.ruta = '';
+      /* La clave enlaza este item con su linea al refrescar. Hay DOS items por
+         clave —el original y el duplicado que cierra el bucle visual—, y los dos
+         han de cambiar a la vez: si solo cambiara uno, el mismo valor diria dos
+         cosas distintas segun por donde fuera pasando la pista. */
+      item.dataset.clave = l.clave;
 
       item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
-      item.appendChild(elemento('span', 'ticker__valor',
-        l.valor === null ? noDisponible()
-          : l.esTipo ? porcentaje(l.valor, l.decimales) : formatearNumero(l.valor, l.decimales)));
-
-      const v = elemento('span', `ticker__var ${claseDireccion(l.variacion)}`,
-        l.variacion === null ? noDisponible() : formatearPorcentaje(l.variacion));
-      item.appendChild(v);
+      item.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
+      item.appendChild(elemento('span',
+        `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
       g.appendChild(item);
     }
     return g;
@@ -195,6 +374,7 @@ export function pintarTicker(indices, cartera) {
 
   pista.appendChild(grupo(false));
   pista.appendChild(grupo(true));
+  pintarFrescura(cinta, cartera, indices);
 
   // La duración se fija por longitud recorrida: velocidad constante y lenta
   // sea cual sea el número de valores.

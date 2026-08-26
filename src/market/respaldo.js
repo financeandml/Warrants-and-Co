@@ -72,6 +72,9 @@ async function cotizacionCnbc(simbolo) {
     mercado: q.exchange || null,
     estadoMercado: q.curmktstatus || null,
     momento: new Date().toISOString(),
+    // Hora de CONSULTA, no de mercado: CNBC no publica el instante de impresion.
+    // Vease la nota en `yahoo.js`; quien lo enseñe ha de rotularlo distinto.
+    momentoDeMercado: false,
     fuente: 'CNBC',
     // Fundamentales publicados junto a la cotizacion; alimentan la ficha del valor.
     fundamentales: {
@@ -165,6 +168,8 @@ async function cotizacionNasdaq(simbolo) {
     mercado: d.exchange || null,
     estadoMercado: p?.isRealTime ? 'REGULAR' : null,
     momento: new Date().toISOString(),
+    // Hora de CONSULTA, no de mercado. Igual que CNBC.
+    momentoDeMercado: false,
     fuente: 'Nasdaq',
   };
 }

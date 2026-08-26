@@ -54,6 +54,10 @@ async function obtenerIndices() {
       nombreProveedor: q.nombre,
       fuente: q.fuente,
       momento: q.momento,
+      // Igual que en la cartera: `momento` no significa lo mismo en todos los
+      // proveedores, y quien lo enseñe necesita saber cual tiene delante.
+      momentoDeMercado: Boolean(q.momentoDeMercado),
+      estadoMercado: q.estadoMercado ?? null,
     };
   });
 

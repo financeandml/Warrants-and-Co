@@ -30,6 +30,7 @@ import { pintarPanorama } from './mercado.js';
 import {
   pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
+  refrescarTicker, rotularFrescura,
 } from './inicio.js';
 
 // ─────────────────────────────── utilidades ──────────────────────────────
@@ -1512,6 +1513,11 @@ async function cargarInicio() {
     alLlegar(api('/api/companias?detalle=1'),
       (d) => { datosInicio.research = d?.fichas ?? []; }, 'research'),
   ]);
+
+  /* La cinta queda viva a partir de aquí. Se arranca DESPUÉS del `allSettled`
+     porque antes no hay cinta que refrescar, y refrescar lo que aún no existe
+     dispararía un repintado entero en la primera pasada. */
+  programarRefrescoCinta();
 }
 
 /**
@@ -1527,6 +1533,95 @@ function repintarInicio() {
   animarManifiesto();
   for (const bloque of pintadosInicio) PINTORES_INICIO[bloque]();
 }
+
+/* ════════════════════ La cinta, que sí es dato vivo ═════════════════════
+ *
+ * Todo lo demás de la portada es una foto del instante de carga, y es correcto
+ * que lo sea: los estadísticos salen de cierres de sesión y no cambian durante
+ * el día. Las cotizaciones sí, y hasta ahora tampoco se movían — `cargarInicio()`
+ * corre UNA vez por carga de página, de modo que la cinta envejecía en silencio.
+ *
+ * ── El ritmo ──
+ * 20 s. El servidor cachea las cotizaciones 15 —`TTL_COTIZACION_MS`—, así que
+ * pedir más a menudo no traería un dato más nuevo: traería el mismo dato y una
+ * petición de más al proveedor. Por encima del TTL, y no justo en él, para no
+ * caer siempre sobre el borde de la caché.
+ *
+ * ── Cuándo NO se pide ──
+ * Con la pestaña oculta no se pide nada. Una pestaña de fondo abierta toda la
+ * noche son 4.320 peticiones que nadie va a mirar.
+ *
+ * Y cuando el mercado deja de imprimir, se retrocede a cinco minutos. Eso NO se
+ * deduce de un calendario de sesión —que habría que mantener, y que se equivoca
+ * en festivos y en subastas—: se deduce del dato. Si tras tres pasadas seguidas
+ * ningún valor ha cambiado, el mercado no está imprimiendo, y da igual el motivo.
+ * Se vuelve al ritmo corto en cuanto algo cambia o el lector regresa a la
+ * pestaña.
+ */
+const REFRESCO_MS = 20_000;
+const REFRESCO_QUIETO_MS = 300_000;
+const PASADAS_QUIETAS = 3;
+
+let refrescoTemporizador = null;
+let rotuloTemporizador = null;
+let pasadasSinCambio = 0;
+
+function pararRefrescoCinta() {
+  clearTimeout(refrescoTemporizador); refrescoTemporizador = null;
+  clearInterval(rotuloTemporizador); rotuloTemporizador = null;
+}
+
+async function pasadaDeCinta() {
+  /* Se piden las dos fuentes de la cinta y NADA MÁS. La fila de cifras y el
+     cuadro de mando salen de la misma llamada de cartera, pero no se repintan
+     aquí: son otro commit y otra decisión. Repintarlos de tapadillo movería unas
+     cifras que la portada presenta como cierres de sesión. */
+  const [indices, cartera] = await Promise.all([
+    api('/api/radar/indices').catch(() => null),
+    api('/api/mercado/cartera').catch(() => null),
+  ]);
+  if (!indices && !cartera) return null;
+
+  if (indices) datosInicio.indices = indices;
+  if (cartera) datosInicio.cartera = cartera;
+  return refrescarTicker(datosInicio.indices, datosInicio.cartera);
+}
+
+function programarRefrescoCinta() {
+  pararRefrescoCinta();
+  if (document.visibilityState !== 'visible') return;
+
+  /* El «hace X» se reescribe cada diez segundos aunque no se pida nada: lo que
+     envejece es el rótulo, no el dato, y para envejecer no hace falta la red. */
+  rotuloTemporizador = setInterval(() => rotularFrescura(), 10_000);
+
+  const siguiente = () => {
+    const espera = pasadasSinCambio >= PASADAS_QUIETAS ? REFRESCO_QUIETO_MS : REFRESCO_MS;
+    refrescoTemporizador = setTimeout(async () => {
+      if (document.visibilityState !== 'visible') return;
+      let cambios = null;
+      try { cambios = await pasadaDeCinta(); } catch { cambios = null; }
+      // `null` es «no se pudo comparar» —repintado entero o fuente caída—, y no
+      // es lo mismo que «no cambió nada»: no cuenta como pasada quieta.
+      if (cambios === null) pasadasSinCambio = 0;
+      else if (cambios > 0) pasadasSinCambio = 0;
+      else pasadasSinCambio++;
+      siguiente();
+    }, espera);
+  };
+  siguiente();
+}
+
+/* Al volver a la pestaña se vuelve al ritmo corto y se pide de inmediato: quien
+   regresa quiere ver el dato de ahora, no el de cuando se fue. */
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') { pararRefrescoCinta(); return; }
+  if (!inicioMontado) return;
+  pasadasSinCambio = 0;
+  rotularFrescura();
+  pasadaDeCinta().catch(() => {});
+  programarRefrescoCinta();
+});
 
 /**
  * Repinta lo que la pasada sobre el DOM no alcanza.

@@ -629,6 +629,14 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
       takeProfit: p.takeProfit,
       stopLoss: p.stopLoss,
       divisa: q?.divisa ?? p.divisa ?? 'USD',
+      /* Cuando imprimio el mercado este precio, y si es eso de verdad.
+         Se publica —en vez de quedarse en el orquestador, que es donde estaba—
+         porque sin ello el cliente no puede decir nada honesto sobre frescura:
+         solo sabria cuando lo pidio el, que con el mercado cerrado avanza igual.
+         Una linea cerrada no cotiza, de modo que no lleva ninguno de los dos. */
+      momento: p.cerrada ? null : (q?.momento ?? null),
+      momentoDeMercado: p.cerrada ? null : Boolean(q?.momentoDeMercado),
+      estadoMercado: p.cerrada ? null : (q?.estadoMercado ?? null),
       variacionDiaPct: p.cerrada ? null : redondear(q?.variacionPct),
       rentabilidadPct: redondear(rentabilidad),
       valorTramo: redondear(valorTramo, 4),

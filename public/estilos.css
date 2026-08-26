@@ -2501,6 +2501,14 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   .portada__cifras__celda--entra {
     animation: none !important; clip-path: none !important; opacity: 1 !important;
   }
+  /* El valor cambia de golpe, sin deslizamiento. Lo que NO se pierde es saber
+     cuál cambió: eso lo dice `[data-cambiado]`, que es un filete y no un
+     movimiento, y sigue puesto un ciclo entero. Movimiento reducido no es
+     información reducida. */
+  .ticker__valor--sale, .ticker__var--sale,
+  .ticker__valor--entra, .ticker__var--entra {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -3129,8 +3137,96 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
   font-size: 0.7rem;
 }
-.ticker__valor { font-variant-numeric: tabular-nums; }
-.ticker__var { font-variant-numeric: tabular-nums; font-size: 0.76rem; }
+/* ── El valor de la cinta, y por qué es `inline-block` ──
+   Para poder moverlo al cambiar hace falta `transform`, y `transform` no aplica
+   a una caja en linea. `inline-block` la habilita SIN mover nada: con
+   `overflow: visible` la linea base de un `inline-block` sigue siendo la de su
+   ultima linea de texto —CSS 2.1, 10.8.1—, que es exactamente la que tenia en
+   linea. El alto de la cinta es el mismo antes, DURANTE y despues del cambio, y
+   eso importa porque ese alto lo mide `seguirEncuadreBanner()` para encuadrar la
+   fotografia: moverlo aqui moveria el arbol cada veinte segundos.
+
+   Quien toque esto tiene la prueba en `tests/cinta.js`, que mide el alto en los
+   tres momentos. Los tres hacen falta: una animacion que mueva la caja solo
+   MIENTRAS dura vuelve a su sitio antes de que nadie mire, y medir en reposo la
+   da por buena — comprobado, con un margen dentro del fotograma de entrada.
+
+   Tampoco se fia de razonar sobre lineas base, que aqui ademas no deciden: el
+   item es `inline-flex` y su alto lo gobierna el mas alto de sus hijos. Se
+   comprobo poniendo `overflow: hidden` a proposito, por si movia la linea base
+   como haria en contexto en linea: no cambio el alto. */
+.ticker__valor { font-variant-numeric: tabular-nums; display: inline-block; }
+.ticker__var { font-variant-numeric: tabular-nums; font-size: 0.76rem; display: inline-block; }
+
+/* ── Un valor que acaba de cambiar ──
+   Sale hacia arriba y el nuevo entra desde abajo, como un panel de salidas. Dos
+   tramos de 100 ms encadenados por `animationend`, y no un temporizador a mitad
+   de animacion: con la pestaña de fondo el reloj se estira y el texto cambiaria
+   fuera de tiempo.
+
+   Solo `opacity` y `transform`: ni una ni otra tocan la maquetacion, de modo que
+   la cinta mide lo mismo mientras cambia y el encuadre de la foto no se entera.
+
+   Se mueve UNICAMENTE lo que cambio de verdad. Teñir todo lo que se refresco
+   convertiria la cinta —que ya se traslada sola— en un parpadeo continuo, y de
+   paso diria que cambio algo donde no cambio nada. */
+@keyframes ticker-valor-sale {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-5px); }
+}
+@keyframes ticker-valor-entra {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.ticker__valor--sale, .ticker__var--sale {
+  animation: ticker-valor-sale 100ms cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+.ticker__valor--entra, .ticker__var--entra {
+  animation: ticker-valor-entra 100ms cubic-bezier(0, 0, 0.2, 1) backwards;
+}
+
+/* ── El rotulo de frescura ──
+   Anclado al borde de la cinta y FUERA DEL FLUJO: una fila propia costaria alto
+   de hero, que es lo que paga el pliegue. No se mueve con la pista.
+
+   Dice cuando imprimio el MERCADO el precio, no cuando lo pedimos nosotros, y
+   cuando el proveedor no publica esa hora lo rotula distinto. Con el mercado
+   cerrado se queda quieto y acaba diciendo «hace 3 h», que es la verdad: mas
+   honesto que cualquier animacion que fingiera pulso. */
+.ticker__frescura {
+  position: absolute; inset-block: 0; inset-inline-end: 0;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding-inline: 18px;
+  font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--tinta-mate);
+  background: inherit;
+  border-inline-start: 1px solid var(--linea);
+  white-space: nowrap; pointer-events: none;
+}
+/* En pantalla estrecha la cinta no da para las dos cosas: manda el dato. */
+@media (max-width: 720px) { .ticker__frescura { display: none; } }
+
+/* El punto no porta informacion por si solo: el rotulo dice el tiempo con
+   palabras, y el punto solo lo acompaña. */
+.ticker__frescura__punto {
+  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+  background: var(--tinta-mate);
+}
+.ticker__frescura[data-vivo="true"] .ticker__frescura__punto { background: var(--alcista); }
+
+/* ── «Este acaba de cambiar», sin movimiento ──
+   Un filete bajo el item que cambió, puesto un ciclo entero. Existe para que la
+   información sobreviva cuando el sistema pide movimiento reducido y no hay
+   deslizamiento que ver, pero se pone SIEMPRE: quien mira de reojo una cinta que
+   se traslada puede perderse 200 ms, y el filete sigue ahí cuando vuelve la
+   vista. No cambia la caja —va en `box-shadow`, no en `border`—, de modo que la
+   cinta mide lo mismo con él y sin él. */
+.ticker__item[data-cambiado="true"] {
+  box-shadow: inset 0 -2px 0 0 var(--linea-fuerte);
+}
+.portada[data-banner="true"] .ticker__item[data-cambiado="true"] {
+  box-shadow: inset 0 -2px 0 0 var(--linea-portada);
+}
 
 @keyframes cinta-avance {
   from { transform: translate3d(0, 0, 0); }
