@@ -3794,15 +3794,16 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }
 
   /* ── Micro-interacciones ──
-     El hundimiento pierde el recorrido pero la fila conserva su oscurecido: el
-     acuse de la pulsación no depende de moverse. El halo de foco se queda
-     quieto —es señal, no animación—. El giro se detiene y deja el glifo fijo,
-     que sigue diciendo «ocupado» junto a la opacidad. */
-  .boton:not(:disabled):active,
-  .tarjeta-compania:active, .noticia:active,
-  a.senal:active, button.senal:active,
-  .research:active, .destacada:active,
-  .pastilla:active, .pulse-indice:active { transform: none !important; }
+     El HUNDIMIENTO SE CONSERVA, y es deliberado. Se neutralizó primero, y visto
+     junto no se sostenía: los realces de `:hover` elevan 2 px aquí desde antes
+     de esta reforma, y no hay razón para permitir dos al pasar y prohibir uno al
+     pulsar. `prefers-reduced-motion` existe para recorridos que marean, y un
+     píxel no lo es; la incoherencia con el `:hover` molesta más que el gesto.
+
+     El halo de foco se queda quieto —es señal, no animación—. El giro sí se
+     detiene: es un bucle infinito, que es exactamente lo que esta preferencia
+     pide retirar, y el glifo parado sigue diciendo «ocupado» junto a la
+     opacidad. */
   .boton[data-ocupado="true"]::before { animation: none !important; }
 }
 
