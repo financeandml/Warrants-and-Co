@@ -328,8 +328,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
    acotado a inicio y no suelto: la fase 3 convierte una vista cada vez, y un
    selector global dejaría las otras seis a medio camino. Cuando le toque a cada
    una, este selector se ensancha. */
+/* ── El acento en las vistas ya convertidas (fase 3) ──
+   La lista ES el registro de hasta dónde ha llegado la fase. Cuando entre la
+   última vista, estos selectores se colapsan en las reglas base y este bloque
+   desaparece. Falta `noticias`, que está viva y sin convertir. */
 #seccion-inicio .etiqueta-superior,
-#seccion-cartera .etiqueta-superior { color: var(--acento); }
+#seccion-cartera .etiqueta-superior,
+#seccion-companias .etiqueta-superior,
+#seccion-catalizadores .etiqueta-superior,
+#seccion-repositorio .etiqueta-superior { color: var(--acento); }
 
 /* ───────────────────────────────── Cabecera ───────────────────────────── */
 
@@ -593,11 +600,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ─────────────────────────────── Filtros ──────────────────────────────── */
 
+/* Conserva `--superficie-alt` y NO pasa al idioma de tarjeta del resto. No es
+   un descuido: es una superficie de CONTROLES, y los controles que lleva dentro
+   —`input`, `select`— tienen su propio fondo `--superficie`. Sobre un panel
+   blanco desaparecerían contra él. El tinte es lo que los hace visibles.
+
+   La esquina se acota a repositorio porque este panel lo comparte NOTICIAS, que
+   todavía no está convertida: redondearlo global la dejaría a medias. */
 .panel-filtros {
   border: 1px solid var(--linea); border-radius: var(--radio);
   padding: 22px 24px; margin-bottom: 24px;
   background: var(--superficie-alt);
 }
+#seccion-repositorio .panel-filtros { border-radius: var(--radio-l); }
 
 .panel-filtros__principal { display: flex; flex-wrap: wrap; gap: 10px; }
 .panel-filtros__principal input[type="search"] {
@@ -638,8 +653,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: all var(--transicion);
 }
 .pastilla:hover { border-color: var(--tinta); color: var(--tinta); }
+/* Filtro ACTIVO: cromo. Blanco sobre `--acento` da 6,29:1 en claro y la tinta
+   inversa sobre él 6,55:1 en oscuro; los dos pasan AA. */
 .pastilla[aria-pressed="true"] {
-  background: var(--superficie-inversa); color: var(--tinta-inversa); border-color: var(--superficie-inversa);
+  background: var(--acento); color: var(--tinta-inversa); border-color: var(--acento);
 }
 
 .barra-resultados {
@@ -650,9 +667,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ──────────────────────────────── Tablas ──────────────────────────────── */
 
+/* Vive en repositorio y en cartera, las dos ya convertidas: cambia global. */
 .tabla-envoltorio {
   overflow-x: auto;
-  border: 1px solid var(--linea); border-radius: var(--radio);
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
   background: var(--superficie);
 }
 
@@ -782,7 +800,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .controles-grafico { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
-.conmutador { display: inline-flex; border: 1px solid var(--linea-fuerte); border-radius: var(--radio); overflow: hidden; }
+/* Catalizadores y cartera, las dos convertidas. */
+.conmutador { display: inline-flex; border: 1px solid var(--linea-fuerte); border-radius: var(--radio-m); overflow: hidden; }
 .conmutador button {
   padding: 7px 13px; font-size: 0.76rem; font-weight: 500;
   border: none; border-inline-start: 1px solid var(--linea-fuerte);
@@ -791,7 +810,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .conmutador button:first-child { border-inline-start: none; }
 .conmutador button:hover { background: var(--superficie-alt); color: var(--tinta); }
-.conmutador button.activo { background: var(--superficie-inversa); color: var(--tinta-inversa); }
+.conmutador button.activo { background: var(--acento); color: var(--tinta-inversa); }
 
 .selector-indice select {
   padding: 7px 11px; font-size: 0.79rem;
@@ -2654,13 +2673,15 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 
 .tarjeta-compania {
   display: flex; flex-direction: column; gap: 14px;
-  padding: 24px;
+  padding: var(--espacio-4);
   background: var(--superficie);
-  border: 1px solid var(--linea); border-radius: var(--radio);
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
   cursor: pointer;
   transition: border-color var(--transicion), transform var(--transicion);
 }
-.tarjeta-compania:hover { border-color: var(--tinta-mate); transform: translateY(-2px); }
+/* La tarjeta ENTERA es pulsable, así que su realce es cromo y le toca el acento.
+   Lo que lleva dentro —el ticker, las cifras— conserva su lectura. */
+.tarjeta-compania:hover { border-color: var(--acento); transform: translateY(-2px); }
 .tarjeta-compania:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 .tarjeta-compania__cabecera { display: flex; align-items: flex-start; gap: 12px; }
@@ -2787,7 +2808,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .evento {
   display: grid; grid-template-columns: 92px 1fr;
   background: var(--superficie);
-  border: 1px solid var(--linea); border-radius: var(--radio);
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
   overflow: hidden;
 }
 .evento__prioridad {
@@ -2847,9 +2868,11 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   display: grid; gap: 16px;
   grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
 }
+/* El trazo discontinuo se queda: dice «aquí falta un dato», que es información
+   y no decoración. Solo cambia la esquina. */
 .carencia {
-  padding: 20px; background: var(--superficie);
-  border: 1px dashed var(--linea-fuerte); border-radius: var(--radio);
+  padding: var(--espacio-4); background: var(--superficie);
+  border: 1px dashed var(--linea-fuerte); border-radius: var(--radio-l);
 }
 .carencia__tipo {
   font-size: 0.62rem; font-weight: 600; letter-spacing: 0.11em;

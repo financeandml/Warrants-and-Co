@@ -141,6 +141,14 @@ const VISTAS_CONVERTIDAS = {
      ruta pasar para encontrarla y la consulta es global, así que da igual dónde
      esté; ésta acota por sección, y no da igual. */
   cartera: ['.indicador__valor', '.estadistico__nota'],
+
+  /* Descubiertas mirando la vista pintada, no deducidas del CSS: se barrieron
+     los nodos hoja con un dígito dentro de cada sección. Es la misma cautela que
+     evitó meter `.aportacion__valor` en cartera. `.estado-datos` queda fuera a
+     propósito: lleva un recuento, no una lectura. */
+  companias: ['.dato__valor'],
+  catalizadores: ['.par-dato__valor', '.grupo-agenda__fecha'],
+  repositorio: ['.num'],
 };
 
 const TODOS = [...new Set([...SUPERFICIES, ...TEXTO, ...CON_SIGNIFICADO,
