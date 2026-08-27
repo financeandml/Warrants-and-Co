@@ -1,6 +1,9 @@
 /* ============================================================================
    Warrants & Co. — Sistema visual corporativo
-   Paleta estrictamente acromatica: blanco, negro y escala de grises.
+   Base acromatica, tres tonos DIRECCIONALES —alza, baja, aviso— y un indigo
+   que es identidad y significado a la vez: en cromo es la marca, en un dato es
+   informacion neutra, sin direccion. Son el mismo hecho y salen de un solo
+   token, `--acento`; el azul semantico que vivia aparte se ha fusionado con el.
    La identidad de serie en los graficos se transmite por trazo y etiqueta,
    nunca por color, de modo que el conjunto es legible tambien en impresion.
    ========================================================================= */
@@ -25,7 +28,9 @@
   /* Tinta */
   --tinta:             #101011;
   --tinta-secundaria:  #4a4a4c;
-  --tinta-mate:        #76767a;
+  /* 4,54:1 sobre `--superficie-hundida`. El #76767a anterior daba 4,04 ahi:
+     pasaba sobre blanco y fallaba sobre las superficies donde de verdad vive. */
+  --tinta-mate:        #6e6e71;
   --tinta-inversa:     #ffffff;
 
   /* Trazos */
@@ -50,16 +55,38 @@
   --verde-sesion:      #1a9d4b;
   --verde-halo:        rgba(26, 157, 75, 0.22);
 
-  /* Paleta semántica: el color codifica lectura de mercado, nunca decora.
-     Cada tono va siempre acompañado de glifo o rótulo. */
+  /* Tonos DIRECCIONALES. Solo estos tres apuntan a algún lado, y cada uno va
+     siempre acompañado de glifo o rótulo: el color nunca carga solo. */
   --alcista:           #0f7a3d;
   --alcista-tenue:     rgba(15, 122, 61, 0.09);
   --bajista:           #b02a26;
   --bajista-tenue:     rgba(176, 42, 38, 0.09);
-  --aviso:             #9a6b08;
-  --aviso-tenue:       rgba(154, 107, 8, 0.10);
-  --informativo:       #2b5f9e;
-  --informativo-tenue: rgba(43, 95, 158, 0.09);
+  /* 4,54:1 sobre `--superficie-hundida`; el #9a6b08 anterior daba 4,18. */
+  --aviso:             #926608;
+  --aviso-tenue:       rgba(146, 102, 8, 0.10);
+  /* ── El índigo ──
+     UN SOLO TOKEN para dos usos que son el mismo hecho: en cromo —foco, botón
+     primario, marcador de sección— es identidad; en un dato es información
+     NEUTRA, sin dirección. Aquí vivía un azul semántico a 23° del acento en
+     tema oscuro: cada uno era legible por separado y juntos no se separaban en
+     una tabla. Fusionarlos hace la confusión imposible por construcción, no por
+     vigilancia.
+
+     Tres valores y no uno porque #6366F1 —el tono de marca— da 4,47:1 sobre
+     blanco y 4,38:1 sobre #0c0c0d: se queda corto por centésimas en los DOS
+     temas. `--acento` es lo que se lee; `--acento-pleno` solo rellena. */
+  --acento:            #4F46E5;
+  --acento-pleno:      #6366F1;
+  --acento-tenue:      rgba(99, 102, 241, 0.09);
+  /* El foco es un hecho, y por la regla 9 tiene una sola fuente: se decía
+     `var(--tinta)` en diez reglas sueltas, que es diez sitios donde olvidarlo. */
+  --foco:              var(--acento);
+
+  /* La plancha sobre la que se apoya el logotipo. No se redefine por tema
+     —de ahi que viva solo aqui—: el sello esta dibujado para fondo negro y
+     sobre superficie clara perderia el contorno. Era `#000` repetido en dos
+     reglas, que es el mismo hecho con dos fuentes. */
+  --fondo-marca:       #000000;
   --pendiente:         var(--tinta-mate);
 
   /* Sombras y realces */
@@ -89,7 +116,18 @@
 
   /* Metrica */
   --ancho-maximo: 1240px;
+  /* `--radio` es el de hoy —esquina apenas insinuada—. La escala de debajo es
+     el vocabulario que consume la fase 3; hasta entonces nadie la invoca. */
   --radio: 2px;
+  --radio-s: 6px;
+  --radio-m: 10px;
+  --radio-l: 14px;
+  --espacio-1: 4px;
+  --espacio-2: 8px;
+  --espacio-3: 14px;
+  --espacio-4: 22px;
+  --espacio-5: 34px;
+  --espacio-6: 54px;
   --transicion: 140ms ease;
 }
 
@@ -130,8 +168,9 @@
   --bajista-tenue:     rgba(226, 99, 95, 0.13);
   --aviso:             #d6a33a;
   --aviso-tenue:       rgba(214, 163, 58, 0.14);
-  --informativo:       #6ba3e0;
-  --informativo-tenue: rgba(107, 163, 224, 0.13);
+  --acento:            #818CF8;
+  --acento-pleno:      #6366F1;
+  --acento-tenue:      rgba(99, 102, 241, 0.16);
 
   --sombra-emergente:  rgba(0, 0, 0, 0.6);
   --sombra-aviso:      rgba(0, 0, 0, 0.7);
@@ -177,8 +216,9 @@
     --bajista-tenue:     rgba(226, 99, 95, 0.13);
     --aviso:             #d6a33a;
     --aviso-tenue:       rgba(214, 163, 58, 0.14);
-    --informativo:       #6ba3e0;
-    --informativo-tenue: rgba(107, 163, 224, 0.13);
+    --acento:            #818CF8;
+    --acento-pleno:      #6366F1;
+    --acento-tenue:      rgba(99, 102, 241, 0.16);
 
     --sombra-emergente:  rgba(0, 0, 0, 0.6);
     --sombra-aviso:      rgba(0, 0, 0, 0.7);
@@ -248,7 +288,7 @@ table { border-collapse: collapse; width: 100%; }
 button, input, select, textarea { font: inherit; color: inherit; }
 
 :focus-visible {
-  outline: 2px solid var(--tinta);
+  outline: 2px solid var(--foco);
   outline-offset: 2px;
 }
 
@@ -296,7 +336,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .marca__sello {
   width: 40px; height: 40px; flex-shrink: 0;
   display: block; object-fit: contain;
-  background: #000;
+  background: var(--fondo-marca);
 }
 
 .marca__texto { display: flex; flex-direction: column; line-height: 1.15; }
@@ -359,7 +399,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .boton:disabled { opacity: 0.45; cursor: not-allowed; }
 
-.boton--solido   { background: var(--superficie-inversa); color: var(--tinta-inversa); border-color: var(--superficie-inversa); }
+/* El primario es el sitio de cromo donde el índigo pesa más. Rellena con
+   `--acento` y no con `--acento-pleno`: el rótulo mide 0,83rem y sobre #6366F1
+   daría 4,47:1. Sobre `--acento` da 6,29:1 en claro y 6,55:1 en oscuro. */
+.boton--solido   { background: var(--acento); color: var(--tinta-inversa); border-color: var(--acento); }
 .boton--solido:hover:not(:disabled)  { opacity: 0.86; }
 
 .boton--contorno { border-color: var(--linea-fuerte); color: var(--tinta); }
@@ -1127,7 +1170,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: background var(--transicion), border-color var(--transicion);
 }
 .propuesta__boton:hover { background: var(--superficie-hundida); border-color: var(--tinta-mate); }
-.propuesta__boton:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.propuesta__boton:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 /* El campo con una propuesta sin confirmar se señala también en el propio
    control, porque es donde está mirando quien va a decidir. */
@@ -1247,7 +1290,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .pie__identidad { display: flex; align-items: center; gap: 16px; }
 .pie__logo {
   width: 60px; height: 60px; flex-shrink: 0;
-  border: 1px solid var(--linea); background: #000;
+  border: 1px solid var(--linea); background: var(--fondo-marca);
   object-fit: contain;
 }
 .pie__marca { font-weight: 600; font-size: 0.95rem; }
@@ -1729,7 +1772,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
     linear-gradient(var(--linea-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--linea-hairline) 1px, transparent 1px);
   background-size: 68px 68px;
+  /* paleta-ok: en una mascara el negro es opacidad, no color. */
   mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
+  /* paleta-ok: idem. */
   -webkit-mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
   opacity: 0.85;
 }
@@ -1998,7 +2043,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .lectura--alza  { color: var(--alcista); }
 .lectura--baja  { color: var(--bajista); }
 .lectura--aviso { color: var(--aviso); }
-.lectura--info  { color: var(--informativo); }
+.lectura--info  { color: var(--acento); }
 .lectura--nula  { color: var(--tinta-mate); font-weight: 400; }
 .lectura--alza::before { content: "▲ "; font-size: 0.7em; }
 .lectura--baja::before { content: "▼ "; font-size: 0.7em; }
@@ -2478,6 +2523,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   .portada__trama, .acciones-noticias,
   .celda-acciones, .pie__social { display: none !important; }
   body { font-size: 11pt; }
+  /* paleta-ok: la impresion no tiene tema; el gris es del papel, no de la paleta. */
   .tarjeta, .tabla-envoltorio { break-inside: avoid; border-color: #999; }
   .seccion[hidden] { display: none !important; }
 }
@@ -2555,7 +2601,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   border: 1px solid var(--linea-fuerte); border-radius: var(--radio);
 }
 .barra-busqueda input[type="search"]:focus-visible,
-.barra-busqueda select:focus-visible { outline: 2px solid var(--tinta); outline-offset: 1px; }
+.barra-busqueda select:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
 
 /* Conmutador Upcoming / Past */
 .conmutador { display: inline-flex; border: 1px solid var(--linea-fuerte); border-radius: var(--radio); overflow: hidden; }
@@ -2587,7 +2633,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   transition: border-color var(--transicion), transform var(--transicion);
 }
 .tarjeta-compania:hover { border-color: var(--tinta-mate); transform: translateY(-2px); }
-.tarjeta-compania:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.tarjeta-compania:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 .tarjeta-compania__cabecera { display: flex; align-items: flex-start; gap: 12px; }
 .tarjeta-compania__ticker {
@@ -3012,7 +3058,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   transition: color var(--transicion);
 }
 .pilar__enlace:hover { color: var(--tinta-secundaria); }
-.pilar__enlace:focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
+.pilar__enlace:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
 
 /* La flecha avanza un paso al pasar el cursor. Nada más. */
 .pilar__flecha {
@@ -3263,7 +3309,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   transition: color var(--transicion);
 }
 .enlace-avance:hover { color: var(--tinta-secundaria); }
-.enlace-avance:focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
+.enlace-avance:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
 .enlace-avance__flecha { display: inline-block; transition: transform var(--transicion); }
 .enlace-avance:hover .enlace-avance__flecha { transform: translateX(4px); }
 
@@ -3293,7 +3339,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .pulse-indice:first-child { border-inline-start: none; padding-inline-start: 0; }
 .pulse-indice:hover { background: var(--superficie-alt); }
 .pulse-indice[aria-selected="true"] { box-shadow: inset 0 2px 0 0 var(--tinta); }
-.pulse-indice:focus-visible { outline: 2px solid var(--tinta); outline-offset: -2px; }
+.pulse-indice:focus-visible { outline: 2px solid var(--foco); outline-offset: -2px; }
 
 .pulse-indice__nombre {
   font-size: 0.7rem; font-weight: 600; letter-spacing: 0.13em;
@@ -3406,7 +3452,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .research-selector__pestana:first-child { padding-inline-start: 0; }
 .research-selector__pestana:hover { color: var(--tinta); }
 .research-selector__pestana[aria-selected="true"] { color: var(--tinta); border-block-end-color: var(--tinta); }
-.research-selector__pestana:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.research-selector__pestana:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 .research-panel {
   display: grid; gap: 40px;
@@ -3700,7 +3746,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   transition: color var(--transicion);
 }
 .pie__navegacion a:hover { color: var(--tinta); }
-.pie__navegacion a:focus-visible { outline: 2px solid var(--tinta); outline-offset: 3px; }
+.pie__navegacion a:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
 
 @media (max-width: 560px) {
   .pie__navegacion { gap: 12px 22px; }
@@ -3727,7 +3773,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .conmutador-idioma button[aria-pressed="true"] {
   background: var(--superficie-inversa); color: var(--tinta-inversa);
 }
-.conmutador-idioma button:focus-visible { outline: 2px solid var(--tinta); outline-offset: 2px; }
+.conmutador-idioma button:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 /* Mientras el idioma activo no sea aquel en el que está escrito el documento,
    el cuerpo permanece oculto: es preferible un instante en blanco a un

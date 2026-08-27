@@ -46,11 +46,20 @@ lado— y por la regla 9 salen de la misma fuente: `--acento`. **No existe `--in
 aparte**; un segundo azul sería justo el color que esta cláusula impide. La dirección la
 llevan los otros tres, y solo ellos.
 
-**3 · Distancia mínima entre tonos con significado: 45°.** En los dos temas, y
-`tests/paleta.js` lo afirma. El criterio existe porque el caso que lo motivó estaba a 23°:
-el índigo (234°) y el antiguo `--informativo` (211°) en tema oscuro. Cada uno por separado
-era legible; en una tabla de rentabilidades a 13 px no se separaban. Es la regla 9 en
-color: dos cosas parecidas que nadie afirmaba que fueran distintas.
+**3 · Distancia mínima entre tonos con significado: ΔE2000 25.** En los dos temas, y
+`tests/paleta.js` lo afirma. Se escribió primero en grados de tono —45°— y estaba mal: el
+grado está comprimido en la zona azul y estirado en la roja, de modo que denunciaba a rojo
+contra ámbar, que distan 39° y se distinguen de sobra, y habría absuelto casos peores.
+ΔE2000 mide diferencia **percibida**, que es lo que la cláusula siempre quiso decir. El
+umbral cae en un hueco ancho y está puesto entre sus dos anclajes, no ajustado a ninguno:
+
+| | ΔE2000 |
+|---|---|
+| El caso que motivó la cláusula: el índigo contra el azul semántico retirado | 10,8 · 14,7 |
+| **Umbral** | **25** |
+| El par legítimo más ajustado: baja contra aviso | 29,4 · 34,8 |
+
+Es la regla 9 en color: dos cosas parecidas que nadie afirmaba que fueran distintas.
 
 **4 · El contraste se mide, no se mira.** Todo token que componga texto llega a **4.5:1**
 sobre su superficie en ambos temas, y `tests/paleta.js` lo afirma. Hay cifra que explica
@@ -64,7 +73,9 @@ inspección visual y falla la auditoría—. Por eso el índigo vive en tres val
 | `--acento-pleno` | `#6366F1` | `#6366F1` | rellenos y tipografía grande, **nunca texto corrido** |
 | `--acento-tenue` | `rgba(99,102,241,.09)` | `rgba(99,102,241,.13)` | fondos de tarjeta y halos |
 
-`#6366F1` es el tono de la marca; `--acento` es lo que se lee.
+`#6366F1` es el tono de la marca; `--acento` es lo que se lee. De él derivan `--foco`
+—que se decía `var(--tinta)` en diez reglas sueltas, diez sitios donde olvidarlo— y nada
+más: `tests/paleta.js` afirma que el foco es *exactamente* el acento y no una copia suya.
 
 **5 · Movimiento.** Con `prefers-reduced-motion: reduce`: sin parallax, sin cursor
 personalizado, sin barrido en la carga, y todo en su **estado final, nunca oculto**. El
