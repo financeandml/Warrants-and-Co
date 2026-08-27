@@ -2125,7 +2125,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: border-color var(--transicion), transform var(--transicion);
 }
 a.senal, button.senal { cursor: pointer; }
-a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: translateY(-2px); }
+a.senal:hover, button.senal:hover { border-color: var(--acento); transform: translateY(-2px); }
 .senal--pendiente { background: var(--superficie-alt); }
 
 .senal__cabecera { display: flex; align-items: center; gap: 9px; }
@@ -2224,7 +2224,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   background: var(--superficie); cursor: pointer;
   transition: border-color var(--transicion), transform var(--transicion);
 }
-.research:hover { border-color: var(--tinta); transform: translateY(-2px); }
+.research:hover { border-color: var(--acento); transform: translateY(-2px); }
 
 .research__superior { display: flex; align-items: center; gap: 10px; }
 .research__precio { margin-inline-start: auto; font-size: 0.88rem; font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -2409,7 +2409,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   background: var(--superficie); cursor: pointer;
   transition: border-color var(--transicion), transform var(--transicion);
 }
-.destacada:hover { border-color: var(--tinta); transform: translateY(-2px); }
+.destacada:hover { border-color: var(--acento); transform: translateY(-2px); }
 .destacada__superior { display: flex; align-items: center; gap: 8px; }
 .destacada__ticker { font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.04em; }
 .destacada__score { margin-inline-start: auto; }
@@ -3792,6 +3792,18 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
   .research-panel { transition: none !important; }
   .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }
+
+  /* ── Micro-interacciones ──
+     El hundimiento pierde el recorrido pero la fila conserva su oscurecido: el
+     acuse de la pulsación no depende de moverse. El halo de foco se queda
+     quieto —es señal, no animación—. El giro se detiene y deja el glifo fijo,
+     que sigue diciendo «ocupado» junto a la opacidad. */
+  .boton:not(:disabled):active,
+  .tarjeta-compania:active, .noticia:active,
+  a.senal:active, button.senal:active,
+  .research:active, .destacada:active,
+  .pastilla:active, .pulse-indice:active { transform: none !important; }
+  .boton[data-ocupado="true"]::before { animation: none !important; }
 }
 
 /* Accesos del pie: una fila sobria, sin repetir la navegación principal. */
@@ -3841,3 +3853,54 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
    destello de texto en el idioma equivocado. La marca la pone el resolutor
    síncrono y la retira la primera pasada de traducción. */
 :root[data-i18n-pendiente] body { visibility: hidden; }
+
+/* ═══════════════════════════ Micro-interacciones ═══════════════════════════
+   Ninguna de las de aquí porta información: todas refuerzan un estado que el
+   elemento ya declara quieto. Si se retiran todas, no se pierde ni un dato.
+   ═════════════════════════════════════════════════════════════════════════ */
+
+/* ── El hundimiento al pulsar ──
+   No había NI UNO en toda la plataforma: treinta y cuatro elementos con
+   `cursor: pointer` y ninguno acusaba la pulsación. La pulsación ya está
+   ocurriendo y el elemento ya se anuncia pulsable por su cursor y por su rol;
+   esto solo la confirma bajo el dedo. */
+.boton:not(:disabled):active,
+.tarjeta-compania:active,
+.noticia:active,
+a.senal:active, button.senal:active,
+.research:active,
+.destacada:active,
+.pastilla:active,
+.pulse-indice:active {
+  transform: translateY(1px);
+  transition-duration: 90ms;
+}
+
+/* Una fila de tabla no se desplaza: `transform` sobre `tr` se comporta de forma
+   desigual entre motores y puede desencajar las celdas. La fila acusa la
+   pulsación oscureciendo, que es lo mismo dicho sin mover nada. */
+.tabla-informes tbody tr:active { background: var(--acento-tenue); filter: brightness(0.97); }
+
+/* ── El halo de foco ──
+   El contorno sigue siendo el portador; el halo solo lo hace visible sobre
+   fondos con ruido —una tarjeta sobre la fotografía del hero, una fila sobre
+   una tabla rayada—. Va en `box-shadow` y no en un segundo `outline` porque el
+   contorno del navegador no admite dos. */
+:focus-visible { box-shadow: 0 0 0 4px var(--acento-tenue); }
+
+/* ── El giro que el comentario prometía ──
+   `[data-ocupado="true"]` decía «Giro del control mientras se sincroniza» y solo
+   bajaba la opacidad: un comentario describiendo algo que no existía. La
+   opacidad y el `pointer-events: none` ya dicen que el control no admite
+   pulsación; lo que NO distinguen es «ocupado» de «deshabilitado», y eso es lo
+   que el giro añade —sobre un estado que el programa ya conoce—. */
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.boton[data-ocupado="true"]::before {
+  content: "";
+  width: 11px; height: 11px; flex: none;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: girar 700ms linear infinite;
+}
