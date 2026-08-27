@@ -55,6 +55,15 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    cabecera con un año dentro ya lo cumple, y la espera vuelve con la vista a
    medio pintar. Se espera por los nodos concretos que se van a medir. */
 const PORdesRUTA = {
+  /* Faltan aquí `.pulse-indice__valor` y `.pulse-indice__var`, que son dos
+     columnas de cifras sin vigilar. NO es un olvido: viven en el pulso, que es
+     un área CERRADA —`PINTORES_INICIO` en `app.js` no lo incluye y su HTML
+     conserva `hidden`—, de modo que no se pintan nunca. Añadirlas hoy dejaría la
+     batería en «SIN DATO» permanente, que es la versión suave del rojo
+     permanente: se deja de mirar igual.
+
+     Quien reabra el área: añádelas a esta lista en la misma tanda. Lo mismo vale
+     para el radar, el flujo y la señal. */
   inicio: ['.portada__cifras__valor', '.cinta-metricas__valor', '.cinta-metricas__nota', '.dato__valor'],
   cartera: ['.indicador__valor', '.aportacion__valor', '.estadistico__nota'],
   catalizadores: ['.par-dato__valor', '.grupo-agenda__fecha'],

@@ -33,7 +33,14 @@
        media plataforma con una paleta y a la otra media con otra, según hubiera
        pulsado el conmutador o no. Esta batería afirma que las dos coinciden.
 
-   4 · SIN LITERALES. Un color se declara como token o no se declara. Las dos
+   4 · SEGREGACIÓN (cláusula 2). El acento no entra en una celda que porte una
+       cifra. Va en el borde y el fondo de la tarjeta —cromo—, nunca en el color
+       del número. La excepción está en la propia cláusula y es una sola:
+       `.lectura--info` SÍ calcula el acento, porque bajo la fusión el índigo
+       significa «información neutra, sin dirección» y eso es un dato legítimo.
+       Se comprueba en las vistas ya convertidas, y la lista crece con cada una.
+
+   5 · SIN LITERALES. Un color se declara como token o no se declara. Las dos
        excepciones legítimas —una máscara, donde el negro es opacidad, y
        `@media print`, que no tiene tema— se marcan en su línea con
        `paleta-ok:` y su motivo.
@@ -62,6 +69,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { exigirPlaywright } = require('./dependencias');
+const { crearTercerEstado } = require('./tercer-estado');
 
 const { chromium } = exigirPlaywright('paleta: contraste, distancia y fuente única');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
@@ -106,6 +114,24 @@ const TEXTO = ['--tinta', '--tinta-secundaria', '--tinta-mate',
    los tres direccionales igual que ellos entre sí. */
 const CON_SIGNIFICADO = ['--acento', '--alcista', '--bajista', '--aviso'];
 const RETIRADOS = ['--informativo', '--informativo-tenue'];
+
+/* Las vistas ya convertidas a bento y, para cada una, QUÉ celdas con cifra tiene.
+   Crece una entrada por tanda de la fase 3.
+
+   La lista es por vista y no una sola global, y se espera a que estén TODAS, no
+   a que esté alguna. Costó un fallo no cazado averiguarlo: con «alguna», la
+   cronología —que pinta pronto— cumplía la condición y la medida se tomaba antes
+   de que llegara el panel de research, de modo que un acento metido en
+   `.dato__valor` pasaba entero. Es la misma trampa que ya avisa `CLAUDE.md`:
+   esperar por que la sección «tenga algo» no es esperar por lo que se va a
+   medir.
+
+   No vale tampoco barrer todo nodo con un dígito: un rótulo con un año dentro lo
+   cumple y no es una lectura. */
+const VISTAS_CONVERTIDAS = {
+  inicio: ['.portada__cifras__valor', '.cinta-metricas__valor',
+           '.dato__valor', '.cronologia__dia'],
+};
 
 const TODOS = [...new Set([...SUPERFICIES, ...TEXTO, ...CON_SIGNIFICADO,
                            ...RETIRADOS, '--acento-pleno', '--foco', '--fondo-marca'])];
@@ -177,6 +203,12 @@ const enHex = ([r, g, b]) =>
 
 const R = [];
 const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
+
+/* El apoyo 4 mira vistas pintadas, y una vista sin filas no se aprueba ni se
+   suspende: se declara. El volcado de esta batería es diferido, así que la
+   pendiente se acumula en `R` como todo lo demás. */
+const E = crearTercerEstado(B);
+const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
 
 /* ── Apoyo 1-3 · lo que el navegador calcula de verdad ─────────────────── */
 
@@ -283,6 +315,50 @@ const aTerna = (css) => {
       c['--foco'] && c['--acento'] && enHex(c['--foco']) === enHex(c['--acento']),
       `--foco ${c['--foco'] && enHex(c['--foco'])} · --acento ${c['--acento'] && enHex(c['--acento'])}`);
 
+    // ── 4 · el acento no se cuela en una celda con cifra ──
+    for (const [vista, CELDAS_CON_CIFRA] of Object.entries(VISTAS_CONVERTIDAS)) {
+      await p.goto(`${B}/#/${vista}`, { waitUntil: 'domcontentloaded' });
+      if (e.marca) {
+        await p.evaluate((v) => document.documentElement.setAttribute('data-tema', v), e.marca);
+      }
+      /* Por condición y sobre lo que solo existe ya pintado. Si no llega nada
+         que medir no se aprueba: se declara pendiente. */
+      /* La vista va como argumento y NO se deduce del hash: `'#/inicio'.slice(3)`
+         da «nicio», y el selector resultante no casa con nada. Falla en silencio
+         —cero nodos parece «no hay datos»—, que es la peor forma de fallar. */
+      const hay = await E.esperarDatos(p, ({ sels, v }) =>
+        sels.every((sel) => document.querySelectorAll(`#seccion-${v} ${sel}`).length > 0),
+        { sels: CELDAS_CON_CIFRA, v: vista },
+        { nombre: `[${e.n}] ${vista} · hay celdas con cifra que revisar`,
+          motivo: 'la vista no pintó todas sus columnas de cifras: la base no trae filas',
+          plazo: 30000, declarar: pendiente });
+
+      if (!hay) continue;
+
+      const intrusos = await p.evaluate(({ sels, acentos, v }) => {
+        const raiz = document.getElementById(`seccion-${v}`);
+        if (!raiz) return null;
+        const fuera = [];
+        for (const sel of sels) {
+          for (const el of raiz.querySelectorAll(sel)) {
+            // La excepción de la cláusula: el índigo SÍ significa «info neutra».
+            if (el.classList.contains('lectura--info')) continue;
+            if (acentos.includes(getComputedStyle(el).color)) {
+              fuera.push(`${sel} «${el.className}»`);
+            }
+          }
+        }
+        return fuera;
+      }, { sels: CELDAS_CON_CIFRA,
+           acentos: [c['--acento'], c['--acento-pleno']].filter(Boolean)
+             .map(([r, g, b]) => `rgb(${r}, ${g}, ${b})`),
+           v: vista });
+
+      t(`[${e.n}] ${vista} · el acento no entra en ninguna celda con cifra`,
+        intrusos !== null && intrusos.length === 0,
+        intrusos === null ? `no existe #seccion-${vista}` : intrusos.slice(0, 3).join(' · '));
+    }
+
     await ctx.close();
   }
 
@@ -346,8 +422,17 @@ const aTerna = (css) => {
 
   await navegador.close();
 
-  for (const r of R) console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
-  const mal = R.filter((r) => !r.ok).length;
-  console.log(mal ? `\n  ${mal} fallo(s) de ${R.length}\n` : `\n  ${R.length}/${R.length} correctas\n`);
-  process.exit(mal ? 1 : 0);
+  for (const r of R) {
+    if (r.sinDato) { console.log(`    SIN DATO ${r.n}  → ${r.d}\n             base: ${B}`); continue; }
+    console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
+  }
+  const mal = R.filter((r) => !r.sinDato && !r.ok).length;
+  const sin = R.filter((r) => r.sinDato).length;
+  const medidas = R.length - sin;
+  if (mal) console.log(`\n  ${mal} fallo(s) de ${medidas}${sin ? ` · ${sin} sin dato` : ''}\n`);
+  else if (sin) {
+    console.log(`\n  ${medidas} correctas · ${sin} SIN DATO: no se pudieron comprobar.`);
+    console.log(`  La base de ${B} no trae las filas que necesitan. No es un aprobado.\n`);
+  } else console.log(`\n  ${medidas}/${medidas} correctas\n`);
+  process.exit(mal ? 1 : (sin ? 2 : 0));
 })();

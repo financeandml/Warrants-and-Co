@@ -324,6 +324,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-size: 0.68rem; font-weight: 600; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--tinta-mate);
 }
+/* El marcador de sección es cromo —cláusula 2—, así que lleva el acento. Va
+   acotado a inicio y no suelto: la fase 3 convierte una vista cada vez, y un
+   selector global dejaría las otras seis a medio camino. Cuando le toque a cada
+   una, este selector se ensancha. */
+#seccion-inicio .etiqueta-superior { color: var(--acento); }
 
 /* ───────────────────────────────── Cabecera ───────────────────────────── */
 
@@ -3031,18 +3036,22 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
    marca la línea, que es lo que hace que parezca una publicación y no un panel. */
 .pilares {
   display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: var(--espacio-3);
   margin-block-start: clamp(64px, 9vh, 104px);
-  border-block-start: 1px solid var(--linea-fuerte);
 }
 
+/* Eran tres columnas separadas por filetes; ahora son tres cajas. El filete
+   superior y las medianeras desaparecen: en bento el hueco separa, y sumarle
+   una línea sería decir dos veces lo mismo. */
 .pilar {
   display: flex; flex-direction: column; align-items: flex-start;
-  padding-block-start: clamp(30px, 4vh, 44px);
-  padding-inline: clamp(26px, 3vw, 44px) clamp(20px, 3vw, 40px);
-  border-inline-start: 1px solid var(--linea);
+  padding: var(--espacio-4);
+  background: var(--superficie-alt);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-l);
+  transition: border-color var(--transicion);
 }
-/* La primera columna se alinea con el enunciado: sin filete ni sangría. */
-.pilar:first-child { border-inline-start: none; padding-inline-start: 0; }
+.pilar:hover { border-color: var(--linea-fuerte); }
 
 .pilar__titulo {
   font-size: 0.78rem; font-weight: 600;
@@ -3065,7 +3074,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   color: var(--tinta); text-decoration: none;
   transition: color var(--transicion);
 }
-.pilar__enlace:hover { color: var(--tinta-secundaria); }
+.pilar__enlace:hover { color: var(--acento); }
 .pilar__enlace:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
 
 /* La flecha avanza un paso al pasar el cursor. Nada más. */
@@ -3105,29 +3114,15 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .cifras__enlace:hover .cifras__flecha { transform: translateX(4px); }
 
 @media (max-width: 900px) {
-  /* En tableta, dos columnas. La tercera pasa debajo ocupando la fila entera:
-     si se quedara en una sola columna, su filete superior cubriría media
-     anchura y parecería un trazo cortado. */
+  /* En tableta, dos columnas y la tercera abajo entera. Con cajas ya no hay que
+     desmontarle el filete: una caja ancha se lee como caja igual. */
   .pilares { grid-template-columns: repeat(2, 1fr); }
-  .pilar:nth-child(3) {
-    grid-column: 1 / -1;
-    border-inline-start: none; padding-inline-start: 0;
-    margin-block-start: clamp(30px, 4vh, 44px);
-    border-block-start: 1px solid var(--linea);
-  }
+  .pilar:nth-child(3) { grid-column: 1 / -1; }
 }
 
 @media (max-width: 620px) {
-  /* En móvil se apilan y el filete pasa a ser horizontal. */
+  /* En móvil se apilan. El hueco de la rejilla ya las separa. */
   .pilares { grid-template-columns: 1fr; }
-  .pilar {
-    border-inline-start: none; padding-inline: 0;
-    padding-block-start: 26px;
-  }
-  .pilar + .pilar {
-    margin-block-start: 26px;
-    border-block-start: 1px solid var(--linea);
-  }
   .pilar__enlace { padding-block-start: 20px; }
 }
 
@@ -3328,25 +3323,27 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .pulse { display: grid; gap: 30px; }
 
 .pulse__indices {
-  display: grid; gap: 0;
+  display: grid; gap: var(--espacio-2);
   grid-template-columns: repeat(3, 1fr);
-  border-block-start: 1px solid var(--linea-fuerte);
 }
 
 .pulse-indice {
   display: flex; flex-direction: column; align-items: flex-start; gap: 5px;
-  padding: 22px 24px 22px 0;
-  font-family: inherit; text-align: start;
-  background: none; border: none; cursor: pointer;
-  border-inline-start: 1px solid var(--linea);
-  padding-inline-start: 24px;
-  /* La pestaña activa se marca con un filete superior, no con relleno. */
-  box-shadow: inset 0 2px 0 0 transparent;
-  transition: box-shadow var(--transicion), background var(--transicion);
+  padding: var(--espacio-3) var(--espacio-4);
+  font-family: inherit; text-align: start; cursor: pointer;
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-m);
+  transition: border-color var(--transicion), background var(--transicion);
 }
-.pulse-indice:first-child { border-inline-start: none; padding-inline-start: 0; }
-.pulse-indice:hover { background: var(--superficie-alt); }
-.pulse-indice[aria-selected="true"] { box-shadow: inset 0 2px 0 0 var(--tinta); }
+.pulse-indice:hover { background: var(--superficie-alt); border-color: var(--linea-fuerte); }
+/* Cláusula 2 al pie de la letra: la casilla ELEGIDA se marca en el borde y el
+   fondo, que son cromo. La cifra de dentro —`.pulse-indice__valor` y su
+   variación— no se toca: ésa lleva su propia lectura y el acento no entra ahí. */
+.pulse-indice[aria-selected="true"] {
+  border-color: var(--acento);
+  background: var(--acento-tenue);
+}
 .pulse-indice:focus-visible { outline: 2px solid var(--foco); outline-offset: -2px; }
 
 .pulse-indice__nombre {
@@ -3399,7 +3396,12 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
 }
 
-.radar-familia { border-block-start: 1px solid var(--linea-fuerte); padding-block-start: 20px; }
+.radar-familia {
+  background: var(--superficie-alt);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-l);
+  padding: var(--espacio-4);
+}
 .radar-familia__cabecera {
   display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
   margin-block-end: 18px;
@@ -3459,7 +3461,12 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 }
 .research-selector__pestana:first-child { padding-inline-start: 0; }
 .research-selector__pestana:hover { color: var(--tinta); }
-.research-selector__pestana[aria-selected="true"] { color: var(--tinta); border-block-end-color: var(--tinta); }
+/* Cláusula 2: la pestaña ELEGIDA es cromo —un estado de la interfaz, no un
+   dato—, así que la marca el acento. Lo que la pestaña abre debajo lleva cifras,
+   y ésas conservan su propia lectura. */
+.research-selector__pestana[aria-selected="true"] {
+  color: var(--acento); border-block-end-color: var(--acento);
+}
 .research-selector__pestana:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 .research-panel {
@@ -3490,10 +3497,16 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   font-size: 0.86rem; font-style: italic; color: var(--tinta-mate);
 }
 
+/* La columna de cifras era un filete con sangría; ahora es una caja. El acento
+   NO entra aquí dentro: `.dato__valor` es una cifra y lleva su propia lectura.
+   La caja se distingue por superficie y borde, que es lo que la cláusula 2
+   permite. */
 .research-panel__datos {
-  display: grid; gap: 22px;
-  padding-inline-start: 34px;
-  border-inline-start: 1px solid var(--linea);
+  display: grid; gap: var(--espacio-4);
+  padding: var(--espacio-4);
+  background: var(--superficie-alt);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-l);
 }
 .dato__secundario { font-size: 0.74rem; font-variant-numeric: tabular-nums; }
 
@@ -3683,11 +3696,9 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 
 @media (max-width: 900px) {
   .research-panel { grid-template-columns: 1fr; gap: 30px; }
-  .research-panel__datos {
-    padding-inline-start: 0; padding-block-start: 26px;
-    border-inline-start: none; border-block-start: 1px solid var(--linea);
-    grid-template-columns: repeat(2, 1fr);
-  }
+  /* Sigue siendo caja al apilarse: solo cambia a dos columnas dentro. Ya no hay
+     que desmontarle el filete lateral porque ya no lo tiene. */
+  .research-panel__datos { grid-template-columns: repeat(2, 1fr); }
   .signal-home { grid-template-columns: 1fr; gap: 34px; }
   .flujo-vacio { grid-template-columns: 1fr; gap: 30px; }
   .flujo-vacio__contrato {
@@ -3704,13 +3715,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 
   /* Las pestañas del pulso se apilan: en una fila de tres no cabe la cifra. */
   .pulse__indices { grid-template-columns: 1fr; }
-  .pulse-indice {
-    border-inline-start: none; padding-inline-start: 0;
-    padding-block: 16px;
-    border-block-end: 1px solid var(--linea);
-    box-shadow: none;
-  }
-  .pulse-indice[aria-selected="true"] { box-shadow: inset 3px 0 0 0 var(--tinta); padding-inline-start: 14px; }
+  .pulse-indice { padding: var(--espacio-3); }
   .grafico-linea { padding: 14px 12px 8px; }
 
   .radar-home { grid-template-columns: 1fr; gap: 26px; }

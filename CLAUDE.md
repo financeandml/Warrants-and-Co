@@ -106,6 +106,13 @@ hace **siempre** con `waitForFunction` sobre un nodo que solo existe cuando los 
 están pintados —`#cuadro-mando`, `#home-research-cuerpo`, un `tbody` con filas—.
 
 - **Nunca con `waitForTimeout`.** Mide la carga de la máquina, no el programa.
+
+  **Deuda conocida, no olvido.** `tests/repintado.js` tiene ocho —líneas 107, 112, 185,
+  221, 369, 561, 563 y 578—, todas esperas de asentamiento tras conmutar de idioma, que
+  es justo lo que esta regla prohíbe. Siguen ahí porque sustituirlas por condiciones
+  puede destapar carreras que hoy tapan, y eso es un encargo propio, no un retoque de
+  paso. Queda escrito para que nadie las tome por precedente: **no se añaden más**, ni
+  ahí ni en ninguna batería, y quien toque una de esas ocho la convierte en condición.
 - **Nunca comprobando que la sección «tenga contenido».** Su armazón —títulos, cabeceras
   de tabla— ya la hace no vacía antes de que llegue ningún dato, así que una sección sin
   pintar pasa por «no menciona el ticker» y por «está en el idioma nuevo».
