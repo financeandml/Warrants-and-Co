@@ -1109,6 +1109,32 @@ siete días e invalidación por versión: sustituir el fichero basta para que se
 
 ## Diseño
 
+> ### ⏳ Identidad visual en reforma — decidido el 27-08-2026, aún no implementado
+>
+> Todo lo que describe esta sección **sigue siendo lo que hay en pantalla**. El contrato
+> que la sustituirá ya está escrito y vive en `CLAUDE.md` §Diseño; este cuerpo se corrige
+> fase a fase, según cada una aterrice, y esta nota se retira cuando no quede nada por
+> corregir.
+>
+> Lo decidido, en tres renglones:
+>
+> - **De cuatro tonos semánticos a tres direccionales más un índigo.** El azul
+>   `--informativo` y el acento de marca eran el mismo hecho —la plataforma hablando sin
+>   apuntar a ningún lado— y pasan a salir de un solo token, `--acento`. Un acento
+>   decorativo *junto a* un semántico azul habría dejado dos azules a 23° de tono en tema
+>   oscuro: indistinguibles en una tabla de rentabilidades, y cada uno legible por
+>   separado. Fusionarlos hace la confusión imposible por construcción, no por vigilancia.
+> - **Playfair Display sale**; entra una geométrica para titulares. Inter se queda para el
+>   texto, y `--mono` sigue sin fichero propio: un tercer `.woff2` se paga en la ruta
+>   crítica del primer pintado.
+> - **Bento, micro-interacciones y más aire**, vista a vista. Y, *solo si el presupuesto
+>   del banner lo admite*, parallax en el hero: el árbol entero y sus 28 px de holgura
+>   valen más que un efecto de scroll, de modo que en el choque el efecto es lo que cae.
+>
+> Lo que **no** cambia, y por eso no aparece arriba: la redundancia glifo/signo, los tres
+> estados del dato, el doble tema, `prefers-reduced-motion`, las cifras tabulares y el
+> gráfico acromático. La reforma es de identidad, no de lectura.
+
 **Tema claro y oscuro.** El conmutador de la cabecera alterna entre ambos y la elección
 persiste entre sesiones. Sin elección explícita se sigue la preferencia del sistema
 operativo; volver a pulsar el tema activo devuelve el control al sistema. El tema se
@@ -1144,7 +1170,7 @@ movimiento reducido se detiene sin perder su función: queda en su primer fotogr
 los valores legibles y cortados por el ancho de la ventana. Esa línea de datos partida
 por el borde es la que invita a bajar, y no depende del movimiento para hacerlo.
 
-Paleta estrictamente acromática: blanco, negro y escala de grises. En el gráfico, al no
+**El gráfico es acromático, y lo seguirá siendo tras la reforma.** Al no
 disponer de color, la identidad de cada serie recae en el trazo (continuo para la
 cartera, discontinuo para el índice), la leyenda y las etiquetas de extremo; el signo de
 las variaciones se transmite por glifo (▲ ▼) y peso tipográfico, nunca por color. El

@@ -30,10 +30,53 @@ es bilingüe ES/EN por diccionario. Comentarios que expliquen el porqué, no el 
 
 ## Diseño
 
-Paleta acromática más cuatro tonos semánticos en `estilos.css`. El color nunca es
-el único portador de información: toda variación lleva glifo y signo. Usa variables
-CSS existentes, nunca un color literal. Tema claro y oscuro. Respeta
-`prefers-reduced-motion`.
+Base acromática, **tres tonos direccionales** —alza, baja, aviso— y un **índigo** que es
+identidad y significado a la vez. Tema claro y oscuro. Usa variables CSS existentes, nunca
+un color literal. Respeta `prefers-reduced-motion`.
+
+**1 · El color nunca carga solo.** Ningún dato depende solo del color: toda variación
+lleva glifo (▲ ▼) y signo explícito; toda señal, rótulo. La plataforma se lee impresa en
+blanco y negro y con cualquier daltonismo. Esta cláusula no ha cambiado y no se negocia.
+
+**2 · El índigo significa siempre lo mismo.** No es un acento decorativo con un semántico
+azul al lado: es **un solo token**. En cromo —cabecera, navegación, foco, botón primario,
+marcador de sección, carga— es identidad; en un dato es **información neutra, sin
+dirección**. Las dos cosas son el mismo hecho —la plataforma hablando sin apuntar a ningún
+lado— y por la regla 9 salen de la misma fuente: `--acento`. **No existe `--informativo`
+aparte**; un segundo azul sería justo el color que esta cláusula impide. La dirección la
+llevan los otros tres, y solo ellos.
+
+**3 · Distancia mínima entre tonos con significado: 45°.** En los dos temas, y
+`tests/paleta.js` lo afirma. El criterio existe porque el caso que lo motivó estaba a 23°:
+el índigo (234°) y el antiguo `--informativo` (211°) en tema oscuro. Cada uno por separado
+era legible; en una tabla de rentabilidades a 13 px no se separaban. Es la regla 9 en
+color: dos cosas parecidas que nadie afirmaba que fueran distintas.
+
+**4 · El contraste se mide, no se mira.** Todo token que componga texto llega a **4.5:1**
+sobre su superficie en ambos temas, y `tests/paleta.js` lo afirma. Hay cifra que explica
+por qué no basta el ojo: **#6366F1 da 4.47:1 sobre blanco y 4.38:1 sobre `#0c0c0d`** —se
+queda corto por centésimas en los dos, que es el peor sitio donde quedarse: pasa la
+inspección visual y falla la auditoría—. Por eso el índigo vive en tres valores:
+
+| token | claro | oscuro | para qué |
+|---|---|---|---|
+| `--acento` | `#4F46E5` · 6,29:1 | `#818CF8` · 6,55:1 | texto, iconos, foco |
+| `--acento-pleno` | `#6366F1` | `#6366F1` | rellenos y tipografía grande, **nunca texto corrido** |
+| `--acento-tenue` | `rgba(99,102,241,.09)` | `rgba(99,102,241,.13)` | fondos de tarjeta y halos |
+
+`#6366F1` es el tono de la marca; `--acento` es lo que se lee.
+
+**5 · Movimiento.** Con `prefers-reduced-motion: reduce`: sin parallax, sin cursor
+personalizado, sin barrido en la carga, y todo en su **estado final, nunca oculto**. El
+cursor personalizado existe solo bajo `@media (pointer: fine)` —en táctil no hay puntero
+que sustituir— y no sustituye nunca al foco de teclado.
+
+**Tipografía.** Geométrica para titulares, Inter para texto, **monospace del sistema**
+para el detalle técnico. `--mono` no lleva fichero propio: un tercer `.woff2` se paga en
+la ruta crítica del primer pintado del hero, y la pila del sistema ya es buena en las tres
+plataformas. La cadena de respaldo de `--sans` no es decorativa: resuelve ▲ y ▼ —U+25B2 y
+U+25BC—, fuera del subconjunto `latin`. Quien la recorte se queda sin las flechas, y
+entonces el color pasa a cargar solo, contra la cláusula 1.
 
 ## Cómo quiero que trabajes
 
