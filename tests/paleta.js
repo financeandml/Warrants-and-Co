@@ -149,6 +149,14 @@ const VISTAS_CONVERTIDAS = {
   companias: ['.dato__valor'],
   catalizadores: ['.par-dato__valor', '.grupo-agenda__fecha'],
   repositorio: ['.num'],
+
+  /* `noticias` está convertida y NO figura aquí, y no es un olvido: es la única
+     vista sin celdas de lectura. Se comprobó sobre la vista pintada —12 tarjetas,
+     23 nodos con dígito— y todos los dígitos viven o dentro de la prosa de un
+     titular («vende acciones por 1,58 millones») o en la paginación, que es cromo
+     y por tanto SÍ debe ir en índigo. Poner `noticias: []` daría un verde que no
+     ha costado nada: la condición «están todas» se cumple sola con la lista
+     vacía. Si algún día noticias publica una columna de cifras, entra aquí. */
 };
 
 const TODOS = [...new Set([...SUPERFICIES, ...TEXTO, ...CON_SIGNIFICADO,

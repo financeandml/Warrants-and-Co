@@ -329,14 +329,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
    selector global dejaría las otras seis a medio camino. Cuando le toque a cada
    una, este selector se ensancha. */
 /* ── El acento en las vistas ya convertidas (fase 3) ──
-   La lista ES el registro de hasta dónde ha llegado la fase. Cuando entre la
-   última vista, estos selectores se colapsan en las reglas base y este bloque
-   desaparece. Falta `noticias`, que está viva y sin convertir. */
+   La lista ES el registro de hasta dónde ha llegado la fase, y ya están TODAS las
+   vistas vivas. Faltan mercado, opciones y radar, que son áreas cerradas: se
+   convierten cuando se reabran, y entonces esta lista se colapsa en la regla base
+   y este bloque desaparece.
+
+   Sigue acotado a propósito. Global daría el rótulo índigo a tres vistas que por
+   dentro siguen en el estilo anterior; así cada vista sigue siendo un corte. */
 #seccion-inicio .etiqueta-superior,
 #seccion-cartera .etiqueta-superior,
 #seccion-companias .etiqueta-superior,
 #seccion-catalizadores .etiqueta-superior,
-#seccion-repositorio .etiqueta-superior { color: var(--acento); }
+#seccion-repositorio .etiqueta-superior,
+#seccion-noticias .etiqueta-superior { color: var(--acento); }
 
 /* ───────────────────────────────── Cabecera ───────────────────────────── */
 
@@ -605,14 +610,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
    —`input`, `select`— tienen su propio fondo `--superficie`. Sobre un panel
    blanco desaparecerían contra él. El tinte es lo que los hace visibles.
 
-   La esquina se acota a repositorio porque este panel lo comparte NOTICIAS, que
-   todavía no está convertida: redondearlo global la dejaría a medias. */
+   Aquí hubo una regla que acotaba la esquina a repositorio, porque este panel lo
+   comparten repositorio y noticias y la segunda iba sin convertir. Convertida
+   noticias, la acotación sobraba y se ha retirado: un selector acotado sin el
+   motivo delante es una trampa para quien lo toque después. */
 .panel-filtros {
-  border: 1px solid var(--linea); border-radius: var(--radio);
-  padding: 22px 24px; margin-bottom: 24px;
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
+  padding: var(--espacio-4); margin-bottom: var(--espacio-4);
   background: var(--superficie-alt);
 }
-#seccion-repositorio .panel-filtros { border-radius: var(--radio-l); }
 
 .panel-filtros__principal { display: flex; flex-wrap: wrap; gap: 10px; }
 .panel-filtros__principal input[type="search"] {
@@ -719,13 +725,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .paginacion { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 28px; }
 .paginacion button {
   min-width: 38px; padding: 8px 12px; font-size: 0.83rem;
-  border: 1px solid var(--linea-fuerte); border-radius: var(--radio);
+  border: 1px solid var(--linea-fuerte); border-radius: var(--radio-m);
   background: var(--superficie); cursor: pointer;
   transition: all var(--transicion);
 }
 .paginacion button:hover:not(:disabled) { border-color: var(--tinta); }
+/* La página en la que estás es un estado de la interfaz, no un dato. */
 .paginacion button[aria-current="true"] {
-  background: var(--superficie-inversa); color: var(--tinta-inversa); border-color: var(--superficie-inversa);
+  background: var(--acento); color: var(--tinta-inversa); border-color: var(--acento);
 }
 .paginacion button:disabled { opacity: 0.4; cursor: not-allowed; }
 
@@ -1838,16 +1845,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ══════════════════════════ Noticias ════════════════════════════════════ */
 
-.rejilla-noticias { display: grid; gap: 22px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+.rejilla-noticias { display: grid; gap: var(--espacio-4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
 
+/* `.noticia` vive también en radar, que sigue cerrada y sin convertir. Se cambia
+   global de todos modos: acotar algo que no se pinta es ceremonia, y una tarjeta
+   con la esquina nueva dentro de una vista vieja no desentona. */
 .noticia {
   display: flex; flex-direction: column; gap: 11px;
-  padding: 24px 24px 22px; width: 100%;
-  border: 1px solid var(--linea); border-radius: var(--radio);
+  padding: var(--espacio-4); width: 100%;
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
   background: var(--superficie); text-align: start; cursor: pointer;
   transition: border-color var(--transicion), transform var(--transicion);
 }
-.noticia:hover { border-color: var(--tinta); transform: translateY(-2px); }
+/* La tarjeta entera es pulsable: su realce es cromo. */
+.noticia:hover { border-color: var(--acento); transform: translateY(-2px); }
 
 .noticia__superior {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
