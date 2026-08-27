@@ -27,9 +27,8 @@
 
 import { localeFormato, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
-import { MARGEN_REVELADO } from './inicio.js';
+import { MARGEN_REVELADO, sinMovimiento } from './movimiento.js';
 
-const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * Publica la altura real de la cabecera en `--alto-cabecera`.
@@ -395,29 +394,12 @@ function fijar(nodo, nombre, valor) {
   if (nodo.style.getPropertyValue(nombre) !== valor) nodo.style.setProperty(nombre, valor);
 }
 
-/** Revela los bloques marcados a medida que entran en el area visible. */
-export function activarApariciones() {
-  const elementos = document.querySelectorAll('.aparicion');
-  if (!elementos.length) return;
+/* Aquí vivía el gemelo de `revelar()`. Se ha retirado: los cinco nodos que
+   observaba llevaban además `.revelado`, de modo que había dos observadores
+   sobre los mismos elementos con dos umbrales distintos, y mandaba el más laxo
+   —justo el que NO respetaba `MARGEN_REVELADO`, la cifra que este fichero usa
+   para el presupuesto del hero—. El mecanismo único está en `movimiento.js`. */
 
-  if (sinMovimiento() || !('IntersectionObserver' in window)) {
-    for (const el of elementos) el.dataset.visible = 'true';
-    return;
-  }
-
-  const observador = new IntersectionObserver(
-    (entradas) => {
-      for (const entrada of entradas) {
-        if (entrada.isIntersecting) {
-          entrada.target.dataset.visible = 'true';
-          observador.unobserve(entrada.target);
-        }
-      }
-    },
-    { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
-  );
-  for (const el of elementos) observador.observe(el);
-}
 
 /**
  * Cinta de cotizaciones. El listado se duplica y la animacion recorre justo la

@@ -7,7 +7,7 @@
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
-import { activarApariciones, pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
+import { pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import { pintarAnillo } from './anillo.js';
 import {
@@ -3544,7 +3544,6 @@ async function iniciar() {
   actualizarIndicadorSesion();
   seguirAlturaCabecera();
   seguirEncuadreBanner();
-  activarApariciones();
 
   await cargarMarca();
   await cargarVocabularios();

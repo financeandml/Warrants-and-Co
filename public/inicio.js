@@ -20,6 +20,7 @@
 import {
   $, elemento, formatearNumero, formatearFecha, localeFormato, relativo,
   porcentaje, formatearPorcentaje } from './formato.js';
+import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
 import { t, tLista } from './i18n.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
@@ -27,7 +28,7 @@ import { t, tLista } from './i18n.js';
 const noDisponible = () => t('general.noDisponible');
 const sinDatos = () => t('general.sinDatos');
 
-const sinMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 
 const cifra = (v, dec = 2) => (Number.isFinite(v) ? formatearNumero(v, dec) : noDisponible());
 /* Cambio con signo en unidades del propio dato. Un cambio en por ciento no pasa
@@ -57,58 +58,8 @@ const claseDireccion = (v) =>
   !Number.isFinite(v) ? 'lectura--nula' : v > 0 ? 'lectura--alza' : v < 0 ? 'lectura--baja' : 'lectura--plana';
 
 // ═══════════════════════════ revelado al entrar ═══════════════════════════
-
-/**
- * Observador único para toda la Home. Cada elemento marcado declara qué hacer
- * al entrar en pantalla, y deja de observarse en cuanto lo ha hecho: no hay
- * ninguna animación que se repita al subir y bajar.
- */
-/*
- * Franja muerta inferior del observador. Lo que asome dentro de estos píxeles
- * finales NO llega a revelarse: aparecería una caja vacía, que es peor que el
- * hueco.
- *
- * Se exporta porque no es solo asunto de este observador. El hero lo necesita
- * para decidir si sus dos líneas caben —`seguirEncuadreBanner()`, en
- * `portada.js`—: son la misma cifra, «cuánto tiene que asomar el manifiesto para
- * que se vea», y escribirla en los dos sitios era dejar que un día dejaran de
- * decir lo mismo sin que se notara en pantalla.
- */
-export const MARGEN_REVELADO = 60;
-
-const acciones = new WeakMap();
-let observador = null;
-
-function observarEntrada(elemento, alEntrar) {
-  if (sinMovimiento() || !('IntersectionObserver' in window)) {
-    elemento.dataset.visible = 'true';
-    alEntrar?.(elemento);
-    return;
-  }
-  if (!observador) {
-    observador = new IntersectionObserver(
-      (entradas) => {
-        for (const e of entradas) {
-          if (!e.isIntersecting) continue;
-          e.target.dataset.visible = 'true';
-          acciones.get(e.target)?.(e.target);
-          observador.unobserve(e.target);
-        }
-      },
-      { threshold: 0.18, rootMargin: `0px 0px -${MARGEN_REVELADO}px 0px` }
-    );
-  }
-  if (alEntrar) acciones.set(elemento, alEntrar);
-  observador.observe(elemento);
-}
-
-/** Marca un bloque para que entre con el desplazamiento discreto de la casa. */
-function revelar(nodo, retardo = 0) {
-  nodo.classList.add('revelado');
-  if (retardo) nodo.style.setProperty('--retardo', `${retardo}ms`);
-  observarEntrada(nodo);
-  return nodo;
-}
+// El mecanismo vive en `movimiento.js`. Vivía aquí, y una copia gemela en
+// `portada.js`; allí está escrito qué salía mal de tenerlo dos veces.
 
 /** Cuenta hasta un valor real. Nunca se invoca sobre un dato ausente. */
 function contarHasta(nodo, destino, { decimales = 0, duracion = 1100, sufijo = '' } = {}) {
@@ -410,10 +361,15 @@ export function animarManifiesto() {
   for (const linea of document.querySelectorAll('.manifiesto .linea-revelada')) {
     observarEntrada(linea);
   }
-  const entrada = $('.manifiesto__entrada');
-  if (entrada) revelar(entrada, 380);
+  /* Estos cinco nodos llevaban `.aparicion` en el documento ADEMÁS de esto, y
+     el escalonado que se aplicaba era el del documento: 0, 140, 210, 280 y
+     350 ms. Se conservan tal cual —medidos en pantalla antes de unificar—, para
+     que el cambio de mecanismo no cambie de paso lo que ya estaba revisado.
+     Los 380, 0, 0, 90 y 180 que se pasaban aquí no llegaban a aplicarse. */
   document.querySelectorAll('.manifiesto .etiqueta-superior').forEach((e) => revelar(e));
-  document.querySelectorAll('.pilar').forEach((p, i) => revelar(p, i * 90));
+  const entrada = $('.manifiesto__entrada');
+  if (entrada) revelar(entrada, 140);
+  document.querySelectorAll('.pilar').forEach((p, i) => revelar(p, 210 + i * 70));
 }
 
 // ═══════════════════════════ 3 · FILA DE CIFRAS ═══════════════════════════

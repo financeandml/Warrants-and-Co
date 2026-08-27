@@ -145,7 +145,11 @@ const medir = (p) => p.evaluate(async () => {
     asomaEtiqueta: etiqueta ? svh - yEtiqueta : null,
     // La franja muerta del observador que revela el manifiesto. Se importa de
     // donde vive el observador: es la misma cifra con la que el hero decide.
-    margenRevelado: (await import('/inicio.js')).MARGEN_REVELADO,
+    /* La cifra sale del módulo del mecanismo, que es donde vive el observador
+       que la usa. Vivía en `inicio.js`; al unificar el revelado se mudó, y esta
+       línea lo cazó —«franja muerta undefined» en las seis ventanas—, que es
+       exactamente para lo que estaba puesta. */
+    margenRevelado: (await import('/movimiento.js')).MARGEN_REVELADO,
     // Las dos líneas: si están puestas, si se ven, y si envuelven.
     lineas: po.dataset.lineas,
     lineasVisibles: getComputedStyle(bloque).visibility === 'visible',

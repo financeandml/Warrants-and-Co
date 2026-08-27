@@ -1835,14 +1835,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .portada__interior { position: relative; z-index: 1; }
 
-/* Entrada escalonada de los elementos de la portada. */
-.aparicion {
-  opacity: 0; transform: translateY(14px);
-  transition: opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
-              transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
-}
-.aparicion[data-visible="true"] { opacity: 1; transform: none; }
-
 /* ══════════════════════════ Noticias ════════════════════════════════════ */
 
 .rejilla-noticias { display: grid; gap: var(--espacio-4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
@@ -2592,8 +2584,9 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  /* Sin animacion, los elementos deben quedar en su estado final, nunca ocultos. */
-  .aparicion { opacity: 1 !important; transform: none !important; }
+  /* Sin animacion, los elementos deben quedar en su estado final, nunca ocultos.
+     La regla de `.revelado` —el mecanismo unico— vive en el otro bloque de
+     movimiento reducido, mas abajo, y ademas retira la transicion. */
   .cinta-cotizaciones__pista { animation: none !important; }
   /* La cinta del hero se detiene, pero sigue leyendose: queda en su primer
      fotograma, con los valores visibles y cortados por el ancho de la ventana.
@@ -3136,8 +3129,10 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 }
 .pilar__enlace:hover .pilar__flecha { transform: translateX(4px); }
 
-/* Entrada escalonada, apoyada en el mecanismo que ya usa la portada. */
-.manifiesto .aparicion { transition-delay: calc(var(--i, 0) * 70ms); }
+/* Aquí vivía el escalonado por `--i`. Era la mitad perdedora de un empate: con
+   dos clases vencía a `.revelado` en `transition-delay` y dejaba sin efecto los
+   retardos que calculaba el JS. El escalonado se declara ahora en la llamada a
+   `revelar()`, y en un solo sitio. */
 
 /* ── Fila de cifras ──
    Va entre los pilares y Market Pulse, que ya trae su propio filete superior:
