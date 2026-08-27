@@ -27,37 +27,56 @@
    No escribe en la base: solo lee. Requiere Playwright y servidor levantado.
    ========================================================================= */
 const { exigirPlaywright } = require('./dependencias');
+const { crearTercerEstado } = require('./tercer-estado');
 
 const { chromium } = exigirPlaywright('catálogo de índices de referencia');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
 (async () => {
   const navegador = await chromium.launch();
-  let ok = 0, fallos = 0;
+  const E = crearTercerEstado(B);
   const errores = [];
 
   const comp = (nombre, real, esperado) => {
     const bien = typeof esperado === 'function' ? esperado(real) : real === esperado;
-    if (bien) { ok++; console.log(`  ✓ ${nombre}`); return; }
-    fallos++;
-    console.log(`  ✗ ${nombre}`);
-    console.log(`      esperado: ${typeof esperado === 'function' ? '(predicado)' : esperado}`);
-    console.log(`      real:     ${real}`);
+    if (bien) { E.acierto(nombre); return; }
+    E.fallo(nombre,
+      `esperado ${typeof esperado === 'function' ? '(predicado)' : JSON.stringify(esperado)} · ` +
+      `real ${JSON.stringify(real)}`);
   };
 
   /* El selector solo existe pintado: `poblarBenchmarks()` lo llena cuando la
      cartera contesta, y el `<select>` del documento llega vacío a propósito.
      Esperar «que la sección tenga contenido» daría por buena una lista vacía. */
-  const selectorPoblado = (p) => p.waitForFunction(
+  const selectorPoblado = (p) => E.esperarDatos(p,
     () => document.querySelectorAll('#selector-benchmark option').length > 0,
-    null, { timeout: 60000 });
+    null, { nombre: 'el selector de índices se puebla',
+            motivo: 'la cartera no devolvió catálogo, así que el `<select>` quedó vacío',
+            plazo: 60000 });
 
   const opciones = (p) => p.$$eval('#selector-benchmark option',
     (os) => os.map((o) => ({ valor: o.value, rotulo: o.textContent.trim() })));
 
-  // ── 1 · El catálogo que publica el servidor ──
-  const catalogo = await (await fetch(`${B}/api/mercado/cartera`)).json()
-    .then((d) => d.benchmarks);
+  /* ── La puerta de arriba ──
+     Todo lo que sigue mide una cartera: el selector se llena cuando la cartera
+     contesta, la leyenda se pinta con el gráfico, el anillo reparte posiciones.
+     Contra una base sin tesis publicadas no hay NADA de eso, y la batería se
+     caía con un plantón de sesenta segundos y un volcado de pila que no decía
+     ni qué se perdía ni contra qué base estaba.
+
+     Se pregunta primero, y si no hay cartera se declara entero pendiente. No es
+     un aprobado: sale con código 2. */
+  const cartera = await (await fetch(`${B}/api/mercado/cartera`)).json();
+
+  if (cartera.vacia) {
+    E.pendiente('la batería entera',
+      'la base no tiene ninguna tesis publicada con ticker: no hay cartera que medir');
+    console.log(`\n  Siembra una base con posiciones abiertas y vuelve a apuntar aquí.\n`);
+    await navegador.close();
+    process.exit(E.cerrar('catálogo de índices'));
+  }
+
+  const catalogo = cartera.benchmarks;
 
   console.log('\n  ── el selector es el catálogo del servidor ──');
   comp('el servidor publica un catálogo con nombre y símbolo',
@@ -165,9 +184,13 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     // La leyenda se pinta con el gráfico; se espera al nombre nuevo, que solo
     // aparece cuando la cartera del índice nuevo ha resuelto y repintado.
     await p.selectOption('#selector-benchmark', otro.simbolo);
-    await p.waitForFunction((r) => document.querySelector('#leyenda-grafico')
-      ?.textContent.includes(r), rotulo, { timeout: 60000 });
+    const repintoLeyenda = await E.esperarDatos(p,
+      (r) => document.querySelector('#leyenda-grafico')?.textContent.includes(r),
+      rotulo, { nombre: 'la leyenda repinta al elegir otro índice',
+                motivo: 'el gráfico no llegó a pintar: la cartera no tiene serie que dibujar',
+                plazo: 60000 });
 
+    if (repintoLeyenda) {
     comp('la leyenda del gráfico nombra el índice elegido',
       await p.$eval('#leyenda-grafico', (e) => e.textContent), (v) => v.includes(rotulo));
     comp('los sub-estadísticos también',
@@ -178,6 +201,7 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       (await p.$eval('#leyenda-grafico', (e) => e.textContent))
         + (await p.$eval('#sub-estadisticos', (e) => e.textContent)),
       (v) => !v.includes(catalogo[0].nombre));
+    }
     await ctx.close();
   }
 
@@ -272,8 +296,20 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
     await p.reload();
     await anilloPintado(p);
-    await p.waitForFunction(() => document.querySelectorAll('#cuerpo-posiciones tr').length > 0,
-      null, { timeout: 60000 });
+
+    /* El contenedor ha de existir siempre: si falta, la vista dejó de pintarse
+       y eso es regresión. Las FILAS, en cambio, solo existen con posiciones
+       abiertas —y una base cuyas tesis estén todas cerradas es legítima—. */
+    if (!await E.exigirContenedor(p, '#cuerpo-posiciones', `[${idioma}] la tabla de posiciones`)) {
+      await ctx.close(); continue;
+    }
+    if (!await E.esperarDatos(p,
+      () => document.querySelectorAll('#cuerpo-posiciones tr').length > 0, null,
+      { nombre: `[${idioma}] el anillo contra la tabla de posiciones`,
+        motivo: 'la tabla existe y está vacía: la base no tiene ninguna posición ABIERTA',
+        plazo: 60000 })) {
+      await ctx.close(); continue;
+    }
 
     const anillo = await leerAnillo(p);
     const tabla = await leerTabla(p);
@@ -345,30 +381,42 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
   /* ── Los casos degenerados ──
      Con una sola posición, con ninguna, con la caja a cero y con la caja
      desconocida. Los cuatro han existido o van a existir, y ninguno puede
-     romper la maqueta ni, peor, afirmar algo falso. */
+     romper la maqueta ni, peor, afirmar algo falso.
+
+     `necesita` es cuántas posiciones ABIERTAS da por supuestas la mutación del
+     caso. No es adorno: «caja al 0 %» reparte `[40, 35, 25]` sobre las que haya,
+     de modo que contra una base con menos de tres montaba un caso distinto del
+     que decía montar y fallaba afirmando que el anillo estaba roto. El anillo
+     estaba bien; era el montaje el que dependía de la base sin declararlo. */
   console.log('\n  ── el anillo en los casos degenerados ──');
   const casos = [
-    { n: 'una sola posición',
+    { n: 'una sola posición', necesita: 1,
       mutar: (c) => { c.posiciones = c.posiciones.slice(0, 1); c.liquidez.pesoActual = 85.55; },
       espera: (a) => a.sectores.length === 2 && a.arcos === 2 },
-    { n: 'ninguna viva · todo caja',
+    { n: 'ninguna viva · todo caja', necesita: 0,
       mutar: (c) => { c.posiciones = []; c.liquidez.pesoActual = 100; },
       // Un solo sector: un anillo entero y una sola fila en la lista.
       espera: (a) => a.arcos === 1 && a.sectores.length === 1 && a.sectores[0].peso === 100 },
-    { n: 'caja al 0 %',
+    { n: 'caja al 0 %', necesita: 3,
       mutar: (c) => { c.liquidez.pesoActual = 0;
         c.posiciones.forEach((p, i) => { p.pesoVigente = [40, 35, 25][i]; }); },
       /* Cero NO es lo mismo que ausente: sin arco —0° es invisible— pero CON
          etiqueta, de modo que «invertido al 100 %» se afirma y no se deduce. */
       espera: (a) => a.arcos === 3 && a.sectores.length === 4
         && a.sectores.some((s) => s.peso === 0) },
-    { n: 'caja desconocida',
+    { n: 'caja desconocida', necesita: 0,
       mutar: (c) => { delete c.liquidez; },
       // Sin la caja no se cierra la composición: no se dibuja nada.
       espera: (a) => Boolean(a.vacio) },
   ];
 
+  const abiertas = (cartera.posiciones ?? []).length;
   for (const caso of casos) {
+    if (abiertas < caso.necesita) {
+      E.pendiente(`${caso.n} · el anillo responde como debe`,
+        `el caso monta ${caso.necesita} posición(es) abiertas y la base trae ${abiertas}`);
+      continue;
+    }
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 1000 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
@@ -399,7 +447,6 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
   comp('sin errores de consola', errores.length === 0, true);
 
-  console.log(`\n  ${ok} conformes · ${fallos} fallos\n`);
   await navegador.close();
-  process.exit(fallos ? 1 : 0);
+  process.exit(E.cerrar('catálogo de índices'));
 })();

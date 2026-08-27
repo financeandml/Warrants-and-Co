@@ -112,8 +112,15 @@ export const BANNER = {
  *      ninguna ventana; antes se pierde pliegue, que es lo reversible.
  *
  * Crecer cuesta asomo del manifiesto, y por eso es el segundo recurso y no el
- * primero. Medido: a 1920×700 el hero pasa de 460 a 523 px y siguen asomando
- * 108; a 2560×800, de 535 a 596 y asoman 135.
+ * primero. Medido con Jost —la geométrica de los titulares—: a 1920×700 el hero
+ * crece hasta 509 px y siguen asomando 122; a 2560×800, hasta 594 y asoman 137.
+ *
+ * Son una FOTOGRAFÍA, no un contrato: cambian con la cara tipográfica y con el
+ * bloque de marca. Lo que sí es contrato, y lo afirma `tests/portada.js`, es que
+ * el hero CREZCA en esas ventanas y que la holgura no baje nunca de 28.
+ * (El README daba 505 y 588 para estas mismas dos medidas y este comentario
+ * daba 523 y 596: el mismo hecho con dos fuentes, y las dos desactualizadas.
+ * Ahora sale de aquí, y el README remite.)
  *
  * ── Por qué se mide y no se constantiza ──
  * Igual que `--alto-cabecera`: la cinta mide 52 px en escritorio y 48 en móvil,

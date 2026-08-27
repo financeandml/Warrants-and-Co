@@ -174,7 +174,9 @@ sobre un campo gris.
 >
 > 1. **Se mueve el encuadre.** Mientras sobre foto por abajo no cuesta nada.
 > 2. **Crece el hero**, con `--alto-minimo-banner`, lo justo y solo donde el encuadre no
->    llega. Medido: a 1920×700 pasa de 460 a 505 px y a 2560×800 de 535 a 588.
+>    llega. Las medidas concretas viven en un solo sitio, la cabecera de
+>    `seguirEncuadreBanner()` en `public/portada.js`: repetirlas aquí ya las dejó
+>    desacompasadas una vez.
 > 3. **La holgura no se cede nunca.** La cinta no se sienta sobre el árbol en ninguna
 >    ventana.
 >
@@ -1124,7 +1126,8 @@ siete días e invalidación por versión: sustituir el fichero basta para que se
 >   decorativo *junto a* un semántico azul habría dejado dos azules a 23° de tono en tema
 >   oscuro: indistinguibles en una tabla de rentabilidades, y cada uno legible por
 >   separado. Fusionarlos hace la confusión imposible por construcción, no por vigilancia.
-> - **Playfair Display sale**; entra una geométrica para titulares. Inter se queda para el
+> - **Playfair Display ha salido**; entra **Jost** —geométrica, derivada de Futura, y
+>   12 kB más ligera— para titulares. Inter se queda para el
 >   texto, y `--mono` sigue sin fichero propio: un tercer `.woff2` se paga en la ruta
 >   crítica del primer pintado.
 > - **Bento, micro-interacciones y más aire**, vista a vista. Y, *solo si el presupuesto

@@ -96,7 +96,7 @@
   --destello:          rgba(16, 16, 17, 0.04);
 
   /* ── Tipografia ──
-     Inter para el texto y Playfair Display para los titulares y las insignias.
+     Inter para el texto y Jost —geometrica, derivada de Futura— para los titulares.
      Las dos se sirven desde este dominio —`marca/fuentes/`—, y por eso la CSP no
      cambia: sin directiva `font-src`, la peticion cae en `default-src 'self'`,
      que ya las autoriza. Un origen de terceros habria obligado a abrir la
@@ -109,7 +109,12 @@
      antes. Quien recorte esta cadena se queda sin las flechas de variacion, y
      el color pasaria a cargar solo. */
   --sans: Inter, "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
-  --serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Aqui vivia la serif editorial, y su retirada es un cambio de CRITERIO y no
+     solo de cara: hacia DOS trabajos bajo un nombre —la marca del hero y el
+     titular del manifiesto, que son display, y cinco reglas de ticker, que son
+     detalle tecnico—. Se han separado: lo display va a `--geo` y los tickers a
+     `--mono`, donde ademas una columna de simbolos cuadra sola. */
+  --geo: Jost, Futura, "Century Gothic", "Avenir Next", var(--sans);
   /* Se invocaba en seis sitios como `var(--mono, monospace)` y no estaba
      declarada en ninguno: caia siempre en el `monospace` de respaldo. */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -250,9 +255,9 @@
 }
 
 @font-face {
-  font-family: 'Playfair Display';
-  src: url('marca/fuentes/playfair-display.woff2') format('woff2');
-  font-weight: 400 900;
+  font-family: 'Jost';
+  src: url('marca/fuentes/jost.woff2') format('woff2');
+  font-weight: 400 700;
   font-style: normal;
   font-display: swap;
 }
@@ -276,7 +281,10 @@ body {
   text-rendering: optimizeLegibility;
 }
 
-h1, h2, h3, h4 { margin: 0; font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; }
+h1, h2, h3, h4 {
+  margin: 0; font-family: var(--geo); font-weight: 600;
+  line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance;
+}
 h1 { font-size: clamp(1.75rem, 3.4vw, 2.55rem); }
 h2 { font-size: 1.28rem; }
 h3 { font-size: 1.05rem; }
@@ -541,7 +549,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .ficha__ticker {
-  font-family: var(--serif); font-size: 0.82rem; letter-spacing: 0.04em;
+  font-family: var(--mono); font-size: 0.82rem; letter-spacing: 0.04em;
   color: var(--tinta); text-transform: none;
   padding: 2px 8px; border: 1px solid var(--linea-fuerte);
 }
@@ -572,7 +580,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .distintivo--fuerte { border-color: var(--tinta); color: var(--tinta); }
 
 .formato-doc {
-  font-family: var(--serif); font-size: 0.7rem; letter-spacing: 0.08em;
+  font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.08em;
   padding: 2px 7px; border: 1px solid var(--linea-fuerte);
   color: var(--tinta-secundaria); white-space: nowrap;
 }
@@ -1357,7 +1365,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-inline-end: 1px solid var(--linea);
   font-size: 0.82rem;
 }
-.cotiza__ticker { font-family: var(--serif); font-size: 0.85rem; letter-spacing: 0.05em; }
+.cotiza__ticker { font-family: var(--mono); font-size: 0.85rem; letter-spacing: 0.05em; }
 .cotiza__precio { font-variant-numeric: tabular-nums; font-weight: 600; }
 .cotiza__var { font-size: 0.76rem; font-variant-numeric: tabular-nums; }
 .cotiza--cerrada .cotiza__ticker { opacity: 0.55; }
@@ -1622,7 +1630,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* La marca es el único texto de la portada. */
 .portada__marca-principal {
-  font-family: var(--serif);
+  font-family: var(--geo);
   font-size: clamp(2.3rem, 7vw, 5rem);
   /* El apretado baja de -0.035 a -0.025em. No es gusto: en una serif de alto
      contraste los trazos finos son lo primero que se pierde al juntar las letras,
@@ -2091,7 +2099,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 
 .senal__cuerpo { display: flex; flex-direction: column; gap: 4px; margin-top: auto; }
 .senal__ticker {
-  font-family: var(--serif); font-size: 0.86rem; letter-spacing: 0.05em;
+  font-family: var(--mono); font-size: 0.86rem; letter-spacing: 0.05em;
   padding: 2px 8px; border: 1px solid var(--linea-fuerte);
   align-self: flex-start;
 }
@@ -2154,7 +2162,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 }
 .aportacion:last-child { border-bottom: none; }
 .aportacion__ticker {
-  font-family: var(--serif); font-size: 0.84rem; letter-spacing: 0.05em;
+  font-family: var(--mono); font-size: 0.84rem; letter-spacing: 0.05em;
   width: 62px; flex-shrink: 0;
 }
 .aportacion__nombre {
@@ -2361,7 +2369,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 }
 .destacada:hover { border-color: var(--tinta); transform: translateY(-2px); }
 .destacada__superior { display: flex; align-items: center; gap: 8px; }
-.destacada__ticker { font-family: var(--serif); font-size: 0.9rem; letter-spacing: 0.04em; }
+.destacada__ticker { font-family: var(--mono); font-size: 0.9rem; letter-spacing: 0.04em; }
 .destacada__score { margin-inline-start: auto; }
 .destacada__contrato { font-size: 0.86rem; font-weight: 600; font-variant-numeric: tabular-nums; }
 .destacada__motivo { font-size: 0.77rem; color: var(--tinta-secundaria); line-height: 1.5; }
@@ -3003,7 +3011,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .manifiesto__enunciado { max-width: 62ch; }
 
 .manifiesto__titular {
-  font-family: var(--serif);
+  font-family: var(--geo);
   margin-block: 26px 0;
   font-size: clamp(1.85rem, 4.2vw, 3.15rem);
   font-weight: 600; letter-spacing: -0.02em; line-height: 1.14;

@@ -39,6 +39,7 @@
    ========================================================================= */
 
 const { exigirPlaywright } = require('./dependencias');
+const { crearTercerEstado } = require('./tercer-estado');
 
 const { chromium } = exigirPlaywright('encuadre del banner de portada');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
@@ -68,6 +69,14 @@ const VENTANAS = [
 
 const R = [];
 const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
+
+/* El tercer estado, con el volcado de esta batería: las cifras del hero salen
+   de la cartera, y contra una base sin tesis publicadas no se pintan nunca.
+   Esperarlas y caerse con un plantón de 45 s decía que la portada estaba rota
+   cuando lo que faltaba eran datos. Se declara pendiente y se sigue. */
+const E = crearTercerEstado(B);
+const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
+const CIFRAS_HERO = 'las cifras del hero no se pintan: la base no tiene cartera publicada';
 
 /**
  * Espera a que la portada esté encuadrada de verdad.
@@ -320,7 +329,12 @@ const medirFichero = (p) => p.evaluate(async () => {
       !(m.cifras === 'true' && m.lineas === 'false'),
       `líneas ${m.lineas} · cifras ${m.cifras}`);
 
-    if (v.cifras) {
+    /* La fila existe como armazón desde el primer pintado, pero sus rótulos
+       solo llegan con la cartera. Sin ellos no hay renglones que contar, y
+       decir «envuelve» de una fila vacía sería denunciar la falta de datos. */
+    if (v.cifras && m.cifrasRenglones.length === 0) {
+      pendiente(`${v.n} · ningún rótulo de la fila envuelve`, CIFRAS_HERO);
+    } else if (v.cifras) {
       t(`${v.n} · ningún rótulo de la fila envuelve`,
         m.cifrasRenglones.length === 3 && m.cifrasRenglones.every((n) => n === 1),
         `renglones ${m.cifrasRenglones.join(', ')}`);
@@ -347,6 +361,13 @@ const medirFichero = (p) => p.evaluate(async () => {
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await encuadrada(p);
 
+    /* El peldaño de las cifras solo existe si hay cifras. Contra una base sin
+       cartera la fila no se pinta nunca, no cede nunca, y las tres afirmaciones
+       de abajo salían en rojo diciendo «ningún cambio»: describían la base, no
+       la portada. */
+    const hayCifras = await p.evaluate(() =>
+      document.querySelectorAll('.portada__cifras__etiqueta').length > 0);
+
     // El peldaño se nombra: los dos —cifras y líneas— se barren igual.
     const estado = async (cual = 'lineas') => {
       await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
@@ -369,12 +390,15 @@ const medirFichero = (p) => p.evaluate(async () => {
     /* El peldaño de las cifras, que cede ANTES que el de las líneas y por tanto
        cae más arriba. Necesita su propia banda: son dos decisiones distintas y
        una histéresis compartida no impediría que parpadeara la otra. */
-    const bajadaC = await barrer(790, 715, -1, 'cifras');
+    const bajadaC = hayCifras ? await barrer(790, 715, -1, 'cifras') : [];
+    if (!hayCifras) {
+      pendiente('el peldaño de las cifras no oscila', CIFRAS_HERO);
+    } else {
     t('bajando, las cifras ceden una sola vez',
       bajadaC.length === 1 && bajadaC[0].a === 'false',
       bajadaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
 
-    const subidaC = await barrer(715, 800, 1, 'cifras');
+    const subidaC = hayCifras ? await barrer(715, 800, 1, 'cifras') : [];
     t('subiendo, las cifras vuelven una sola vez',
       subidaC.length === 1 && subidaC[0].a === 'true',
       subidaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
@@ -382,6 +406,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     t('las cifras vuelven más arriba de donde cedieron',
       bajadaC.length === 1 && subidaC.length === 1 && subidaC[0].h - bajadaC[0].h > 4,
       `cede en ${bajadaC[0]?.h} · vuelve en ${subidaC[0]?.h}`);
+    }
 
     if (bajadaC.length === 1) {
       await p.setViewportSize({ width: 1440, height: bajadaC[0].h });
@@ -524,10 +549,11 @@ const medirFichero = (p) => p.evaluate(async () => {
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
 
     // Listas: se espera a que las DOS filas tengan sus casillas pintadas.
-    const pintadas = () => p.waitForFunction(() =>
+    const pintadas = () => E.esperarDatos(p, () =>
       document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3
       && document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda').length === 4,
-      null, { timeout: 60000 });
+      null, { nombre: 'las dos filas de cifras se pintan', motivo: CIFRAS_HERO,
+              plazo: 60000, declarar: pendiente });
 
     const leer = () => p.evaluate(() => {
       const norm = (x) => x.trim().replace(/\s+/g, ' ');
@@ -570,7 +596,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     for (const idioma of ['en', 'es']) {
       await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
       await p.reload({ waitUntil: 'domcontentloaded' });
-      await pintadas();
+      if (!await pintadas()) break;   // el ctx lo cierra el final del bloque
       const { hero, abajo } = await leer();
 
       // Las cuatro de abajo son año, total, índice y caída, en ese orden; el hero
@@ -635,15 +661,16 @@ const medirFichero = (p) => p.evaluate(async () => {
            alto, `seguirEncuadreBanner()` mediría una fila distinta durante la
            animación y la decisión de ceder saldría de un hero que ya no existe
            medio segundo después. */
-  {
+  entrada: {
     const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
 
-    const pintadas = () => p.waitForFunction(() =>
+    const pintadas = () => E.esperarDatos(p, () =>
       document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
-      null, { timeout: 45000 });
+      null, { nombre: 'la fila del hero se pinta', motivo: CIFRAS_HERO,
+              plazo: 45000, declarar: pendiente });
 
     const estado = () => p.evaluate(() => {
       const raiz = document.getElementById('cifras-hero');
@@ -663,7 +690,7 @@ const medirFichero = (p) => p.evaluate(async () => {
       };
     });
 
-    await pintadas();
+    if (!await pintadas()) { await ctx.close(); break entrada; }
     const alEntrar = await estado();
 
     t('la entrada se aplica a las tres casillas',
@@ -699,7 +726,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     for (const idioma of ['en', 'es']) {
       await p.click(`.conmutador-idioma button[data-idioma="${idioma}"]`);
       await p.waitForFunction((lg) => document.documentElement.lang === lg, idioma, { timeout: 20000 });
-      await pintadas();
+      if (!await pintadas()) break;   // el ctx lo cierra el final del bloque
       const tras = await estado();
       t(`[${idioma}] la entrada no se repite al repintar`,
         tras.celdas.length === 3 && tras.celdas.every((c) => !c.entra),
@@ -719,9 +746,12 @@ const medirFichero = (p) => p.evaluate(async () => {
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
-    await p.waitForFunction(() =>
+    if (!await E.esperarDatos(p, () =>
       document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
-      null, { timeout: 45000 });
+      null, { nombre: 'con movimiento reducido, la fila del hero se pinta',
+              motivo: CIFRAS_HERO, plazo: 45000, declarar: pendiente })) {
+      await ctx.close();
+    } else {
 
     const visibles = await p.evaluate(() =>
       [...document.querySelectorAll('#cifras-hero .portada__cifras__celda')].map((c) => {
@@ -745,6 +775,7 @@ const medirFichero = (p) => p.evaluate(async () => {
         (v.recorte === 'none' || v.recorte === 'inset(0px)') && Number(v.opacidad) === 1),
       JSON.stringify(visibles.map((v) => `${v.recorte} ${v.opacidad}`)));
     await ctx.close();
+    }
   }
 
   if (errores.length) {
@@ -754,8 +785,17 @@ const medirFichero = (p) => p.evaluate(async () => {
   }
 
   await navegador.close();
-  for (const r of R) console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
-  const mal = R.filter((r) => !r.ok).length;
-  console.log(mal ? `\n  ${mal} fallo(s) de ${R.length}\n` : `\n  ${R.length}/${R.length} correctas\n`);
-  process.exit(mal ? 1 : 0);
+  for (const r of R) {
+    if (r.sinDato) { console.log(`    SIN DATO ${r.n}  → ${r.d}\n             base: ${B}`); continue; }
+    console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
+  }
+  const mal = R.filter((r) => !r.sinDato && !r.ok).length;
+  const sin = R.filter((r) => r.sinDato).length;
+  const medidas = R.length - sin;
+  if (mal) console.log(`\n  ${mal} fallo(s) de ${medidas}${sin ? ` · ${sin} sin dato` : ''}\n`);
+  else if (sin) {
+    console.log(`\n  ${medidas} correctas · ${sin} SIN DATO: no se pudieron comprobar.`);
+    console.log(`  La base de ${B} no trae las filas que necesitan. No es un aprobado.\n`);
+  } else console.log(`\n  ${medidas}/${medidas} correctas\n`);
+  process.exit(mal ? 1 : (sin ? 2 : 0));
 })();

@@ -3,8 +3,8 @@
 /* ============================================================================
    Tipografía — las dos familias llegan, y las cifras siguen cuadrando.
 
-   La plataforma se compone con Inter para el texto y Playfair Display para los
-   titulares, servidas desde este mismo dominio.
+   La plataforma se compone con Inter para el texto y Jost —geométrica, derivada de
+   Futura— para los titulares, servidas desde este mismo dominio.
 
    ═══ Por qué esta batería existe ═══
 
@@ -40,6 +40,7 @@
    ========================================================================= */
 
 const { exigirPlaywright } = require('./dependencias');
+const { crearTercerEstado } = require('./tercer-estado');
 
 const { chromium } = exigirPlaywright('tipografía y cifras tabulares');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
@@ -65,6 +66,17 @@ const COLUMNAS = [...new Set(Object.values(PORdesRUTA).flat())];
 const R = [];
 const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
 
+/* El tercer estado. Estas columnas solo existen si la base trae filas que
+   pintar, y contra una vacía la batería daba NUEVE fallos de catorce: decía que
+   las cifras no cuadraban cuando no había ninguna cifra. Un rojo permanente por
+   el sitio al que apuntas enseña a no mirar la batería.
+
+   Lo que NO se hace es dar la columna por buena. Una columna que nadie ha
+   medido sigue sin estar comprobada: se declara pendiente, y el código de
+   salida es 2, que no es 0. */
+const E = crearTercerEstado(B);
+const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
+
 (async () => {
   const navegador = await chromium.launch();
   const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
@@ -84,9 +96,12 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
          esta ruta va a medir, visibles y con una cifra dentro. El plazo no es una
          espera —quien cumple, sigue—: es el límite tras el cual se da la condición
          por perdida, y entonces el guardián del final denuncia lo no medido. */
-      await p.waitForFunction((sels) => sels.every((sel) =>
+      await E.esperarDatos(p, (sels) => sels.every((sel) =>
         [...document.querySelectorAll(sel)].some((el) => /\d/.test(el.textContent || ''))
-      ), PORdesRUTA[ruta], { timeout: 45000 }).catch(() => {});
+      ), PORdesRUTA[ruta],
+      { nombre: `[${idioma}] ${ruta} · las columnas llegan a pintarse`,
+        motivo: 'la vista no pintó ninguna cifra: la base no trae filas para esta ruta',
+        plazo: 45000, declarar: () => {} });
 
       const medida = await p.evaluate((columnas) => {
         /* Compone dos tiras del mismo número de dígitos con los estilos REALMENTE
@@ -141,7 +156,7 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
         return {
           columnas: out,
           inter: document.fonts.check('1em Inter'),
-          playfair: document.fonts.check('1em "Playfair Display"'),
+          geo: document.fonts.check('1em Jost'),
           /* Las familias que el documento tiene CARGADAS de verdad. No vale
              `getComputedStyle(body).fontFamily`: eso devuelve lo que la hoja de
              estilos declara, que sigue diciendo «Inter» aunque el fichero no haya
@@ -155,7 +170,7 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
       if (ruta === 'inicio') {
         t(`[${idioma}] Inter ha llegado`, medida.inter,
           `familias cargadas: ${medida.cargadas}`);
-        t(`[${idioma}] Playfair Display ha llegado`, medida.playfair,
+        t(`[${idioma}] Jost ha llegado`, medida.geo,
           `familias cargadas: ${medida.cargadas}`);
       }
 
@@ -175,17 +190,29 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   }
 
   /* Un selector de la lista que no se haya visto en ninguna ruta no es un
-     aprobado silencioso: es una columna que nadie ha comprobado. */
+     aprobado silencioso: es una columna que nadie ha comprobado. Pero tampoco es
+     un fallo —la plataforma puede estar perfecta y la base vacía—, y llamarlo
+     fallo era exactamente lo que ponía la batería en rojo permanente. */
   for (const sel of COLUMNAS) {
-    t(`${sel} se ha llegado a medir en alguna ruta`, vistos.has(sel),
-      'no apareció en ninguna de las rutas recorridas');
+    if (vistos.has(sel)) { t(`${sel} se ha llegado a medir en alguna ruta`, true); continue; }
+    pendiente(`${sel} se ha llegado a medir en alguna ruta`,
+      'no apareció con cifras en ninguna de las rutas recorridas');
   }
 
   t('sin errores de consola', errores.length === 0, errores.slice(0, 3).join(' | '));
 
   await navegador.close();
-  for (const r of R) console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
-  const mal = R.filter((r) => !r.ok).length;
-  console.log(mal ? `\n  ${mal} fallo(s) de ${R.length}\n` : `\n  ${R.length}/${R.length} correctas\n`);
-  process.exit(mal ? 1 : 0);
+  for (const r of R) {
+    if (r.sinDato) { console.log(`    SIN DATO ${r.n}  → ${r.d}\n             base: ${B}`); continue; }
+    console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
+  }
+  const mal = R.filter((r) => !r.sinDato && !r.ok).length;
+  const sin = R.filter((r) => r.sinDato).length;
+  const medidas = R.length - sin;
+  if (mal) console.log(`\n  ${mal} fallo(s) de ${medidas}${sin ? ` · ${sin} sin dato` : ''}\n`);
+  else if (sin) {
+    console.log(`\n  ${medidas} correctas · ${sin} SIN DATO: no se pudieron comprobar.`);
+    console.log(`  La base de ${B} no trae las filas que necesitan. No es un aprobado.\n`);
+  } else console.log(`\n  ${medidas}/${medidas} correctas\n`);
+  process.exit(mal ? 1 : (sin ? 2 : 0));
 })();

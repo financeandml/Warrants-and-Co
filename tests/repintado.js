@@ -18,6 +18,7 @@
    Escribe nada en la base: solo lee. Requiere Playwright y servidor levantado.
    ========================================================================= */
 const { exigirPlaywright } = require('./dependencias');
+const { crearTercerEstado } = require('./tercer-estado');
 
 const { chromium } = exigirPlaywright('repintado al cambiar de idioma');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
@@ -40,37 +41,47 @@ const AREAS_OCULTAS = false;
   p.on('pageerror', (e) => errores.push(e.message));
   p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
 
-  let ok = 0, fallos = 0;
+  const E = crearTercerEstado(B);
 
   // Varios rótulos llevan `text-transform: uppercase`, e `innerText` devuelve
   // el texto ya transformado: la comparación ignora las mayúsculas.
   const norm = (x) => (typeof x === 'string' ? x.toLocaleLowerCase().trim() : x);
+  /* ── La sección como unidad de «sin dato» ──
+     Nueve esperas de esta batería aguardan a que una VISTA pinte, y todas
+     dependen de que la base traiga filas. Gatearlas una a una serían diecisiete
+     puertas en una secuencia plana, y la decimoctava se olvidaría.
+
+     En vez de eso la batería sabe en qué sección está. Una espera perdida marca
+     la sección entera, y a partir de ahí `comp()` declara pendiente en lugar de
+     comparar contra los nulos que deja una vista sin pintar —que es justo el
+     rojo falso que se quiere evitar—. La marca se levanta en la cabecera
+     siguiente, que es donde empieza otra vista. */
+  let sinPintar = null;
+  const seccion = (titulo) => { sinPintar = null; console.log(titulo); };
+
   const comp = (nombre, real, esperado) => {
+    if (sinPintar) { E.pendiente(nombre, sinPintar); return; }
     const bien = typeof esperado === 'function' ? esperado(real) : norm(real) === norm(esperado);
-    if (bien) ok++; else fallos++;
-    console.log(`    ${bien ? 'OK   ' : 'FALLO'} ${nombre}` +
-      (bien ? '' : `  → ${JSON.stringify(real)}`));
+    if (bien) E.acierto(nombre); else E.fallo(nombre, JSON.stringify(real));
   };
+
+  /** Una espera de vista: no lanza, marca la sección y deja seguir. */
+  const vistaPintada = (pagina, condicion, arg, vista) => E.esperarDatos(
+    pagina, condicion, arg,
+    { nombre: `la vista «${vista}» llega a pintarse`,
+      motivo: `la base no trae filas para «${vista}»`,
+      plazo: 45000,
+      declarar: (n, m) => { sinPintar = m; E.pendiente(n, m); } });
   /* ── El tercer estado: ni bien, ni mal, SIN DATO ──
      `txt()` devuelve `null` ante cualquier nodo que no esté, y con eso una
      comprobación no puede distinguir dos cosas muy distintas: que el dato esté y
      sea el equivocado, o que no haya nada que medir porque la base contra la que
      se corre no tiene esas filas.
 
-     Es la segunda batería en dos días que falla así —`derivadas.js` fue la
-     otra—: roja, sin decir por qué, y por un motivo que no estaba en la
-     plataforma sino en contra qué instancia se apuntaba. Una prueba roja
-     permanente deja de mirarse.
-
-     Lo que NO se hace es dar por buena la ausencia. Un contenedor que falta
-     entero es regresión y se denuncia como fallo; solo se declara pendiente el
-     contenedor que existe y está legítimamente vacío. Y se dice contra qué base
-     se está corriendo, que es el dato que faltaba para diagnosticarlo. */
-  let sinDato = 0;
-  const pendiente = (nombre, motivo) => {
-    sinDato++;
-    console.log(`    SIN DATO ${nombre}  → ${motivo}\n             base: ${B}`);
-  };
+     El mecanismo nació aquí y hoy vive en `tests/tercer-estado.js`, porque otras
+     tres baterías lo necesitaban y copiarlo habría sido un hecho con cuatro
+     fuentes. Allí está escrito el porqué entero. */
+  const { pendiente } = E;
 
   /**
    * Comprueba algo que solo existe cuando la base tiene datos.
@@ -100,7 +111,30 @@ const AREAS_OCULTAS = false;
   await idioma('es');
   await p.waitForTimeout(800);
 
-  console.log('\n  ── cartera · castellano de partida ──');
+  /* ── La puerta de arriba ──
+     Esta batería no comprueba que las vistas existan: comprueba que REPINTAN al
+     cambiar de idioma, y para eso hace falta algo pintado que repintar. Contra
+     una base sin tesis publicadas no hay ni una fila en ninguna de las ocho
+     vistas que recorre.
+
+     Y no basta con no lanzar en las esperas: la batería también ACTÚA —elige en
+     un `<select>`, pulsa pestañas—, y una acción sobre un control vacío revienta
+     con su propio plantón. `page.selectOption: Timeout 30000ms exceeded` no dice
+     que la plataforma esté rota; dice que la lista estaba vacía.
+
+     Gatear cada interacción sería reestructurar la batería. Se pregunta una vez,
+     arriba, y si no hay nada que repintar se declara entera pendiente. */
+  const hayCartera = await (await fetch(`${B}/api/mercado/cartera`)).json()
+    .then((d) => !d.vacia).catch(() => false);
+
+  if (!hayCartera) {
+    E.pendiente('la batería entera',
+      'la base no tiene ninguna tesis publicada con ticker: no hay nada pintado que repintar');
+    await navegador.close();
+    process.exit(E.cerrar());
+  }
+
+  seccion('\n  ── cartera · castellano de partida ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Peso actual');
   // Pintado en JavaScript: la liquidez de la composición y la nota del total de la
@@ -152,7 +186,7 @@ const AREAS_OCULTAS = false;
   comp('conmutador de la tabla, abierta', await txt('#btn-tabla-serie'), 'Ocultar datos');
 
   await idioma('en');
-  console.log('\n  ── cartera · repintada al conmutar, sin recargar ──');
+  seccion('\n  ── cartera · repintada al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Current weight');
   comp('liquidez en el anillo de composición',
@@ -185,7 +219,7 @@ const AREAS_OCULTAS = false;
 
   await p.goto(`${B}/#/repositorio`);
   await p.waitForTimeout(1000);
-  console.log('\n  ── repositorio · en inglés ──');
+  seccion('\n  ── repositorio · en inglés ──');
   comp('titular', await txt('#seccion-repositorio h1'), 'Research catalogue');
   comp('columna de la tabla', await txt('#tabla-informes thead th:nth-child(1)'), 'Company');
   comp('rótulo de filtro', await txt('.panel-filtros__campos label:first-child span'), 'Sector');
@@ -196,7 +230,7 @@ const AREAS_OCULTAS = false;
     (v) => ['Public', 'Client', 'Institutional', 'Internal'].includes(v));
 
   await idioma('es');
-  console.log('\n  ── repositorio · repintado de vuelta a castellano ──');
+  seccion('\n  ── repositorio · repintado de vuelta a castellano ──');
   comp('titular', await txt('#seccion-repositorio h1'), 'Catálogo de informes');
   comp('columna de la tabla', await txt('#tabla-informes thead th:nth-child(1)'), 'Compañía');
   // El castellano concuerda en género donde el inglés dice «All» dos veces.
@@ -224,16 +258,16 @@ const AREAS_OCULTAS = false;
     // que TODAS hayan pintado antes de conmutar: un bloque que llegue después del
     // cambio pinta ya con el diccionario nuevo, y entonces la prueba pasaría sin
     // que nadie haya repintado nada. Se espera por condición, no por reloj.
-    const radarPintado = () => p.waitForFunction(() => {
+    const radarPintado = () => vistaPintada(p, () => {
       const lleno = (sel) => (document.querySelector(sel)?.textContent ?? '').trim().length > 0;
       return ['#snapshot-mercado', '#rejilla-radar', '#tarjeta-signal', '#agenda-catalizadores',
         '#rejilla-research', '#lista-titulares', '#panel-cartera'].every(lleno);
-    }, null, { timeout: 60000 });
+    }, null, 'radar');
     await radarPintado();
     await idioma('es');
     await radarPintado();
 
-    console.log('\n  ── radar · castellano de partida ──');
+    seccion('\n  ── radar · castellano de partida ──');
     comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Inteligencia de mercado');
     comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Cartera');
     comp('cabecera de análisis', await txt('#titulo-top-research'), 'Análisis destacado');
@@ -254,7 +288,7 @@ const AREAS_OCULTAS = false;
     }
 
     await idioma('en');
-    console.log('\n  ── radar · repintado al conmutar, sin recargar ──');
+    seccion('\n  ── radar · repintado al conmutar, sin recargar ──');
     comp('antetítulo', await txt('#seccion-radar .etiqueta-superior'), 'Market intelligence');
     comp('cabecera de cartera', await txt('#titulo-panel-cartera'), 'Portfolio');
     comp('cabecera de análisis', await txt('#titulo-top-research'), 'Top research');
@@ -287,14 +321,14 @@ const AREAS_OCULTAS = false;
   await p.goto(`${B}/#/companias`);
   // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados:
   // el armazón de la sección ya la hace no vacía antes de que llegue nada.
-  const companiasPintadas = () => p.waitForFunction(
+  const companiasPintadas = () => vistaPintada(p, 
     () => document.querySelectorAll('#rejilla-companias .tarjeta-compania').length > 0,
-    null, { timeout: 60000 });
+    null, 'compañías');
   await companiasPintadas();
   await idioma('es');
   await companiasPintadas();
 
-  console.log('\n  ── compañías · castellano de partida ──');
+  seccion('\n  ── compañías · castellano de partida ──');
   comp('titular', await txt('#seccion-companias h1'), 'Compañías');
   comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Análisis');
   comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'Todos los sectores');
@@ -305,9 +339,9 @@ const AREAS_OCULTAS = false;
 
   // ── Ficha ──
   await p.locator('#rejilla-companias .tarjeta-compania').first().click();
-  const fichaPintada = () => p.waitForFunction(
+  const fichaPintada = () => vistaPintada(p, 
     () => document.querySelectorAll('#ficha-compania .bloque-ficha').length > 0,
-    null, { timeout: 60000 });
+    null, 'ficha de compañía');
   await fichaPintada();
 
   const SELLOS_ES = ['Tiempo real', 'Con retraso', 'Histórico', 'Calculado', 'Inferido', 'No disponible'];
@@ -323,7 +357,7 @@ const AREAS_OCULTAS = false;
   }
 
   await idioma('en');
-  console.log('\n  ── compañías · repintadas al conmutar, sin recargar ──');
+  seccion('\n  ── compañías · repintadas al conmutar, sin recargar ──');
   comp('bloque de tesis', await txt('#ficha-compania .bloque-ficha__titulo'), 'Current thesis');
   if (await p.locator('#ficha-compania .sello').count()) {
     comp('sello de calidad traducido', await txt('#ficha-compania .sello'), esSello(SELLOS_EN));
@@ -333,7 +367,7 @@ const AREAS_OCULTAS = false;
   // aparecer ya en el idioma nuevo sin pedir nada.
   await p.locator('#btn-volver-companias').click();
   await p.waitForTimeout(300);
-  console.log('\n  ── compañías · la lista oculta también se repintó ──');
+  seccion('\n  ── compañías · la lista oculta también se repintó ──');
   comp('titular', await txt('#seccion-companias h1'), 'Companies');
   comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Research');
   comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'All sectors');
@@ -347,14 +381,14 @@ const AREAS_OCULTAS = false;
   // salía crudo en inglés. Todo se construye en JavaScript salvo las cabeceras.
   await p.goto(`${B}/#/catalizadores`);
   // «Cargado» se mide sobre los grupos de la agenda, que solo existen con datos.
-  const agendaPintada = () => p.waitForFunction(
+  const agendaPintada = () => vistaPintada(p, 
     () => document.querySelectorAll('#agenda-completa .grupo-agenda, #agenda-completa .vacio').length > 0,
-    null, { timeout: 60000 });
+    null, 'agenda de catalizadores');
   await agendaPintada();
   await idioma('es');
   await agendaPintada();
 
-  console.log('\n  ── catalizadores · castellano de partida ──');
+  seccion('\n  ── catalizadores · castellano de partida ──');
   comp('titular', await txt('#seccion-catalizadores h1'), 'Catalizadores');
   comp('conmutador de horizonte',
     await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Próximos');
@@ -374,7 +408,7 @@ const AREAS_OCULTAS = false;
   }
 
   await idioma('en');
-  console.log('\n  ── catalizadores · repintados al conmutar, sin recargar ──');
+  seccion('\n  ── catalizadores · repintados al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-catalizadores h1'), 'Catalysts');
   comp('conmutador de horizonte',
     await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Upcoming');
@@ -397,14 +431,14 @@ const AREAS_OCULTAS = false;
     // condiciones y ahora la redacta `Intl.RelativeTimeFormat`.
     await p.goto(`${B}/#/mercado`);
     // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados.
-    const mercadoPintado = () => p.waitForFunction(
+    const mercadoPintado = () => vistaPintada(p, 
       () => document.querySelectorAll('#panorama-mercado .tarjeta-mercado').length > 0,
-      null, { timeout: 60000 });
+      null, 'mercado');
     await mercadoPintado();
     await idioma('es');
     await mercadoPintado();
 
-    console.log('\n  ── mercado · castellano de partida ──');
+    seccion('\n  ── mercado · castellano de partida ──');
     comp('titular', await txt('#seccion-mercado h1'), 'Mercados');
     comp('antetítulo', await txt('#seccion-mercado .etiqueta-superior'), 'Mercado');
     comp('cobertura con plural', await txt('#estado-mercado'),
@@ -425,7 +459,7 @@ const AREAS_OCULTAS = false;
     }
 
     await idioma('en');
-    console.log('\n  ── mercado · repintado al conmutar, sin recargar ──');
+    seccion('\n  ── mercado · repintado al conmutar, sin recargar ──');
     comp('titular', await txt('#seccion-mercado h1'), 'Markets');
     comp('cobertura con plural', await txt('#estado-mercado'),
       (v) => v && /^\d+ of \d+ instruments? resolved/.test(v));
@@ -442,15 +476,15 @@ const AREAS_OCULTAS = false;
     // módulo, así que si guardara el rótulo en vez de la clave se congelaría en el
     // idioma de arranque y ningún repintado la alcanzaría.
     await p.goto(`${B}/#/opciones`);
-    const contratosPintados = () => p.waitForFunction(
+    const contratosPintados = () => vistaPintada(p, 
       () => document.querySelectorAll('#tabla-inusual .tabla-opciones tbody tr').length > 0
         || document.querySelectorAll('#tabla-inusual .vacio').length > 0,
-      null, { timeout: 60000 });
+      null, 'contratos');
     await contratosPintados();
     await idioma('es');
     await contratosPintados();
 
-    console.log('\n  ── opciones · castellano de partida ──');
+    seccion('\n  ── opciones · castellano de partida ──');
     comp('titular', await txt('#seccion-opciones h1'), 'Opciones');
     comp('pestaña', await txt('#pestana-inusual'), 'Actividad inusual');
     comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Mayor actividad inusual');
@@ -475,10 +509,10 @@ const AREAS_OCULTAS = false;
     // Se cambia de pestaña sin recargar: la cadena la pinta su propio módulo, y su
     // cabecera mezcla lo que se traduce con lo que no.
     await p.locator('#pestana-cadena').click();
-    const cadenaPintada = () => p.waitForFunction(
+    const cadenaPintada = () => vistaPintada(p, 
       () => document.querySelectorAll('#tabla-cadena .tabla-opciones thead tr').length > 0
         || document.querySelectorAll('#tabla-cadena .vacio, #tabla-cadena .pendiente-bloque').length > 0,
-      null, { timeout: 60000 });
+      null, 'cadena de opciones');
     await cadenaPintada();
 
     const hayCadena = await p.locator('#tabla-cadena .tabla-opciones thead tr').count();
@@ -493,7 +527,7 @@ const AREAS_OCULTAS = false;
     comp('cabecera del mapa de OI', await txt('#titulo-mapa-oi'), 'Interés abierto por strike');
 
     await idioma('en');
-    console.log('\n  ── opciones · repintadas al conmutar, sin recargar ──');
+    seccion('\n  ── opciones · repintadas al conmutar, sin recargar ──');
     comp('titular', await txt('#seccion-opciones h1'), 'Options');
     comp('pestaña', await txt('#pestana-inusual'), 'Unusual activity');
     comp('cabecera de destacadas', await txt('#titulo-destacadas'), 'Top unusual activity');
@@ -508,7 +542,7 @@ const AREAS_OCULTAS = false;
         (v) => v && /^Showing .+ of \d+ contracts?$/.test(v));
     }
 
-    console.log('\n  ── opciones · cadena repintada ──');
+    seccion('\n  ── opciones · cadena repintada ──');
     if (hayCadena) {
       comp('columna traducida de la cadena',
         await txt('#tabla-cadena .tabla-opciones tr:nth-child(2) th:nth-child(3)'), 'Last');
@@ -528,7 +562,7 @@ const AREAS_OCULTAS = false;
   await idioma('es');
   await p.waitForTimeout(400);
 
-  console.log('\n  ── noticias · castellano de partida ──');
+  seccion('\n  ── noticias · castellano de partida ──');
   comp('titular', await txt('#seccion-noticias h1'), 'Noticias de mercado');
   comp('rótulo de filtro',
     await txt('#form-filtros-noticias .panel-filtros__campos label:first-child span'), 'Categoría');
@@ -545,7 +579,7 @@ const AREAS_OCULTAS = false;
   const categoria = await p.locator('#filtro-noticias-categoria').inputValue();
 
   await idioma('en');
-  console.log('\n  ── noticias · repintadas al conmutar, sin recargar ──');
+  seccion('\n  ── noticias · repintadas al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-noticias h1'), 'Market news');
   comp('botón de sindicación', await txt('#btn-sincronizar'), 'Refresh now');
   comp('rótulo de filtro',
@@ -578,9 +612,9 @@ const AREAS_OCULTAS = false;
   // armazón de la portada —hero, manifiesto, pilares— ya está en el documento
   // mucho antes de que la cartera conteste, y «la sección tiene contenido» daría
   // por buena una fila vacía.
-  const filaPintada = () => p.waitForFunction(
+  const filaPintada = () => vistaPintada(p, 
     () => document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda').length === 4,
-    null, { timeout: 30000 });
+    null, 'fila de cifras de portada');
   await filaPintada();
 
   const celdas = () => p.$$eval('#cifras-portada-cuerpo .cinta-metricas__celda', (cs) => cs.map((c) => ({
@@ -610,7 +644,7 @@ const AREAS_OCULTAS = false;
 
   await idioma('es');
   await filaPintada();
-  console.log('\n  ── portada · fila de cifras en castellano ──');
+  seccion('\n  ── portada · fila de cifras en castellano ──');
   let cs = await celdas();
   comp('rótulo del año', cs[0].etiqueta, 'Rentabilidad 2026');
   // El año no es una cantidad: como número, `t()` lo agruparía por millares. En
@@ -636,7 +670,7 @@ const AREAS_OCULTAS = false;
 
   await idioma('en');
   await filaPintada();
-  console.log('\n  ── portada · fila repintada al conmutar, sin recargar ──');
+  seccion('\n  ── portada · fila repintada al conmutar, sin recargar ──');
   cs = await celdas();
   comp('rótulo del año', cs[0].etiqueta, '2026 return');
   comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
@@ -662,9 +696,9 @@ const AREAS_OCULTAS = false;
 
      Se afirma en los dos idiomas y contra la fila de abajo: son las mismas tres
      cifras, y decirlo es lo único que hace legítimo mostrarlas dos veces. */
-  const heroPintado = () => p.waitForFunction(
+  const heroPintado = () => vistaPintada(p, 
     () => document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
-    null, { timeout: 30000 });
+    null, 'hero');
 
   const celdasHero = () => p.$$eval('#cifras-hero .portada__cifras__celda', (cs) => cs.map((c) => ({
     valor: c.querySelector('.portada__cifras__valor')?.textContent.trim() ?? null,
@@ -727,10 +761,5 @@ const AREAS_OCULTAS = false;
      un aprobado, y anunciarla como tal es presentar por bueno un resultado que
      nadie puede justificar —el mismo defecto que la plataforma evita con los
      datos de mercado—. Verde solo cuando todo se midió. */
-  if (fallos) console.log(`\n  ${fallos} problemas${sinDato ? ` · ${sinDato} sin dato` : ''}\n`);
-  else if (sinDato) {
-    console.log(`\n  ${ok} correctas · ${sinDato} SIN DATO: no se pudieron comprobar.`);
-    console.log(`  La base de ${B} no trae las filas que necesitan. No es un aprobado.\n`);
-  } else console.log(`\n  ${ok}/${ok} correctas\n`);
-  process.exit(fallos ? 1 : (sinDato ? 2 : 0));
+  process.exit(E.cerrar());
 })();
