@@ -38,6 +38,18 @@ cp .claude/settings.ejemplo.json .claude/settings.local.json
 `settings.local.json` está en `.gitignore` a propósito: el script sí se comparte, pero
 **tenerlo encendido es decisión de cada máquina**. Por eso hay plantilla y no se hereda.
 
+Las rutas de la plantilla van **relativas** —`bash .claude/sincronizar.sh`—, y eso es
+deliberado: los hooks se ejecutan con el directorio del proyecto como directorio de
+trabajo, y además cada script se relocaliza solo a partir de su propia ruta. Una ruta
+absoluta funcionaría en una máquina y rompería en la otra.
+
+Si en la tuya el hook no llega a dispararse, pon la ruta absoluta **en forma MSYS**
+—barras normales y el disco como `/c/`—, nunca en forma Windows:
+
+```bash
+bash '/c/Users/TUNOMBRE/ruta/al/repo/.claude/auto-push.sh'
+```
+
 Comprueba también que Git sabe quién eres, porque `sincronizar.sh` anuncia los cambios
 por autor y «unknown» no le dice nada a nadie:
 
@@ -45,6 +57,30 @@ por autor y «unknown» no le dice nada a nadie:
 git config user.name "Tu Nombre"
 git config user.email "tu@correo"
 ```
+
+### Y comprueba que de verdad se ha montado
+
+Este paso no es opcional, y el motivo es que **el fallo aquí es silencioso**: si el
+hook no llega a dispararse, no verás ningún error. Verás exactamente lo mismo que si
+todo fuera bien —nada—, mientras crees tener la sincronización montada y no la tienes.
+
+Primero, que el script corre en tu máquina. Desde la raíz del repositorio:
+
+```bash
+bash .claude/sincronizar.sh; echo "salida: $?"
+```
+
+Si estás al día, el script **calla** y responde `salida: 0`. El silencio es el
+resultado correcto, no una señal de que no ha hecho nada. Si hubiera novedades,
+imprimiría una línea de JSON diciendo qué bajó y de quién.
+
+Segundo, que Claude Code lo dispara: **abre una sesión nueva y mira si aparece
+«Buscando novedades...»**. Si no aparece, el hook no está activo —revisa la nota de
+las rutas de arriba— y díselo al otro antes de ponerte a trabajar.
+
+Y de paso, que subir funciona: haz un cambio de nada, cierra la tarea y mira si sale
+«Subido a GitHub». Vale más un commit tonto hoy que descubrir el lunes que llevas
+tres días sin subir nada.
 
 ## Las cuatro reglas que de verdad evitan el choque
 

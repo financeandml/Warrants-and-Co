@@ -30,6 +30,18 @@ jobs:
   autonomas:
     name: Autonomas (sin navegador)
     runs-on: ubuntu-latest
+
+    # Ninguna de las ocho toca la base por defecto —comprobado: `src/cartera.js`
+    # no arrastra `src/db.js`, y `tests/copia.js` fija su propio `WARRANTS_DB`
+    # antes de requerirlo—. Se aisla igualmente, porque `src/db.js` abre la base
+    # AL CARGARSE, y basta con que una prueba futura lo requiera para que empiece
+    # a escribir en `data/` sin que nadie lo note. Es lo que pide CLAUDE.md para
+    # cualquier prueba que escriba.
+    env:
+      WARRANTS_DB: ${{ github.workspace }}/prueba/prueba.db
+      WARRANTS_UPLOADS: ${{ github.workspace }}/prueba/subidas
+      WARRANTS_COPIAS: ${{ github.workspace }}/prueba/copias
+
     steps:
       - uses: actions/checkout@v4
 
@@ -39,6 +51,9 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      - name: Preparar directorio aislado
+        run: mkdir -p "${{ github.workspace }}/prueba/subidas" "${{ github.workspace }}/prueba/copias"
 
       # Estas ocho no abren navegador ni necesitan servidor: solo modulos `node:`
       # y fuentes del proyecto. Corren en segundos y son las que de verdad

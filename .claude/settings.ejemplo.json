@@ -1,20 +1,4 @@
 {
-  "_comentario": [
-    "Plantilla de hooks para trabajar dos personas en main. COPIA este fichero a",
-    ".claude/settings.local.json, que es el que Claude Code lee y el que .gitignore",
-    "excluye: la decision de tener esto encendido es de cada maquina, el script no.",
-    "",
-    "   cp .claude/settings.ejemplo.json .claude/settings.local.json",
-    "",
-    "Las rutas van RELATIVAS a proposito. Los hooks se ejecutan con el directorio del",
-    "proyecto como directorio de trabajo, y ademas cada script se relocaliza solo a",
-    "partir de su propia ruta, asi que no hace falta clavar una ruta absoluta -- que",
-    "seria de una maquina y romperia en la otra.",
-    "",
-    "Si en tu maquina el hook no se dispara, sustituye la ruta por la absoluta EN",
-    "FORMA MSYS (barras normales, disco como /c/), no en forma Windows:",
-    "   bash '/c/Users/TUNOMBRE/ruta/al/repo/.claude/auto-push.sh'"
-  ],
   "hooks": {
     "SessionStart": [
       {

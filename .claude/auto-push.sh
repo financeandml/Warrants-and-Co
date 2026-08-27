@@ -34,6 +34,20 @@ msg() {
 
 SECRETOS='secrets\.toml$|(^|/)\.env$|\.pem$|\.p12$|_rsa$|\.key$'
 
+# Un rebase o un merge a medias no es "estar en otra rama": es un trabajo a medio
+# terminar, y es el estado en el que MAS falta hace decirlo. Durante un rebase el
+# HEAD esta desacoplado y `git branch --show-current` responde vacio, asi que sin
+# esta comprobacion el aviso salia como "estas en la rama ''" -- que no es verdad
+# y ademas esconde lo unico que hay que hacer: terminar el rebase o descartarlo.
+A_MEDIAS=""
+[ -d "$(git rev-parse --git-path rebase-merge 2>/dev/null)" ] && A_MEDIAS="un rebase"
+[ -d "$(git rev-parse --git-path rebase-apply 2>/dev/null)" ] && A_MEDIAS="un rebase"
+[ -f "$(git rev-parse --git-path MERGE_HEAD 2>/dev/null)" ] && A_MEDIAS="un merge"
+[ -f "$(git rev-parse --git-path CHERRY_PICK_HEAD 2>/dev/null)" ] && A_MEDIAS="un cherry-pick"
+if [ -n "$A_MEDIAS" ]; then
+  msg "Auto-push omitido: tienes $A_MEDIAS a medias. No se ha tocado nada y no se ha subido nada. Terminalo con git rebase --continue, o descartalo con git rebase --abort."
+  exit 0
+fi
 RAMA="$(git branch --show-current 2>/dev/null)" || exit 0
 if [ "$RAMA" != "main" ]; then
   if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
