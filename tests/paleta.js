@@ -131,6 +131,16 @@ const RETIRADOS = ['--informativo', '--informativo-tenue'];
 const VISTAS_CONVERTIDAS = {
   inicio: ['.portada__cifras__valor', '.cinta-metricas__valor',
            '.dato__valor', '.cronologia__dia'],
+  /* En cartera vive el anillo, y sus sectores NO están en esta lista a
+     propósito: no son celdas de texto con cifra sino arcos de un SVG, y su
+     régimen es la cláusula 1 —cada sector lleva su nombre escrito y la caja su
+     trama—, no la 3.
+
+     Tampoco está `.aportacion__valor`, aunque `tipografia.js` la clasifique bajo
+     la ruta de cartera: vive en `#seccion-radar`. Allí la lista dice por qué
+     ruta pasar para encontrarla y la consulta es global, así que da igual dónde
+     esté; ésta acota por sección, y no da igual. */
+  cartera: ['.indicador__valor', '.estadistico__nota'],
 };
 
 const TODOS = [...new Set([...SUPERFICIES, ...TEXTO, ...CON_SIGNIFICADO,

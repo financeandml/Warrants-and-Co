@@ -328,7 +328,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
    acotado a inicio y no suelto: la fase 3 convierte una vista cada vez, y un
    selector global dejaría las otras seis a medio camino. Cuando le toque a cada
    una, este selector se ensancha. */
-#seccion-inicio .etiqueta-superior { color: var(--acento); }
+#seccion-inicio .etiqueta-superior,
+#seccion-cartera .etiqueta-superior { color: var(--acento); }
 
 /* ───────────────────────────────── Cabecera ───────────────────────────── */
 
@@ -672,8 +673,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   vertical-align: middle;
 }
 
+/* Una fila pulsable es cromo: el realce va al FONDO de la fila. Las celdas de
+   dentro llevan cifras y conservan su lectura —cláusula 2—. */
 .tabla-informes tbody tr { cursor: pointer; transition: background var(--transicion); }
-.tabla-informes tbody tr:hover { background: var(--superficie-alt); }
+.tabla-informes tbody tr:hover { background: var(--acento-tenue); }
 .tabla-informes tbody tr:last-child td,
 .tabla-datos tbody tr:last-child td { border-bottom: none; }
 
@@ -726,13 +729,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .estado-datos { font-size: 0.74rem; color: var(--tinta-mate); text-align: end; line-height: 1.5; }
 
+/* Se redondea, pero no se parte en seis cajas sueltas. Las seis cifras son UNA
+   lectura continua —el estado de la cartera de un vistazo—, y trocearlas en
+   casillas con borde propio diría que son seis cosas independientes. El bento va
+   donde el contenido es un conjunto de piezas; aquí es una franja. `overflow`
+   recorta las celdas contra la esquina nueva. */
 .cuadro-mando {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   background: var(--superficie);
   border: 1px solid var(--linea);
-  border-radius: var(--radio);
-  margin-bottom: 28px;
+  border-radius: var(--radio-l);
+  overflow: hidden;
+  margin-bottom: var(--espacio-4);
   overflow: hidden;
 }
 
@@ -753,9 +762,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .indicador--principal .indicador__valor { font-size: 2.6rem; }
 .indicador__nota { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--tinta-mate); }
 
+/* El fondo se queda en `--superficie` y NO pasa a `--superficie-alt`, y hay una
+   medida detrás: dentro de una de estas tarjetas vive el anillo de composición.
+   Su sector más apagado —`--anillo-4`— da 1,97:1 sobre `--superficie` y baja a
+   1,83:1 sobre `--superficie-alt`; y `.anillo__trama-fondo` rellena con
+   `--superficie`, de modo que sobre una tarjeta teñida la trama de la caja se
+   vería como un parche más claro que lo que la rodea. */
 .tarjeta {
-  border: 1px solid var(--linea); border-radius: var(--radio);
-  background: var(--superficie); margin-bottom: 28px;
+  border: 1px solid var(--linea); border-radius: var(--radio-l);
+  background: var(--superficie); margin-bottom: var(--espacio-4);
 }
 
 .tarjeta__cabecera {
@@ -3046,12 +3061,15 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .pilar {
   display: flex; flex-direction: column; align-items: flex-start;
   padding: var(--espacio-4);
-  background: var(--superficie-alt);
+  background: var(--superficie);
   border: 1px solid var(--linea);
   border-radius: var(--radio-l);
-  transition: border-color var(--transicion);
+  transition: border-color var(--transicion), background var(--transicion);
 }
-.pilar:hover { border-color: var(--linea-fuerte); }
+/* El tinte es del ESTADO, no de la caja. Una tarjeta en reposo se define por su
+   borde, que es como se definían ya `.tarjeta`, `.cuadro-mando` y
+   `.grafico-linea` desde antes de esta reforma. */
+.pilar:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
 
 .pilar__titulo {
   font-size: 0.78rem; font-weight: 600;
@@ -3337,6 +3355,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
   transition: border-color var(--transicion), background var(--transicion);
 }
 .pulse-indice:hover { background: var(--superficie-alt); border-color: var(--linea-fuerte); }
+/* nota: el fondo de reposo es `--superficie`, igual que el resto de tarjetas. */
 /* Cláusula 2 al pie de la letra: la casilla ELEGIDA se marca en el borde y el
    fondo, que son cromo. La cifra de dentro —`.pulse-indice__valor` y su
    variación— no se toca: ésa lleva su propia lectura y el acento no entra ahí. */
@@ -3397,7 +3416,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 }
 
 .radar-familia {
-  background: var(--superficie-alt);
+  background: var(--superficie);
   border: 1px solid var(--linea);
   border-radius: var(--radio-l);
   padding: var(--espacio-4);
@@ -3504,7 +3523,7 @@ a.senal:hover, button.senal:hover { border-color: var(--tinta); transform: trans
 .research-panel__datos {
   display: grid; gap: var(--espacio-4);
   padding: var(--espacio-4);
-  background: var(--superficie-alt);
+  background: var(--superficie);
   border: 1px solid var(--linea);
   border-radius: var(--radio-l);
 }
