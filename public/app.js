@@ -27,6 +27,8 @@ import {
   pintarAgenda, pintarCarencias, pintarFiltros as pintarFiltrosCatalizadores,
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
+import { iniciarCarga } from './carga.js';
+import { iniciarCursor } from './cursor.js';
 import {
   pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
@@ -187,7 +189,11 @@ function irA(seccion, pestana = null, { empujar = true } = {}) {
   purgarSiCaducada(seccion);
 
   if (seccion === 'opciones' && pestana) seleccionarPestanaOpciones(pestana);
-  CARGADORES[seccion]?.();
+  // Devuelve la promesa del cargador. Casi todas las llamadas la ignoran —el
+  // enrutador no espera a nadie—; la del arranque sí la necesita, porque la
+  // pantalla de carga se retira cuando la primera vista está PINTADA y no
+  // cuando se ha decidido cuál era.
+  return CARGADORES[seccion]?.();
 }
 
 /**
@@ -3518,6 +3524,9 @@ function enlazarEventos() {
 }
 
 async function iniciar() {
+  // Lo primero de todo: entre aquí y `irA()` la plataforma existe con su armazón
+  // puesto y sin un dato dentro, que es el estado que la capa tapa.
+  const carga = iniciarCarga();
   iniciarTema();
   // Lo que se construye en JavaScript no lo alcanza la pasada sobre el DOM:
   // cada vista se repinta al oír el cambio de idioma.
@@ -3549,7 +3558,11 @@ async function iniciar() {
   await cargarVocabularios();
   await cargarVocabulariosNoticias();
 
-  irA(seccionDesdeHash(), null, { empujar: false });
+  // Se espera a que la primera vista esté pintada: es la condición que retira la
+  // pantalla de carga, más abajo. Un fallo del cargador no ha de dejar la capa
+  // puesta —eso sería tapar el aviso de error con una pantalla de espera—, así
+  // que el rechazo se absorbe aquí y la carga se cierra igual.
+  await Promise.resolve(irA(seccionDesdeHash(), null, { empujar: false })).catch(() => {});
 
   // La cartera se precarga aunque la sección visible sea otra. Antes lo hacía
   // `cargarPanel()` de paso, al poblar el Radar; con el Radar oculto hay que
@@ -3557,6 +3570,15 @@ async function iniciar() {
   // gráfico al cambiar de modo o de índice, y la cobertura destacada para saber
   // qué tesis están en cartera. Silenciosa: nadie está mirando esa sección.
   cargarCartera({ silencioso: true });
+
+  // Se cierra con la primera vista ya pintada —`irA()` de arriba— y NO se espera
+  // a la cartera silenciosa: nadie está mirando esa sección, y encadenarla aquí
+  // alargaría la capa por algo que el lector no ve.
+  carga.cerrar();
+
+  // Después de cerrar: el cursor propio no tiene nada que representar mientras
+  // la capa cubre la pantalla.
+  iniciarCursor();
 }
 
 if (document.readyState === 'loading') {
