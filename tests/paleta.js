@@ -341,25 +341,14 @@ const aTerna = (css) => {
       c['--foco'] && c['--acento'] && enHex(c['--foco']) === enHex(c['--acento']),
       `--foco ${c['--foco'] && enHex(c['--foco'])} · --acento ${c['--acento'] && enHex(c['--acento'])}`);
 
-    // ── el cursor personalizado no apaga el foco de teclado ──
-    /* La fase 5 mete un cursor propio, y con él una tentación concreta: dar el
-       contorno de foco por redundante —«ya se ve dónde está el ratón»— y
-       apagarlo. Con ratón eso se ve perfectamente bien; quien navega con Tab se
-       queda sin saber dónde está.
-
-       Se comprueba con la pantalla YA TOMADA por el cursor: se pone la marca que
-       `cursor.js` deja en la raíz —que es lo que habilita `cursor: none`— y se
-       tabula de verdad, porque `:focus-visible` solo se cumple con foco de
+    // ── el foco de teclado sigue visible ──
+    /* Se tabula de verdad, porque `:focus-visible` solo se cumple con foco de
        teclado. Enfocar por programa daría un verde falso: la regla no llega a
        aplicarse y el contorno medido sería el de nadie.
 
-       Lo que se afirma son tres cosas, y las tres han de darse a la vez: que hay
-       contorno, que mide lo que la hoja dice, y que su color es EXACTAMENTE el
-       acento. Un contorno de 0 px con el color correcto pasaría dos de tres. */
-    await p.evaluate(() => {
-      document.documentElement.dataset.cursor = 'propio';
-      document.documentElement.dataset.cursorVisible = 'true';
-    });
+       Se afirman tres cosas a la vez: que hay contorno, que mide lo que la hoja
+       dice, y que su color es EXACTAMENTE el acento. Un contorno de 0 px con el
+       color correcto pasaría dos de tres. */
     await p.keyboard.press('Tab');
     const foco = await p.evaluate(() => {
       const el = document.activeElement;
@@ -374,20 +363,14 @@ const aTerna = (css) => {
     });
 
     if (!foco) {
-      pendiente(`[${e.n}] el cursor propio no apaga el foco de teclado`,
+      pendiente(`[${e.n}] el foco de teclado sigue visible`,
         'al tabular no quedó nada enfocado: no hay contorno que medir');
     } else {
       const esperado = c['--acento'] && `rgb(${c['--acento'].join(', ')})`;
-      t(`[${e.n}] el cursor propio no apaga el foco de teclado`,
+      t(`[${e.n}] el foco de teclado sigue visible`,
         foco.estilo !== 'none' && foco.ancho >= 2 && foco.color === esperado,
         `«${foco.que}»: ${foco.estilo} ${foco.ancho}px ${foco.color} · se esperaba solid ≥2px ${esperado}`);
     }
-
-    await p.evaluate(() => {
-      delete document.documentElement.dataset.cursor;
-      delete document.documentElement.dataset.cursorVisible;
-    });
-
     // ── 4 · el acento no se cuela en una celda con cifra ──
     for (const [vista, CELDAS_CON_CIFRA] of Object.entries(VISTAS_CONVERTIDAS)) {
       await p.goto(`${B}/#/${vista}`, { waitUntil: 'domcontentloaded' });

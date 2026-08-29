@@ -119,12 +119,6 @@ export default {
   ],
   'portada.manifiesto.entrada': 'Análisis fundamental de las compañías en cobertura, la agenda de lo que puede moverlas y una cartera cuyo historial se puede comprobar tesis a tesis.',
 
-  // ── Portada · las dos líneas del hero ──
-  // No repiten al manifiesto: aquel enuncia, estas describen el mecanismo del
-  // que sale la fila de cifras que va justo debajo.
-  'portada.linea.que': 'Análisis de renta variable con cartera publicada.',
-  'portada.linea.como': 'Cada tesis lleva su precio y su fecha, y la cartera sale de ellas.',
-
   'portada.pilar.research.titulo': 'Análisis',
   'portada.pilar.research.texto': 'Análisis fundamental profundo, centrado en compañías, catalizadores, valoración y tesis de inversión.',
   // Los pilares de Radar y Opciones quedan sin uso mientras sus áreas estén

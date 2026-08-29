@@ -28,7 +28,6 @@ import {
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
-import { iniciarCursor } from './cursor.js';
 import {
   pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
@@ -3576,9 +3575,6 @@ async function iniciar() {
   // alargaría la capa por algo que el lector no ve.
   carga.cerrar();
 
-  // Después de cerrar: el cursor propio no tiene nada que representar mientras
-  // la capa cubre la pantalla.
-  iniciarCursor();
 }
 
 if (document.readyState === 'loading') {

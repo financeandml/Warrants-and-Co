@@ -9,6 +9,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 
 const { db, UPLOAD_DIR } = require('../db');
+const { cuerpoError } = require('../errores');
 const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
 const { leerPdf, ErrorLectura, CODIGOS_LECTURA } = require('../extraccion/pdf');
 const { extraerFicha, CAMPOS, CAMPOS_FUERA_DE_EXTRACCION } = require('../extraccion/ficha');
@@ -234,7 +235,7 @@ router.get('/', (req, res) => {
   } catch (err) {
     // Una expresion FTS malformada no debe traducirse en error de servidor.
     if (/fts5|MATCH|malformed/i.test(err.message)) {
-      return res.status(400).json({ error: 'La consulta de búsqueda no es válida.' });
+      return res.status(422).json(cuerpoError('VALIDACION', { detalle: 'La consulta de búsqueda no es válida.' }));
     }
     throw err;
   }
@@ -442,7 +443,7 @@ router.delete('/:id(\\d+)', (req, res) => {
   const id = Number(req.params.id);
   const ficheros = db.prepare('SELECT nombre_fichero FROM adjuntos WHERE informe_id = ?').all(id);
   const info = db.prepare('DELETE FROM informes WHERE id = ?').run(id);
-  if (!info.changes) return res.status(404).json({ error: 'El informe solicitado no existe.' });
+  if (!info.changes) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El informe solicitado no existe.' }));
   // Los registros caen por ON DELETE CASCADE; el soporte fisico se retira aqui.
   for (const f of ficheros) fs.promises.unlink(path.join(UPLOAD_DIR, f.nombre_fichero)).catch(() => {});
   res.json({ eliminado: id });
@@ -451,7 +452,7 @@ router.delete('/:id(\\d+)', (req, res) => {
 router.delete('/:id(\\d+)/adjuntos/:adjuntoId(\\d+)', (req, res) => {
   const { id, adjuntoId } = req.params;
   const fila = db.prepare('SELECT nombre_fichero FROM adjuntos WHERE id = ? AND informe_id = ?').get(Number(adjuntoId), Number(id));
-  if (!fila) return res.status(404).json({ error: 'El documento solicitado no existe.' });
+  if (!fila) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El documento solicitado no existe.' }));
   db.prepare('DELETE FROM adjuntos WHERE id = ?').run(Number(adjuntoId));
   fs.promises.unlink(path.join(UPLOAD_DIR, fila.nombre_fichero)).catch(() => {});
   res.json({ eliminado: Number(adjuntoId) });
@@ -463,11 +464,11 @@ router.get('/:id(\\d+)/adjuntos/:adjuntoId(\\d+)', (req, res) => {
   const fila = db
     .prepare('SELECT * FROM adjuntos WHERE id = ? AND informe_id = ?')
     .get(Number(req.params.adjuntoId), Number(req.params.id));
-  if (!fila) return res.status(404).json({ error: 'El documento solicitado no existe.' });
+  if (!fila) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El documento solicitado no existe.' }));
 
   // El nombre procede de la base de datos, nunca de la URL: no hay travesia de rutas.
   const ruta = path.join(UPLOAD_DIR, path.basename(fila.nombre_fichero));
-  if (!fs.existsSync(ruta)) return res.status(410).json({ error: 'El soporte documental ya no está disponible.' });
+  if (!fs.existsSync(ruta)) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El soporte documental ya no está disponible.' }));
 
   res.setHeader('Content-Type', fila.tipo_mime);
   res.setHeader('X-Content-Type-Options', 'nosniff');

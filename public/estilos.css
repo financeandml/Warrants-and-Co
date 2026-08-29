@@ -3962,60 +3962,9 @@ a.senal:active, button.senal:active,
    estaría moviendo. */
 :root[data-cargando] body { overflow: hidden; }
 
-/* ═══════════════════════════ Cursor personalizado ═══════════════════════════
-   Solo con puntero fino —en táctil no hay puntero que sustituir— y solo con
-   movimiento normal: `cursor.js` no monta nada con `prefers-reduced-motion`, y
-   sin sus nodos estas reglas no tienen a quién aplicarse.
-
-   NO TOCA EL FOCO. El contorno de `:focus-visible` sigue exactamente donde
-   estaba y con el mismo `--foco`: el cursor habla del ratón, el foco del
-   teclado. `tests/paleta.js` lo afirma con el cursor ya montado. */
-@media (pointer: fine) {
-  :root[data-cursor="propio"] body { cursor: none; }
-  /* Todo lo que ya declaraba `cursor: pointer` deja de declararlo: el halo es
-     quien dice ahora «esto se pulsa». */
-  :root[data-cursor="propio"] body *:not(input):not(textarea):not([contenteditable="true"]) {
-    cursor: none;
-  }
-  /* Donde manda la barra de inserción vuelve el cursor del sistema: un punto no
-     dice dónde va a caer la letra. */
-  :root[data-cursor="propio"] input,
-  :root[data-cursor="propio"] textarea,
-  :root[data-cursor="propio"] [contenteditable="true"] { cursor: auto; }
-
-  .cursor__punto, .cursor__halo {
-    position: fixed; top: 0; left: 0; z-index: 300;
-    pointer-events: none;
-    border-radius: 50%;
-    opacity: 0;
-    transition: opacity 160ms ease;
-  }
-  :root[data-cursor-visible="true"] .cursor__punto,
-  :root[data-cursor-visible="true"] .cursor__halo { opacity: 1; }
-
-  .cursor__punto {
-    width: 6px; height: 6px;
-    background: var(--acento-pleno);
-  }
-
-  /* El halo es el único que interpreta: se ensancha sobre lo pulsable y se
-     encoge bajo la pulsación. El tamaño va en `width`/`height` y no en `scale`
-     porque el `transform` lo ocupa la posición, que la escribe el módulo. */
-  .cursor__halo {
-    width: 26px; height: 26px;
-    border: 1px solid var(--acento);
-    background: var(--acento-tenue);
-    transition: width 180ms ease, height 180ms ease,
-                margin 180ms ease, opacity 160ms ease;
-  }
-  .cursor__halo[data-sobre-pulsable="true"] { width: 42px; height: 42px; }
-  .cursor__halo[data-pulsando="true"] { width: 18px; height: 18px; }
-}
-
-/* Con movimiento reducido no hay cursor propio —`cursor.js` no lo monta— ni
-   barrido en la carga. La pantalla de carga sigue existiendo, quieta: el hueco
-   que tapa es el mismo con preferencia o sin ella, y lo que la cláusula retira
-   es el recorrido, no la información. */
+/* Con movimiento reducido no hay barrido en la carga. La pantalla de carga
+   sigue existiendo, quieta: el hueco que tapa es el mismo con preferencia o
+   sin ella, y lo que la cláusula retira es el recorrido, no la información. */
 @media (prefers-reduced-motion: reduce) {
   .carga__barrido { animation: none !important; }
   .carga--saliendo { transition: none !important; }
