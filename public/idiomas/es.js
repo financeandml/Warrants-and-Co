@@ -160,7 +160,6 @@ export default {
 
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
-  'inicio.ticker.masMercados': 'Ver más mercados',
 
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',

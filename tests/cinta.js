@@ -8,27 +8,28 @@
    el día. Las cotizaciones sí cambian, y hasta ahora tampoco se movían —
    `cargarInicio()` corre una vez por carga de página—.
 
-   Fila fija en formato píldora, sin bucle ni duplicado: cada activo aparece
-   UNA sola vez en el documento. La versión anterior duplicaba la pista para
-   que un carrusel infinito encajara sin salto visual; al retirar el carrusel
-   —rediseño a formato de barra estática con divisores— el duplicado dejó de
-   tener función y esta batería se adapta para afirmar sobre un único ítem.
+   Marquesina en bucle continuo: la pista se duplica y la animación recorre
+   exactamente la mitad, de modo que el ciclo encaja sin salto visual. El
+   duplicado se oculta al lector de pantalla. Cada activo aparece DOS veces en
+   el documento, y las dos copias han de cambiar a la vez.
 
    ═══ Qué se afirma, y por qué cada cosa ═══
 
-   1 · QUE CADA VALOR CAMBIA EN EL SITIO, SIN COSTE DE ALTO. Una sola copia por
-       clave: se afirma que la sustitución llega y que ni durante ni después
-       mueve el alto de la cinta.
+   1 · QUE LOS DOS ÍTEMS DE UNA CLAVE CAMBIAN A LA VEZ Y SIN COSTE DE ALTO. Si
+       solo cambiara uno, el mismo hecho diría dos cosas distintas según por
+       dónde fuera pasando la cinta, y no habría error que lo delatara: las dos
+       mitades no se ven nunca a la vez.
 
    2 · QUE EL ALTO NO CAMBIA. El alto de la cinta lo mide `seguirEncuadreBanner()`
        para encuadrar la fotografía y decidir dónde cae el árbol. Una sustitución
        que moviera un píxel movería el árbol cada veinte segundos.
 
-   3 · QUE EL SPARKLINE SOLO APARECE CON SERIE REAL. `/api/mercado/serie/:simbolo`
-       publica cierres diarios reales; un ticker de cartera casi siempre la
-       consigue, y hoy el proveedor conectado no tiene histórico para los índices
-       —fallan con «crumb inválido»—. La celda de un ticker de cartera acaba con
-       su trazo; la de un índice no reserva un hueco vacío para uno que no llega.
+   3 · QUE EL SPARKLINE ES UNIVERSAL, PERO NUNCA FABRICADO. Toda celda acaba con
+       su trazo. `/api/mercado/serie/:simbolo` publica cierres diarios reales, y
+       cuando el proveedor no tiene histórico —hoy, los cuatro índices, con
+       «crumb inválido»— la celda cae a una recta de DOS puntos reales, el
+       cierre de ayer derivado por aritmética exacta y el precio de hoy. Nunca
+       una curva con forma de tendencia inventada.
 
    4 · QUE CON MOVIMIENTO REDUCIDO EL VALOR SIGUE CAMBIANDO. La hoja apaga esa
        animación con `animation: none`, y sin animación `animationend` NO SE
@@ -89,7 +90,7 @@ const pintada = (p) => p.waitForFunction(() =>
   const navegador = await chromium.launch();
   const errores = [];
 
-  /* ── 1 · Sustitución en el sitio, sin coste de alto ── */
+  /* ── 1 · Sustitución en el sitio, en los dos ítems, sin coste de alto ── */
   {
     const { ctx, p } = await conCambio(navegador);
     p.on('pageerror', (e) => errores.push(e.message));
@@ -106,17 +107,18 @@ const pintada = (p) => p.waitForFunction(() =>
       };
     });
 
-    t('cada valor aparece una sola vez: sin bucle, sin duplicado',
-      antes.porClave === 1, `«${antes.clave}» aparece ${antes.porClave} vez(ces)`);
+    t('cada valor está dos veces: el original y el del bucle',
+      antes.porClave === 2, `«${antes.clave}» aparece ${antes.porClave} vez(ces)`);
 
-    /* `esperarCambio` vuelve en cuanto el texto es otro. Medir AHÍ, con la
+    /* `esperarCambio` vuelve en cuanto el texto es otro, que es el final del
+       primer tramo: el segundo sigue corriendo. Se mide AHÍ, con la
        sustitución en marcha, y no solo en reposo.
 
        Medir solo antes y después no afirma nada: una animación que moviera la
-       caja únicamente mientras dura —un margen, un relleno, un alto— movería
-       el árbol 200 ms cada vez que cambia un valor y volvería a su sitio antes
-       de que nadie mirase. Se comprobó: con un `margin-block-start` dentro del
-       fotograma, la comprobación de antes pasaba en verde. */
+       caja únicamente mientras dura —un margen, un relleno, un alto— empujaría
+       el árbol 200 ms cada 20 s y volvería a su sitio antes de que nadie
+       mirase. Se comprobó: con un `margin-block-start` dentro del fotograma,
+       la comprobación de antes pasaba en verde. */
     await esperarCambio(p, antes.valor);
     const enMarcha = await p.evaluate(() =>
       document.getElementById('ticker-mercado').getBoundingClientRect().height);
@@ -128,19 +130,21 @@ const pintada = (p) => p.waitForFunction(() =>
     await p.waitForTimeout(600);
 
     const despues = await p.evaluate((clave) => {
-      const item = document.querySelector(`[data-clave="${CSS.escape(clave)}"]`);
+      const items = [...document.querySelectorAll(`[data-clave="${CSS.escape(clave)}"]`)];
       return {
         alto: document.getElementById('ticker-mercado').getBoundingClientRect().height,
-        valor: item.querySelector('.ticker__valor').textContent,
-        marcado: item.dataset.cambiado === 'true',
+        valores: items.map((i) => i.querySelector('.ticker__valor').textContent),
+        marcados: items.filter((i) => i.dataset.cambiado === 'true').length,
       };
     }, antes.clave);
 
-    t('el valor cambió de verdad',
-      despues.valor !== antes.valor,
-      `antes «${antes.valor}» · ahora «${despues.valor}»`);
+    t('las dos copias del valor dicen lo mismo tras el cambio',
+      despues.valores.length === 2 && despues.valores[0] === despues.valores[1]
+        && despues.valores[0] !== antes.valor,
+      `antes «${antes.valor}» · ahora ${JSON.stringify(despues.valores)}`);
 
-    t('el ítem queda marcado como cambiado', despues.marcado, String(despues.marcado));
+    t('las dos copias quedan marcadas como cambiadas',
+      despues.marcados === 2, `${despues.marcados} de 2`);
 
     t('la sustitución no cambia el alto de la cinta',
       Math.abs(antes.alto - despues.alto) < 0.5,
@@ -148,7 +152,7 @@ const pintada = (p) => p.waitForFunction(() =>
     await ctx.close();
   }
 
-  /* ── 2 · El sparkline solo aparece con serie real ── */
+  /* ── 2 · El sparkline es universal, con serie real o con la recta de respaldo ── */
   {
     const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
     const p = await ctx.newPage();
@@ -156,41 +160,53 @@ const pintada = (p) => p.waitForFunction(() =>
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await pintada(p);
 
-    /* El gráfico llega aparte del pintado inicial, en cuanto el proveedor
-       confirma la serie. Se espera a que la primera celda de cartera lo
-       consiga, o a que el plazo se agote —lo agota sin fallar: la ausencia se
-       comprueba después, con su propio motivo declarado. */
-    await p.waitForFunction(() =>
-      document.querySelector('[data-clave^="p:"] .ticker__grafico') !== null,
-      null, { timeout: 15000 }).catch(() => {});
+    /* Todos los gráficos llegan aparte del pintado inicial: el de cartera en
+       cuanto el proveedor confirma la serie, el de índices en cuanto cae al
+       respaldo. Se espera a que TODOS los ítems lo tengan, o a que el plazo
+       se agote —lo agota sin fallar: la ausencia se comprueba después, con su
+       propio motivo declarado. */
+    await p.waitForFunction(() => {
+      const items = [...document.querySelectorAll('#ticker-pista .ticker__item')];
+      return items.length > 0 && items.every((i) => i.querySelector('.ticker__grafico'));
+    }, null, { timeout: 15000 }).catch(() => {});
 
     const estado = await p.evaluate(() => {
-      const cartera = [...document.querySelectorAll('[data-clave^="p:"]')];
-      const indices = [...document.querySelectorAll('[data-clave^="i:"]')];
+      const items = [...document.querySelectorAll('#ticker-pista .ticker__item')];
+      const cartera = items.filter((i) => i.dataset.clave.startsWith('p:'));
+      const indices = items.filter((i) => i.dataset.clave.startsWith('i:'));
+      const puntosDe = (i) => i.querySelector('.ticker__grafico__linea')
+        ?.getAttribute('points')?.split(' ').length ?? 0;
       return {
+        total: items.length,
+        totalConGrafico: items.filter((i) => i.querySelector('.ticker__grafico')).length,
         carteraTotal: cartera.length,
         carteraConGrafico: cartera.filter((i) => i.querySelector('.ticker__grafico')).length,
-        indicesConGrafico: indices.filter((i) => i.querySelector('.ticker__grafico')).length,
+        // El respaldo es SIEMPRE una recta de dos puntos —nunca una curva—: se
+        // afirma sobre la forma del trazo, no solo sobre que exista alguno.
+        indicesTotal: indices.length,
+        indicesDosPuntos: indices.filter((i) => puntosDe(i) === 2).length,
       };
     });
 
+    t('el sparkline es universal: ninguna celda se queda sin él',
+      estado.total > 0 && estado.totalConGrafico === estado.total,
+      `${estado.totalConGrafico} de ${estado.total} celdas con gráfico`);
+
     if (!estado.carteraTotal) {
-      pendiente('el sparkline de cartera aparece con serie real',
+      pendiente('el sparkline de cartera usa la serie real, no la recta de respaldo',
         'la base no tiene tesis en cartera: sin ticker de cartera que ejercite el proveedor');
     } else {
-      t('el sparkline de cartera aparece con serie real',
+      t('el sparkline de cartera usa la serie real, no la recta de respaldo',
         estado.carteraConGrafico === estado.carteraTotal,
         `${estado.carteraConGrafico} de ${estado.carteraTotal} celdas de cartera con gráfico`);
     }
 
-    /* lineasDeTicker() no pide serie para los índices —el proveedor conectado
-       no tiene histórico para ninguno hoy, y pedirla sería una petición
-       condenada a 404 en cada carga—, así que sus celdas nunca llevan
-       gráfico. Cuando el proveedor lo resuelva, esta afirmación es la que
-       avisa de que ya puede pedirse también aquí. */
-    t('sin gráfico donde el proveedor no tiene histórico (hoy, los índices)',
-      estado.indicesConGrafico === 0,
-      `${estado.indicesConGrafico} índices con gráfico`);
+    /* Hoy el proveedor conectado no tiene histórico para los índices —fallan
+       con «crumb inválido»—, así que su celda cae al respaldo: la recta de
+       dos puntos reales, nunca una curva con forma de tendencia inventada. */
+    t('los índices caen al respaldo: recta de dos puntos, nunca una curva inventada',
+      estado.indicesTotal > 0 && estado.indicesDosPuntos === estado.indicesTotal,
+      `${estado.indicesDosPuntos} de ${estado.indicesTotal} índices con recta de dos puntos`);
     await ctx.close();
   }
 

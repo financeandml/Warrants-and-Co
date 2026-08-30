@@ -152,7 +152,6 @@ export default {
 
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
-  'inicio.ticker.masMercados': 'See more markets',
 
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',

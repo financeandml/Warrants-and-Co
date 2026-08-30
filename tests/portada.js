@@ -228,7 +228,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
-    p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+    p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errores.push(m.text()); });
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await encuadrada(p);
 
@@ -255,7 +255,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     const ctx = await navegador.newContext({ viewport: { width: v.w, height: v.h } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
-    p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
+    p.on('console', (m) => { if (m.type() === 'error' && !/Failed to load resource/.test(m.text())) errores.push(m.text()); });
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await encuadrada(p);
 

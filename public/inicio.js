@@ -99,13 +99,7 @@ function lineasDeTicker(indices, cartera) {
       // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
       destino: '#/companias',
       clave: `i:${i.clave ?? i.simbolo ?? i.nombre}`,
-      /* Sin símbolo, adrede: el proveedor conectado no tiene histórico para
-         ningún índice del panel —SPX, NDX, VIX, US10Y fallan hoy con «crumb
-         inválido»—, así que pedir la serie sería una petición condenada a
-         404 en cada carga de portada, siempre. No es una carencia que la
-         cinta deba re-descubrir sesión a sesión: se declara aquí y se
-         revisa el día que el proveedor lo resuelva. */
-      simbolo: null,
+      simbolo: i.simbolo ?? null,
     });
   }
 
@@ -172,13 +166,13 @@ function sustituirValor(nodo, texto, prefijo) {
   return true;
 }
 
-/* ── El sparkline: solo con serie real, nunca con una fabricada ──
+/* ── El sparkline: siempre con datos reales, nunca con una curva fabricada ──
    `/api/mercado/serie/:simbolo` publica cierres diarios reales. Hoy el
    proveedor conectado no tiene histórico para los índices —VIX, NDX, SPX,
-   US10Y fallan con «crumb inválido»—, así que sus celdas se quedan sin
-   gráfico: es una carencia de proveedor, no una decisión de diseño, y no se
-   disimula con una línea inventada. Un ticker de cartera sí lo consigue casi
-   siempre.
+   US10Y fallan con «crumb inválido»—, así que su celda cae a `serieSimple()`:
+   una recta de dos puntos, los dos reales, no la curva con forma de tendencia
+   que tendría una serie inventada. Un ticker de cartera consigue casi siempre
+   la serie completa.
 
    La caché es por símbolo y vive mientras dure la página: la cinta no vuelve
    a pedir la serie en cada refresco de 20 s, solo la tendencia de precio, que
@@ -205,8 +199,7 @@ function obtenerSerieSparkline(simbolo) {
  * decorativo y redundante con el signo que ya está escrito al lado, nunca la
  * única forma de leer la dirección: la regla 1 de CLAUDE.md lo exige.
  */
-function construirSparkline(serie) {
-  const valores = serie.map((p) => p.valor);
+function construirSparkline(valores) {
   const minimo = Math.min(...valores);
   const maximo = Math.max(...valores);
   const rango = maximo - minimo || 1;
@@ -236,11 +229,25 @@ function construirSparkline(serie) {
 }
 
 /**
+ * Serie de respaldo cuando el proveedor no tiene histórico del símbolo —hoy,
+ * los cuatro índices—: una recta de DOS puntos reales, nunca una curva
+ * inventada. El cierre de ayer no lo publica nadie directamente, pero sale de
+ * dos cifras que sí se publican —el precio actual y la variación %— por
+ * aritmética exacta, no por estimación: `cierre = actual / (1 + var/100)`.
+ */
+function serieSimple(valorActual, variacionPct) {
+  if (!Number.isFinite(valorActual) || !Number.isFinite(variacionPct)) return null;
+  const cierreAnterior = valorActual / (1 + variacionPct / 100);
+  if (!Number.isFinite(cierreAnterior)) return null;
+  return [cierreAnterior, valorActual];
+}
+
+/**
  * Refresca la cinta SIN reconstruirla.
  *
- * Reconstruirla perdería la marca de «este acaba de cambiar» de cualquier
- * celda a medio desvanecer. Aquí se cambian solo las celdas cuyo texto es
- * distinto.
+ * Reconstruirla reiniciaría el traslado de la pista —la cinta daría un salto
+ * visible— y perdería la marca de «este acaba de cambiar» de cualquier celda
+ * a medio desvanecer. Aquí se cambian solo las celdas cuyo texto es distinto.
  *
  * Si el CONJUNTO de claves cambia —una posición que se abre o se cierra— no hay
  * refresco que valga y se repinta entero: la cinta ya no habla de las mismas
@@ -253,7 +260,7 @@ export function refrescarTicker(indices, cartera) {
   if (!cinta || !pista || cinta.hidden) return null;
 
   const lineas = lineasDeTicker(indices, cartera);
-  const clavesAhora = [...pista.querySelectorAll('.ticker__item')]
+  const clavesAhora = [...pista.querySelectorAll('.ticker__grupo:first-child .ticker__item')]
     .map((n) => n.dataset.clave).join('|');
   if (!lineas.length || lineas.map((l) => l.clave).join('|') !== clavesAhora) {
     pintarTicker(indices, cartera);
@@ -262,36 +269,58 @@ export function refrescarTicker(indices, cartera) {
 
   let cambios = 0;
   for (const l of lineas) {
-    const item = pista.querySelector(`[data-clave="${CSS.escape(l.clave)}"]`);
-    if (!item) continue;
-    const valor = item.querySelector('.ticker__valor');
-    const varia = item.querySelector('.ticker__var');
-    let movido = false;
-    movido = sustituirValor(valor, textoValor(l), 'ticker__valor') || movido;
-    movido = sustituirValor(varia, textoVariacion(l), 'ticker__var') || movido;
-    if (varia) varia.className = `ticker__var ${claseDireccion(l.variacion)}`
-      + (varia.classList.contains('ticker__var--sale') ? ' ticker__var--sale' : '')
-      + (varia.classList.contains('ticker__var--entra') ? ' ticker__var--entra' : '');
-    if (movido) {
-      cambios++;
-      /* Marca persistente de «este cambió». Es la que sostiene la información
-         cuando el sistema pide movimiento reducido y no hay deslizamiento que
-         ver: movimiento reducido no es información reducida. */
-      item.dataset.cambiado = 'true';
-      clearTimeout(Number(item.dataset.temporizador) || 0);
-      item.dataset.temporizador = String(setTimeout(() => {
-        delete item.dataset.cambiado; delete item.dataset.temporizador;
-      }, 4000));
+    // Los DOS items de esa clave: el original y el duplicado del bucle. Los
+    // dos han de cambiar a la vez, o el mismo valor diría dos cosas distintas
+    // según por dónde fuera pasando la pista.
+    for (const item of pista.querySelectorAll(`[data-clave="${CSS.escape(l.clave)}"]`)) {
+      const valor = item.querySelector('.ticker__valor');
+      const varia = item.querySelector('.ticker__var');
+      let movido = false;
+      movido = sustituirValor(valor, textoValor(l), 'ticker__valor') || movido;
+      movido = sustituirValor(varia, textoVariacion(l), 'ticker__var') || movido;
+      if (varia) varia.className = `ticker__var ${claseDireccion(l.variacion)}`
+        + (varia.classList.contains('ticker__var--sale') ? ' ticker__var--sale' : '')
+        + (varia.classList.contains('ticker__var--entra') ? ' ticker__var--entra' : '');
+      if (movido) {
+        cambios++;
+        /* Marca persistente de «este cambió». Es la que sostiene la información
+           cuando el sistema pide movimiento reducido y no hay deslizamiento que
+           ver: movimiento reducido no es información reducida. */
+        item.dataset.cambiado = 'true';
+        clearTimeout(Number(item.dataset.temporizador) || 0);
+        item.dataset.temporizador = String(setTimeout(() => {
+          delete item.dataset.cambiado; delete item.dataset.temporizador;
+        }, 4000));
+      }
     }
   }
 
   return cambios;
 }
 
+/** Construye una celda de la cinta, sin su gráfico: eso llega aparte y tarde. */
+function construirItemTicker(l) {
+  const item = elemento('a', 'ticker__item');
+  item.href = l.destino;
+  item.dataset.ruta = '';
+  // La clave enlaza este item con su línea al refrescar.
+  item.dataset.clave = l.clave;
+
+  const texto = elemento('span', 'ticker__texto');
+  texto.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
+  const fila = elemento('span', 'ticker__cifras');
+  fila.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
+  fila.appendChild(elemento('span',
+    `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
+  texto.appendChild(fila);
+  item.appendChild(texto);
+  return item;
+}
+
 /**
  * Cinta de mercado. Índices y posiciones abiertas, con sus cifras reales.
- * Fila fija en formato píldora, sin bucle: si algún día no caben todos los
- * activos, la propia pista se desplaza horizontalmente y ninguno se oculta.
+ * La pista se duplica y la animación recorre exactamente la mitad, de modo que
+ * el ciclo encaja sin salto. El duplicado se oculta al lector de pantalla.
  */
 export function pintarTicker(indices, cartera) {
   const cinta = $('#ticker-mercado');
@@ -303,32 +332,45 @@ export function pintarTicker(indices, cartera) {
   cinta.hidden = false;
   pista.textContent = '';
 
-  for (const l of lineas) {
-    const item = elemento('a', 'ticker__item');
-    item.href = l.destino;
-    item.dataset.ruta = '';
-    // La clave enlaza este item con su línea al refrescar.
-    item.dataset.clave = l.clave;
+  const grupo = (duplicado) => {
+    const g = elemento('div', 'ticker__grupo');
+    if (duplicado) g.setAttribute('aria-hidden', 'true');
+    for (const l of lineas) g.appendChild(construirItemTicker(l));
+    return g;
+  };
 
-    const texto = elemento('span', 'ticker__texto');
-    texto.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
-    const fila = elemento('span', 'ticker__cifras');
-    fila.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
-    fila.appendChild(elemento('span',
-      `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
-    texto.appendChild(fila);
-    item.appendChild(texto);
-    pista.appendChild(item);
+  pista.appendChild(grupo(false));
+  pista.appendChild(grupo(true));
 
-    // El gráfico llega aparte y tarde: solo cuando el proveedor confirma una
-    // serie real, nunca antes. Sin serie, la celda se queda sin él —no hay
-    // hueco reservado para un trazo que puede no llegar nunca—.
-    if (l.simbolo) {
-      obtenerSerieSparkline(l.simbolo).then((serie) => {
-        if (serie) item.appendChild(construirSparkline(serie));
-      });
+  /* El gráfico llega aparte y tarde, a las DOS copias de cada clave. Se pide
+     la serie una única vez por símbolo —la caché es compartida— y, si el
+     proveedor no la tiene, se cae a la recta de dos puntos reales antes de
+     rendirse del todo. Solo si ninguna de las dos existe la celda se queda
+     sin gráfico: no hay hueco reservado para uno que no llega. */
+  const pendientes = lineas.map((l) => {
+    const valores = l.simbolo
+      ? obtenerSerieSparkline(l.simbolo).then((serie) =>
+          (serie ? serie.map((p) => p.valor) : serieSimple(l.valor, l.variacion)))
+      : Promise.resolve(serieSimple(l.valor, l.variacion));
+
+    return valores.then((v) => {
+      if (!v) return;
+      for (const item of pista.querySelectorAll(`[data-clave="${CSS.escape(l.clave)}"]`)) {
+        item.appendChild(construirSparkline(v));
+      }
+    });
+  });
+
+  /* La duración se fija por longitud recorrida, y solo cuando el contenido ya
+     está completo: medir antes de que lleguen los gráficos daría un ancho
+     corto y la cinta saltaría al ensancharse cada celda que consigue el suyo. */
+  Promise.allSettled(pendientes).then(() => {
+    const anchoGrupo = pista.firstElementChild.getBoundingClientRect().width;
+    if (anchoGrupo > 0) {
+      pista.style.setProperty('--recorrido', `${anchoGrupo}px`);
+      pista.style.setProperty('--duracion', `${Math.max(28, Math.round(anchoGrupo / 26))}s`);
     }
-  }
+  });
 }
 
 // ══════════════════════════ 2 · DECLARACIÓN Y PILARES ══════════════════════

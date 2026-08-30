@@ -1741,13 +1741,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada[data-banner="true"] .ticker__item:hover {
   background: var(--velo-portada-activo);
 }
-.portada[data-banner="true"] .ticker__mas {
-  color: var(--tinta-portada);
-  border-inline-start-color: var(--linea-portada);
-}
-.portada[data-banner="true"] .ticker__mas:hover {
-  background: var(--velo-portada-activo);
-}
 
 @property --alto-por-ventana {
   syntax: "<length>";
@@ -2585,6 +2578,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
      La regla de `.revelado` —el mecanismo unico— vive en el otro bloque de
      movimiento reducido, mas abajo, y ademas retira la transicion. */
   .cinta-cotizaciones__pista { animation: none !important; }
+  /* La cinta del hero se detiene, pero sigue leyendose: queda en su primer
+     fotograma, con los valores visibles y cortados por el ancho de la ventana.
+     Esa linea de datos partida por el borde es la que invita a bajar, y no
+     depende del movimiento para hacerlo. */
+  .ticker__pista { animation: none !important; }
   /* Sin recorrido, pero enteras: una casilla a medio descubrir sería una cifra
      cortada, que es peor que una cifra sin entrada. */
   .portada__cifras__celda--entra {
@@ -3188,12 +3186,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 /* ─────────────────────────────── 1 · TICKER ─────────────────────────────── */
 
-/* Píldora blanca, sin recorrido: una fila fija de celdas separadas por
-   divisores verticales. Si algún día no caben todas, la PISTA se desplaza
-   —`overflow-x: auto`, propia del contenido, nunca de la página entera—; el
-   contenedor jamás oculta un activo por falta de sitio. */
+/* Píldora blanca en marquesina: la pista se duplica y se desplaza en bucle
+   continuo, y `overflow: hidden` en el contenedor recorta el tramo que
+   sobra. Pausa al pasar el ratón o el foco por encima, para poder leerla. */
 .ticker {
-  display: flex; align-items: stretch;
+  position: relative;
   overflow: hidden;
   border: 1px solid var(--linea);
   border-radius: var(--radio-l);
@@ -3201,9 +3198,13 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   max-width: 100%;
 }
 .ticker__pista {
-  display: flex; flex: 1 1 auto; min-width: 0;
-  overflow-x: auto;
+  display: flex; width: max-content;
+  animation: cinta-avance var(--duracion, 46s) linear infinite;
 }
+.ticker:hover .ticker__pista,
+.ticker:focus-within .ticker__pista { animation-play-state: paused; }
+
+.ticker__grupo { display: flex; }
 
 .ticker__item {
   display: flex; align-items: center; gap: 14px;
@@ -3214,7 +3215,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   white-space: nowrap;
   transition: background var(--transicion);
 }
-.ticker__pista > .ticker__item:last-child { border-inline-end: none; }
 .ticker__item:hover { background: var(--superficie-alt); }
 .ticker__texto { display: flex; flex-direction: column; gap: 6px; }
 .ticker__etiqueta {
@@ -3289,23 +3289,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   animation: ticker-valor-entra 100ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
 
-/* ── «Ver más mercados» ──
-   Pieza fija al final de la fila —FUERA de `.ticker__pista`, que es lo único
-   que se desplaza—: nunca se pierde por el desbordamiento si algún día no
-   caben todos los activos. */
-.ticker__mas {
-  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
-  padding-inline: 20px;
-  font-size: 0.74rem; font-weight: 600; color: var(--tinta);
-  text-decoration: none; white-space: nowrap;
-  border-inline-start: 1px solid var(--linea-hairline);
-  transition: color var(--transicion), background var(--transicion);
-}
-.ticker__mas:hover { color: var(--acento); background: var(--superficie-alt); }
-.ticker__mas:focus-visible { outline: 2px solid var(--foco); outline-offset: -2px; }
-.ticker__mas__flecha { display: inline-block; transition: transform var(--transicion); }
-.ticker__mas:hover .ticker__mas__flecha { transform: translateX(4px); }
-
 /* ── «Este acaba de cambiar», sin movimiento ──
    Un filete bajo el item que cambió, puesto un ciclo entero. Existe para que la
    información sobreviva cuando el sistema pide movimiento reducido y no hay
@@ -3318,6 +3301,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .portada[data-banner="true"] .ticker__item[data-cambiado="true"] {
   box-shadow: inset 0 -2px 0 0 var(--linea-portada);
+}
+
+@keyframes cinta-avance {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(calc(var(--recorrido, 1200px) * -1), 0, 0); }
 }
 
 /* Lectura direccional: el signo manda, el peso acompaña. Nunca solo color. */
@@ -3779,6 +3767,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   /* Todo llega a su sitio sin recorrido: la página sigue siendo la misma. */
   .revelado { opacity: 1 !important; transform: none !important; transition: none !important; }
   .linea-revelada > span { transform: none !important; transition: none !important; }
+  .ticker__pista { animation: none !important; }
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
   .research-panel { transition: none !important; }
   .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }
