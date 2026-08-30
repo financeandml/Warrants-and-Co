@@ -27,7 +27,7 @@
 
 import { localeFormato, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
-import { sinMovimiento } from './movimiento.js';
+import { MARGEN_REVELADO, sinMovimiento } from './movimiento.js';
 
 
 /**
@@ -134,6 +134,7 @@ export function seguirEncuadreBanner() {
   const cinta = document.getElementById('ticker-mercado');
   const interior = portada.querySelector('.portada__interior');
   const cifras = portada.querySelector('.portada__cifras');
+  const lineas = portada.querySelector('.portada__lineas');
 
   // Un elemento oculto no tiene caja: `height` ya vale 0. Mirar ademas `hidden`
   // invitaba a creer que una cinta sin pintar valia 0 por decision y no por
@@ -158,11 +159,31 @@ export function seguirEncuadreBanner() {
    * `tests/portada.js` cae en doce afirmaciones y publica holgura 28 mientras la
    * cinta acaba 24,5 px POR DEBAJO de la base del arbol.
    */
-  /* Fuera del régimen `cover`, una fracción y una holgura calculadas con él no
-     describen la pantalla, así que se retiran. */
+  /* Solo escribe si cambia: reescribir el mismo atributo despierta al observador
+     de mutaciones sin que nada se haya movido. Misma disciplina que `fijar()`. */
+  const marcar = (nombre, valor) => {
+    if (portada.dataset[nombre] !== valor) portada.dataset[nombre] = valor;
+  };
+
+  /*
+   * Salir del cálculo devolviendo las dos piezas cedibles.
+   *
+   * Los `delete` retiran lo que sería mentira: una fracción y una holgura
+   * calculadas con `cover` no describen una pantalla que no usa `cover`. Pero
+   * `data-lineas` y `data-cifras` también mentían al quedarse como estaban:
+   * decían «cedido» donde no hay presupuesto que pagar. Un hero llegado desde
+   * una ventana apaisada aparecía en el móvil sin líneas y sin cifras habiendo
+   * sitio de sobra, y no había forma de salir de ahí salvo recargando.
+   *
+   * Fuera del régimen que las hace ceder, NADA las cede: la banda del árbol, la
+   * holgura y la cinta —los tres términos que se pagan con pliegue— son de este
+   * cálculo y de ningún otro. De modo que se restituyen, no se dejan.
+   */
   const sinPresupuesto = () => {
     delete portada.dataset.fraccionBanner;
     delete portada.dataset.holguraCinta;
+    marcar('lineas', 'true');
+    marcar('cifras', 'true');
   };
 
   const publicar = () => {
@@ -181,6 +202,7 @@ export function seguirEncuadreBanner() {
     if (!(caja.width > 0 && caja.height > 0)) return;
 
     const cintaAlto = alto(cinta);
+    const interiorAlto = alto(interior);
 
     // `cover` escala por el lado que se quede corto. Más apaisada que la foto
     // —todo escritorio—, manda el ancho; si no, la foto entra entera de alto.
