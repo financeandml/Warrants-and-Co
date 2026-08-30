@@ -1266,6 +1266,7 @@ Greenwich la retrasaría al día anterior y el eje rotularía un día de menos.
 | 4 | Las nueve secciones · **catalizadores** | hecho |
 | 4 | Las nueve secciones · **mercado** | hecho |
 | 4 | Las nueve secciones · **opciones** | hecho |
+| 5 | Deuda de `src/`: mensajes de error de la API, motivos de extracción y panorama de mercado | hecho |
 
 **La fase 4 está cerrada: las nueve secciones hablan los dos idiomas.** Lo que se pinta en
 JavaScript se repinta al conmutar sin volver a la red, y lo comprueba `npm run test:repintado`
@@ -1285,14 +1286,16 @@ rótulo. Antes de existir, la interfaz castellana rotulaba «UNAVAILABLE», «OP
 > el rótulo. Se corrige aquí, y no reescribiendo la historia: mover commits ya publicados
 > cuesta más de lo que aclara una etiqueta.
 
-> **Queda una deuda, y es de `src/`, no de la interfaz.** Hay texto que redacta el
-> servidor y que llega al navegador ya escrito en castellano: el título y la descripción
-> de cada grupo del panorama de mercado, los motivos de carencia, y **los mensajes de
-> error de la API**. El cliente los pinta tal cual —no puede hacer otra cosa— y por eso
-> se ven en castellano aunque la interfaz esté en inglés. Llevarlos al diccionario
-> significa meter la traducción dentro de `src/`, que es otra tarea y de otro tamaño: se
-> aborda **al cerrar la fase 4**, no antes, para no dejar la migración a medias en dos
-> capas a la vez.
+> **La deuda de `src/` —fase 5— está saldada.** Los tres focos que quedaban en castellano
+> a pelo, texto que redactaba el servidor y que el cliente pintaba tal cual, ya viajan por
+> código y se traducen: los mensajes de error de la API (`src/errores.js`, consumidos por
+> `rotuloError()`), los motivos de la extracción de PDF (`extraccion/motivos.js`, ya lo
+> estaban) y el título, la descripción y los motivos fijos del panorama de mercado
+> (`src/mercado/motivos.js`, nuevo, consumido por `rotuloMotivo`-style lookups en
+> `public/mercado.js`). El texto ajeno de un proveedor —la razón concreta por la que una
+> cotización no resolvió— sigue sin traducirse a propósito: viaja en `detalle`, misma
+> doctrina que `PROVEEDOR_NO_RESPONDE`. Lo comprueba `node tests/mercado-idiomas.js`,
+> igual que `tests/errores.js` comprueba el catálogo de errores.
 
 ### Las dos decisiones transversales, cerradas
 

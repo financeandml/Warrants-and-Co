@@ -1091,6 +1091,30 @@ export default {
   },
   'mercado.sinMotivo': 'Dato no disponible',
 
+  // ── Grupos del panorama ──
+  'mercado.grupo.renta-variable.titulo': 'Renta variable',
+  'mercado.grupo.renta-variable.descripcion': 'Índices de referencia estadounidenses',
+  'mercado.grupo.volatilidad.titulo': 'Volatilidad',
+  'mercado.grupo.volatilidad.descripcion': 'Volatilidad implícita del mercado',
+  'mercado.grupo.tipos.titulo': 'Curva de tipos',
+  'mercado.grupo.tipos.descripcion': 'Rendimiento del Tesoro estadounidense',
+
+  // ── Motivos fijos por los que un dato o un cálculo no se publica ──
+  'mercado.motivo.SIN_DATOS': 'Sin datos de mercado.',
+  'mercado.motivo.DOW_JONES_SIN_PROVEEDOR':
+    'Ningún proveedor conectado publica el índice. Los símbolos habituales resuelven a otros ' +
+    'instrumentos: DJIA devuelve un ETF de covered call y DIA el ETF réplica, no el índice.',
+  'mercado.motivo.VIX_VOLATILIDAD_IMPLICITA': 'Volatilidad implícita a 30 días del S&P 500',
+  'mercado.motivo.CURVA_INCOMPLETA': 'Requiere los tramos de 2 y 10 años',
+  'mercado.motivo.CALIDAD_DIFERIDO': 'Dato consolidado con retraso. La plataforma no dispone de contrato de tiempo real.',
+  'mercado.motivo.CALIDAD_FUERA_DE_SESION': 'Estado de la sesión: {estado}. El último precio es el cierre de la sesión anterior.',
+
+  // ── Estado de sesión, para el {estado} de arriba ──
+  'mercado.estadoMercado.CLOSED': 'Cerrado',
+  'mercado.estadoMercado.PRE_MKT': 'Previo a la apertura',
+  'mercado.estadoMercado.POST_MKT': 'Posterior al cierre',
+  'mercado.estadoMercado.AFTER_HOURS': 'Fuera de horario',
+
   // ── Curva de tipos ──
   'mercado.curva.titulo': 'Pendiente de la curva',
   // La cifra llega ya formateada: «pb» es la unidad, y va pegada al número.
@@ -1105,6 +1129,10 @@ export default {
   'mercado.leyenda.titulo': 'Calidad del dato',
   'mercado.leyenda.subtitulo': 'Qué significa cada sello en esta página',
   'mercado.leyenda.ausentes': 'No resuelto en esta carga: {instrumentos}.',
+  'mercado.calidad.leyenda.REAL_TIME': 'Cotización en vivo. La plataforma no dispone hoy de ninguna.',
+  'mercado.calidad.leyenda.DELAYED': 'Dato consolidado con retraso durante la sesión.',
+  'mercado.calidad.leyenda.HISTORICAL': 'Último cierre disponible; el mercado no está en sesión regular.',
+  'mercado.calidad.leyenda.UNAVAILABLE': 'Ningún proveedor conectado resuelve el instrumento.',
 
   // ═══════════════════════════ Opciones (A) ════════════════════════════════
   // Terminología según el criterio de CLAUDE.md: se traduce lo que un analista

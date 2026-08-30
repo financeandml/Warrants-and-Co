@@ -1041,6 +1041,30 @@ export default {
   },
   'mercado.sinMotivo': 'Data unavailable',
 
+  // ── Market map groups ──
+  'mercado.grupo.renta-variable.titulo': 'Equities',
+  'mercado.grupo.renta-variable.descripcion': 'U.S. benchmark indices',
+  'mercado.grupo.volatilidad.titulo': 'Volatility',
+  'mercado.grupo.volatilidad.descripcion': 'Implied market volatility',
+  'mercado.grupo.tipos.titulo': 'Yield curve',
+  'mercado.grupo.tipos.descripcion': 'U.S. Treasury yield',
+
+  // ── Fixed reasons a data point or a calculation is not published ──
+  'mercado.motivo.SIN_DATOS': 'No market data.',
+  'mercado.motivo.DOW_JONES_SIN_PROVEEDOR':
+    'No connected provider publishes the index. The usual symbols resolve to other ' +
+    'instruments: DJIA returns a covered-call ETF and DIA the tracking ETF, not the index.',
+  'mercado.motivo.VIX_VOLATILIDAD_IMPLICITA': '30-day implied volatility of the S&P 500',
+  'mercado.motivo.CURVA_INCOMPLETA': 'Requires the 2-year and 10-year points',
+  'mercado.motivo.CALIDAD_DIFERIDO': 'Consolidated data with a delay. The platform holds no real-time entitlement.',
+  'mercado.motivo.CALIDAD_FUERA_DE_SESION': 'Session status: {estado}. The last price is the previous session’s close.',
+
+  // ── Session state, for the {estado} above ──
+  'mercado.estadoMercado.CLOSED': 'Closed',
+  'mercado.estadoMercado.PRE_MKT': 'Pre-market',
+  'mercado.estadoMercado.POST_MKT': 'Post-close',
+  'mercado.estadoMercado.AFTER_HOURS': 'After hours',
+
   // ── Yield curve ──
   'mercado.curva.titulo': 'Curve slope',
   'mercado.curva.puntosBasicos': '{valor} bp',
@@ -1054,6 +1078,10 @@ export default {
   'mercado.leyenda.titulo': 'Data quality',
   'mercado.leyenda.subtitulo': 'What each seal means on this page',
   'mercado.leyenda.ausentes': 'Not resolved on this load: {instrumentos}.',
+  'mercado.calidad.leyenda.REAL_TIME': 'Live quote. The platform holds none today.',
+  'mercado.calidad.leyenda.DELAYED': 'Consolidated data with a delay during the session.',
+  'mercado.calidad.leyenda.HISTORICAL': 'Last available close; the market is not in regular session.',
+  'mercado.calidad.leyenda.UNAVAILABLE': 'No connected provider resolves the instrument.',
 
   // ═══════════════════════════ Options (A) ═════════════════════════════════
   'opciones.etiqueta': 'Derivatives',

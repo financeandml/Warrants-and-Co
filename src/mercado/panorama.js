@@ -22,6 +22,7 @@
  */
 
 const mercado = require('../market');
+const { CLAVES_GRUPO } = require('./motivos');
 
 const CALIDAD = {
   TIEMPO_REAL: 'REAL_TIME',
@@ -39,7 +40,7 @@ const INSTRUMENTOS = [
 
   // ── Volatilidad ──
   { clave: 'vix', simbolo: 'VIX', nombre: 'VIX', grupo: 'volatilidad', formato: 'indice', decimales: 2,
-    nota: 'Volatilidad implícita a 30 días del S&P 500' },
+    nota: 'VIX_VOLATILIDAD_IMPLICITA' },
 
   // ── Curva de tipos ──
   { clave: 'us3m', simbolo: 'US3M', nombre: 'EE. UU. 3 meses', grupo: 'tipos', formato: 'tipo', decimales: 3, plazoAnios: 0.25 },
@@ -59,17 +60,15 @@ const SIN_FUENTE = [
     clave: 'dowjones',
     nombre: 'Dow Jones Industrial Average',
     grupo: 'renta-variable',
-    motivo:
-      'Ningún proveedor conectado publica el índice. Los símbolos habituales resuelven a otros ' +
-      'instrumentos: DJIA devuelve un ETF de covered call y DIA el ETF réplica, no el índice.',
+    motivo: 'DOW_JONES_SIN_PROVEEDOR',
   },
 ];
 
-const GRUPOS = [
-  { clave: 'renta-variable', titulo: 'Renta variable', descripcion: 'Índices de referencia estadounidenses' },
-  { clave: 'volatilidad', titulo: 'Volatilidad', descripcion: 'Volatilidad implícita del mercado' },
-  { clave: 'tipos', titulo: 'Curva de tipos', descripcion: 'Rendimiento del Tesoro estadounidense' },
-];
+// El título y la descripción de cada grupo viven en el diccionario del
+// cliente, no aquí: son tres claves cerradas, iguales en cada carga, y
+// `src/mercado/motivos.js` es su única fuente — mismo criterio que el resto
+// de vocabularios cerrados de la plataforma (`public/vocabulario.js`).
+const GRUPOS = CLAVES_GRUPO.map((clave) => ({ clave }));
 
 /** Sesiones en las que el último precio ya no es una cotización viva. */
 const FUERA_DE_SESION = new Set(['CLOSED', 'PRE_MKT', 'POST_MKT', 'AFTER_HOURS']);
@@ -81,15 +80,9 @@ const FUERA_DE_SESION = new Set(['CLOSED', 'PRE_MKT', 'POST_MKT', 'AFTER_HOURS']
 function calidadDe(q) {
   const estado = String(q.estadoMercado ?? '').toUpperCase();
   if (FUERA_DE_SESION.has(estado)) {
-    return {
-      calidad: CALIDAD.HISTORICO,
-      explicacion: `Mercado en ${estado.replace('_', ' ').toLowerCase()}: el último precio es el cierre de la sesión anterior.`,
-    };
+    return { calidad: CALIDAD.HISTORICO, explicacion: 'CALIDAD_FUERA_DE_SESION' };
   }
-  return {
-    calidad: CALIDAD.DIFERIDO,
-    explicacion: 'Dato consolidado con retraso. La plataforma no dispone de contrato de tiempo real.',
-  };
+  return { calidad: CALIDAD.DIFERIDO, explicacion: 'CALIDAD_DIFERIDO' };
 }
 
 /** Antigüedad del dato en segundos, para que la interfaz pueda rotularla. */
@@ -172,7 +165,10 @@ async function obtenerPanorama() {
         variacion: null,
         variacionPct: null,
         direccion: 'UNKNOWN',
-        motivo: r.reason?.message ?? 'Sin datos de mercado',
+        // El motivo fijo se traduce; lo que diga el proveedor es texto ajeno
+        // y viaja aparte, sin traducir — misma doctrina que `PROVEEDOR_NO_RESPONDE`.
+        motivo: 'SIN_DATOS',
+        detalle: r.reason?.message ?? null,
       };
     }
 
@@ -220,12 +216,8 @@ async function obtenerPanorama() {
         ...SIN_FUENTE.map((s) => ({ nombre: s.nombre, motivo: s.motivo })),
       ],
     },
-    calidades: {
-      REAL_TIME: 'Cotización en vivo. La plataforma no dispone hoy de ninguna.',
-      DELAYED: 'Dato consolidado con retraso durante la sesión.',
-      HISTORICAL: 'Último cierre disponible; el mercado no está en sesión regular.',
-      UNAVAILABLE: 'Ningún proveedor conectado resuelve el instrumento.',
-    },
+    // La leyenda de cada sello es un texto fijo y cerrado: vive en el
+    // diccionario del cliente (`mercado.calidad.leyenda.*`), no aquí.
     proveedores: mercado.estado?.().proveedoresCotizacion ?? [],
     generadoEn: new Date().toISOString(),
   };
@@ -254,7 +246,7 @@ function construirCurva(instrumentos) {
           invertida: diezAnios.valor < dosAnios.valor,
           derivadoDe: ['US10Y', 'US2Y'],
         }
-      : { disponible: false, calidad: CALIDAD.NO_DISPONIBLE, motivo: 'Requiere los tramos de 2 y 10 años' };
+      : { disponible: false, calidad: CALIDAD.NO_DISPONIBLE, motivo: 'CURVA_INCOMPLETA' };
 
   return { puntos, pendiente, disponible: puntos.length >= 2 };
 }

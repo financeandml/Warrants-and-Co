@@ -58,8 +58,8 @@ export function pintarPanorama(datos) {
     const seccion = elemento('section', 'bloque-panel');
 
     const cabecera = elemento('div', 'bloque-panel__cabecera');
-    cabecera.appendChild(elemento('h2', '', grupo.titulo));
-    cabecera.appendChild(elemento('p', '', grupo.descripcion));
+    cabecera.appendChild(elemento('h2', '', t(`mercado.grupo.${grupo.clave}.titulo`)));
+    cabecera.appendChild(elemento('p', '', t(`mercado.grupo.${grupo.clave}.descripcion`)));
     seccion.appendChild(cabecera);
 
     const rejilla = elemento('div', 'rejilla-mercado');
@@ -76,7 +76,7 @@ export function pintarPanorama(datos) {
     raiz.appendChild(seccion);
   }
 
-  raiz.appendChild(bloqueLeyenda(datos));
+  raiz.appendChild(bloqueLeyenda());
 }
 
 function tarjetaInstrumento(i) {
@@ -90,8 +90,12 @@ function tarjetaInstrumento(i) {
 
   if (!i.disponible) {
     tarjeta.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', noDisponible()));
-    // El motivo lo redacta el servidor; solo se traduce la reserva.
-    tarjeta.appendChild(elemento('p', 'tarjeta-mercado__motivo', i.motivo ?? t('mercado.sinMotivo')));
+    // El motivo es un código fijo del catálogo del servidor y se traduce; lo
+    // que diga el proveedor (`detalle`) es texto ajeno y no se traduce: solo
+    // se ofrece como título emergente, para quien quiera el diagnóstico.
+    const motivo = elemento('p', 'tarjeta-mercado__motivo', i.motivo ? t(`mercado.motivo.${i.motivo}`) : t('mercado.sinMotivo'));
+    if (i.detalle) motivo.title = i.detalle;
+    tarjeta.appendChild(motivo);
     tarjeta.appendChild(sello('UNAVAILABLE'));
     return tarjeta;
   }
@@ -113,10 +117,14 @@ function tarjetaInstrumento(i) {
       : noDisponible()));
   tarjeta.appendChild(cambio);
 
-  if (i.nota) tarjeta.appendChild(elemento('p', 'tarjeta-mercado__nota', i.nota));
+  if (i.nota) tarjeta.appendChild(elemento('p', 'tarjeta-mercado__nota', t(`mercado.motivo.${i.nota}`)));
 
   const pie = elemento('div', 'tarjeta-mercado__pie');
-  pie.appendChild(sello(i.calidad, i.explicacionCalidad ?? ''));
+  const explicacion = i.explicacionCalidad
+    ? t(`mercado.motivo.${i.explicacionCalidad}`, i.explicacionCalidad === 'CALIDAD_FUERA_DE_SESION'
+        ? { estado: t(`mercado.estadoMercado.${i.estadoMercado}`) } : undefined)
+    : '';
+  pie.appendChild(sello(i.calidad, explicacion));
   pie.appendChild(elemento('span', '', frescura(i.antiguedadSegundos)));
   pie.appendChild(elemento('span', '', i.fuente ?? ''));
   tarjeta.appendChild(pie);
@@ -130,7 +138,7 @@ function tarjetaAusente(s) {
   cabecera.appendChild(elemento('h3', 'tarjeta-mercado__nombre', s.nombre));
   tarjeta.appendChild(cabecera);
   tarjeta.appendChild(elemento('span', 'tarjeta-mercado__valor tarjeta-mercado__valor--ausente', noDisponible()));
-  tarjeta.appendChild(elemento('p', 'tarjeta-mercado__motivo', s.motivo));
+  tarjeta.appendChild(elemento('p', 'tarjeta-mercado__motivo', t(`mercado.motivo.${s.motivo}`)));
   tarjeta.appendChild(sello('UNAVAILABLE'));
   return tarjeta;
 }
@@ -157,7 +165,7 @@ function bloqueCurva(curva) {
     cabecera.appendChild(sello('CALCULATED', t('mercado.curva.selloNota')));
   } else {
     cabecera.appendChild(elemento('strong', 'curva-tipos__pendiente curva-tipos__pendiente--ausente', noDisponible()));
-    cabecera.appendChild(elemento('span', 'curva-tipos__lectura', p.motivo));
+    cabecera.appendChild(elemento('span', 'curva-tipos__lectura', t(`mercado.motivo.${p.motivo}`)));
   }
   bloque.appendChild(cabecera);
 
@@ -182,8 +190,13 @@ function bloqueCurva(curva) {
   return bloque;
 }
 
+// Los cuatro sellos de calidad son un vocabulario cerrado del servidor —igual
+// que `CALIDAD` en `src/mercado/panorama.js`— y su explicación es fija: vive
+// en el diccionario del cliente (`mercado.calidad.leyenda.*`), no en la red.
+const CALIDADES_LEYENDA = ['REAL_TIME', 'DELAYED', 'HISTORICAL', 'UNAVAILABLE'];
+
 /** Leyenda de calidades: qué significa cada sello y qué no tenemos. */
-function bloqueLeyenda(datos) {
+function bloqueLeyenda() {
   const bloque = elemento('section', 'bloque-panel');
   const cabecera = elemento('div', 'bloque-panel__cabecera');
   cabecera.appendChild(elemento('h2', '', t('mercado.leyenda.titulo')));
@@ -191,10 +204,10 @@ function bloqueLeyenda(datos) {
   bloque.appendChild(cabecera);
 
   const lista = elemento('div', 'rejilla-leyenda');
-  for (const [clave, texto] of Object.entries(datos.calidades ?? {})) {
+  for (const clave of CALIDADES_LEYENDA) {
     const fila = elemento('div', 'leyenda-calidad');
     fila.appendChild(sello(clave));
-    fila.appendChild(elemento('span', '', texto));
+    fila.appendChild(elemento('span', '', t(`mercado.calidad.leyenda.${clave}`)));
     lista.appendChild(fila);
   }
   bloque.appendChild(lista);
