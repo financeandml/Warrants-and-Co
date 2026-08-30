@@ -1342,9 +1342,14 @@ async function eliminarInforme() {
   if (!confirm(t('informe.eliminar.confirmar'))) return;
 
   try {
-    await api(`/api/informes/${id}`, { method: 'DELETE' });
+    const eliminado = await api(`/api/informes/${id}`, { method: 'DELETE' });
     $('#dialogo-informe').close();
     avisar(t('informe.eliminado'), { claro: true });
+    // Simétrico al aviso de reetiquetado: borrar una tesis puede dejar un
+    // ticker sin cobertura y desvincularlo de noticias ya existentes.
+    if (eliminado?.noticiasDesvinculadas) {
+      avisar(t('informe.eliminado.desvinculadas', { n: eliminado.noticiasDesvinculadas }));
+    }
     await invalidarDerivadasDeInformes();
   } catch (err) {
     avisar(err.message);

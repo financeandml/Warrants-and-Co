@@ -259,7 +259,46 @@ function vincularNoticiasACompania(ticker, empresa) {
   return actualizadas;
 }
 
+/**
+ * Retira un ticker de las noticias que lo llevaban, al borrarse la tesis
+ * que lo justificaba.
+ *
+ * Solo actúa si NINGUNA otra tesis viva sigue usando el mismo ticker —se
+ * asume que el informe ya se ha borrado de `informes` en este punto, así que
+ * la comprobación no necesita excluir ningún id—. `categoria` y `relevancia`
+ * NUNCA se tocan: no hay forma de recuperar su valor previo al reetiquetado
+ * sin inventarlo, y la regla 1 de CLAUDE.md lo prohíbe. Es la operación
+ * inversa de `vincularNoticiasACompania()`, y solo esa mitad: retira lo que
+ * es demostrable, nunca lo que habría que suponer.
+ */
+function desvincularNoticiasDeCompania(ticker) {
+  if (!ticker) return 0;
+  const t = ticker.toUpperCase();
+
+  const sigueEnCobertura = db
+    .prepare('SELECT 1 FROM informes WHERE ticker = ? LIMIT 1')
+    .get(t);
+  if (sigueEnCobertura) return 0;
+
+  const candidatas = db.prepare(
+    `SELECT id, tickers FROM noticias
+     WHERE origen = 'Investing.com'
+     AND EXISTS (SELECT 1 FROM json_each(tickers) WHERE value = ?)`
+  ).all(t);
+
+  let actualizadas = 0;
+  const actualizarTickers = db.prepare('UPDATE noticias SET tickers = ? WHERE id = ?');
+
+  for (const n of candidatas) {
+    const tickers = JSON.parse(n.tickers ?? '[]').filter((x) => x !== t);
+    actualizarTickers.run(JSON.stringify(tickers), n.id);
+    actualizadas++;
+  }
+  return actualizadas;
+}
+
 module.exports = {
   sincronizar, iniciarSincronizacionPeriodica, detenerSincronizacion,
   estadoSincronizacion, detectarValores, valoresEnCobertura, vincularNoticiasACompania,
+  desvincularNoticiasDeCompania,
 };

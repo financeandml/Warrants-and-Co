@@ -7,7 +7,7 @@
    añade. Es la contraparte de `detectarValores()`, que hace lo mismo en la
    otra dirección temporal cuando llega una noticia nueva.
 
-   Dos casos:
+   Cuatro casos:
 
      A · ALTA. Publicar una tesis con ticker reetiqueta la noticia que lo
          menciona, y la respuesta declara cuántas tocó.
@@ -19,6 +19,16 @@
          parcial: el emparejamiento por ticker seguía funcionando y ocultaba el
          fallo, que solo se ve con una noticia que menciona la compañía por
          nombre y no por ticker.
+
+     C · BORRADO, única tesis. Al borrar la única tesis que respalda un
+         ticker, éste se retira del array `tickers` de las noticias que lo
+         llevaban. `categoria` y `relevancia` NO se tocan —decisión de
+         diseño: no hay forma de saber su valor antes del reetiquetado sin
+         inventarlo, así que se quedan como estaban—.
+
+     D · BORRADO, tesis compartida. Si otra tesis viva sigue usando el mismo
+         ticker, borrar una de las dos no retira nada: la cobertura sigue
+         justificada por la que queda.
 
    ESCRIBE EN LA BASE: apúntese siempre a una instancia de pruebas, nunca a
    `data/warrants.db` ni a un servidor arrancado sobre ella.
@@ -78,8 +88,8 @@ async function api(ruta, opciones = {}) {
 
   // Idempotencia: una repasada sin resembrar la base no debe acumular restos
   // de la pasada anterior, o el recuento de reetiquetadas deja de ser fiable.
-  db.prepare("DELETE FROM noticias WHERE titular LIKE '%Zylonix%' OR titular LIKE '%Quorvex%'").run();
-  db.prepare("DELETE FROM informes WHERE empresa LIKE '%Zylonix%' OR empresa LIKE '%Quorvex%'").run();
+  db.prepare("DELETE FROM noticias WHERE titular LIKE '%Zylonix%' OR titular LIKE '%Quorvex%' OR titular LIKE '%Veltrix%' OR titular LIKE '%Halbrook%'").run();
+  db.prepare("DELETE FROM informes WHERE empresa LIKE '%Zylonix%' OR empresa LIKE '%Quorvex%' OR empresa LIKE '%Veltrix%' OR empresa LIKE '%Halbrook%'").run();
 
   // ── Caso A · alta, emparejamiento por ticker ──
   const idNoticiaA = sembrarNoticia(db, {
@@ -137,6 +147,67 @@ async function api(ruta, opciones = {}) {
   t('edición parcial · el ticker nuevo queda vinculado por nombre',
     Array.isArray(noticiaB.datos?.tickers) && noticiaB.datos.tickers.includes('QRVX'),
     JSON.stringify(noticiaB.datos?.tickers));
+
+  // ── Caso C · borrado, única tesis: el ticker se retira ──
+  const idNoticiaC = sembrarNoticia(db, {
+    titular: 'Veltrix Robotics firma un contrato con un fabricante europeo',
+    fecha: hoy,
+  });
+
+  const altaCForm = new FormData();
+  altaCForm.append('empresa', 'Veltrix Robotics');
+  altaCForm.append('ticker', 'VLTX');
+  const altaC = await api('/api/informes', { method: 'POST', body: altaCForm });
+  t('borrado único · el alta reetiqueta antes de borrar',
+    altaC.datos?.noticiasReetiquetadas === 1, JSON.stringify(altaC.datos));
+
+  const borradoC = await api(`/api/informes/${altaC.datos?.id}`, { method: 'DELETE' });
+  t('borrado único · responde con éxito', borradoC.status === 200, JSON.stringify(borradoC.datos));
+  t('borrado único · declara una noticia desvinculada',
+    borradoC.datos?.noticiasDesvinculadas === 1, String(borradoC.datos?.noticiasDesvinculadas));
+
+  const noticiaC = await api(`/api/noticias/${idNoticiaC}`);
+  t('borrado único · el ticker se retira del array',
+    Array.isArray(noticiaC.datos?.tickers) && !noticiaC.datos.tickers.includes('VLTX'),
+    JSON.stringify(noticiaC.datos?.tickers));
+  t('borrado único · categoría NO se toca',
+    noticiaC.datos?.categoria === 'Compañía', String(noticiaC.datos?.categoria));
+  t('borrado único · relevancia NO se toca',
+    noticiaC.datos?.relevancia === 'alta', String(noticiaC.datos?.relevancia));
+
+  // ── Caso D · borrado, tesis compartida: el ticker se queda ──
+  const idNoticiaD = sembrarNoticia(db, {
+    titular: 'Halbrook Systems anuncia resultados por encima de lo esperado',
+    fecha: hoy,
+  });
+
+  const altaD1Form = new FormData();
+  altaD1Form.append('empresa', 'Halbrook Systems');
+  altaD1Form.append('ticker', 'HLBK');
+  const altaD1 = await api('/api/informes', { method: 'POST', body: altaD1Form });
+  t('borrado compartido · la primera tesis reetiqueta',
+    altaD1.datos?.noticiasReetiquetadas === 1, JSON.stringify(altaD1.datos));
+
+  const altaD2Form = new FormData();
+  altaD2Form.append('empresa', 'Halbrook Systems');
+  altaD2Form.append('ticker', 'HLBK');
+  const altaD2 = await api('/api/informes', { method: 'POST', body: altaD2Form });
+  t('borrado compartido · la segunda tesis no reetiqueta de nuevo (ya estaba)',
+    (altaD2.datos?.noticiasReetiquetadas ?? 0) === 0, JSON.stringify(altaD2.datos));
+
+  const borradoD = await api(`/api/informes/${altaD1.datos?.id}`, { method: 'DELETE' });
+  t('borrado compartido · responde con éxito', borradoD.status === 200, JSON.stringify(borradoD.datos));
+  t('borrado compartido · no declara ninguna noticia desvinculada',
+    (borradoD.datos?.noticiasDesvinculadas ?? 0) === 0, String(borradoD.datos?.noticiasDesvinculadas));
+
+  const noticiaD = await api(`/api/noticias/${idNoticiaD}`);
+  t('borrado compartido · el ticker sigue vinculado: la otra tesis lo respalda',
+    Array.isArray(noticiaD.datos?.tickers) && noticiaD.datos.tickers.includes('HLBK'),
+    JSON.stringify(noticiaD.datos?.tickers));
+  t('borrado compartido · categoría sigue intacta',
+    noticiaD.datos?.categoria === 'Compañía', String(noticiaD.datos?.categoria));
+  t('borrado compartido · relevancia sigue intacta',
+    noticiaD.datos?.relevancia === 'alta', String(noticiaD.datos?.relevancia));
 
   for (const r of R) console.log(`  ${r.ok ? 'OK  ' : 'FAIL'} ${r.n}${r.ok ? '' : ` — ${r.d}`}`);
   const fallos = R.filter((r) => !r.ok).length;

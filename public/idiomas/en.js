@@ -395,6 +395,10 @@ export default {
   },
   'informe.eliminar.confirmar': 'Permanently delete this report and its attached documentation?',
   'informe.eliminado': 'Report deleted.',
+  'informe.eliminado.desvinculadas': {
+    one: '{n} news item unlinked from this company: no thesis with this ticker remains.',
+    other: '{n} news items unlinked from this company: no thesis with this ticker remains.',
+  },
 
   // ═════════════ Report card proposed from an attached PDF ════════════════
   // Extracting is proposing: nothing taken from the document counts as valid

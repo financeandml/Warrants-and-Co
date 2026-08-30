@@ -407,6 +407,10 @@ export default {
   },
   'informe.eliminar.confirmar': '¿Eliminar definitivamente este informe y su documentación asociada?',
   'informe.eliminado': 'Informe eliminado.',
+  'informe.eliminado.desvinculadas': {
+    one: '{n} noticia se ha desvinculado de esta compañía: ya no queda ninguna tesis con este ticker.',
+    other: '{n} noticias se han desvinculado de esta compañía: ya no queda ninguna tesis con este ticker.',
+  },
 
   // ══════════════ Propuesta de ficha leída de un PDF adjunto ══════════════
   // Extraer es proponer: nada de lo que sale del documento cuenta como válido

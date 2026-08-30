@@ -448,12 +448,20 @@ router.put('/:id(\\d+)', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
 
 router.delete('/:id(\\d+)', (req, res) => {
   const id = Number(req.params.id);
+  const existente = db.prepare('SELECT ticker FROM informes WHERE id = ?').get(id);
+  if (!existente) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El informe solicitado no existe.' }));
+
   const ficheros = db.prepare('SELECT nombre_fichero FROM adjuntos WHERE informe_id = ?').all(id);
-  const info = db.prepare('DELETE FROM informes WHERE id = ?').run(id);
-  if (!info.changes) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El informe solicitado no existe.' }));
+  db.prepare('DELETE FROM informes WHERE id = ?').run(id);
   // Los registros caen por ON DELETE CASCADE; el soporte fisico se retira aqui.
   for (const f of ficheros) fs.promises.unlink(path.join(UPLOAD_DIR, f.nombre_fichero)).catch(() => {});
-  res.json({ eliminado: id });
+
+  // Con la tesis ya borrada, si ninguna otra la respalda el ticker deja de
+  // estar en cartera: se retira de las noticias que lo llevaban.
+  const noticiasDesvinculadas = existente.ticker
+    ? sincronizacion.desvincularNoticiasDeCompania(existente.ticker)
+    : 0;
+  res.json({ eliminado: id, noticiasDesvinculadas });
 });
 
 router.delete('/:id(\\d+)/adjuntos/:adjuntoId(\\d+)', (req, res) => {
