@@ -1135,14 +1135,14 @@ siete días e invalidación por versión: sustituir el fichero basta para que se
 >   valen más que un efecto de scroll, de modo que en el choque el efecto es lo que cae.
 >
 > Lo que **no** cambia, y por eso no aparece arriba: la redundancia glifo/signo, los tres
-> estados del dato, el doble tema, `prefers-reduced-motion`, las cifras tabulares y el
-> gráfico acromático. La reforma es de identidad, no de lectura.
+> estados del dato, `prefers-reduced-motion`, las cifras tabulares y el gráfico acromático.
+> La reforma es de identidad, no de lectura.
 
-**Tema claro y oscuro.** El conmutador de la cabecera alterna entre ambos y la elección
-persiste entre sesiones. Sin elección explícita se sigue la preferencia del sistema
-operativo; volver a pulsar el tema activo devuelve el control al sistema. El tema se
-aplica antes del primer pintado, así que no hay destello al recargar. El tema oscuro
-está escogido, no invertido: los grises se recalculan para conservar la jerarquía.
+**Tema único claro.** Decisión de producto, ajena a esta reforma: la interfaz ya no
+ofrece conmutador ni sigue `prefers-color-scheme`; `public/tema.js` fija `data-tema="claro"`
+siempre. El sistema de tokens de `:root[data-tema="oscuro"]` sigue en `estilos.css` y
+`tests/paleta.js` lo sigue verificando —reserva del sistema de diseño, no deuda—, pero
+hoy ningún visitante lo ve.
 
 **Presencia corporativa.** La portada y el pie enlazan al perfil de LinkedIn de
 Warrants & Co., en pestaña nueva y con `rel="noopener noreferrer"`.
