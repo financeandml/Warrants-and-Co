@@ -31,7 +31,7 @@ import { iniciarCarga } from './carga.js';
 import {
   pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
-  refrescarTicker, rotularFrescura,
+  refrescarTicker,
 } from './inicio.js';
 
 // ─────────────────────────────── utilidades ──────────────────────────────
@@ -1578,12 +1578,10 @@ const REFRESCO_QUIETO_MS = 300_000;
 const PASADAS_QUIETAS = 3;
 
 let refrescoTemporizador = null;
-let rotuloTemporizador = null;
 let pasadasSinCambio = 0;
 
 function pararRefrescoCinta() {
   clearTimeout(refrescoTemporizador); refrescoTemporizador = null;
-  clearInterval(rotuloTemporizador); rotuloTemporizador = null;
 }
 
 async function pasadaDeCinta() {
@@ -1605,10 +1603,6 @@ async function pasadaDeCinta() {
 function programarRefrescoCinta() {
   pararRefrescoCinta();
   if (document.visibilityState !== 'visible') return;
-
-  /* El «hace X» se reescribe cada diez segundos aunque no se pida nada: lo que
-     envejece es el rótulo, no el dato, y para envejecer no hace falta la red. */
-  rotuloTemporizador = setInterval(() => rotularFrescura(), 10_000);
 
   const siguiente = () => {
     const espera = pasadasSinCambio >= PASADAS_QUIETAS ? REFRESCO_QUIETO_MS : REFRESCO_MS;
@@ -1633,7 +1627,6 @@ document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') { pararRefrescoCinta(); return; }
   if (!inicioMontado) return;
   pasadasSinCambio = 0;
-  rotularFrescura();
   pasadaDeCinta().catch(() => {});
   programarRefrescoCinta();
 });

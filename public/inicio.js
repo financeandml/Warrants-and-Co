@@ -99,6 +99,13 @@ function lineasDeTicker(indices, cartera) {
       // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
       destino: '#/companias',
       clave: `i:${i.clave ?? i.simbolo ?? i.nombre}`,
+      /* Sin símbolo, adrede: el proveedor conectado no tiene histórico para
+         ningún índice del panel —SPX, NDX, VIX, US10Y fallan hoy con «crumb
+         inválido»—, así que pedir la serie sería una petición condenada a
+         404 en cada carga de portada, siempre. No es una carencia que la
+         cinta deba re-descubrir sesión a sesión: se declara aquí y se
+         revisa el día que el proveedor lo resuelva. */
+      simbolo: null,
     });
   }
 
@@ -112,6 +119,7 @@ function lineasDeTicker(indices, cartera) {
       // Cada valor en cartera tiene ficha propia: la cinta lleva a ella.
       destino: `#/companias?t=${encodeURIComponent(p.ticker)}`,
       clave: `p:${p.ticker}`,
+      simbolo: p.ticker,
     });
   }
 
@@ -164,70 +172,67 @@ function sustituirValor(nodo, texto, prefijo) {
   return true;
 }
 
-/**
- * Rótulo de frescura, anclado al borde de la cinta y fuera del flujo.
- *
- * Dice cuándo imprimió el MERCADO el precio, no cuándo lo pedimos nosotros, y
- * cuando el proveedor no publica esa hora lo rotula distinto —hoy el proveedor
- * activo es el de respaldo, que solo sabe la hora de la consulta—. Con el
- * mercado cerrado el instante deja de avanzar y el rótulo acaba diciendo «hace
- * 3 h», que es la verdad y es más honesto que fingir pulso.
- */
-function pintarFrescura(cinta, cartera, indices) {
-  let caja = cinta.querySelector('.ticker__frescura');
-  if (!caja) {
-    caja = elemento('div', 'ticker__frescura');
-    caja.appendChild(elemento('span', 'ticker__frescura__punto'));
-    caja.appendChild(elemento('span', 'ticker__frescura__texto'));
-    cinta.appendChild(caja);
+/* ── El sparkline: solo con serie real, nunca con una fabricada ──
+   `/api/mercado/serie/:simbolo` publica cierres diarios reales. Hoy el
+   proveedor conectado no tiene histórico para los índices —VIX, NDX, SPX,
+   US10Y fallan con «crumb inválido»—, así que sus celdas se quedan sin
+   gráfico: es una carencia de proveedor, no una decisión de diseño, y no se
+   disimula con una línea inventada. Un ticker de cartera sí lo consigue casi
+   siempre.
+
+   La caché es por símbolo y vive mientras dure la página: la cinta no vuelve
+   a pedir la serie en cada refresco de 20 s, solo la tendencia de precio, que
+   sí cambia sesión a sesión y no minuto a minuto. */
+const cacheSparkline = new Map();
+
+function obtenerSerieSparkline(simbolo) {
+  if (!cacheSparkline.has(simbolo)) {
+    cacheSparkline.set(simbolo, fetch(`/api/mercado/serie/${encodeURIComponent(simbolo)}?dias=20`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => (d?.disponible && Array.isArray(d.serie) && d.serie.length >= 2 ? d.serie : null))
+      .catch(() => null));
   }
-
-  /* El instante más reciente de los publicados, y si alguno de ellos es de
-     mercado de verdad. Se mira la cartera y los índices: basta uno fiable para
-     poder hablar de la hora del mercado. */
-  const momentos = [
-    ...(cartera?.posiciones ?? []),
-    ...(indices?.indices ?? []),
-  ].filter((x) => x?.momento);
-
-  const texto = caja.querySelector('.ticker__frescura__texto');
-  if (!momentos.length) {
-    delete caja.dataset.vivo;
-    texto.textContent = t('inicio.ticker.frescura.sinHora');
-    caja.dataset.deMercado = 'false';
-    return;
-  }
-
-  const deMercado = momentos.some((x) => x.momentoDeMercado === true);
-  const ultimo = momentos.reduce((a, b) =>
-    (new Date(b.momento) > new Date(a.momento) ? b : a));
-
-  caja.dataset.deMercado = String(deMercado);
-  caja.dataset.momento = ultimo.momento;
-  rotularFrescura(caja);
+  return cacheSparkline.get(simbolo);
 }
 
-/** Reescribe el «hace X» sin volver a pedir nada. */
-export function rotularFrescura(caja = document.querySelector('.ticker__frescura')) {
-  if (!caja?.dataset.momento) return;
-  const texto = caja.querySelector('.ticker__frescura__texto');
-  if (!texto) return;
+/**
+ * Construye el trazado SVG de la miniserie. Sin `innerHTML`: cada nodo se crea
+ * por su cuenta, como exige la CSP.
+ *
+ * El color no es del día —la variación diaria que ya lleva la celda, con su
+ * propio signo— sino del PERIODO que el propio trazo dibuja: si la sesión más
+ * antigua de la ventana cotizaba por debajo de la más reciente, sube. Es
+ * decorativo y redundante con el signo que ya está escrito al lado, nunca la
+ * única forma de leer la dirección: la regla 1 de CLAUDE.md lo exige.
+ */
+function construirSparkline(serie) {
+  const valores = serie.map((p) => p.valor);
+  const minimo = Math.min(...valores);
+  const maximo = Math.max(...valores);
+  const rango = maximo - minimo || 1;
+  const ANCHO = 56, ALTO = 24;
 
-  const segundos = Math.max(0, Math.round((Date.now() - new Date(caja.dataset.momento)) / 1000));
-  const deMercado = caja.dataset.deMercado === 'true';
+  const puntos = valores.map((v, i) => {
+    const x = (i / (valores.length - 1)) * ANCHO;
+    const y = ALTO - ((v - minimo) / rango) * ALTO;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(' ');
 
-  /* El punto solo se enciende con hora de mercado reciente. Nunca carga solo: el
-     rótulo dice el tiempo con palabras y el punto únicamente lo acompaña. */
-  if (deMercado && segundos < 120) caja.dataset.vivo = 'true';
-  else delete caja.dataset.vivo;
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('class', 'ticker__grafico');
+  svg.setAttribute('viewBox', `0 0 ${ANCHO} ${ALTO}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
 
-  const cuanto = segundos < 60 ? t('inicio.ticker.frescura.segundos', { n: segundos })
-    : segundos < 3600 ? t('inicio.ticker.frescura.minutos', { n: Math.round(segundos / 60) })
-      : t('inicio.ticker.frescura.horas', { n: Math.round(segundos / 3600) });
+  const cambio = valores[valores.length - 1] - valores[0];
+  const modificador = cambio > 0 ? 'alza' : cambio < 0 ? 'baja' : 'plana';
 
-  texto.textContent = deMercado
-    ? t('inicio.ticker.frescura.mercado', { cuanto })
-    : t('inicio.ticker.frescura.consulta', { cuanto });
+  const linea = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  linea.setAttribute('points', puntos);
+  linea.setAttribute('class', `ticker__grafico__linea ticker__grafico__linea--${modificador}`);
+  svg.appendChild(linea);
+  return svg;
 }
 
 /**
@@ -280,7 +285,6 @@ export function refrescarTicker(indices, cartera) {
     }
   }
 
-  pintarFrescura(cinta, cartera, indices);
   return cambios;
 }
 
@@ -306,16 +310,25 @@ export function pintarTicker(indices, cartera) {
     // La clave enlaza este item con su línea al refrescar.
     item.dataset.clave = l.clave;
 
-    item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
+    const texto = elemento('span', 'ticker__texto');
+    texto.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
     const fila = elemento('span', 'ticker__cifras');
     fila.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
     fila.appendChild(elemento('span',
       `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
-    item.appendChild(fila);
+    texto.appendChild(fila);
+    item.appendChild(texto);
     pista.appendChild(item);
-  }
 
-  pintarFrescura(cinta, cartera, indices);
+    // El gráfico llega aparte y tarde: solo cuando el proveedor confirma una
+    // serie real, nunca antes. Sin serie, la celda se queda sin él —no hay
+    // hueco reservado para un trazo que puede no llegar nunca—.
+    if (l.simbolo) {
+      obtenerSerieSparkline(l.simbolo).then((serie) => {
+        if (serie) item.appendChild(construirSparkline(serie));
+      });
+    }
+  }
 }
 
 // ══════════════════════════ 2 · DECLARACIÓN Y PILARES ══════════════════════

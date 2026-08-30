@@ -152,18 +152,6 @@ export default {
 
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
-  /* ── Ticker freshness ──
-     Two forms, and the difference is not stylistic: "quoted" says when the
-     MARKET printed the price, "fetched" when we asked for it. Only the first is
-     real freshness; the second keeps advancing even with the market closed for
-     hours, and calling that quoted would be a lie. The fallback provider only
-     publishes the second. */
-  'inicio.ticker.frescura.mercado': 'Quoted {cuanto}',
-  'inicio.ticker.frescura.consulta': 'Fetched {cuanto}',
-  'inicio.ticker.frescura.sinHora': 'No time published',
-  'inicio.ticker.frescura.segundos': '{n}s ago',
-  'inicio.ticker.frescura.minutos': '{n}m ago',
-  'inicio.ticker.frescura.horas': '{n}h ago',
   'inicio.ticker.masMercados': 'See more markets',
 
   // ── Home · market pulse ──

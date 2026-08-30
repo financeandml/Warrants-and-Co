@@ -1741,7 +1741,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada[data-banner="true"] .ticker__item:hover {
   background: var(--velo-portada-activo);
 }
-.portada[data-banner="true"] .ticker__frescura,
 .portada[data-banner="true"] .ticker__mas {
   color: var(--tinta-portada);
   border-inline-start-color: var(--linea-portada);
@@ -3207,7 +3206,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 
 .ticker__item {
-  display: flex; flex-direction: column; gap: 6px;
+  display: flex; align-items: center; gap: 14px;
   flex-shrink: 0;
   padding: 18px 24px;
   font-size: 0.8rem; text-decoration: none; color: var(--tinta);
@@ -3217,11 +3216,32 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .ticker__pista > .ticker__item:last-child { border-inline-end: none; }
 .ticker__item:hover { background: var(--superficie-alt); }
+.ticker__texto { display: flex; flex-direction: column; gap: 6px; }
 .ticker__etiqueta {
   font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
   font-size: 0.7rem;
 }
 .ticker__cifras { display: inline-flex; align-items: baseline; gap: 9px; }
+
+/* ── El sparkline ──
+   Llega tarde y a veces no llega: es un trazo decorativo, redundante con el
+   signo que ya está escrito en `.ticker__var`, nunca la única forma de leer
+   la dirección. Sin él la celda es exactamente la de antes —no reserva un
+   hueco vacío para un gráfico que puede no venir nunca—, así que su ancho
+   entra en el ancho de la celda en cuanto aparece, y no antes. */
+.ticker__grafico {
+  width: 52px; height: 22px; flex-shrink: 0;
+  overflow: visible;
+}
+.ticker__grafico__linea {
+  fill: none;
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+}
+.ticker__grafico__linea--alza { stroke: var(--alcista); }
+.ticker__grafico__linea--baja { stroke: var(--bajista); }
+.ticker__grafico__linea--plana { stroke: var(--tinta-mate); }
+
 /* ── El valor de la cinta, y por qué es `inline-block` ──
    Para poder moverlo al cambiar hace falta `transform`, y `transform` no aplica
    a una caja en linea. `inline-block` la habilita SIN mover nada: con
@@ -3269,34 +3289,10 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   animation: ticker-valor-entra 100ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
 
-/* ── El rótulo de frescura y «ver más» ──
-   Los dos son piezas fijas al final de la fila —FUERA de `.ticker__pista`, que
-   es lo único que se desplaza—: así ninguno de los dos se pierde por el
-   desbordamiento si algún día no caben todos los activos.
-
-   La frescura dice cuándo imprimió el MERCADO el precio, no cuándo lo pedimos
-   nosotros, y cuando el proveedor no publica esa hora lo rotula distinto. Con
-   el mercado cerrado se queda quieto y acaba diciendo «hace 3 h», que es la
-   verdad: más honesto que cualquier animación que fingiera pulso. */
-.ticker__frescura {
-  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
-  padding-inline: 18px;
-  font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
-  color: var(--tinta-mate);
-  border-inline-start: 1px solid var(--linea-hairline);
-  white-space: nowrap; pointer-events: none;
-}
-/* En pantalla estrecha no da para las tres cosas: manda el dato sobre el reloj. */
-@media (max-width: 720px) { .ticker__frescura { display: none; } }
-
-/* El punto no porta informacion por si solo: el rotulo dice el tiempo con
-   palabras, y el punto solo lo acompaña. */
-.ticker__frescura__punto {
-  width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
-  background: var(--tinta-mate);
-}
-.ticker__frescura[data-vivo="true"] .ticker__frescura__punto { background: var(--alcista); }
-
+/* ── «Ver más mercados» ──
+   Pieza fija al final de la fila —FUERA de `.ticker__pista`, que es lo único
+   que se desplaza—: nunca se pierde por el desbordamiento si algún día no
+   caben todos los activos. */
 .ticker__mas {
   display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
   padding-inline: 20px;

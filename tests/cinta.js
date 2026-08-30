@@ -24,11 +24,11 @@
        para encuadrar la fotografía y decidir dónde cae el árbol. Una sustitución
        que moviera un píxel movería el árbol cada veinte segundos.
 
-   3 · QUE EL RÓTULO DISTINGUE COTIZADO DE CONSULTADO. `momento` no significa lo
-       mismo en todos los proveedores: Yahoo publica el instante en que el mercado
-       imprimió el precio, y los de respaldo la hora en que se lo preguntamos. Con
-       el mercado cerrado, la primera se queda quieta y la segunda avanza en cada
-       petición. Rotular una como la otra es publicar una frescura falsa.
+   3 · QUE EL SPARKLINE SOLO APARECE CON SERIE REAL. `/api/mercado/serie/:simbolo`
+       publica cierres diarios reales; un ticker de cartera casi siempre la
+       consigue, y hoy el proveedor conectado no tiene histórico para los índices
+       —fallan con «crumb inválido»—. La celda de un ticker de cartera acaba con
+       su trazo; la de un índice no reserva un hueco vacío para uno que no llega.
 
    4 · QUE CON MOVIMIENTO REDUCIDO EL VALOR SIGUE CAMBIANDO. La hoja apaga esa
        animación con `animation: none`, y sin animación `animationend` NO SE
@@ -48,6 +48,7 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
 const R = [];
 const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
+const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
 
 /* Una pasada del sondeo son 20 s por diseño —el servidor cachea las cotizaciones
    15—, así que esperar es aquí lo correcto y no un atajo: lo que se comprueba es
@@ -81,8 +82,7 @@ async function conCambio(navegador, opciones = {}) {
 }
 
 const pintada = (p) => p.waitForFunction(() =>
-  document.querySelectorAll('#ticker-pista .ticker__item').length > 0
-  && Boolean(document.querySelector('.ticker__frescura__texto')?.textContent),
+  document.querySelectorAll('#ticker-pista .ticker__item').length > 0,
   null, { timeout: 45000 });
 
 (async () => {
@@ -148,43 +148,50 @@ const pintada = (p) => p.waitForFunction(() =>
     await ctx.close();
   }
 
-  /* ── 2 · El rótulo distingue cotizado de consultado, en los dos idiomas ── */
-  for (const idioma of ['es', 'en']) {
-    for (const deMercado of [true, false]) {
-      const { ctx, p } = await conCambio(navegador, { deMercado });
-      p.on('pageerror', (e) => errores.push(e.message));
-      await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
-      await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
-      await p.reload({ waitUntil: 'domcontentloaded' });
-      await pintada(p);
+  /* ── 2 · El sparkline solo aparece con serie real ── */
+  {
+    const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
+    const p = await ctx.newPage();
+    p.on('pageerror', (e) => errores.push(e.message));
+    await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
+    await pintada(p);
 
-      const antes = await p.evaluate(() =>
-        document.querySelector('#ticker-pista .ticker__valor').textContent);
-      await esperarCambio(p, antes);
-      await p.waitForTimeout(400);
+    /* El gráfico llega aparte del pintado inicial, en cuanto el proveedor
+       confirma la serie. Se espera a que la primera celda de cartera lo
+       consiga, o a que el plazo se agote —lo agota sin fallar: la ausencia se
+       comprueba después, con su propio motivo declarado. */
+    await p.waitForFunction(() =>
+      document.querySelector('[data-clave^="p:"] .ticker__grafico') !== null,
+      null, { timeout: 15000 }).catch(() => {});
 
-      const rotulo = await p.evaluate(() => {
-        const f = document.querySelector('.ticker__frescura');
-        return { texto: f.querySelector('.ticker__frescura__texto').textContent,
-                 deMercado: f.dataset.deMercado, vivo: f.dataset.vivo ?? null };
-      });
+    const estado = await p.evaluate(() => {
+      const cartera = [...document.querySelectorAll('[data-clave^="p:"]')];
+      const indices = [...document.querySelectorAll('[data-clave^="i:"]')];
+      return {
+        carteraTotal: cartera.length,
+        carteraConGrafico: cartera.filter((i) => i.querySelector('.ticker__grafico')).length,
+        indicesConGrafico: indices.filter((i) => i.querySelector('.ticker__grafico')).length,
+      };
+    });
 
-      /* Las dos formas han de ser DISTINTAS y decir cuál es cuál. Se compara
-         contra el diccionario del idioma, no contra una palabra escrita aquí. */
-      const esperado = deMercado
-        ? { es: 'Cotizado', en: 'Quoted' }[idioma]
-        : { es: 'Consultado', en: 'Fetched' }[idioma];
-      t(`[${idioma}] con momento ${deMercado ? 'de mercado' : 'de consulta'}, el rótulo lo dice`,
-        rotulo.texto.startsWith(esperado) && rotulo.deMercado === String(deMercado),
-        `«${rotulo.texto}» · data-de-mercado=${rotulo.deMercado}`);
-
-      /* El punto solo se enciende con hora de mercado. Con hora de consulta,
-         encenderlo anunciaría un pulso que nadie ha publicado. */
-      t(`[${idioma}] el punto solo se enciende con hora de mercado`,
-        deMercado ? rotulo.vivo === 'true' : rotulo.vivo === null,
-        `vivo=${rotulo.vivo} con deMercado=${deMercado}`);
-      await ctx.close();
+    if (!estado.carteraTotal) {
+      pendiente('el sparkline de cartera aparece con serie real',
+        'la base no tiene tesis en cartera: sin ticker de cartera que ejercite el proveedor');
+    } else {
+      t('el sparkline de cartera aparece con serie real',
+        estado.carteraConGrafico === estado.carteraTotal,
+        `${estado.carteraConGrafico} de ${estado.carteraTotal} celdas de cartera con gráfico`);
     }
+
+    /* lineasDeTicker() no pide serie para los índices —el proveedor conectado
+       no tiene histórico para ninguno hoy, y pedirla sería una petición
+       condenada a 404 en cada carga—, así que sus celdas nunca llevan
+       gráfico. Cuando el proveedor lo resuelva, esta afirmación es la que
+       avisa de que ya puede pedirse también aquí. */
+    t('sin gráfico donde el proveedor no tiene histórico (hoy, los índices)',
+      estado.indicesConGrafico === 0,
+      `${estado.indicesConGrafico} índices con gráfico`);
+    await ctx.close();
   }
 
   /* ── 3 · Movimiento reducido: sin recorrido, pero el valor cambia ── */
@@ -269,8 +276,14 @@ const pintada = (p) => p.waitForFunction(() =>
   t('sin errores de consola', errores.length === 0, errores.slice(0, 3).join(' | '));
 
   await navegador.close();
-  for (const r of R) console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
-  const mal = R.filter((r) => !r.ok).length;
-  console.log(mal ? `\n  ${mal} fallo(s) de ${R.length}\n` : `\n  ${R.length}/${R.length} correctas\n`);
-  process.exit(mal ? 1 : 0);
+  for (const r of R) {
+    if (r.sinDato) { console.log(`    SIN DATO ${r.n}  → ${r.d}`); continue; }
+    console.log(`    ${r.ok ? 'OK   ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
+  }
+  const mal = R.filter((r) => !r.sinDato && !r.ok).length;
+  const sin = R.filter((r) => r.sinDato).length;
+  console.log(mal ? `\n  ${mal} fallo(s) de ${R.length}\n`
+    : sin ? `\n  ${R.length - sin} correctas · ${sin} SIN DATO\n`
+      : `\n  ${R.length}/${R.length} correctas\n`);
+  process.exit(mal ? 1 : (sin ? 2 : 0));
 })();
