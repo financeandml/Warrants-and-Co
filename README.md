@@ -1635,7 +1635,7 @@ publican el titular. Recuperar el desarrollo exigiría descargar cada artículo,
 está cerrada por Cloudflare además de plantear dudas de licencia; por eso la ficha remite
 al original.
 
-El campo `stop_loss` se registra y se muestra, pero todavía no cierra posiciones de
-forma automática: a diferencia del take profit, un stop suele ejecutarse con
-deslizamiento y conviene decidir si se quiere cierre automático al precio del stop o al
-cierre de la sesión. Queda pendiente de esa decisión.
+El campo `stop_loss` cierra posiciones de forma automática, simétrico al take profit
+pero al cierre de la sesión que cruza el nivel, no al precio exacto del stop: un stop
+real se ejecuta con deslizamiento, y suponer el precio exacto sería más optimista que
+el mercado.

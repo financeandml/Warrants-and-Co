@@ -90,13 +90,13 @@ function sesiones(n, desde = '2026-01-05') {
   return fechas;
 }
 
-/** Barras diarias a partir de una lista de cierres. El máximo se declara aparte. */
-function barras(fechas, cierres, maximos = null) {
+/** Barras diarias a partir de una lista de cierres. Máximo y mínimo se declaran aparte. */
+function barras(fechas, cierres, maximos = null, minimos = null) {
   return cierres.map((cierre, i) => ({
     fecha: fechas[i],
     apertura: cierre,
     maximo: maximos ? maximos[i] : cierre,
-    minimo: cierre,
+    minimo: minimos ? minimos[i] : cierre,
     cierre,
     volumen: 1000,
   }));
@@ -564,12 +564,37 @@ async function caso8() {
     cartera.avisos.join(' | '));
 }
 
+/*
+ * Caso 9 — stop loss cierra al cierre de la sesión que lo cruza, no al nivel exacto.
+ *
+ * Compra a 10, stop en 8. La sesión 3 mete un mínimo de 5 —cruza el stop de sobra—
+ * pero cierra en 6: la liquidación se hace a 6, no a 8. Asumir el precio exacto del
+ * stop ignoraría el deslizamiento, que es justo lo que esta regla evita.
+ */
+async function caso9() {
+  const f = sesiones(5);
+  escenario = {
+    barras: { V: barras(f, [10, 9, 6, 6, 6], null, [10, 9, 5, 6, 6]) },
+    cotizaciones: {},
+  };
+  const cartera = await calcularCartera([
+    linea({ ticker: 'V', fecha_publicacion: f[0], precio_compra: 10, stop_loss: 8 }),
+  ]);
+
+  const v = cartera.cerradas.find((p) => p.ticker === 'V');
+  t('stop loss · la posición se cierra', Boolean(v), `cerradas: ${cartera.cerradas.map((p) => p.ticker).join(', ')}`);
+  t('stop loss · se liquida al cierre de la sesión, no al nivel del stop',
+    v?.precioCierre === 6, `salida ${v?.precioCierre}`);
+  t('stop loss · se cierra en la sesión que cruza el nivel, no antes',
+    v?.fechaCierre === f[2], `cierre ${v?.fechaCierre} vs ${f[2]}`);
+}
+
 // ─────────────────────────────── ejecución ───────────────────────────────
 
 (async () => {
   for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4],
     ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6], ['caso 7', caso7],
-    ['caso 8', caso8]]) {
+    ['caso 8', caso8], ['caso 9', caso9]]) {
     try {
       await caso();
     } catch (e) {

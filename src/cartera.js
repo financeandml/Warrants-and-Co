@@ -136,7 +136,8 @@ function maximaCaida(niveles) {
 /**
  * Alinea los historicos de varios valores sobre un calendario comun.
  * Se arrastra el ultimo dato disponible para cubrir festivos no coincidentes.
- * Se conserva el maximo de cada sesion: es el que determina si se alcanza el take profit.
+ * Se conservan el maximo y el minimo de cada sesion: determinan si se alcanza
+ * el take profit o se cruza el stop loss.
  */
 function alinear(historicos) {
   const calendario = new Set();
@@ -151,10 +152,15 @@ function alinear(historicos) {
     for (const fecha of fechas) {
       const f = porFecha.get(fecha);
       if (f && typeof f.cierre === 'number') {
-        ultimo = { cierre: f.cierre, maximo: typeof f.maximo === 'number' ? f.maximo : f.cierre, real: true };
+        ultimo = {
+          cierre: f.cierre,
+          maximo: typeof f.maximo === 'number' ? f.maximo : f.cierre,
+          minimo: typeof f.minimo === 'number' ? f.minimo : f.cierre,
+          real: true,
+        };
       } else if (ultimo) {
-        // Sesion sin cruce: se arrastra el cierre, pero no un maximo que no existio.
-        ultimo = { cierre: ultimo.cierre, maximo: ultimo.cierre, real: false };
+        // Sesion sin cruce: se arrastra el cierre, pero no un maximo/minimo que no existio.
+        ultimo = { cierre: ultimo.cierre, maximo: ultimo.cierre, minimo: ultimo.cierre, real: false };
       }
       if (ultimo !== null) alineada.set(fecha, ultimo);
     }
@@ -219,6 +225,21 @@ function construirIndice(posiciones, fechas, series) {
         liquidez += unidades.get(p.ticker) * p.takeProfit;
         unidades.delete(p.ticker);
         cerradas.set(p.ticker, { fecha, precio: p.takeProfit, motivo: 'Take profit alcanzado' });
+      }
+    }
+
+    // 2b · Stop loss: se liquida al cierre de la sesion que cruza el nivel, no al
+    //      nivel exacto — un stop real se ejecuta con deslizamiento, y suponer el
+    //      precio del stop seria mas optimista que el mercado.
+    for (const p of activas) {
+      if (cerradas.has(p.ticker) || !unidades.has(p.ticker)) continue;
+      if (!Number.isFinite(p.stopLoss) || p.stopLoss <= 0) continue;
+      const datos = series.get(p.ticker).get(fecha);
+      if (!datos || !datos.real) continue;
+      if (datos.minimo <= p.stopLoss) {
+        liquidez += unidades.get(p.ticker) * datos.cierre;
+        unidades.delete(p.ticker);
+        cerradas.set(p.ticker, { fecha, precio: datos.cierre, motivo: 'Stop loss alcanzado' });
       }
     }
 
