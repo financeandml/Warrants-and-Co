@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/sincronizar.sh",
+            "timeout": 120,
+            "statusMessage": "Buscando novedades..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/auto-push.sh",
+            "timeout": 120,
+            "statusMessage": "Subiendo a GitHub..."
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,10 @@
+pandas==3.0.5
+numpy==2.5.1
+scipy==1.18.0
+yfinance==1.5.2
+streamlit==1.60.0
+plotly==6.9.0
+pandas-datareader==0.11.1
+openpyxl==3.1.5
+fpdf2==2.8.7
+supabase==2.31.0

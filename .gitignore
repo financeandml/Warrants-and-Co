@@ -11,3 +11,8 @@ data/copias/
 .env
 .env.*
 !.env.example
+
+# Config personal de Claude Code en esta maquina (activa el auto-push).
+# El script .claude/auto-push.sh SI se versiona; lo que no viaja es la
+# decision de tenerlo encendido, que es por maquina.
+.claude/settings.local.json

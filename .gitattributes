@@ -1,0 +1,51 @@
+# ============================================================================
+# Finales de línea y binarios.
+#
+# Existe porque somos dos y podemos estar en sistemas distintos. Sin esto, el
+# repositorio guarda lo que cada máquina le dé: quien tenga `core.autocrlf=false`
+# en Windows comitea CRLF, y a la otra persona le llega el fichero entero como
+# modificado. Es el conflicto más molesto que hay —falso, ruidoso y en cada
+# push—, y encima esconde el cambio de verdad entre mil líneas idénticas.
+#
+# `text=auto` normaliza a LF DENTRO del repositorio y deja que cada uno lo vea
+# en su sistema como quiera. Se decide aquí, en el repositorio, y no en la
+# configuración de cada máquina, que es justo lo que no se puede garantizar.
+# ============================================================================
+
+* text=auto
+
+
+# ─── Scripts ────────────────────────────────────────────────────────────────
+# Los hooks aguantan CRLF en Git Bash —comprobado, no supuesto—, pero eso vale
+# solo ahí: en cuanto uno se ejecute desde WSL, un contenedor o el CI, un `\r`
+# al final del shebang deja «bad interpreter». LF siempre, en todas partes.
+
+*.sh text eol=lf
+
+
+# ─── Binarios ───────────────────────────────────────────────────────────────
+# Marcados a mano y no por olfato. Git los detecta bien casi siempre, y ese
+# «casi» es el problema: un .woff2 o un .jpg normalizados por error no dan un
+# error, dan una tipografía que no carga o una imagen partida. Y eso se
+# descubre en pantalla, tarde.
+
+*.pdf   binary
+*.docx  binary
+*.xlsx  binary
+*.zip   binary
+
+*.jpg   binary
+*.jpeg  binary
+*.png   binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+
+# La base no se versiona (ahí está `.gitignore`), pero si alguien la fuerza con
+# `git add -f`, que al menos entre como binaria y no destrozada.
+*.db    binary

@@ -1,0 +1,186 @@
+# ============================================================================
+# Pruebas en cada push a main.
+#
+# Con dos personas empujando a la misma rama no hay revision previa que pare
+# nada: lo que uno sube, el otro se lo baja al arrancar. Esto es lo unico que se
+# interpone, y por eso corre en `push`, no solo en `pull_request`.
+#
+# Dos niveles separados A PROPOSITO, en dos jobs y no en dos pasos del mismo:
+# si el nivel con navegador se cae por algo suyo -- Chromium, el servidor, un
+# tiempo de espera --, el rapido sigue dando su veredicto. Un job unico convierte
+# cualquier fragilidad del navegador en "no se sabe nada de nada".
+# ============================================================================
+name: Pruebas
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Si llegan dos pushes seguidos, el de en medio no interesa: cancela y quedate
+# con el ultimo. Lo que importa es si main esta sano AHORA.
+concurrency:
+  group: pruebas-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ---------------------------------------------------------------------------
+  autonomas:
+    name: Autonomas (sin navegador)
+    runs-on: ubuntu-latest
+
+    # Ninguna de las ocho toca la base por defecto —comprobado: `src/cartera.js`
+    # no arrastra `src/db.js`, y `tests/copia.js` fija su propio `WARRANTS_DB`
+    # antes de requerirlo—. Se aisla igualmente, porque `src/db.js` abre la base
+    # AL CARGARSE, y basta con que una prueba futura lo requiera para que empiece
+    # a escribir en `data/` sin que nadie lo note. Es lo que pide CLAUDE.md para
+    # cualquier prueba que escriba.
+    env:
+      WARRANTS_DB: ${{ github.workspace }}/prueba/prueba.db
+      WARRANTS_UPLOADS: ${{ github.workspace }}/prueba/subidas
+      WARRANTS_COPIAS: ${{ github.workspace }}/prueba/copias
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Preparar directorio aislado
+        run: mkdir -p "${{ github.workspace }}/prueba/subidas" "${{ github.workspace }}/prueba/copias"
+
+      # Estas ocho no abren navegador ni necesitan servidor: solo modulos `node:`
+      # y fuentes del proyecto. Corren en segundos y son las que de verdad
+      # protegen el dia a dia.
+      #
+      # Cada una en su paso, no encadenadas: encadenadas, la primera que falla
+      # esconde a las siete siguientes y hay que ir arreglando de una en una.
+      - name: idiomas
+        run: npm run test:idiomas
+      - name: errores
+        if: '!cancelled()'
+        run: npm run test:errores
+      - name: cartera
+        if: '!cancelled()'
+        run: npm run test:cartera
+      - name: copia
+        if: '!cancelled()'
+        run: npm run test:copia
+      - name: extraccion
+        if: '!cancelled()'
+        run: npm run test:extraccion
+      - name: extraccion-lector
+        if: '!cancelled()'
+        run: npm run test:extraccion-lector
+      - name: extraccion-rotulos
+        if: '!cancelled()'
+        run: npm run test:extraccion-rotulos
+      - name: extraccion-corpus
+        if: '!cancelled()'
+        run: npm run test:extraccion-corpus
+
+  # ---------------------------------------------------------------------------
+  navegador:
+    name: Con navegador
+    runs-on: ubuntu-latest
+
+    # Las cuatro variables del servidor van las cuatro, y por los motivos que
+    # explica CLAUDE.md en «Pruebas que escriben»: omitir cualquiera no da un
+    # error claro, da una bateria roja que parece decir otra cosa.
+    #   - WARRANTS_CLAVE ha de coincidir con CLAVE_PRUEBA, o el alta responde 401
+    #     y desde la prueba se ve igual que una invalidacion rota.
+    #   - WARRANTS_MAX_PETICIONES sube el limite por IP: una pasada abre medio
+    #     centenar de peticiones en segundos y el de serie las corta con 429.
+    #   - WARRANTS_DB y WARRANTS_UPLOADS aislan base y adjuntos.
+    # Aqui la clave es un valor de prueba literal, no un secreto: el runner es
+    # efimero y la base se siembra vacia en cada pasada.
+    env:
+      WARRANTS_DB: ${{ github.workspace }}/prueba/prueba.db
+      WARRANTS_UPLOADS: ${{ github.workspace }}/prueba/subidas
+      WARRANTS_COPIAS: ${{ github.workspace }}/prueba/copias
+      WARRANTS_MAX_PETICIONES: '100000'
+      WARRANTS_CLAVE: PRUEBA123
+      CLAVE_PRUEBA: PRUEBA123
+      PORT: '4174'
+      HOST: 127.0.0.1
+      BASE_PRUEBA: http://127.0.0.1:4174
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      # Playwright es devDependency, pero el navegador en si no viaja en npm:
+      # hay que bajarlo aparte. `--with-deps` trae las librerias de sistema que
+      # Chromium necesita en ubuntu-latest.
+      - name: Instalar Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Sembrar base aislada
+        run: |
+          mkdir -p "${{ github.workspace }}/prueba/subidas" "${{ github.workspace }}/prueba/copias"
+          npm run sembrar
+
+      # Esperar al servidor sondeando, NO con un `sleep`: un sleep mide la carga
+      # de la maquina, no el programa -- el mismo motivo por el que CLAUDE.md
+      # prohibe `waitForTimeout` en las pruebas de navegador.
+      #
+      # Sin dependencias nuevas (`wait-on` seria una): curl basta.
+      - name: Levantar servidor y esperar a que responda
+        run: |
+          npm start > "${{ github.workspace }}/servidor.log" 2>&1 &
+          echo $! > "${{ github.workspace }}/servidor.pid"
+          for _ in $(seq 1 60); do
+            if curl -sf http://127.0.0.1:4174/ > /dev/null; then
+              echo "Servidor en pie."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::El servidor no respondio en 60 s."
+          cat "${{ github.workspace }}/servidor.log"
+          exit 1
+
+      - name: humo
+        run: npm test
+      - name: portada
+        if: '!cancelled()'
+        run: npm run test:portada
+      - name: repintado
+        if: '!cancelled()'
+        run: npm run test:repintado
+      - name: derivadas
+        if: '!cancelled()'
+        run: npm run test:derivadas
+      - name: areas
+        if: '!cancelled()'
+        run: npm run test:areas
+      - name: cinta
+        if: '!cancelled()'
+        run: npm run test:cinta
+      - name: tipografia
+        if: '!cancelled()'
+        run: npm run test:tipografia
+      - name: propuesta
+        if: '!cancelled()'
+        run: npm run test:propuesta
+      - name: cartera-interfaz
+        if: '!cancelled()'
+        run: npm run test:cartera-interfaz
+
+      # El log del servidor es lo primero que se mira cuando una prueba de
+      # navegador falla sin decir por que. Solo cuando algo ha ido mal.
+      - name: Log del servidor (si algo fallo)
+        if: failure()
+        run: cat "${{ github.workspace }}/servidor.log"
