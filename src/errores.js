@@ -15,22 +15,6 @@
    por la que existen `CLAVES_ACCESO` y `public/vocabulario.js`.
    ========================================================================= */
 
-/* ── Pendiente · E1b ──────────────────────────────────────────────────────
-   Estos once códigos existen y no los consume nadie todavía. Las rutas siguen
-   redactando su error a pelo —`res.status(404).json({ error: '…' })`, una
-   veintena de sitios entre `routes/informes.js`, `routes/noticias.js`,
-   `routes/mercado.js` y `routes/opciones.js`— y sin código el cliente no puede
-   rotularlos: caen a la frase castellana del servidor.
-
-   E1b consiste en pasar esas rutas por `cuerpoError()`, propagar el `codigo` en
-   el manejador de `server.js` y declarar los once rótulos como `codigo.…` en
-   los diccionarios. `rotuloError()` en `app.js` ya los resolverá sin cambio
-   alguno; hasta entonces, la reserva es una frase útil y nunca una clave cruda.
-
-   `tests/errores.js` los enumera como pendientes en cada pasada. Al declarar
-   sus rótulos dejan de ser aviso y pasan a exigirse como los de validación.
-   ──────────────────────────────────────────────────────────────────────── */
-
 /** Errores de petición: uno por respuesta. */
 const API = {
   LIMITE_PETICIONES: {
@@ -61,6 +45,10 @@ const API = {
   PROVEEDOR_NO_RESPONDE: {
     status: 502,
     mensaje: 'Un proveedor externo no ha respondido.',
+  },
+  CAPACIDAD_NO_DISPONIBLE: {
+    status: 501,
+    mensaje: 'Ningún proveedor conectado ofrece esta capacidad.',
   },
 };
 

@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { db } = require('../db');
+const { cuerpoError } = require('../errores');
 const opciones = require('../opciones');
 
 const router = express.Router();
@@ -32,11 +33,13 @@ router.get('/cadena/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(cadena);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json({ error: err.message });
+    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
     // Una carencia del proveedor no es un fallo del servicio: se distingue del error.
     if (err.name === 'ErrorProveedorOpciones') {
+      const codigo = err.transitorio ? 'PROVEEDOR_NO_RESPONDE' : 'CAPACIDAD_NO_DISPONIBLE';
       return res.status(err.transitorio ? 502 : 501).json({
-        error: err.message, capacidad: err.capacidad, proveedor: err.proveedor, disponible: false,
+        ...cuerpoError(codigo, { detalle: err.message }),
+        capacidad: err.capacidad, proveedor: err.proveedor, disponible: false,
       });
     }
     next(err);
@@ -84,7 +87,7 @@ router.get('/historico/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(datos);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json({ error: err.message });
+    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
     next(err);
   }
 });

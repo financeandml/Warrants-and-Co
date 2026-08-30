@@ -3017,7 +3017,7 @@ async function sincronizarAhora() {
     await cargarEstadoSincronizacion();
     await invalidarDerivadasDeNoticias();
   } catch (err) {
-    avisar(err.message, { duracion: 9000 });
+    avisar(rotuloError(err.codigo, err.message), { duracion: 9000 });
     await cargarEstadoSincronizacion();
   } finally {
     delete boton.dataset.ocupado;
@@ -3267,7 +3267,7 @@ async function cargarCadenaOpciones(simboloSolicitado = null) {
     const caja = elemento('div', 'pendiente-bloque');
     caja.appendChild(elemento('span', 'pendiente-bloque__marca', t('opciones.cadena.sinDatos.marca')));
     caja.appendChild(elemento('strong', null, t('opciones.cadena.sinDatos.titulo', { simbolo })));
-    caja.appendChild(elemento('p', null, err.message));
+    caja.appendChild(elemento('p', null, rotuloError(err.codigo, err.message)));
     destino.appendChild(caja);
     $('#mapa-interes').textContent = '';
   } finally {

@@ -710,6 +710,18 @@ export default {
   'codigo.URL_NO_VALIDA': 'El enlace debe ser una dirección http o https válida',
   'codigo.CATEGORIA_NO_RECONOCIDA': 'Categoría no reconocida',
   'codigo.RELEVANCIA_NO_RECONOCIDA': 'Nivel de relevancia no reconocido',
+  'codigo.LIMITE_PETICIONES': 'Se ha superado el límite de peticiones. Reintente en unos instantes.',
+  'codigo.CREDENCIAL_INVALIDA': 'Credencial de analista no válida.',
+  'codigo.RECURSO_NO_ENCONTRADO': 'Recurso de API no encontrado.',
+  'codigo.CUERPO_NO_JSON': 'El cuerpo de la petición no es JSON válido.',
+  'codigo.VALIDACION': 'Los datos remitidos no superan la validación',
+  'codigo.DOCUMENTO_DEMASIADO_GRANDE': 'Cada documento supera el tamaño máximo admitido.',
+  'codigo.DEMASIADOS_DOCUMENTOS': 'Se ha excedido el número máximo de documentos por informe.',
+  'codigo.CAMPO_FICHERO_INESPERADO': 'Campo de fichero no esperado.',
+  'codigo.DOCUMENTOS_NO_PROCESABLES': 'No ha sido posible procesar los documentos.',
+  'codigo.ERROR_INTERNO': 'Se ha producido un error interno en el servidor.',
+  'codigo.PROVEEDOR_NO_RESPONDE': 'Un proveedor externo no ha respondido.',
+  'codigo.CAPACIDAD_NO_DISPONIBLE': 'Ningún proveedor conectado ofrece esta capacidad.',
 
   // ══════════════════════════ Acceso de analista ═══════════════════════════
   'acceso.credencialInvalida': 'Credencial no válida.',

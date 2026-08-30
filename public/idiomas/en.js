@@ -686,6 +686,18 @@ export default {
   'codigo.URL_NO_VALIDA': 'The link must be a valid http or https address',
   'codigo.CATEGORIA_NO_RECONOCIDA': 'Category not recognised',
   'codigo.RELEVANCIA_NO_RECONOCIDA': 'Relevance level not recognised',
+  'codigo.LIMITE_PETICIONES': 'Rate limit exceeded. Please try again in a few moments.',
+  'codigo.CREDENCIAL_INVALIDA': 'Invalid analyst credential.',
+  'codigo.RECURSO_NO_ENCONTRADO': 'API resource not found.',
+  'codigo.CUERPO_NO_JSON': 'Request body is not valid JSON.',
+  'codigo.VALIDACION': 'The submitted data does not pass validation',
+  'codigo.DOCUMENTO_DEMASIADO_GRANDE': 'Each document exceeds the maximum allowed size.',
+  'codigo.DEMASIADOS_DOCUMENTOS': 'Maximum number of documents per report exceeded.',
+  'codigo.CAMPO_FICHERO_INESPERADO': 'Unexpected file field.',
+  'codigo.DOCUMENTOS_NO_PROCESABLES': 'Documents could not be processed.',
+  'codigo.ERROR_INTERNO': 'An internal server error has occurred.',
+  'codigo.PROVEEDOR_NO_RESPONDE': 'An external provider did not respond.',
+  'codigo.CAPACIDAD_NO_DISPONIBLE': 'No connected provider offers this capability.',
 
   // ═══════════════════════════ Analyst access ═════════════════════════════
   'acceso.credencialInvalida': 'Invalid credentials.',

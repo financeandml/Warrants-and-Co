@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { db } = require('../db');
+const { cuerpoError } = require('../errores');
 const { validarNoticia, CATEGORIAS_NOTICIA, RELEVANCIAS, ETIQUETAS_RELEVANCIA } = require('../validacion');
 const sincronizacion = require('../noticias/sincronizacion');
 
@@ -116,7 +117,7 @@ router.get('/', (req, res) => {
     });
   } catch (err) {
     if (/fts5|MATCH|malformed/i.test(err.message)) {
-      return res.status(400).json({ error: 'La consulta de búsqueda no es válida.' });
+      return res.status(400).json(cuerpoError('VALIDACION', { detalle: 'La consulta de búsqueda no es válida.' }));
     }
     throw err;
   }
@@ -150,7 +151,7 @@ router.post('/sincronizar', async (req, res, next) => {
     res.json({ ...resultado, estado: sincronizacion.estadoSincronizacion() });
   } catch (err) {
     res.status(502).json({
-      error: `No ha sido posible sincronizar con Investing.com: ${err.message}`,
+      ...cuerpoError('PROVEEDOR_NO_RESPONDE', { detalle: err.message }),
       estado: sincronizacion.estadoSincronizacion(),
     });
   }
@@ -158,7 +159,7 @@ router.post('/sincronizar', async (req, res, next) => {
 
 router.get('/:id(\\d+)', (req, res) => {
   const fila = db.prepare('SELECT * FROM noticias WHERE id = ?').get(Number(req.params.id));
-  if (!fila) return res.status(404).json({ error: 'La noticia solicitada no existe.' });
+  if (!fila) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'La noticia solicitada no existe.' }));
   res.json(mapear(fila));
 });
 
@@ -175,7 +176,7 @@ router.post('/', (req, res) => {
 router.put('/:id(\\d+)', (req, res) => {
   const id = Number(req.params.id);
   if (!db.prepare('SELECT id FROM noticias WHERE id = ?').get(id)) {
-    return res.status(404).json({ error: 'La noticia solicitada no existe.' });
+    return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'La noticia solicitada no existe.' }));
   }
   const datos = validarNoticia(req.body ?? {}, { parcial: true });
   const columnas = Object.keys(datos);
@@ -188,7 +189,7 @@ router.put('/:id(\\d+)', (req, res) => {
 
 router.delete('/:id(\\d+)', (req, res) => {
   const info = db.prepare('DELETE FROM noticias WHERE id = ?').run(Number(req.params.id));
-  if (!info.changes) return res.status(404).json({ error: 'La noticia solicitada no existe.' });
+  if (!info.changes) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'La noticia solicitada no existe.' }));
   res.json({ eliminado: Number(req.params.id) });
 });
 

@@ -12,6 +12,7 @@ const multer = require('multer');
 
 const { db } = require('./src/db');
 const { ErrorValidacion } = require('./src/validacion');
+const { cuerpoError } = require('./src/errores');
 const informes = require('./src/routes/informes');
 const noticias = require('./src/routes/noticias');
 const sincronizacionNoticias = require('./src/noticias/sincronizacion');
@@ -210,28 +211,29 @@ app.use((err, req, res, next) => {
   if (res.headersSent) return next(err);
 
   if (err instanceof ErrorValidacion) {
-    return res.status(422).json({ error: err.message, errores: err.errores });
+    return res.status(422).json({ error: err.message, codigo: err.codigo, errores: err.errores });
   }
 
   if (err instanceof multer.MulterError) {
-    const mensajes = {
-      LIMIT_FILE_SIZE: `Cada documento no puede superar ${Math.round(informes.LIMITE_BYTES / 1024 / 1024)} MB.`,
-      LIMIT_FILE_COUNT: 'Se ha excedido el número máximo de documentos por informe.',
-      LIMIT_UNEXPECTED_FILE: 'Campo de fichero no esperado.',
+    const mapa = {
+      LIMIT_FILE_SIZE: 'DOCUMENTO_DEMASIADO_GRANDE',
+      LIMIT_FILE_COUNT: 'DEMASIADOS_DOCUMENTOS',
+      LIMIT_UNEXPECTED_FILE: 'CAMPO_FICHERO_INESPERADO',
     };
-    return res.status(413).json({ error: mensajes[err.code] ?? 'No ha sido posible procesar los documentos.' });
+    const codigo = mapa[err.code] ?? 'DOCUMENTOS_NO_PROCESABLES';
+    return res.status(413).json(cuerpoError(codigo));
   }
 
   if (err.status && err.status < 500) {
-    return res.status(err.status).json({ error: err.message });
+    return res.status(err.status).json({ error: err.message, codigo: err.codigo });
   }
 
   if (err.type === 'entity.parse.failed') {
-    return res.status(400).json({ error: 'El cuerpo de la petición no es JSON válido.' });
+    return res.status(400).json(cuerpoError('CUERPO_NO_JSON'));
   }
 
   console.error('[error]', err);
-  res.status(500).json({ error: 'Se ha producido un error interno en el servidor.' });
+  res.status(500).json(cuerpoError('ERROR_INTERNO'));
 });
 
 // ----------------------------------------------------------- arranque
