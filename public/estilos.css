@@ -1731,7 +1731,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada[data-banner="true"] .ticker {
   color: var(--tinta-portada);
   background: var(--velo-portada);
-  border-block-color: var(--linea-portada);
+  border-color: var(--linea-portada);
   backdrop-filter: saturate(120%) blur(6px);
 }
 .portada[data-banner="true"] .ticker__item {
@@ -1739,6 +1739,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-inline-end-color: var(--linea-portada);
 }
 .portada[data-banner="true"] .ticker__item:hover {
+  background: var(--velo-portada-activo);
+}
+.portada[data-banner="true"] .ticker__frescura,
+.portada[data-banner="true"] .ticker__mas {
+  color: var(--tinta-portada);
+  border-inline-start-color: var(--linea-portada);
+}
+.portada[data-banner="true"] .ticker__mas:hover {
   background: var(--velo-portada-activo);
 }
 
@@ -2578,11 +2586,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
      La regla de `.revelado` —el mecanismo unico— vive en el otro bloque de
      movimiento reducido, mas abajo, y ademas retira la transicion. */
   .cinta-cotizaciones__pista { animation: none !important; }
-  /* La cinta del hero se detiene, pero sigue leyendose: queda en su primer
-     fotograma, con los valores visibles y cortados por el ancho de la ventana.
-     Esa linea de datos partida por el borde es la que invita a bajar, y no
-     depende del movimiento para hacerlo. */
-  .ticker__pista { animation: none !important; }
   /* Sin recorrido, pero enteras: una casilla a medio descubrir sería una cifra
      cortada, que es peor que una cifra sin entrada. */
   .portada__cifras__celda--entra {
@@ -3186,36 +3189,39 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 /* ─────────────────────────────── 1 · TICKER ─────────────────────────────── */
 
+/* Píldora blanca, sin recorrido: una fila fija de celdas separadas por
+   divisores verticales. Si algún día no caben todas, la PISTA se desplaza
+   —`overflow-x: auto`, propia del contenido, nunca de la página entera—; el
+   contenedor jamás oculta un activo por falta de sitio. */
 .ticker {
-  position: relative;
+  display: flex; align-items: stretch;
   overflow: hidden;
-  border-block: 1px solid var(--linea);
+  border: 1px solid var(--linea);
+  border-radius: var(--radio-l);
   background: var(--superficie);
-  /* La cinta no puede provocar barra de desplazamiento en la página. */
   max-width: 100%;
 }
 .ticker__pista {
-  display: flex; width: max-content;
-  animation: cinta-avance var(--duracion, 46s) linear infinite;
+  display: flex; flex: 1 1 auto; min-width: 0;
+  overflow-x: auto;
 }
-.ticker:hover .ticker__pista,
-.ticker:focus-within .ticker__pista { animation-play-state: paused; }
-
-.ticker__grupo { display: flex; }
 
 .ticker__item {
-  display: inline-flex; align-items: center; gap: 10px;
-  padding: 22px 26px;
+  display: flex; flex-direction: column; gap: 6px;
+  flex-shrink: 0;
+  padding: 18px 24px;
   font-size: 0.8rem; text-decoration: none; color: var(--tinta);
   border-inline-end: 1px solid var(--linea-hairline);
   white-space: nowrap;
   transition: background var(--transicion);
 }
+.ticker__pista > .ticker__item:last-child { border-inline-end: none; }
 .ticker__item:hover { background: var(--superficie-alt); }
 .ticker__etiqueta {
   font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
   font-size: 0.7rem;
 }
+.ticker__cifras { display: inline-flex; align-items: baseline; gap: 9px; }
 /* ── El valor de la cinta, y por qué es `inline-block` ──
    Para poder moverlo al cambiar hace falta `transform`, y `transform` no aplica
    a una caja en linea. `inline-block` la habilita SIN mover nada: con
@@ -3230,10 +3236,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    MIENTRAS dura vuelve a su sitio antes de que nadie mire, y medir en reposo la
    da por buena — comprobado, con un margen dentro del fotograma de entrada.
 
-   Tampoco se fia de razonar sobre lineas base, que aqui ademas no deciden: el
-   item es `inline-flex` y su alto lo gobierna el mas alto de sus hijos. Se
-   comprobo poniendo `overflow: hidden` a proposito, por si movia la linea base
-   como haria en contexto en linea: no cambio el alto. */
+   Dentro de `.ticker__cifras` —`inline-flex`— el hijo se blockifica igual que
+   fuera de ella, de modo que declarar `inline-block` no cambia nada aquí: se
+   deja escrito porque sigue siendo la razón de fondo, no una reliquia. */
 .ticker__valor { font-variant-numeric: tabular-nums; display: inline-block; }
 .ticker__var { font-variant-numeric: tabular-nums; font-size: 0.76rem; display: inline-block; }
 
@@ -3264,25 +3269,24 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   animation: ticker-valor-entra 100ms cubic-bezier(0, 0, 0.2, 1) backwards;
 }
 
-/* ── El rotulo de frescura ──
-   Anclado al borde de la cinta y FUERA DEL FLUJO: una fila propia costaria alto
-   de hero, que es lo que paga el pliegue. No se mueve con la pista.
+/* ── El rótulo de frescura y «ver más» ──
+   Los dos son piezas fijas al final de la fila —FUERA de `.ticker__pista`, que
+   es lo único que se desplaza—: así ninguno de los dos se pierde por el
+   desbordamiento si algún día no caben todos los activos.
 
-   Dice cuando imprimio el MERCADO el precio, no cuando lo pedimos nosotros, y
-   cuando el proveedor no publica esa hora lo rotula distinto. Con el mercado
-   cerrado se queda quieto y acaba diciendo «hace 3 h», que es la verdad: mas
-   honesto que cualquier animacion que fingiera pulso. */
+   La frescura dice cuándo imprimió el MERCADO el precio, no cuándo lo pedimos
+   nosotros, y cuando el proveedor no publica esa hora lo rotula distinto. Con
+   el mercado cerrado se queda quieto y acaba diciendo «hace 3 h», que es la
+   verdad: más honesto que cualquier animación que fingiera pulso. */
 .ticker__frescura {
-  position: absolute; inset-block: 0; inset-inline-end: 0;
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: 7px; flex-shrink: 0;
   padding-inline: 18px;
   font-size: 0.68rem; letter-spacing: 0.06em; text-transform: uppercase;
   color: var(--tinta-mate);
-  background: inherit;
-  border-inline-start: 1px solid var(--linea);
+  border-inline-start: 1px solid var(--linea-hairline);
   white-space: nowrap; pointer-events: none;
 }
-/* En pantalla estrecha la cinta no da para las dos cosas: manda el dato. */
+/* En pantalla estrecha no da para las tres cosas: manda el dato sobre el reloj. */
 @media (max-width: 720px) { .ticker__frescura { display: none; } }
 
 /* El punto no porta informacion por si solo: el rotulo dice el tiempo con
@@ -3292,6 +3296,19 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   background: var(--tinta-mate);
 }
 .ticker__frescura[data-vivo="true"] .ticker__frescura__punto { background: var(--alcista); }
+
+.ticker__mas {
+  display: inline-flex; align-items: center; gap: 8px; flex-shrink: 0;
+  padding-inline: 20px;
+  font-size: 0.74rem; font-weight: 600; color: var(--tinta);
+  text-decoration: none; white-space: nowrap;
+  border-inline-start: 1px solid var(--linea-hairline);
+  transition: color var(--transicion), background var(--transicion);
+}
+.ticker__mas:hover { color: var(--acento); background: var(--superficie-alt); }
+.ticker__mas:focus-visible { outline: 2px solid var(--foco); outline-offset: -2px; }
+.ticker__mas__flecha { display: inline-block; transition: transform var(--transicion); }
+.ticker__mas:hover .ticker__mas__flecha { transform: translateX(4px); }
 
 /* ── «Este acaba de cambiar», sin movimiento ──
    Un filete bajo el item que cambió, puesto un ciclo entero. Existe para que la
@@ -3305,11 +3322,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .portada[data-banner="true"] .ticker__item[data-cambiado="true"] {
   box-shadow: inset 0 -2px 0 0 var(--linea-portada);
-}
-
-@keyframes cinta-avance {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(calc(var(--recorrido, 1200px) * -1), 0, 0); }
 }
 
 /* Lectura direccional: el signo manda, el peso acompaña. Nunca solo color. */
@@ -3771,7 +3783,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   /* Todo llega a su sitio sin recorrido: la página sigue siendo la misma. */
   .revelado { opacity: 1 !important; transform: none !important; transition: none !important; }
   .linea-revelada > span { transform: none !important; transition: none !important; }
-  .ticker__pista { animation: none !important; }
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
   .research-panel { transition: none !important; }
   .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }

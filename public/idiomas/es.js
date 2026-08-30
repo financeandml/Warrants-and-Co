@@ -172,6 +172,7 @@ export default {
   'inicio.ticker.frescura.segundos': 'hace {n} s',
   'inicio.ticker.frescura.minutos': 'hace {n} min',
   'inicio.ticker.frescura.horas': 'hace {n} h',
+  'inicio.ticker.masMercados': 'Ver más mercados',
 
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',

@@ -233,9 +233,9 @@ export function rotularFrescura(caja = document.querySelector('.ticker__frescura
 /**
  * Refresca la cinta SIN reconstruirla.
  *
- * Reconstruirla reiniciaría el traslado de la pista —la cinta daría un salto
- * visible cada 20 s— y no habría con qué comparar para saber qué cambió. Aquí
- * se cambian solo las celdas cuyo texto es distinto.
+ * Reconstruirla perdería la marca de «este acaba de cambiar» de cualquier
+ * celda a medio desvanecer. Aquí se cambian solo las celdas cuyo texto es
+ * distinto.
  *
  * Si el CONJUNTO de claves cambia —una posición que se abre o se cierra— no hay
  * refresco que valga y se repinta entero: la cinta ya no habla de las mismas
@@ -248,7 +248,7 @@ export function refrescarTicker(indices, cartera) {
   if (!cinta || !pista || cinta.hidden) return null;
 
   const lineas = lineasDeTicker(indices, cartera);
-  const clavesAhora = [...pista.querySelectorAll('.ticker__grupo:first-child .ticker__item')]
+  const clavesAhora = [...pista.querySelectorAll('.ticker__item')]
     .map((n) => n.dataset.clave).join('|');
   if (!lineas.length || lineas.map((l) => l.clave).join('|') !== clavesAhora) {
     pintarTicker(indices, cartera);
@@ -257,27 +257,26 @@ export function refrescarTicker(indices, cartera) {
 
   let cambios = 0;
   for (const l of lineas) {
-    // Los DOS items de esa clave: el original y el duplicado del bucle.
-    for (const item of pista.querySelectorAll(`[data-clave="${CSS.escape(l.clave)}"]`)) {
-      const valor = item.querySelector('.ticker__valor');
-      const varia = item.querySelector('.ticker__var');
-      let movido = false;
-      movido = sustituirValor(valor, textoValor(l), 'ticker__valor') || movido;
-      movido = sustituirValor(varia, textoVariacion(l), 'ticker__var') || movido;
-      if (varia) varia.className = `ticker__var ${claseDireccion(l.variacion)}`
-        + (varia.classList.contains('ticker__var--sale') ? ' ticker__var--sale' : '')
-        + (varia.classList.contains('ticker__var--entra') ? ' ticker__var--entra' : '');
-      if (movido) {
-        cambios++;
-        /* Marca persistente de «este cambió». Es la que sostiene la información
-           cuando el sistema pide movimiento reducido y no hay deslizamiento que
-           ver: movimiento reducido no es información reducida. */
-        item.dataset.cambiado = 'true';
-        clearTimeout(Number(item.dataset.temporizador) || 0);
-        item.dataset.temporizador = String(setTimeout(() => {
-          delete item.dataset.cambiado; delete item.dataset.temporizador;
-        }, 4000));
-      }
+    const item = pista.querySelector(`[data-clave="${CSS.escape(l.clave)}"]`);
+    if (!item) continue;
+    const valor = item.querySelector('.ticker__valor');
+    const varia = item.querySelector('.ticker__var');
+    let movido = false;
+    movido = sustituirValor(valor, textoValor(l), 'ticker__valor') || movido;
+    movido = sustituirValor(varia, textoVariacion(l), 'ticker__var') || movido;
+    if (varia) varia.className = `ticker__var ${claseDireccion(l.variacion)}`
+      + (varia.classList.contains('ticker__var--sale') ? ' ticker__var--sale' : '')
+      + (varia.classList.contains('ticker__var--entra') ? ' ticker__var--entra' : '');
+    if (movido) {
+      cambios++;
+      /* Marca persistente de «este cambió». Es la que sostiene la información
+         cuando el sistema pide movimiento reducido y no hay deslizamiento que
+         ver: movimiento reducido no es información reducida. */
+      item.dataset.cambiado = 'true';
+      clearTimeout(Number(item.dataset.temporizador) || 0);
+      item.dataset.temporizador = String(setTimeout(() => {
+        delete item.dataset.cambiado; delete item.dataset.temporizador;
+      }, 4000));
     }
   }
 
@@ -287,8 +286,8 @@ export function refrescarTicker(indices, cartera) {
 
 /**
  * Cinta de mercado. Índices y posiciones abiertas, con sus cifras reales.
- * La pista se duplica y la animación recorre exactamente la mitad, de modo que
- * el ciclo encaja sin salto. El duplicado se oculta al lector de pantalla.
+ * Fila fija en formato píldora, sin bucle: si algún día no caben todos los
+ * activos, la propia pista se desplaza horizontalmente y ninguno se oculta.
  */
 export function pintarTicker(indices, cartera) {
   const cinta = $('#ticker-mercado');
@@ -300,40 +299,23 @@ export function pintarTicker(indices, cartera) {
   cinta.hidden = false;
   pista.textContent = '';
 
-  const grupo = (duplicado) => {
-    const g = elemento('div', 'ticker__grupo');
-    if (duplicado) g.setAttribute('aria-hidden', 'true');
+  for (const l of lineas) {
+    const item = elemento('a', 'ticker__item');
+    item.href = l.destino;
+    item.dataset.ruta = '';
+    // La clave enlaza este item con su línea al refrescar.
+    item.dataset.clave = l.clave;
 
-    for (const l of lineas) {
-      const item = elemento('a', 'ticker__item');
-      item.href = l.destino;
-      item.dataset.ruta = '';
-      /* La clave enlaza este item con su linea al refrescar. Hay DOS items por
-         clave —el original y el duplicado que cierra el bucle visual—, y los dos
-         han de cambiar a la vez: si solo cambiara uno, el mismo valor diria dos
-         cosas distintas segun por donde fuera pasando la pista. */
-      item.dataset.clave = l.clave;
-
-      item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
-      item.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
-      item.appendChild(elemento('span',
-        `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
-      g.appendChild(item);
-    }
-    return g;
-  };
-
-  pista.appendChild(grupo(false));
-  pista.appendChild(grupo(true));
-  pintarFrescura(cinta, cartera, indices);
-
-  // La duración se fija por longitud recorrida: velocidad constante y lenta
-  // sea cual sea el número de valores.
-  const anchoGrupo = pista.firstElementChild.getBoundingClientRect().width;
-  if (anchoGrupo > 0) {
-    pista.style.setProperty('--recorrido', `${anchoGrupo}px`);
-    pista.style.setProperty('--duracion', `${Math.max(28, Math.round(anchoGrupo / 26))}s`);
+    item.appendChild(elemento('span', 'ticker__etiqueta', l.etiqueta));
+    const fila = elemento('span', 'ticker__cifras');
+    fila.appendChild(elemento('span', 'ticker__valor', textoValor(l)));
+    fila.appendChild(elemento('span',
+      `ticker__var ${claseDireccion(l.variacion)}`, textoVariacion(l)));
+    item.appendChild(fila);
+    pista.appendChild(item);
   }
+
+  pintarFrescura(cinta, cartera, indices);
 }
 
 // ══════════════════════════ 2 · DECLARACIÓN Y PILARES ══════════════════════

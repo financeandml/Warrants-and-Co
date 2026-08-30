@@ -164,6 +164,7 @@ export default {
   'inicio.ticker.frescura.segundos': '{n}s ago',
   'inicio.ticker.frescura.minutos': '{n}m ago',
   'inicio.ticker.frescura.horas': '{n}h ago',
+  'inicio.ticker.masMercados': 'See more markets',
 
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',

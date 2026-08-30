@@ -8,13 +8,17 @@
    el día. Las cotizaciones sí cambian, y hasta ahora tampoco se movían —
    `cargarInicio()` corre una vez por carga de página—.
 
+   Fila fija en formato píldora, sin bucle ni duplicado: cada activo aparece
+   UNA sola vez en el documento. La versión anterior duplicaba la pista para
+   que un carrusel infinito encajara sin salto visual; al retirar el carrusel
+   —rediseño a formato de barra estática con divisores— el duplicado dejó de
+   tener función y esta batería se adapta para afirmar sobre un único ítem.
+
    ═══ Qué se afirma, y por qué cada cosa ═══
 
-   1 · QUE LOS DOS ÍTEMS DE UNA CLAVE CAMBIAN A LA VEZ. La pista se duplica para
-       que el bucle visual encaje, de modo que cada valor está DOS veces en el
-       documento. Si solo cambiara uno, el mismo hecho diría dos cosas distintas
-       según por dónde fuera pasando la cinta, y no habría error que lo delatara:
-       las dos mitades no se ven nunca a la vez.
+   1 · QUE CADA VALOR CAMBIA EN EL SITIO, SIN COSTE DE ALTO. Una sola copia por
+       clave: se afirma que la sustitución llega y que ni durante ni después
+       mueve el alto de la cinta.
 
    2 · QUE EL ALTO NO CAMBIA. El alto de la cinta lo mide `seguirEncuadreBanner()`
        para encuadrar la fotografía y decidir dónde cae el árbol. Una sustitución
@@ -85,7 +89,7 @@ const pintada = (p) => p.waitForFunction(() =>
   const navegador = await chromium.launch();
   const errores = [];
 
-  /* ── 1 · Sustitución en el sitio, en los dos ítems, sin coste de alto ── */
+  /* ── 1 · Sustitución en el sitio, sin coste de alto ── */
   {
     const { ctx, p } = await conCambio(navegador);
     p.on('pageerror', (e) => errores.push(e.message));
@@ -102,18 +106,17 @@ const pintada = (p) => p.waitForFunction(() =>
       };
     });
 
-    t('cada valor está dos veces: el original y el del bucle',
-      antes.porClave === 2, `«${antes.clave}» aparece ${antes.porClave} vez(ces)`);
+    t('cada valor aparece una sola vez: sin bucle, sin duplicado',
+      antes.porClave === 1, `«${antes.clave}» aparece ${antes.porClave} vez(ces)`);
 
-    /* `esperarCambio` vuelve en cuanto el texto es otro, que es el final del
-       primer tramo: el segundo sigue corriendo. Se mide AHÍ, con la sustitución
-       en marcha, y no solo en reposo.
+    /* `esperarCambio` vuelve en cuanto el texto es otro. Medir AHÍ, con la
+       sustitución en marcha, y no solo en reposo.
 
        Medir solo antes y después no afirma nada: una animación que moviera la
-       caja únicamente mientras dura —un margen, un relleno, un alto— empujaría
-       el árbol 200 ms cada 20 s y volvería a su sitio antes de que nadie mirase.
-       Se comprobó: con un `margin-block-start` dentro del fotograma, la
-       comprobación de antes pasaba en verde. */
+       caja únicamente mientras dura —un margen, un relleno, un alto— movería
+       el árbol 200 ms cada vez que cambia un valor y volvería a su sitio antes
+       de que nadie mirase. Se comprobó: con un `margin-block-start` dentro del
+       fotograma, la comprobación de antes pasaba en verde. */
     await esperarCambio(p, antes.valor);
     const enMarcha = await p.evaluate(() =>
       document.getElementById('ticker-mercado').getBoundingClientRect().height);
@@ -125,21 +128,19 @@ const pintada = (p) => p.waitForFunction(() =>
     await p.waitForTimeout(600);
 
     const despues = await p.evaluate((clave) => {
-      const items = [...document.querySelectorAll(`[data-clave="${CSS.escape(clave)}"]`)];
+      const item = document.querySelector(`[data-clave="${CSS.escape(clave)}"]`);
       return {
         alto: document.getElementById('ticker-mercado').getBoundingClientRect().height,
-        valores: items.map((i) => i.querySelector('.ticker__valor').textContent),
-        marcados: items.filter((i) => i.dataset.cambiado === 'true').length,
+        valor: item.querySelector('.ticker__valor').textContent,
+        marcado: item.dataset.cambiado === 'true',
       };
     }, antes.clave);
 
-    t('las dos copias del valor dicen lo mismo tras el cambio',
-      despues.valores.length === 2 && despues.valores[0] === despues.valores[1]
-        && despues.valores[0] !== antes.valor,
-      `antes «${antes.valor}» · ahora ${JSON.stringify(despues.valores)}`);
+    t('el valor cambió de verdad',
+      despues.valor !== antes.valor,
+      `antes «${antes.valor}» · ahora «${despues.valor}»`);
 
-    t('las dos copias quedan marcadas como cambiadas',
-      despues.marcados === 2, `${despues.marcados} de 2`);
+    t('el ítem queda marcado como cambiado', despues.marcado, String(despues.marcado));
 
     t('la sustitución no cambia el alto de la cinta',
       Math.abs(antes.alto - despues.alto) < 0.5,
