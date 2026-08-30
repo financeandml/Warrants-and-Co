@@ -109,7 +109,6 @@ export default {
     'for investors who',
     'think in probabilities.',
   ],
-  'portada.manifiesto.entrada': 'Fundamental research on the companies under coverage, the calendar of what can move them, and a portfolio whose track record can be checked thesis by thesis.',
 
   'portada.pilar.research.titulo': 'Research',
   'portada.pilar.research.texto': 'Deep fundamental analysis focused on companies, catalysts, valuation and investment thesis.',

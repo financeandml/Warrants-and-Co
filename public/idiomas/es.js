@@ -117,7 +117,6 @@ export default {
     'para quien invierte',
     'pensando en probabilidades.',
   ],
-  'portada.manifiesto.entrada': 'Análisis fundamental de las compañías en cobertura, la agenda de lo que puede moverlas y una cartera cuyo historial se puede comprobar tesis a tesis.',
 
   'portada.pilar.research.titulo': 'Análisis',
   'portada.pilar.research.texto': 'Análisis fundamental profundo, centrado en compañías, catalizadores, valoración y tesis de inversión.',

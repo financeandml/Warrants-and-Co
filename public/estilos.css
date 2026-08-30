@@ -1465,6 +1465,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .seccion--portada .portada > .ticker {
   grid-row: 2; align-self: end; justify-self: stretch;
   width: 100%;
+  transform: translateY(18px);
 }
 
 .seccion--portada .portada__interior {
@@ -1568,7 +1569,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
    modo que hay holgura de sobra en los dos idiomas. */
 .portada__cifras {
   display: flex; justify-content: center; flex-wrap: nowrap;
-  gap: clamp(24px, 4.5vw, 56px);
+  gap: clamp(26px, 4vw, 64px);
+  padding-block-start: 12px;
 }
 
 /* En pantalla estrecha las tres casillas no caben en fila y el flex las estruja.
@@ -1676,14 +1678,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* La marca es el único texto de la portada. */
 .portada__marca-principal {
-  font-family: var(--geo);
-  font-size: clamp(2.3rem, 7vw, 5rem);
-  /* El apretado baja de -0.035 a -0.025em. No es gusto: en una serif de alto
-     contraste los trazos finos son lo primero que se pierde al juntar las letras,
-     y -0.035 estaba medido contra una grotesca que no los tiene. -0.025em es el
-     de la composición de referencia. */
-  font-weight: 600; letter-spacing: -0.025em; line-height: 1.02;
+  display: flex; flex-direction: column; align-items: center; gap: clamp(6px, 1.3vw, 12px);
   margin: 0;
+  font-family: var(--geo);
+  font-weight: 600; letter-spacing: -0.045em; line-height: 0.88;
+}
+
+.portada__marca-principal__linea {
+  display: block;
+  font-size: clamp(2.7rem, 7vw, 7rem);
+  color: var(--tinta);
+}
+
+.portada__marca-principal__linea--secundaria {
+  font-size: clamp(2.1rem, 5vw, 5.1rem);
+  color: var(--acento);
+  letter-spacing: -0.04em;
+  opacity: 0.9;
 }
 
 .portada__accesos {
@@ -1695,17 +1706,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .acceso {
   display: inline-flex; align-items: center; justify-content: center; gap: 9px;
   min-width: 178px; padding: 14px 26px;
-  font-size: 0.82rem; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase;
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
   text-decoration: none; color: var(--tinta);
-  border: 1px solid var(--linea-fuerte); border-radius: var(--radio);
-  background: var(--superficie-velo);
+  border: 1px solid var(--linea-fuerte); border-radius: 999px;
+  background: rgba(255, 255, 255, 0.46);
   backdrop-filter: saturate(120%) blur(6px);
-  transition: border-color var(--transicion), background var(--transicion), transform var(--transicion);
+  transition: border-color var(--transicion), background var(--transicion), transform var(--transicion), box-shadow var(--transicion);
+  box-shadow: 0 10px 24px rgba(16, 16, 17, 0.04);
 }
 .acceso:hover {
-  border-color: var(--tinta);
+  border-color: var(--acento);
   background: var(--superficie);
   transform: translateY(-1px);
+  box-shadow: 0 12px 26px rgba(79, 70, 229, 0.08);
 }
 .acceso svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
 
@@ -1823,14 +1836,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada__trama {
   position: absolute; inset: 0; z-index: 0; pointer-events: none;
   background-image:
+    radial-gradient(ellipse at 18% 15%, var(--acento-tenue), transparent 34%),
     linear-gradient(var(--linea-hairline) 1px, transparent 1px),
     linear-gradient(90deg, var(--linea-hairline) 1px, transparent 1px);
-  background-size: 68px 68px;
+  background-size: auto, 68px 68px, 68px 68px;
   /* paleta-ok: en una mascara el negro es opacidad, no color. */
   mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
   /* paleta-ok: idem. */
   -webkit-mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
-  opacity: 0.85;
+  opacity: 0.92;
 }
 
 .portada__interior { position: relative; z-index: 1; }
@@ -3065,14 +3079,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   text-wrap: balance;
 }
 
-.manifiesto__entrada {
-  margin-block-start: 26px;
-  max-width: 56ch;
-  font-size: clamp(0.94rem, 1.2vw, 1.06rem);
-  line-height: 1.72;
-  color: var(--tinta-secundaria);
-}
-
 /* ── Los tres pilares ──
    Separados por filete vertical, no encerrados en tarjetas: la retícula la
    marca la línea, que es lo que hace que parezca una publicación y no un panel. */
@@ -3221,8 +3227,8 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__grupo { display: flex; }
 
 .ticker__item {
-  display: inline-flex; align-items: baseline; gap: 10px;
-  padding: 15px 26px;
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 22px 26px;
   font-size: 0.8rem; text-decoration: none; color: var(--tinta);
   border-inline-end: 1px solid var(--linea-hairline);
   white-space: nowrap;

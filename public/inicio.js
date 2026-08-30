@@ -367,8 +367,6 @@ export function animarManifiesto() {
      que el cambio de mecanismo no cambie de paso lo que ya estaba revisado.
      Los 380, 0, 0, 90 y 180 que se pasaban aquí no llegaban a aplicarse. */
   document.querySelectorAll('.manifiesto .etiqueta-superior').forEach((e) => revelar(e));
-  const entrada = $('.manifiesto__entrada');
-  if (entrada) revelar(entrada, 140);
   document.querySelectorAll('.pilar').forEach((p, i) => revelar(p, 210 + i * 70));
 }
 
