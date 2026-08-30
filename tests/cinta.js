@@ -176,6 +176,25 @@ const pintada = (p) => p.waitForFunction(() =>
       const indices = items.filter((i) => i.dataset.clave.startsWith('i:'));
       const puntosDe = (i) => i.querySelector('.ticker__grafico__linea')
         ?.getAttribute('points')?.split(' ').length ?? 0;
+
+      // El degradado: un área con relleno propio, dos paradas —tenue arriba,
+      // transparente abajo— y un id de gradiente que no se repite en el
+      // documento, o el segundo sparkline robaría el relleno del primero.
+      const degradados = items.map((i) => {
+        const area = i.querySelector('.ticker__grafico__area');
+        const grad = i.querySelector('linearGradient');
+        const paradas = [...(grad?.querySelectorAll('stop') ?? [])];
+        return {
+          tieneArea: Boolean(area),
+          usaElGradientePropio: area?.getAttribute('fill') === `url(#${grad?.id})`,
+          dosParadas: paradas.length === 2,
+          arribaTenue: Number(paradas[0]?.getAttribute('stop-opacity')) > 0
+            && Number(paradas[0]?.getAttribute('stop-opacity')) < 1,
+          abajoTransparente: Number(paradas[1]?.getAttribute('stop-opacity')) === 0,
+          id: grad?.id,
+        };
+      });
+
       return {
         total: items.length,
         totalConGrafico: items.filter((i) => i.querySelector('.ticker__grafico')).length,
@@ -185,6 +204,10 @@ const pintada = (p) => p.waitForFunction(() =>
         // afirma sobre la forma del trazo, no solo sobre que exista alguno.
         indicesTotal: indices.length,
         indicesDosPuntos: indices.filter((i) => puntosDe(i) === 2).length,
+        degradadosCompletos: degradados.filter((d) =>
+          d.tieneArea && d.usaElGradientePropio && d.dosParadas
+          && d.arribaTenue && d.abajoTransparente).length,
+        idsUnicos: new Set(degradados.map((d) => d.id)).size,
       };
     });
 
@@ -207,6 +230,14 @@ const pintada = (p) => p.waitForFunction(() =>
     t('los índices caen al respaldo: recta de dos puntos, nunca una curva inventada',
       estado.indicesTotal > 0 && estado.indicesDosPuntos === estado.indicesTotal,
       `${estado.indicesDosPuntos} de ${estado.indicesTotal} índices con recta de dos puntos`);
+
+    t('todos los sparklines llevan su área degradada, tenue arriba y transparente abajo',
+      estado.total > 0 && estado.degradadosCompletos === estado.total,
+      `${estado.degradadosCompletos} de ${estado.total} con degradado completo`);
+
+    t('cada sparkline tiene su propio id de degradado, sin repetirse',
+      estado.idsUnicos === estado.total,
+      `${estado.idsUnicos} ids únicos de ${estado.total} celdas`);
     await ctx.close();
   }
 

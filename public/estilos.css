@@ -3242,6 +3242,15 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__grafico__linea--baja { stroke: var(--bajista); }
 .ticker__grafico__linea--plana { stroke: var(--tinta-mate); }
 
+/* El área bajo la línea: mismo color, degradado a transparente hacia abajo
+   —la opacidad de cada parada la fija el propio SVG, no esta hoja—. Ningún
+   dato viaja en el relleno que no esté ya en el trazo o en el signo de al
+   lado: es la misma redundancia con más superficie, no una lectura nueva. */
+.ticker__grafico__area { stroke: none; }
+.ticker__grafico__parada--alza { stop-color: var(--alcista); }
+.ticker__grafico__parada--baja { stop-color: var(--bajista); }
+.ticker__grafico__parada--plana { stop-color: var(--tinta-mate); }
+
 /* ── El valor de la cinta, y por qué es `inline-block` ──
    Para poder moverlo al cambiar hace falta `transform`, y `transform` no aplica
    a una caja en linea. `inline-block` la habilita SIN mover nada: con

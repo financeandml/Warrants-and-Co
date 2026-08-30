@@ -189,15 +189,22 @@ function obtenerSerieSparkline(simbolo) {
   return cacheSparkline.get(simbolo);
 }
 
+const NS_SVG = 'http://www.w3.org/2000/svg';
+// Único por instancia: dos sparklines en el documento a la vez —la cinta se
+// duplica para el bucle— no pueden compartir id de degradado, o el segundo
+// robaría el relleno del primero en algunos navegadores.
+let idGradienteSiguiente = 0;
+
 /**
- * Construye el trazado SVG de la miniserie. Sin `innerHTML`: cada nodo se crea
- * por su cuenta, como exige la CSP.
+ * Construye el trazado SVG de la miniserie, con su área degradada debajo.
+ * Sin `innerHTML`: cada nodo se crea por su cuenta, como exige la CSP.
  *
  * El color no es del día —la variación diaria que ya lleva la celda, con su
  * propio signo— sino del PERIODO que el propio trazo dibuja: si la sesión más
  * antigua de la ventana cotizaba por debajo de la más reciente, sube. Es
  * decorativo y redundante con el signo que ya está escrito al lado, nunca la
- * única forma de leer la dirección: la regla 1 de CLAUDE.md lo exige.
+ * única forma de leer la dirección: la regla 1 de CLAUDE.md lo exige. El
+ * relleno es la misma redundancia con más superficie, no un dato aparte.
  */
 function construirSparkline(valores) {
   const minimo = Math.min(...valores);
@@ -205,13 +212,13 @@ function construirSparkline(valores) {
   const rango = maximo - minimo || 1;
   const ANCHO = 56, ALTO = 24;
 
-  const puntos = valores.map((v, i) => {
-    const x = (i / (valores.length - 1)) * ANCHO;
-    const y = ALTO - ((v - minimo) / rango) * ALTO;
-    return `${x.toFixed(1)},${y.toFixed(1)}`;
-  }).join(' ');
+  const coordenadas = valores.map((v, i) => [
+    (i / (valores.length - 1)) * ANCHO,
+    ALTO - ((v - minimo) / rango) * ALTO,
+  ]);
+  const puntos = coordenadas.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  const svg = document.createElementNS(NS_SVG, 'svg');
   svg.setAttribute('class', 'ticker__grafico');
   svg.setAttribute('viewBox', `0 0 ${ANCHO} ${ALTO}`);
   svg.setAttribute('preserveAspectRatio', 'none');
@@ -221,7 +228,37 @@ function construirSparkline(valores) {
   const cambio = valores[valores.length - 1] - valores[0];
   const modificador = cambio > 0 ? 'alza' : cambio < 0 ? 'baja' : 'plana';
 
-  const linea = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  // El degradado: del color del trazo, tenue arriba, transparente abajo.
+  const idGradiente = `ticker-grafico-degradado-${idGradienteSiguiente++}`;
+  const defs = document.createElementNS(NS_SVG, 'defs');
+  const gradiente = document.createElementNS(NS_SVG, 'linearGradient');
+  gradiente.setAttribute('id', idGradiente);
+  gradiente.setAttribute('x1', '0'); gradiente.setAttribute('x2', '0');
+  gradiente.setAttribute('y1', '0'); gradiente.setAttribute('y2', '1');
+
+  const paradaArriba = document.createElementNS(NS_SVG, 'stop');
+  paradaArriba.setAttribute('offset', '0%');
+  paradaArriba.setAttribute('stop-opacity', '0.32');
+  paradaArriba.setAttribute('class', `ticker__grafico__parada ticker__grafico__parada--${modificador}`);
+  const paradaAbajo = document.createElementNS(NS_SVG, 'stop');
+  paradaAbajo.setAttribute('offset', '100%');
+  paradaAbajo.setAttribute('stop-opacity', '0');
+  paradaAbajo.setAttribute('class', `ticker__grafico__parada ticker__grafico__parada--${modificador}`);
+  gradiente.appendChild(paradaArriba);
+  gradiente.appendChild(paradaAbajo);
+  defs.appendChild(gradiente);
+  svg.appendChild(defs);
+
+  // El área: la misma línea, cerrada hacia abajo. Puramente decorativa —el
+  // contorno ya la dibuja el trazo— así que no lleva `aria` propio.
+  const areaPuntos = `${puntos} ${ANCHO.toFixed(1)},${ALTO.toFixed(1)} 0,${ALTO.toFixed(1)}`;
+  const area = document.createElementNS(NS_SVG, 'polygon');
+  area.setAttribute('points', areaPuntos);
+  area.setAttribute('fill', `url(#${idGradiente})`);
+  area.setAttribute('class', 'ticker__grafico__area');
+  svg.appendChild(area);
+
+  const linea = document.createElementNS(NS_SVG, 'polyline');
   linea.setAttribute('points', puntos);
   linea.setAttribute('class', `ticker__grafico__linea ticker__grafico__linea--${modificador}`);
   svg.appendChild(linea);
