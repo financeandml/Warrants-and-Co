@@ -31,8 +31,14 @@ es bilingüe ES/EN por diccionario. Comentarios que expliquen el porqué, no el 
 ## Diseño
 
 Base acromática, **tres tonos direccionales** —alza, baja, aviso— y un **índigo** que es
-identidad y significado a la vez. Tema claro y oscuro. Usa variables CSS existentes, nunca
-un color literal. Respeta `prefers-reduced-motion`.
+identidad y significado a la vez. Usa variables CSS existentes, nunca un color literal.
+Respeta `prefers-reduced-motion`.
+
+**La interfaz solo se sirve en claro.** Decisión de producto: sin conmutador y sin seguir
+`prefers-color-scheme`, `public/tema.js` fija `data-tema="claro"` siempre. El sistema de
+tokens de `:root[data-tema="oscuro"]` sigue en `estilos.css` y `tests/paleta.js` lo sigue
+verificando —se conserva como reserva del sistema de diseño, no como deuda—, pero hoy
+ningún visitante lo ve.
 
 **1 · El color nunca carga solo.** Ningún dato depende solo del color: toda variación
 lleva glifo (▲ ▼) y signo explícito; toda señal, rótulo. La plataforma se lee impresa en
