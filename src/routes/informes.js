@@ -10,6 +10,7 @@ const crypto = require('node:crypto');
 
 const { db, UPLOAD_DIR } = require('../db');
 const { cuerpoError } = require('../errores');
+const sincronizacion = require('../noticias/sincronizacion');
 const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
 const { leerPdf, ErrorLectura, CODIGOS_LECTURA } = require('../extraccion/pdf');
 const { extraerFicha, CAMPOS, CAMPOS_FUERA_DE_EXTRACCION } = require('../extraccion/ficha');
@@ -272,7 +273,7 @@ router.get('/destacados', (req, res) => {
 
 router.get('/:id(\\d+)', (req, res) => {
   const informe = informeCompleto(Number(req.params.id));
-  if (!informe) return res.status(404).json({ error: 'El informe solicitado no existe.' });
+  if (!informe) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El informe solicitado no existe.' }));
   res.json(informe);
 });
 
@@ -387,7 +388,10 @@ router.post('/', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
       insertarAdjunto.run(id, f.filename, path.basename(f.originalname).slice(0, 200), f.mimetype, formatoDeExtension(ext), f.size);
     }
     db.exec('COMMIT');
-    res.status(201).json(informeCompleto(id));
+    const noticiasReetiquetadas = datos.ticker
+      ? sincronizacion.vincularNoticiasACompania(datos.ticker, datos.empresa)
+      : 0;
+    res.status(201).json({ ...informeCompleto(id), noticiasReetiquetadas });
   } catch (err) {
     try { db.exec('ROLLBACK'); } catch { /* la transaccion ya no estaba abierta */ }
     descartarFicheros(req.files);
@@ -399,10 +403,10 @@ router.post('/', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
 
 router.put('/:id(\\d+)', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
   const id = Number(req.params.id);
-  const existe = db.prepare('SELECT id FROM informes WHERE id = ?').get(id);
+  const existe = db.prepare('SELECT id, empresa FROM informes WHERE id = ?').get(id);
   if (!existe) {
     descartarFicheros(req.files);
-    return res.status(404).json({ error: 'El informe solicitado no existe.' });
+    return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO', { detalle: 'El informe solicitado no existe.' }));
   }
 
   let datos;
@@ -429,7 +433,10 @@ router.put('/:id(\\d+)', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
       insertarAdjunto.run(id, f.filename, path.basename(f.originalname).slice(0, 200), f.mimetype, formatoDeExtension(ext), f.size);
     }
     db.exec('COMMIT');
-    res.json(informeCompleto(id));
+    const noticiasReetiquetadas = datos.ticker
+      ? sincronizacion.vincularNoticiasACompania(datos.ticker, datos.empresa ?? existe.empresa)
+      : 0;
+    res.json({ ...informeCompleto(id), noticiasReetiquetadas });
   } catch (err) {
     try { db.exec('ROLLBACK'); } catch { /* la transaccion ya no estaba abierta */ }
     descartarFicheros(req.files);

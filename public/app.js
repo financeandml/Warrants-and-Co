@@ -1305,9 +1305,14 @@ async function enviarFormulario(ev) {
   boton.textContent = t('informe.guardar.procesando');
 
   try {
-    await api(id ? `/api/informes/${id}` : '/api/informes', { method: id ? 'PUT' : 'POST', body: datos });
+    const guardado = await api(id ? `/api/informes/${id}` : '/api/informes', { method: id ? 'PUT' : 'POST', body: datos });
     $('#dialogo-informe').close();
     avisar(t(id ? 'informe.guardado.actualizado' : 'informe.guardado.publicado'), { claro: true });
+    // Publicar o editar una tesis puede reetiquetar noticias ya existentes: un
+    // cambio de estado que, sin este aviso, ocurriría sin que nadie lo viera.
+    if (guardado?.noticiasReetiquetadas) {
+      avisar(t('informe.guardado.reetiquetadas', { n: guardado.noticiasReetiquetadas }));
+    }
 
     await invalidarDerivadasDeInformes();
   } catch (err) {

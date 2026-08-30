@@ -223,7 +223,43 @@ function estadoSincronizacion() {
   };
 }
 
+function vincularNoticiasACompania(ticker, empresa) {
+  if (!ticker) return 0;
+  const t = ticker.toUpperCase();
+  const nucleo = String(empresa || '')
+    .replace(/[.,]/g, ' ')
+    .replace(/\b(inc|corp|corporation|plc|ltd|limited|sa|s\.a|nv|ag|co|company|holdings|group|incorporated)\b/gi, ' ')
+    .trim().toLowerCase();
+
+  const candidatos = db.prepare(
+    `SELECT id, titular, tickers FROM noticias
+     WHERE origen = 'Investing.com'
+     AND (titular LIKE ? OR ( ? AND titular LIKE ? ))`
+  ).all(`%${t}%`, Number(nucleo.length >= 4), nucleo && `%${nucleo}%`);
+
+  let actualizadas = 0;
+  const updateFull = db.prepare(
+    `UPDATE noticias SET categoria = 'Compañía', relevancia = 'alta', tickers = ? WHERE id = ?`
+  );
+
+  for (const n of candidatos) {
+    const tickers = JSON.parse(n.tickers ?? '[]');
+    if (tickers.includes(t)) continue;
+
+    const texto = n.titular.toLowerCase();
+    const porTicker = new RegExp(`(^|[^a-z0-9])\\$?${t.toLowerCase()}([^a-z0-9]|$)`).test(texto);
+    const porNombre = nucleo && nucleo.length >= 4 && texto.includes(nucleo);
+
+    if (porTicker || porNombre) {
+      tickers.push(t);
+      updateFull.run(JSON.stringify(tickers), n.id);
+      actualizadas++;
+    }
+  }
+  return actualizadas;
+}
+
 module.exports = {
   sincronizar, iniciarSincronizacionPeriodica, detenerSincronizacion,
-  estadoSincronizacion, detectarValores, valoresEnCobertura,
+  estadoSincronizacion, detectarValores, valoresEnCobertura, vincularNoticiasACompania,
 };

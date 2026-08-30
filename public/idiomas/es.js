@@ -401,6 +401,10 @@ export default {
   'informe.adjunto.retirado': 'Documento retirado.',
   'informe.guardado.actualizado': 'Informe actualizado correctamente.',
   'informe.guardado.publicado': 'Informe publicado correctamente.',
+  'informe.guardado.reetiquetadas': {
+    one: '{n} noticia existente reetiquetada como de esta compañía.',
+    other: '{n} noticias existentes reetiquetadas como de esta compañía.',
+  },
   'informe.eliminar.confirmar': '¿Eliminar definitivamente este informe y su documentación asociada?',
   'informe.eliminado': 'Informe eliminado.',
 

@@ -389,6 +389,10 @@ export default {
   'informe.adjunto.retirado': 'Document removed.',
   'informe.guardado.actualizado': 'Report updated.',
   'informe.guardado.publicado': 'Report published.',
+  'informe.guardado.reetiquetadas': {
+    one: '{n} existing news item relabelled under this company.',
+    other: '{n} existing news items relabelled under this company.',
+  },
   'informe.eliminar.confirmar': 'Permanently delete this report and its attached documentation?',
   'informe.eliminado': 'Report deleted.',
 
