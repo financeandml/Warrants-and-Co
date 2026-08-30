@@ -4,7 +4,8 @@
   "description": "Plataforma de análisis e inversión de Warrants & Co.",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node --env-file=.env server.js",
+    "close": "pkill -9 -f 'node --env-file=.env server.js'",
     "sembrar": "node scripts/sembrar.js",
     "sembrar:forzar": "node scripts/sembrar.js --forzar",
     "copia": "node scripts/copia.js",
