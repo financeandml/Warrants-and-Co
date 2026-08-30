@@ -99,7 +99,10 @@ function lineasDeTicker(indices, cartera) {
       // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
       destino: '#/companias',
       clave: `i:${i.clave ?? i.simbolo ?? i.nombre}`,
-      simbolo: i.simbolo ?? null,
+      // El sparkline pide el ticker que reconoce el endpoint de históricos
+      // —con su circunflejo de índice—, no el de cotización en vivo: son el
+      // mismo instrumento, dos convenciones de símbolo distintas.
+      simbolo: i.simboloHistorico ?? i.simbolo ?? null,
     });
   }
 

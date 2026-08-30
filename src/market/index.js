@@ -57,7 +57,10 @@ function normalizarSimbolo(simbolo) {
   if (typeof simbolo !== 'string') return null;
   const s = simbolo.trim().toUpperCase().replace(/^\$/, '');
   // Tickers reales: letras, digitos y los separadores . y - (BRK.B, RDS-A).
-  return /^[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(s) ? s : null;
+  // El circunflejo inicial es opcional y de sintaxis, no de contenido: es la
+  // convencion con la que Yahoo Finance nombra el ticker de un indice propio
+  // (^GSPC, ^VIX) y no el de un valor negociable.
+  return /^\^?[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(s) ? s : null;
 }
 
 async function enCascada(proveedores, metodo, args, etiqueta) {

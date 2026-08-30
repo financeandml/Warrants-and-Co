@@ -26,10 +26,18 @@
 
    3 · QUE EL SPARKLINE ES UNIVERSAL, PERO NUNCA FABRICADO. Toda celda acaba con
        su trazo. `/api/mercado/serie/:simbolo` publica cierres diarios reales, y
-       cuando el proveedor no tiene histórico —hoy, los cuatro índices, con
-       «crumb inválido»— la celda cae a una recta de DOS puntos reales, el
-       cierre de ayer derivado por aritmética exacta y el precio de hoy. Nunca
-       una curva con forma de tendencia inventada.
+       cuando el proveedor no tiene histórico —hoy, Yahoo tiene el crumb caído
+       para TODO, ORCL incluido, y el proveedor de respaldo nunca ha llevado
+       histórico de índices puros— la celda cae a una recta de DOS puntos
+       reales, el cierre de ayer derivado por aritmética exacta y el precio de
+       hoy. Nunca una curva con forma de tendencia inventada.
+
+       El símbolo que pide un índice YA es el correcto —el ticker con
+       circunflejo que reconoce el endpoint de gráficos (^GSPC y no SPX)—,
+       así que esta batería también afirma esa petición, no solo su
+       resultado: cuando Yahoo se recupere, la curva real llega sin tocar
+       una sola línea de código, y si algún día alguien vuelve a pedir el
+       símbolo de cotización por error, se cazará aquí.
 
    4 · QUE CON MOVIMIENTO REDUCIDO EL VALOR SIGUE CAMBIANDO. La hoja apaga esa
        animación con `animation: none`, y sin animación `animationend` NO SE
@@ -157,6 +165,17 @@ const pintada = (p) => p.waitForFunction(() =>
     const ctx = await navegador.newContext({ viewport: { width: 1680, height: 1050 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
+
+    // Los símbolos que la cinta pide de verdad, para afirmar el mapeo con
+    // independencia de si Yahoo responde hoy: el resultado depende del
+    // proveedor, pero la petición —qué símbolo se pide— depende solo de
+    // nuestro código, y es lo que esta prueba puede prometer siempre.
+    const peticiones = [];
+    p.on('request', (r) => {
+      const m = r.url().match(/\/api\/mercado\/serie\/([^?]+)/);
+      if (m) peticiones.push(decodeURIComponent(m[1]));
+    });
+
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
     await pintada(p);
 
@@ -224,12 +243,23 @@ const pintada = (p) => p.waitForFunction(() =>
         `${estado.carteraConGrafico} de ${estado.carteraTotal} celdas de cartera con gráfico`);
     }
 
-    /* Hoy el proveedor conectado no tiene histórico para los índices —fallan
-       con «crumb inválido»—, así que su celda cae al respaldo: la recta de
-       dos puntos reales, nunca una curva con forma de tendencia inventada. */
+    /* Hoy Yahoo tiene el crumb caído para todo —ORCL incluido— y el
+       proveedor de respaldo nunca ha llevado histórico de índices puros, así
+       que la celda cae al respaldo: la recta de dos puntos reales, nunca una
+       curva con forma de tendencia inventada. Cuando el proveedor se
+       recupere, esta afirmación es la que avisa de que ya toca exigir la
+       curva completa también aquí. */
     t('los índices caen al respaldo: recta de dos puntos, nunca una curva inventada',
       estado.indicesTotal > 0 && estado.indicesDosPuntos === estado.indicesTotal,
       `${estado.indicesDosPuntos} de ${estado.indicesTotal} índices con recta de dos puntos`);
+
+    /* El mapeo de símbolos, afirmado con independencia del proveedor: la
+       cinta pide el ticker de índice —con circunflejo—, nunca el de
+       cotización en vivo, para las cuatro series de índice. */
+    const pedidosDeIndice = peticiones.filter((s) => /^\^/.test(s));
+    t('el sparkline de un índice pide su símbolo histórico, no el de cotización',
+      pedidosDeIndice.length > 0 && pedidosDeIndice.every((s) => /^\^(GSPC|NDX|VIX|TNX)$/.test(s)),
+      pedidosDeIndice.length ? pedidosDeIndice.join(', ') : 'ninguna petición con circunflejo');
 
     t('todos los sparklines llevan su área degradada, tenue arriba y transparente abajo',
       estado.total > 0 && estado.degradadosCompletos === estado.total,

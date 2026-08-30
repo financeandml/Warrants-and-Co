@@ -14,12 +14,18 @@ const mercado = require('../market');
  * Simbolos verificados uno a uno contra el proveedor. No deben sustituirse a la
  * ligera: varios candidatos aparentemente equivalentes (COMP, DJIA) resuelven a
  * valores distintos de los indices que representan.
+ *
+ * `simboloHistorico` es el ticker que reconoce el endpoint de graficos de
+ * Yahoo Finance para el propio indice —lleva el circunflejo de su convencion,
+ * distinto del que usa la cotizacion en vivo—. Sin el, `/api/mercado/serie`
+ * pedia el historico con el simbolo de cotizacion y el proveedor nunca lo
+ * reconocia como una serie de indice.
  */
 const INDICES = [
-  { clave: 'sp500', simbolo: 'SPX', nombre: 'S&P 500', formato: 'indice' },
-  { clave: 'nasdaq', simbolo: 'NDX', nombre: 'Nasdaq 100', formato: 'indice' },
-  { clave: 'vix', simbolo: 'VIX', nombre: 'VIX', formato: 'indice', nota: 'Volatilidad implícita' },
-  { clave: 'treasury10', simbolo: 'US10Y', nombre: 'Bono EE. UU. 10 años', formato: 'tipo' },
+  { clave: 'sp500', simbolo: 'SPX', simboloHistorico: '^GSPC', nombre: 'S&P 500', formato: 'indice' },
+  { clave: 'nasdaq', simbolo: 'NDX', simboloHistorico: '^NDX', nombre: 'Nasdaq 100', formato: 'indice' },
+  { clave: 'vix', simbolo: 'VIX', simboloHistorico: '^VIX', nombre: 'VIX', formato: 'indice', nota: 'Volatilidad implícita' },
+  { clave: 'treasury10', simbolo: 'US10Y', simboloHistorico: '^TNX', nombre: 'Bono EE. UU. 10 años', formato: 'tipo' },
 ];
 
 /**
