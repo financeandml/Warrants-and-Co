@@ -1131,10 +1131,12 @@ siete días e invalidación por versión: sustituir el fichero basta para que se
 >   —geométrica, derivada de Futura, y 12 kB más ligera— para titulares. Inter se queda
 >   para el texto, y `--mono` sigue sin fichero propio: un tercer `.woff2` se paga en la
 >   ruta crítica del primer pintado.
-> - ⏳ **Bento, micro-interacciones y más aire, vista a vista — sin empezar.** Y, *solo si
->   el presupuesto del banner lo admite*, parallax en el hero: el árbol entero y sus 28 px
->   de holgura valen más que un efecto de scroll, de modo que en el choque el efecto es
->   lo que cae.
+> - ⏳ **Bento, micro-interacciones y más aire, vista a vista — en curso.** Los tres
+>   pilares de la portada ya son tarjetas propias en rejilla (`.pilar` en
+>   `estilos.css`), no columnas separadas por filete; el resto de vistas —panorama,
+>   radar, signal— sigue sin tocar. Y, *solo si el presupuesto del banner lo admite*,
+>   parallax en el hero: el árbol entero y sus 28 px de holgura valen más que un
+>   efecto de scroll, de modo que en el choque el efecto es lo que cae.
 >
 > Lo que **no** cambia, y por eso no aparece arriba: la redundancia glifo/signo, los tres
 > estados del dato, `prefers-reduced-motion`, las cifras tabulares y el gráfico acromático.

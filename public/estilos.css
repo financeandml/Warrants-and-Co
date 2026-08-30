@@ -3056,8 +3056,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 
 /* ── Los tres pilares ──
-   Separados por filete vertical, no encerrados en tarjetas: la retícula la
-   marca la línea, que es lo que hace que parezca una publicación y no un panel. */
+   Bento: tres tarjetas propias en rejilla, no columnas separadas por filete.
+   El hueco entre celdas es lo que las separa; una línea aquí diría dos veces
+   lo mismo. */
 .pilares {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: var(--espacio-3);
