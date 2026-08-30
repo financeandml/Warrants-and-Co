@@ -4,6 +4,7 @@
 
 const express = require('express');
 const { db } = require('../db');
+const { cuerpoError } = require('../errores');
 const mercado = require('../market');
 const { calcularCartera } = require('../cartera');
 const { obtenerPanorama } = require('../mercado/panorama');
@@ -164,8 +165,8 @@ router.get('/cotizacion/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(q);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json({ error: err.message });
-    if (err.codigo === 'SIN_DATOS_MERCADO') return res.status(502).json({ error: err.message });
+    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
+    if (err.codigo === 'SIN_DATOS_MERCADO') return res.status(502).json(cuerpoError('PROVEEDOR_NO_RESPONDE', { detalle: err.message }));
     next(err);
   }
 });
