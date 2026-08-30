@@ -1111,28 +1111,30 @@ siete días e invalidación por versión: sustituir el fichero basta para que se
 
 ## Diseño
 
-> ### ⏳ Identidad visual en reforma — decidido el 27-08-2026, aún no implementado
+> ### ⏳ Identidad visual en reforma — decidido el 27-08-2026, en curso
 >
-> Todo lo que describe esta sección **sigue siendo lo que hay en pantalla**. El contrato
-> que la sustituirá ya está escrito y vive en `CLAUDE.md` §Diseño; este cuerpo se corrige
-> fase a fase, según cada una aterrice, y esta nota se retira cuando no quede nada por
-> corregir.
+> El contrato que la gobierna ya está escrito y vive en `CLAUDE.md` §Diseño; este cuerpo
+> se corrige fase a fase, según cada una aterriza, y esta nota se retira cuando no quede
+> nada por corregir.
 >
 > Lo decidido, en tres renglones:
 >
-> - **De cuatro tonos semánticos a tres direccionales más un índigo.** El azul
+> - ✅ **De cuatro tonos semánticos a tres direccionales más un índigo — hecho.** El azul
 >   `--informativo` y el acento de marca eran el mismo hecho —la plataforma hablando sin
->   apuntar a ningún lado— y pasan a salir de un solo token, `--acento`. Un acento
->   decorativo *junto a* un semántico azul habría dejado dos azules a 23° de tono en tema
->   oscuro: indistinguibles en una tabla de rentabilidades, y cada uno legible por
->   separado. Fusionarlos hace la confusión imposible por construcción, no por vigilancia.
-> - **Playfair Display ha salido**; entra **Jost** —geométrica, derivada de Futura, y
->   12 kB más ligera— para titulares. Inter se queda para el
->   texto, y `--mono` sigue sin fichero propio: un tercer `.woff2` se paga en la ruta
->   crítica del primer pintado.
-> - **Bento, micro-interacciones y más aire**, vista a vista. Y, *solo si el presupuesto
->   del banner lo admite*, parallax en el hero: el árbol entero y sus 28 px de holgura
->   valen más que un efecto de scroll, de modo que en el choque el efecto es lo que cae.
+>   apuntar a ningún lado— y salen de un solo token, `--acento`. Un acento decorativo
+>   *junto a* un semántico azul habría dejado dos azules a 23° de tono en tema oscuro:
+>   indistinguibles en una tabla de rentabilidades, y cada uno legible por separado.
+>   Fusionarlos hace la confusión imposible por construcción, no por vigilancia.
+>   `--informativo` ya no existe en `estilos.css`, y `tests/paleta.js` lo afirma como
+>   regresión: si alguna vez vuelve, la batería lo caza.
+> - ✅ **Tipografía — hecho.** Playfair Display ha salido; `--geo` encabeza con **Jost**
+>   —geométrica, derivada de Futura, y 12 kB más ligera— para titulares. Inter se queda
+>   para el texto, y `--mono` sigue sin fichero propio: un tercer `.woff2` se paga en la
+>   ruta crítica del primer pintado.
+> - ⏳ **Bento, micro-interacciones y más aire, vista a vista — sin empezar.** Y, *solo si
+>   el presupuesto del banner lo admite*, parallax en el hero: el árbol entero y sus 28 px
+>   de holgura valen más que un efecto de scroll, de modo que en el choque el efecto es
+>   lo que cae.
 >
 > Lo que **no** cambia, y por eso no aparece arriba: la redundancia glifo/signo, los tres
 > estados del dato, `prefers-reduced-motion`, las cifras tabulares y el gráfico acromático.
