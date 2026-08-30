@@ -1461,11 +1461,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
 }
 
-/* La cinta se estira a todo lo ancho y se pega al fondo de su fila. */
+/* La cinta se estira a todo lo ancho y se pega al fondo de su fila. Sin
+   transform: seguirEncuadreBanner() calcula el presupuesto de píxeles del
+   hero asumiendo que la cinta está en su posición natural de flujo, y un
+   desplazamiento aquí sin enseñárselo allí deja a los dos describiendo una
+   pantalla distinta. */
 .seccion--portada .portada > .ticker {
   grid-row: 2; align-self: end; justify-self: stretch;
   width: 100%;
-  transform: translateY(18px);
 }
 
 .seccion--portada .portada__interior {
@@ -1502,7 +1505,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   /* El alto que concede la ventana se nombra aquí, y aquí solamente. Está
      registrado con `@property` para que `getComputedStyle` lo devuelva ya
      resuelto en píxeles: `seguirEncuadreBanner()` necesita saberlo para decidir
-     si las dos líneas caben, y volver a escribir la fórmula en JavaScript sería
+     si la fila de cifras cabe, y volver a escribir la fórmula en JavaScript sería
      una segunda fuente del mismo hecho —la que un día deja de coincidir sin que
      se vea en pantalla—. */
   --alto-por-ventana: calc(75.5svh - var(--alto-cabecera));
@@ -1510,50 +1513,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .portada[data-banner="true"] .portada__interior {
-  /* El bloque se mantiene compacto para caber íntegro en la banda limpia. Con las
-     dos líneas dentro son tres piezas y no dos, y el hueco se ciñe por eso: no es
-     estética, es presupuesto. A 1440×700 el hueco antiguo dejaba la decisión a
-     7 px de que las líneas no cupieran; con este cabe con 16 de margen. Ceñirlo no
-     depende de si las líneas están puestas —eso haría que el coste de ponerlas
-     dependiera de si están puestas, y la decisión dejaría de ser estable—. */
+  /* El bloque se mantiene compacto para caber íntegro en la banda limpia: no es
+     estética, es presupuesto. Ceñirlo no depende de si la fila de cifras está
+     puesta —eso haría que el coste de ponerla dependiera de si está puesta, y
+     la decisión dejaría de ser estable—. */
   gap: clamp(18px, 3vh, 30px);
   padding-block: clamp(30px, 6vh, 66px) 0;
-}
-
-/* ── Las dos líneas bajo la marca ──
-   Una sola caja, y no dos hermanas sueltas: como hijo único del flex suman un
-   hueco de la rejilla en vez de dos. El ancho se fija en `ch` y no en píxeles
-   porque lo que hay que evitar es que ENVUELVAN: envolviendo cuestan 120 px de
-   hero y sin envolver 50, y ese es el presupuesto que decide en cuántas ventanas
-   caben. El texto de cada idioma ha de caber en un renglón a este ancho. */
-.portada__lineas {
-  display: flex; flex-direction: column; gap: 2px;
-  /* 672 px, la columna de lectura de la referencia. Sustituye a un `78ch` que se
-     medía contra la fuente y por tanto cambiaba de ancho con ella; en píxeles, el
-     renglón único que este bloque necesita no depende de con qué se componga.
-     Sigue siendo la restricción de siempre: lo que hay que evitar es que ENVUELVA
-     —envolviendo cuesta 120 px de hero y sin envolver 50—, y el texto de cada
-     idioma ha de caber en un renglón a este ancho. */
-  max-width: 672px; text-align: center;
-}
-
-.portada__linea {
-  margin: 0;
-  font-size: 0.98rem; line-height: 1.45;
-  color: var(--tinta-portada, var(--tinta));
-}
-.portada__linea--secundaria { font-size: 0.93rem; color: var(--tinta-mate); }
-
-/* Ocultas: fuera del flujo, pero SIGUEN maquetadas.
-   `display: none` las dejaría a cero de alto, y el alto es justo el dato con el
-   que se decide si vuelven a caber; a cero, volverían siempre y oscilarían. Se
-   conserva el ancho con `inset-inline: 0` para que envuelvan igual que en flujo
-   y la medida valga. `visibility: hidden` las retira del árbol de accesibilidad,
-   que es lo que corresponde a un texto que no se está mostrando. */
-.portada[data-lineas="false"] .portada__lineas {
-  position: absolute; inset-inline: 0; top: 0;
-  margin-inline: auto;
-  visibility: hidden; pointer-events: none;
 }
 
 /* ── La fila de tres cifras del hero ──

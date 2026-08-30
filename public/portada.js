@@ -134,7 +134,6 @@ export function seguirEncuadreBanner() {
   const cinta = document.getElementById('ticker-mercado');
   const interior = portada.querySelector('.portada__interior');
   const cifras = portada.querySelector('.portada__cifras');
-  const lineas = portada.querySelector('.portada__lineas');
 
   // Un elemento oculto no tiene caja: `height` ya vale 0. Mirar ademas `hidden`
   // invitaba a creer que una cinta sin pintar valia 0 por decision y no por
@@ -166,23 +165,22 @@ export function seguirEncuadreBanner() {
   };
 
   /*
-   * Salir del cálculo devolviendo las dos piezas cedibles.
+   * Salir del cálculo devolviendo la pieza cedible.
    *
    * Los `delete` retiran lo que sería mentira: una fracción y una holgura
    * calculadas con `cover` no describen una pantalla que no usa `cover`. Pero
-   * `data-lineas` y `data-cifras` también mentían al quedarse como estaban:
-   * decían «cedido» donde no hay presupuesto que pagar. Un hero llegado desde
-   * una ventana apaisada aparecía en el móvil sin líneas y sin cifras habiendo
-   * sitio de sobra, y no había forma de salir de ahí salvo recargando.
+   * `data-cifras` también mentía al quedarse como estaba: decía «cedido» donde
+   * no hay presupuesto que pagar. Un hero llegado desde una ventana apaisada
+   * aparecía en el móvil sin cifras habiendo sitio de sobra, y no había forma
+   * de salir de ahí salvo recargando.
    *
-   * Fuera del régimen que las hace ceder, NADA las cede: la banda del árbol, la
+   * Fuera del régimen que la hace ceder, NADA la cede: la banda del árbol, la
    * holgura y la cinta —los tres términos que se pagan con pliegue— son de este
-   * cálculo y de ningún otro. De modo que se restituyen, no se dejan.
+   * cálculo y de ningún otro. De modo que se restituye, no se deja.
    */
   const sinPresupuesto = () => {
     delete portada.dataset.fraccionBanner;
     delete portada.dataset.holguraCinta;
-    marcar('lineas', 'true');
     marcar('cifras', 'true');
   };
 
@@ -227,27 +225,23 @@ export function seguirEncuadreBanner() {
       bloqueDeMarca + (BANNER.base - BANNER.copa) * fotoAlto + BANNER.holguraMinima + cintaAlto);
 
     /*
-     * ── Las dos piezas cedibles: un término más de esta misma cuenta ──
+     * ── La pieza cedible: un término más de esta misma cuenta ──
      *
-     * Las dos líneas y la fila de cifras cuestan alto de bloque de marca, y el
-     * bloque entra entero en el mínimo: allí donde el hero ya crecía por la foto,
-     * ese coste sale del pliegue. Medido sobre las seis ventanas de
-     * `tests/portada.js`: las líneas cuestan 67-76 px sin envolver y las cifras
-     * 57-66. Ceden ellas y no la holgura del árbol ni el revelado del manifiesto,
-     * porque son lo único de los cuatro que al faltar no rompe nada.
+     * La fila de cifras cuesta alto de bloque de marca, y el bloque entra entero
+     * en el mínimo: allí donde el hero ya crecía por la foto, ese coste sale del
+     * pliegue. Medido sobre las seis ventanas de `tests/portada.js`: las cifras
+     * cuestan 57-66 px. Cede ella y no la holgura del árbol ni el revelado del
+     * manifiesto, porque es la única de las tres que al faltar no rompe nada.
      *
-     * El orden en que ceden, y por qué, está justo debajo con la escalera.
+     * Cuándo cede, y por qué, está justo debajo con la escalera.
      */
-    const puestas = portada.dataset.lineas !== 'false';
     const cifrasPuestas = portada.dataset.cifras !== 'false';
     const hueco = parseFloat(getComputedStyle(interior).rowGap) || 0;
-    const costeLineas = lineas ? lineas.getBoundingClientRect().height + hueco : 0;
     const costeCifras = cifras ? cifras.getBoundingClientRect().height + hueco : 0;
-    /* El bloque de marca desnudo: la misma cifra lleve puestas o no las dos piezas
-       cedibles. Se descuenta solo lo que ESTÁ en flujo; lo oculto ya no suma al
+    /* El bloque de marca desnudo: la misma cifra lleve puesta o no la pieza
+       cedible. Se descuenta solo lo que ESTÁ en flujo; lo oculto ya no suma al
        alto del interior, aunque siga maquetado. */
-    const marcaSola = interiorAlto
-      - (puestas ? costeLineas : 0) - (cifrasPuestas ? costeCifras : 0);
+    const marcaSola = interiorAlto - (cifrasPuestas ? costeCifras : 0);
 
     /*
      * Cuánto asomaría el manifiesto en cada hipótesis, sin pintar ninguna. El hero
@@ -259,71 +253,52 @@ export function seguirEncuadreBanner() {
       getComputedStyle(portada).getPropertyValue('--alto-por-ventana')) || caja.height;
     const asomoAhora = asomoDelManifiesto();
 
-    /* Cuánto asomaría el manifiesto con esta combinación de piezas, sin pintar
-       ninguna. El hero empuja al manifiesto píxel a píxel, así que basta con
-       saber cuánto asoma ahora y cuánto mediría el hero en cada hipótesis. */
-    const asomoSi = (conLineas, conCifras) => {
+    /* Cuánto asomaría el manifiesto con esta hipótesis, sin pintarla. El hero
+       empuja al manifiesto píxel a píxel, así que basta con saber cuánto asoma
+       ahora y cuánto mediría el hero en cada caso. */
+    const asomoSi = (conCifras) => {
       if (asomoAhora === null) return null;
-      const alto = Math.max(porVentana, minimoDe(
-        marcaSola + (conLineas ? costeLineas : 0) + (conCifras ? costeCifras : 0)));
+      const alto = Math.max(porVentana, minimoDe(marcaSola + (conCifras ? costeCifras : 0)));
       return asomoAhora + (caja.height - alto);
     };
 
-    /* El renglón de cada pieza: lo que ha de sobrar ADEMÁS para que vuelva una
-       que está fuera. No es una cifra elegida, es el alto de línea del propio
-       rótulo que ha de asomar, medido. Sin esta banda, un píxel de ventana mueve
-       el asomo 0,755 px y bastaría para hacerlas parpadear. */
-    const renglonDe = (bloque) => bloque && bloque.firstElementChild
-      ? parseFloat(getComputedStyle(bloque.firstElementChild).lineHeight) || 0 : 0;
-    const renglonLineas = renglonDe(lineas);
+    /* El renglón de la pieza: lo que ha de sobrar ADEMÁS para que vuelva estando
+       fuera. No es una cifra elegida, es el alto de línea del propio rótulo que
+       ha de asomar, medido. Sin esta banda, un píxel de ventana mueve el asomo
+       0,755 px y bastaría para hacerla parpadear. */
     const renglonCifras = cifras && cifras.firstElementChild
       ? parseFloat(getComputedStyle(
           cifras.firstElementChild.lastElementChild ?? cifras.firstElementChild).lineHeight) || 0
       : 0;
 
-    /* ── La escalera: qué se suelta y en qué orden ──
+    /* ── La escalera: si la fila de cifras cabe ──
      *
-     * Se prueban las combinaciones de más a menos y se toma la primera que deja
-     * asomar el manifiesto. El ORDEN es la decisión de producto: **ceden antes
-     * las cifras que las líneas**. Donde no caben las dos cosas se conserva la
-     * frase que dice qué es esto y se sueltan los números.
-     *
-     * Medido, y por eso se escribe aquí: el orden contrario sobrevive un peldaño
-     * más —las cifras cuestan 57 px y las líneas 67, de modo que soltar lo caro
-     * primero rinde más—, y aun así se descarta. Ganaba una banda de unos 20 px
-     * de alto por ancho y perdía que la portada abriese con tres porcentajes y
-     * ninguna frase a 1440×700, que es de los tamaños más frecuentes.
-     *
-     * De las seis ventanas de `tests/portada.js`, los dos órdenes solo difieren
-     * en esa: en cuatro cabe todo o no cabe nada, con cualquier orden.
+     * Se prueba con la cifra puesta y, si no cabe, sin ella. Donde no cabe se
+     * conserva la frase que dice qué es esto y se sueltan los números.
      *
      * ── Por qué no oscila ──
      * Dos cosas, y hacen falta las dos:
      *
      *   1. La ENTRADA de la decisión no depende de la decisión. Se calcula lo que
-     *      asomaría CON cada pieza, esté como esté ahora, y para eso los bloques
-     *      ocultos siguen maquetados —fuera de flujo, no plegados—. Con
-     *      `display: none` medirían cero, el coste parecería nulo, cabrían
+     *      asomaría CON la pieza, esté como esté ahora, y para eso el bloque
+     *      oculto sigue maquetado —fuera de flujo, no plegado—. Con
+     *      `display: none` mediría cero, el coste parecería nulo, cabría
      *      siempre, y a la pasada siguiente ya no.
-     *   2. Cada pieza que está FUERA necesita un renglón de más para volver. Así
+     *   2. La pieza que está FUERA necesita un renglón de más para volver. Así
      *      el umbral de entrar es más alto que el de quedarse, y en el límite no
      *      hay ida y vuelta.
      */
-    const peldanos = [[true, true], [true, false], [false, false]];
-    let conLineas = false, conCifras = false;
-    for (const [L, C] of peldanos) {
-      const exigido = MARGEN_REVELADO
-        + (L && !puestas ? renglonLineas : 0)
-        + (C && !cifrasPuestas ? renglonCifras : 0);
-      const a = asomoSi(L, C);
-      if (a === null || a >= exigido) { conLineas = L; conCifras = C; break; }
+    const peldanos = [true, false];
+    let conCifras = false;
+    for (const C of peldanos) {
+      const exigido = MARGEN_REVELADO + (C && !cifrasPuestas ? renglonCifras : 0);
+      const a = asomoSi(C);
+      if (a === null || a >= exigido) { conCifras = C; break; }
     }
 
-    marcar('lineas', String(conLineas));
     marcar('cifras', String(conCifras));
 
-    const minimo = minimoDe(
-      marcaSola + (conLineas ? costeLineas : 0) + (conCifras ? costeCifras : 0));
+    const minimo = minimoDe(marcaSola + (conCifras ? costeCifras : 0));
 
     // Lo que de verdad queda tras recortar el encuadre a [0, 1]. Es la cifra que
     // la prueba confronta con lo medido en pantalla; no se deduce del deseo.
@@ -359,12 +334,11 @@ export function seguirEncuadreBanner() {
      El ALTO no cambia al cambiar la familia —todos los `line-height` del hero son
      sin unidad, de modo que cada caja mide su `font-size` por su factor y no
      depende de con que se componga—. Lo que cambia es el ANCHO, y el ancho decide
-     si las dos lineas envuelven: envolviendo cuestan 120 px de bloque de marca y
-     sin envolver 50, que es la diferencia entre cederlas y no cederlas.
+     cuanto ocupa la fila de cifras.
 
-     Cuando estan en flujo, el `ResizeObserver` sobre `interior` ya lo recoge. Pero
-     cuando han cedido salen del flujo, `interior` no se entera, y su coste —que es
-     con lo que se decide si vuelven— se habria medido con la familia equivocada y
+     Cuando esta en flujo, el `ResizeObserver` sobre `interior` ya lo recoge. Pero
+     cuando ha cedido sale del flujo, `interior` no se entera, y su coste —que es
+     con lo que se decide si vuelve— se habria medido con la familia equivocada y
      nadie volveria a mirarlo. De ahi este enganche.
 
      `document.fonts` no existe en navegadores muy antiguos; alli no hay fuente que
