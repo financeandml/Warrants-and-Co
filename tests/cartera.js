@@ -539,11 +539,37 @@ async function caso7() {
     `anio ${c.rentabilidadAnio} · total ${c.rentabilidadTotal}`);
 }
 
+/*
+ * Caso 8 — take profit no positivo se ignora y avisa, no liquida.
+ *
+ * Con TP = 0 el máximo de la sesión lo supera siempre (0 no es un precio),
+ * así que sin el filtro `<= 0` la posición se cerraría en la primera sesión.
+ * Se comprueba que sigue viva y que el aviso nombra el ticker, sin emoji.
+ */
+async function caso8() {
+  const f = sesiones(10);
+  const cierres = f.map((_, i) => 100 + i);
+  escenario = { barras: { W: barras(f, cierres) }, cotizaciones: {} };
+  const cartera = await calcularCartera([
+    linea({ ticker: 'W', fecha_publicacion: f[0], precio_compra: 100, take_profit: 0 }),
+  ]);
+
+  t('take profit ≤ 0 · la posición sigue viva', cartera.cerradas.length === 0,
+    `cerradas: ${cartera.cerradas.map((p) => p.ticker).join(', ')}`);
+  t('take profit ≤ 0 · el aviso nombra el ticker',
+    cartera.avisos.some((a) => a.includes('W') && a.includes('take profit')),
+    cartera.avisos.join(' | '));
+  t('take profit ≤ 0 · el aviso no lleva emoji',
+    cartera.avisos.every((a) => !/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/u.test(a)),
+    cartera.avisos.join(' | '));
+}
+
 // ─────────────────────────────── ejecución ───────────────────────────────
 
 (async () => {
   for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4],
-    ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6], ['caso 7', caso7]]) {
+    ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6], ['caso 7', caso7],
+    ['caso 8', caso8]]) {
     try {
       await caso();
     } catch (e) {

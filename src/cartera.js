@@ -212,7 +212,7 @@ function construirIndice(posiciones, fechas, series) {
     // 2 · Toma de beneficios: se liquida al nivel fijado en la primera sesion que lo alcanza.
     for (const p of activas) {
       if (cerradas.has(p.ticker) || !unidades.has(p.ticker)) continue;
-      if (!Number.isFinite(p.takeProfit)) continue;
+      if (!Number.isFinite(p.takeProfit) || p.takeProfit <= 0) continue; // TP debe ser positivo y finito
       const datos = series.get(p.ticker).get(fecha);
       if (!datos || !datos.real) continue;
       if (datos.maximo >= p.takeProfit) {
@@ -556,6 +556,18 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   }
 
   const { fechas, series } = alinear(historicos);
+
+  // Diagnóstico: detectar TPs cero o inválidos
+  for (const p of posiciones) {
+    if (p.takeProfit !== null && !Number.isFinite(p.takeProfit)) {
+      avisos.push(`${p.ticker}: take profit no válido (${p.takeProfit}), se ignora.`);
+    } else if (Number.isFinite(p.takeProfit) && p.takeProfit <= 0) {
+      avisos.push(`${p.ticker}: take profit ≤ 0 (${p.takeProfit}), se ignora. Comprueba el valor en el informe.`);
+    } else if (p.precioCompra !== null && Number.isFinite(p.takeProfit) && p.takeProfit <= p.precioCompra) {
+      avisos.push(`${p.ticker}: take profit (${p.takeProfit}) ≤ precio de compra (${p.precioCompra}), no puede liquidarse con ganancia.`);
+    }
+  }
+
   const { serie, posiciones: detalladas, liquidez } = construirIndice(posiciones, fechas, series);
 
   // Serie del indice de referencia, rebasada a 100 en la fecha de arranque.
