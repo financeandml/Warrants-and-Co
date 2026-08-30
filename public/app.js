@@ -2734,6 +2734,16 @@ function construirTarjetaNoticia(n) {
   if (n.destacada) superior.appendChild(elemento('span', 'distintivo', t('noticias.destacada')));
   tarjeta.appendChild(superior);
 
+  if (n.imagen) {
+    const contenedorImagen = elemento('div', 'noticia__imagen-contenedor');
+    const img = document.createElement('img');
+    img.src = n.imagen;
+    img.alt = n.titular;
+    img.loading = 'lazy';
+    contenedorImagen.appendChild(img);
+    tarjeta.appendChild(contenedorImagen);
+  }
+
   tarjeta.appendChild(elemento('h3', 'noticia__titular', n.titular));
   if (n.entradilla) tarjeta.appendChild(elemento('p', 'noticia__entradilla', n.entradilla));
 

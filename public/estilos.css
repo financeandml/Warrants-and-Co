@@ -1862,9 +1862,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid var(--linea); border-radius: var(--radio-l);
   background: var(--superficie); text-align: start; cursor: pointer;
   transition: border-color var(--transicion), transform var(--transicion);
+  overflow: hidden;
 }
 /* La tarjeta entera es pulsable: su realce es cromo. */
 .noticia:hover { border-color: var(--acento); transform: translateY(-2px); }
+
+.noticia__imagen-contenedor {
+  position: relative; width: calc(100% + 2 * var(--espacio-4));
+  margin: calc(-1 * var(--espacio-4)) calc(-1 * var(--espacio-4)) 0;
+  overflow: hidden; border-radius: var(--radio-l) var(--radio-l) 0 0;
+  height: 180px; background: var(--superficie-hundida);
+}
+.noticia__imagen-contenedor img {
+  width: 100%; height: 100%; object-fit: cover;
+}
 
 .noticia__superior {
   display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
