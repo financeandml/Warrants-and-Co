@@ -316,7 +316,7 @@ async function caso5() {
   t('muestra corta · la muestra se declara insuficiente', e.muestra?.suficiente === false,
     JSON.stringify(e.muestra));
 
-  for (const clave of ['rentabilidadAnualizada', 'ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen']) {
+  for (const clave of ['rentabilidadAnualizada', 'ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen', 'beta', 'correlacionIndice']) {
     t(`muestra corta · ${clave} no se publica`, e[clave] === null, String(e[clave]));
   }
 
@@ -366,7 +366,7 @@ async function caso5bis() {
     e.muestra?.retenidas?.rentabilidadAnualizada === undefined,
     JSON.stringify(Object.keys(e.muestra?.retenidas ?? {})));
 
-  for (const clave of ['ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen']) {
+  for (const clave of ['ratioSharpe', 'ratioSortino', 'ratioCalmar', 'alfaJensen', 'beta', 'correlacionIndice']) {
     t(`banda intermedia · ${clave} sigue retenido`,
       e[clave] === null && e.muestra?.retenidas?.[clave]?.minimas === 756,
       `${e[clave]} · ${JSON.stringify(e.muestra?.retenidas?.[clave])}`);

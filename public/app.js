@@ -2467,9 +2467,9 @@ function pintarEstadisticos(datos) {
 
     [t('cartera.grupo.indice'), [
     [t('cartera.metrica.beta'), formatearNumero(e.beta),
-      t('cartera.metrica.beta.nota', { indice: datos.benchmark })],
+      t('cartera.metrica.beta.nota', { indice: datos.benchmark }), undefined, 'beta'],
     [t('cartera.metrica.correlacion'), formatearNumero(e.correlacionIndice),
-      t('cartera.metrica.correlacion.nota', { indice: datos.benchmark })],
+      t('cartera.metrica.correlacion.nota', { indice: datos.benchmark }), undefined, 'correlacionIndice'],
     ]],
 
     [t('cartera.grupo.sesiones'), [

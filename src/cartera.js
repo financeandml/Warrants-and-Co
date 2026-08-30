@@ -70,6 +70,10 @@ const SUELO_POR_CIFRA = {
   ratioSortino: SESIONES_MINIMAS_RATIOS,
   ratioCalmar: SESIONES_MINIMAS_RATIOS,
   alfaJensen: SESIONES_MINIMAS_RATIOS,
+  // Beta y correlacion son insumo del alfa: mismo suelo que su resultado, o la
+  // cartera retendria el alfa mientras publica el ingrediente del que sale.
+  beta: SESIONES_MINIMAS_RATIOS,
+  correlacionIndice: SESIONES_MINIMAS_RATIOS,
 };
 
 // ------------------------------------------------------------- utilidades
@@ -361,10 +365,12 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
       if (n > 2) {
         const varB = desviacionTipica(rb.slice(0, n)) ** 2;
         const cov = covarianza(rc.slice(0, n), rb.slice(0, n));
-        beta = varB > 0 ? cov / varB : null;
-        const sdC = desviacionTipica(rc.slice(0, n));
-        const sdB = Math.sqrt(varB);
-        correlacion = sdC > 0 && sdB > 0 ? cov / (sdC * sdB) : null;
+        if (hayRatios) {
+          beta = varB > 0 ? cov / varB : null;
+          const sdC = desviacionTipica(rc.slice(0, n));
+          const sdB = Math.sqrt(varB);
+          correlacion = sdC > 0 && sdB > 0 ? cov / (sdC * sdB) : null;
+        }
 
         const nivelesB = comunes.map((p) => mapaBench.get(p.fecha));
         // El índice de referencia sí arranca exactamente en su base al rebasarse.
