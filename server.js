@@ -79,12 +79,19 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'same-origin');
   res.setHeader(
     'Content-Security-Policy',
-    // El cliente es autocontenido: sin origenes externos.
-    // script-src se mantiene estricto, que es lo que cierra la via de inyeccion de codigo.
-    // style-src admite estilos en linea porque el posicionamiento del emergente del
-    // grafico y la anchura de las barras de exposicion se calculan en tiempo de ejecucion;
-    // un estilo no ejecuta codigo, de modo que la superficie de riesgo no aumenta.
-    "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self'; " +
+    // El cliente es autocontenido: sin origenes externos, salvo la unica
+    // excepcion de img-src. Las noticias llegan del RSS de Investing.com
+    // (src/noticias/investing.js) con su propia imagen de portada por
+    // <enclosure>, servida desde un subdominio de investing.com que la pieza
+    // no fija de antemano -asi que se admite el dominio entero, no un host
+    // suelto que dejaria de servir la siguiente noticia sin avisar-. Nada mas
+    // se relaja: script-src sigue estricto, que es lo que cierra la via de
+    // inyeccion de codigo. style-src admite estilos en linea porque el
+    // posicionamiento del emergente del grafico y la anchura de las barras de
+    // exposicion se calculan en tiempo de ejecucion; un estilo no ejecuta
+    // codigo, de modo que la superficie de riesgo no aumenta.
+    "default-src 'self'; img-src 'self' data: https://*.investing.com; " +
+      "style-src 'self' 'unsafe-inline'; script-src 'self'; " +
       "connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
   );
   next();
