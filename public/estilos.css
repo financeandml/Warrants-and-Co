@@ -1484,8 +1484,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding-block: clamp(60px, 12vh, 140px);
   text-align: start;
   /* El texto no invade el lado derecho, donde sigue la fotografía: el ancho
-     tope ronda el 60 % de la rejilla del hero. */
-  max-width: min(640px, 60%);
+     tope ronda el 55 % de la rejilla del hero. Se aprieta desde 60% al mover el
+     árbol al 70% horizontal (ver `.portada__banner`): con el árbol más a la
+     derecha, un bloque de texto al 60% empezaba a solaparlo en anchos medios. */
+  max-width: min(600px, 55%);
 }
 
 @media (max-width: 640px) {
@@ -1820,7 +1822,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
      Antes era un `0%` fijo, y con él la fracción visible de la foto quedaba a
      merced de la relación de aspecto: a 1920×880 se veía el 46,5 % y la cinta
      le cortaba la copa al árbol. */
-  background-position: 50% var(--encuadre-banner, 0%);
+  /* Componente horizontal: 70 %, no 50 %. Centrado dejaba el árbol justo detrás
+     del bloque de texto; movido a la derecha despeja la mitad izquierda para el
+     titular editorial y sigue dejando el árbol entero dentro del encuadre —el
+     tronco y la copa caen entre el 30 % y el 60 % de ALTO de la foto (ver nota
+     de `.seccion--portada .portada[data-banner="true"]`), un eje que este cambio
+     no toca. Se comparó visualmente contra 50 % (el árbol tapaba el texto) y
+     contra 100 % (recortaba la valla del borde derecho de la foto); 70 % es el
+     punto donde el árbol queda contenido sin ninguno de los dos defectos. La
+     componente VERTICAL sigue intacta: la gestiona `seguirEncuadreBanner()`. */
+  background-position: 70% var(--encuadre-banner, 0%);
   background-repeat: no-repeat;
   /* La imagen se sirve a resolución nativa y el navegador solo la reduce, nunca
      la amplía: en pantallas de alta densidad conserva el detalle original. */
