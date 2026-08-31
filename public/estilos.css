@@ -3113,22 +3113,12 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   border-block-start: 1px solid var(--linea);
 }
 
-/* El enunciado no ocupa todo el ancho: leer una línea larga cansa. */
-.manifiesto__enunciado { max-width: 62ch; }
-
-.manifiesto__titular {
-  font-family: var(--geo);
-  margin-block: 26px 0;
-  font-size: clamp(1.85rem, 4.2vw, 3.15rem);
-  font-weight: 600; letter-spacing: -0.02em; line-height: 1.14;
-  text-wrap: balance;
-}
-
-/* ── Bloque nuevo: rótulo + titular antes de los pilares ──
-   Mismo `.etiqueta-superior` que `.manifiesto__enunciado`, ninguna regla de
-   color propia (regla 9: un rótulo, una fuente). El titular es más pequeño que
-   `.manifiesto__titular` —ese sigue siendo la pieza mayor del manifiesto—. */
-.manifiesto__intro { margin-block-start: clamp(40px, 6vh, 72px); max-width: 62ch; }
+/* ── Bloque de marca: rótulo + titular, único titular del manifiesto ──
+   Mismo `.etiqueta-superior` que el resto de la portada, ninguna regla de
+   color propia (regla 9: un rótulo, una fuente). Sustituyó al antiguo
+   `.manifiesto__enunciado` animado, retirado por repetir en pantalla la misma
+   frase que este bloque ya decía en estático. */
+.manifiesto__intro { max-width: 62ch; }
 .manifiesto__intro__titulo {
   font-family: var(--geo);
   margin-block-start: 10px;

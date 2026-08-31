@@ -114,23 +114,10 @@ export default {
   'portada.acceso.research': 'Ver el análisis',
 
   // ── Portada · manifiesto ──
-  // El titular es UNA frase repartida en líneas, y el reparto es tipográfico:
-  // cada idioma decide dónde corta y en cuántas líneas le cabe. Por eso es una
-  // lista y no tres claves —tres claves impondrían a todos los idiomas los
-  // cortes del inglés, y un idioma que necesitara cuatro líneas no tendría
-  // dónde ponerlas— y por eso el documento ya no las trae escritas.
-  'portada.manifiesto.titular': [
-    'Inteligencia de mercado',
-    'para quien invierte',
-    'pensando en probabilidades.',
-  ],
-
-  // Bloque nuevo antes de los pilares. El texto coincide con la primera línea
-  // de `portada.manifiesto.titular` de arriba —es una duplicación real, no un
-  // descuido: ver el comentario en index.html junto a `.manifiesto__intro`—,
-  // pero es un hecho propio (otra clave, otra sección) y no se reutiliza la
-  // clave del manifiesto animado para no acoplar dos titulares que ya hoy
-  // cortan sus líneas de forma distinta.
+  // Único titular de la zona, HTML estático. Sustituye al antiguo
+  // `portada.manifiesto.titular` —una lista, porque el reparto en líneas era
+  // tipográfico y lo decidía JavaScript—, retirado porque su primera línea
+  // repetía, literalmente, esta misma frase (regla 9: un hecho, una fuente).
   'portada.inteligencia.titulo': 'Inteligencia de mercado',
 
   // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres

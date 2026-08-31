@@ -104,20 +104,10 @@ export default {
   'portada.acceso.research': 'View research',
 
   // ── Cover · manifesto ──
-  // ONE sentence broken into lines. Where it breaks, and how many lines it
-  // takes, is typography and belongs to each language: English says it in three
-  // lines, and nothing forces Spanish to use three as well.
-  'portada.manifiesto.titular': [
-    'Market intelligence',
-    'for investors who',
-    'think in probabilities.',
-  ],
-
-  // New block before the pillars. The text matches the first line of
-  // `portada.manifiesto.titular` above — a real duplication, not an oversight,
-  // see the comment next to `.manifiesto__intro` in index.html — but it is its
-  // own fact (a different key, a different section), kept separate so the two
-  // titles aren't coupled when they already break lines differently today.
+  // The only headline in this zone, static HTML. Replaces the old
+  // `portada.manifiesto.titular` — a list, because the line breaks were
+  // typographic and JavaScript decided them — retired because its first line
+  // literally repeated this same sentence (rule 9: one fact, one source).
   'portada.inteligencia.titulo': 'Market intelligence',
 
   // The four pillars from the reference mockup, replacing the previous three

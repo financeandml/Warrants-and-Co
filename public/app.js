@@ -29,7 +29,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, pintarCifrasHero, revelarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -1500,7 +1500,7 @@ async function cargarInicio() {
   if (inicioMontado) return;
   inicioMontado = true;
 
-  animarManifiesto();
+  revelarManifiesto();
   animarCabeceras();
 
   // Guarda lo que llegue —resuelva la fuente o falle— y pinta ese bloque.
@@ -1547,13 +1547,14 @@ async function cargarInicio() {
  * Repinta la portada en el idioma vigente.
  *
  * No se vuelve a pedir nada a ninguna fuente: los datos no dependen del idioma.
- * El titular del manifiesto se recompone porque sus líneas las declara el
- * diccionario, y un bloque cuya fuente aún no haya respondido no se toca: lo
- * pintará su propia carga cuando llegue, ya con el diccionario nuevo.
+ * El titular del manifiesto es hoy HTML estático con `data-i18n` —ya no lo
+ * compone JavaScript a partir de una lista del diccionario—, así que el
+ * repintado del documento se encarga solo y no hay nada que recomponer aquí.
+ * Un bloque cuya fuente aún no haya respondido no se toca: lo pintará su
+ * propia carga cuando llegue, ya con el diccionario nuevo.
  */
 function repintarInicio() {
   if (!inicioMontado) return;
-  animarManifiesto();
   for (const bloque of pintadosInicio) PINTORES_INICIO[bloque]();
 }
 

@@ -21,7 +21,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, localeFormato, relativo,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
-import { t, tLista } from './i18n.js';
+import { t } from './i18n.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
    después y una constante habría quedado congelada en el de arranque. */
@@ -416,33 +416,23 @@ export function pintarTicker(indices, cartera) {
 // ══════════════════════════ 2 · DECLARACIÓN Y PILARES ══════════════════════
 
 /**
- * Compone el titular del manifiesto y revela el enunciado línea a línea.
+ * Revela el bloque de marca del manifiesto y los pilares con el mismo
+ * desplazamiento discreto de la casa.
  *
- * Las líneas se construyen aquí porque el diccionario las declara como lista:
- * cuántas son y por dónde cortan es decisión tipográfica de cada idioma, y el
- * documento no puede traerlas escritas sin imponer a todos el reparto de uno.
+ * Antes componía además el titular animado línea a línea desde una lista del
+ * diccionario (`portada.manifiesto.titular`); se retiró porque su primera
+ * línea repetía, literalmente, la del bloque estático de al lado —el mismo
+ * hecho dos veces en pantalla, regla 9—. El titular que queda es HTML estático
+ * con `data-i18n`, así que aquí ya no hay texto que construir ni que
+ * recomponer al cambiar de idioma: solo la entrada.
+ *
+ * Se llama una sola vez, al montar la portada: a diferencia del mecanismo
+ * retirado, no hace falta repetir la llamada en cada repintado.
  */
-export function animarManifiesto() {
-  const titular = $('#manifiesto-titular');
-  if (titular) {
-    titular.textContent = '';
-    for (const [i, texto] of tLista('portada.manifiesto.titular').entries()) {
-      // Dos capas: la exterior recorta y la interior asciende desde detrás.
-      const linea = elemento('span', 'linea-revelada');
-      linea.style.setProperty('--i', String(i));
-      linea.appendChild(elemento('span', null, texto));
-      titular.appendChild(linea);
-    }
-  }
-
-  for (const linea of document.querySelectorAll('.manifiesto .linea-revelada')) {
-    observarEntrada(linea);
-  }
-  /* Estos cinco nodos llevaban `.aparicion` en el documento ADEMÁS de esto, y
-     el escalonado que se aplicaba era el del documento: 0, 140, 210, 280 y
-     350 ms. Se conservan tal cual —medidos en pantalla antes de unificar—, para
-     que el cambio de mecanismo no cambie de paso lo que ya estaba revisado.
-     Los 380, 0, 0, 90 y 180 que se pasaban aquí no llegaban a aplicarse. */
+export function revelarManifiesto() {
+  /* Escalonado medido en pantalla y conservado tal cual: 210, 280, 350 y
+     420 ms para los cuatro pilares. La etiqueta del bloque de marca entra sin
+     retardo. */
   document.querySelectorAll('.manifiesto .etiqueta-superior').forEach((e) => revelar(e));
   document.querySelectorAll('.pilar').forEach((p, i) => revelar(p, 210 + i * 70));
 }

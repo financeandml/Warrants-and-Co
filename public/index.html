@@ -61,7 +61,7 @@
              hero deja de anunciar el nombre y pasa a anunciar la promesa, pero
              "Warrants & Co." no desaparece — sigue siendo el ancla visual que
              conecta con la marca de la cabecera. No es un hecho traducible: es
-             un nombre propio, como en `.manifiesto__enunciado`. -->
+             un nombre propio, como en `.manifiesto__intro`. -->
         <p class="etiqueta-superior portada__marca-etiqueta">Warrants &amp; Co.</p>
 
         <h1 class="portada__marca-principal" id="portada-titulo">
@@ -115,28 +115,14 @@
     <div class="manifiesto">
       <div class="contenedor">
 
-        <div class="manifiesto__enunciado">
-          <p class="etiqueta-superior">Warrants &amp; Co.</p>
-          <!-- El titular llega vacío a propósito: sus líneas las construye
-               `animarManifiesto()` a partir de la lista del diccionario, porque
-               el número de líneas y el punto de corte los decide cada idioma.
-               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
-          <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
-        </div>
-
-        <!-- Bloque nuevo pedido por el dueño: mismo rótulo de marca —reutiliza
-             `.etiqueta-superior`, que dentro de #seccion-inicio ya sale en
-             --acento (línea ~339 de estilos.css), así que no hace falta una
-             segunda regla de color— más un titular propio, antes de los
-             pilares. Se AÑADE sin tocar `.manifiesto__enunciado`: su titular
-             (animado por `animarManifiesto()`) empieza, en el diccionario, con
-             la misma frase "Inteligencia de mercado" que este bloque repite en
-             estático — es una duplicación real, ver el informe. Va DESPUÉS del
-             enunciado en el documento a propósito: `asomoDelManifiesto()` en
-             `portada.js` mide `.manifiesto .etiqueta-superior` con
-             `querySelector` —el PRIMER encaje—, y colocar este rótulo antes
-             habría cambiado qué etiqueta mide el presupuesto de píxeles del
-             hero sin que nadie se lo hubiera pedido. -->
+        <!-- Único titular de esta zona: el `.manifiesto__enunciado` animado
+             —relleno por `animarManifiesto()` desde `portada.manifiesto.titular`—
+             se retiró porque su primera línea repetía, literalmente, esta
+             misma frase; tener las dos en pantalla era el mismo hecho dicho
+             dos veces (regla 9). Este bloque queda como único encaje de
+             `.manifiesto .etiqueta-superior` con `querySelector`, así que
+             `asomoDelManifiesto()` en `portada.js` sigue midiendo el mismo
+             hecho —el presupuesto de píxeles del hero— sin tocar el módulo. -->
         <div class="manifiesto__intro">
           <p class="etiqueta-superior">Warrants &amp; Co.</p>
           <h2 class="manifiesto__intro__titulo" data-i18n="portada.inteligencia.titulo">Inteligencia de mercado</h2>
