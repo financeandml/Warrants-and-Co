@@ -61,6 +61,12 @@ const TESIS = [
       'de propiedad intelectual. Consideramos que la cotización no recoge adecuadamente la normalización ' +
       'del ciclo de semiconductores ni el potencial del cómputo en el dispositivo. La retribución al ' +
       'accionista y un balance saneado limitan el riesgo a la baja.',
+    // Texto de prueba pedido explícitamente para validar riesgos_clave contra
+    // datos sembrados reales, no un mock aparte.
+    riesgos_clave:
+      'Execution Risk: Delays in scaling the new product pipeline could compress margins. Macro: Exposure to ' +
+      'emerging market FX headwinds. Valuation: Trading at a premium to historical averages, leaving little ' +
+      'margin of safety.',
     etiquetas: ['semiconductores', 'automoción', 'propiedad intelectual', 'cómputo en dispositivo'],
     nivel_acceso: 'cliente',
     destacado: 1,
@@ -144,7 +150,7 @@ if (forzar) {
 const columnas = [
   'empresa', 'ticker', 'sector', 'pais', 'tipo_informe', 'periodo', 'analista',
   'recomendacion', 'precio_objetivo', 'precio_compra', 'take_profit', 'stop_loss',
-  'divisa', 'resumen_ejecutivo', 'etiquetas',
+  'divisa', 'resumen_ejecutivo', 'riesgos_clave', 'etiquetas',
   'nivel_acceso', 'destacado', 'en_cartera', 'peso_cartera', 'fecha_publicacion',
 ];
 const insertar = db.prepare(
@@ -154,7 +160,7 @@ const insertar = db.prepare(
 db.exec('BEGIN IMMEDIATE');
 try {
   for (const t of TESIS) {
-    insertar.run(...columnas.map((c) => (c === 'etiquetas' ? JSON.stringify(t[c]) : t[c])));
+    insertar.run(...columnas.map((c) => (c === 'etiquetas' ? JSON.stringify(t[c]) : t[c] ?? null)));
     console.log(`  Registrada  ${String(t.ticker).padEnd(6)} ${t.empresa}`);
   }
   db.exec('COMMIT');

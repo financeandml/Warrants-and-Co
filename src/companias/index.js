@@ -85,6 +85,7 @@ function agrupar() {
       nivelAcceso: f.nivel_acceso,
       adjuntos: f.adjuntos,
       resumen: f.resumen_ejecutivo || null,
+      riesgosClave: f.riesgos_clave || null,
       enCartera: Boolean(f.en_cartera),
       pesoCartera: Number.isFinite(f.peso_cartera) ? f.peso_cartera : null,
       precioCompra: Number.isFinite(f.precio_compra) ? f.precio_compra : null,
@@ -124,6 +125,11 @@ function componer(c) {
     precioCompra,
     takeProfit,
     stopLoss: vigente('stopLoss'),
+    // Juicio narrativo del analista, no derivado de ningún proveedor. `null`
+    // si nadie lo ha escrito todavía —el tercer estado, «no hay dato»—; el
+    // cliente lo rotula N/A, igual que el resto de campos opcionales de la
+    // ficha. Nunca una cadena vacía.
+    riesgosClave: vigente('riesgosClave'),
     // Recorrido pendiente hasta el objetivo: solo si hay ambos extremos.
     informes,
     totalInformes: informes.length,
@@ -168,20 +174,53 @@ function listar({ q = '', sector = null, soloCartera = false } = {}) {
 }
 
 /**
+ * Estado real de la compañía en la cartera: OPEN, CLOSED o NOT_HELD.
+ *
+ * Es un cruce en el momento de servir la ficha, no un dato guardado: `cartera`
+ * es el objeto que ya devuelve `calcularCartera()` (posiciones vivas +
+ * liquidadas), la misma fuente que usa la vista de Portfolio. Guardar aquí un
+ * estado propio habría sido la regla 9 al revés —dos sitios afirmando lo mismo
+ * sobre la misma posición, sin ninguna prueba de que concuerden—. Si no se
+ * pasa `cartera` (llamada barata, sin el motor), el estado queda `null`: «no
+ * se ha comprobado», no «no está en cartera».
+ */
+function estadoPortfolio(ticker, cartera) {
+  // Sin `cartera` calculada: no se ha comprobado nada, y null lo dice.
+  if (!cartera) return null;
+  // Sin ticker, la compañía no puede figurar en la cartera —se indexa por
+  // ticker—, así que aquí SÍ hay una respuesta firme: nunca estuvo ni podrá
+  // estar. Es la misma distinción que entre «no hay dato» y «el dato es cero».
+  if (!ticker) return 'NOT_HELD';
+  const t = ticker.toUpperCase();
+  if (cartera.posiciones?.some((p) => p.ticker === t)) return 'OPEN';
+  if (cartera.cerradas?.some((p) => p.ticker === t)) return 'CLOSED';
+  return 'NOT_HELD';
+}
+
+/**
  * Ficha de una compañía, enriquecida con lo que el resto de la plataforma sepa
  * de ella. Cada fuente se resuelve por separado: una caída deja su bloque
  * declarado como no disponible sin arrastrar a los demás.
+ *
+ * @param {object} [opciones]
+ * @param {object} [opciones.cartera]     resultado ya calculado de calcularCartera(),
+ *                                        para derivar el estado de portfolio sin
+ *                                        recalcular el motor por cada ficha.
+ * @param {Function} [opciones.agendaDe]  `({ ticker }) => Promise<Array>` — inyectado
+ *                                        para no acoplar este módulo a catalizadores
+ *                                        salvo que de verdad se pidan catalysts.
  */
-async function detalle(claveOTicker) {
+async function detalle(claveOTicker, { cartera = null, agendaDe = null } = {}) {
   const buscada = String(claveOTicker ?? '').trim().toUpperCase();
   const compania = agrupar().find(
     (c) => c.clave.toUpperCase() === buscada || (c.ticker ?? '').toUpperCase() === buscada
   );
   if (!compania) return null;
 
-  const [cotizacion, noticias] = await Promise.all([
+  const [cotizacion, noticias, catalysts] = await Promise.all([
     resolverCotizacion(compania.ticker),
     Promise.resolve(mencionesEnNoticias(compania)),
+    agendaDe && compania.ticker ? agendaDe({ ticker: compania.ticker }).catch(() => []) : Promise.resolve([]),
   ]);
 
   return {
@@ -189,6 +228,8 @@ async function detalle(claveOTicker) {
     cotizacion,
     recorridoObjetivo: recorrido(cotizacion, compania.precioObjetivo),
     noticias,
+    catalysts,
+    portfolioStatus: estadoPortfolio(compania.ticker, cartera),
     generadoEn: new Date().toISOString(),
   };
 }

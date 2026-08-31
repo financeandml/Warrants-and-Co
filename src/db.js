@@ -89,6 +89,12 @@ anadirColumna('informes', 'precio_compra', 'REAL');
 anadirColumna('informes', 'take_profit', 'REAL');
 anadirColumna('informes', 'stop_loss', 'REAL');
 
+// Juicio narrativo del analista sobre los riesgos de la tesis. A diferencia de
+// un precio o una cotizacion, esto no se deriva de ningun proveedor: es
+// texto que el propio analista escribe, y por eso vive como columna, no como
+// calculo. Opcional: sin el, la ficha declara N/A, nunca una cadena vacia.
+anadirColumna('informes', 'riesgos_clave', 'TEXT');
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS noticias (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,

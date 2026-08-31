@@ -156,6 +156,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
 
   for (const [campo, max] of [
     ['sector', 80], ['pais', 60], ['periodo', 40], ['analista', 120], ['resumen_ejecutivo', 8000],
+    ['riesgos_clave', 4000],
   ]) {
     if (!parcial || cuerpo[campo] !== undefined) d[campo] = texto(cuerpo[campo], max);
   }
