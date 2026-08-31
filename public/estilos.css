@@ -1456,13 +1456,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
    empuje en lugar de superponerse al bloque de accesos. */
 .seccion--portada .portada {
   min-height: calc(75.5svh - var(--alto-cabecera));
-  /* `justify-items: start`, no `center`: el hero es de composición izquierda
-     desde el rediseño del hero, pero `place-items: center` seguía centrando
-     `.portada__interior` como CAJA dentro del grid, aunque su texto ya
-     estuviera alineado a la izquierda por dentro —dos alineaciones distintas,
-     la de la caja y la de su contenido, y solo se había corregido la segunda.
-     `align-items` se queda en `center`: solo el eje horizontal era el bug. */
-  display: grid; grid-template-rows: 1fr auto; align-items: center; justify-items: start;
+  /* Pivote de diseño: la composición vuelve a ser centrada, no de izquierda.
+     `place-items: center` centra `.portada__interior` en los dos ejes como
+     caja de grid. La sesión anterior había pasado esto a `justify-items:
+     start` para un hero de izquierda que ya no es el diseño vigente. */
+  display: grid; grid-template-rows: 1fr auto; place-items: center;
   border-bottom: none;
   overflow: hidden;
 }
@@ -1485,30 +1483,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .seccion--portada .portada__interior {
   /* Referencia para las líneas cuando salen del flujo. */
   position: relative;
-  display: flex; flex-direction: column; align-items: flex-start;
+  display: flex; flex-direction: column; align-items: center;
   gap: clamp(44px, 7vh, 76px);
   padding-block: clamp(60px, 12vh, 140px);
-  text-align: start;
-  /* El texto no invade el lado derecho, donde sigue la fotografía: 50 % de
-     tope, estricto, pedido explícitamente para que el bloque NUNCA alcance
-     la mitad de la ventana donde vive el árbol —ver `.portada__banner`, ahora
-     al 100 % horizontal—. */
-  max-width: min(600px, 50%);
-  /* Este nodo también lleva la clase `.contenedor`, que fija
-     `margin-inline: auto` para centrar el ancho de página en el resto de la
-     plataforma. Dentro del grid del hero eso GANA sobre `justify-items:
-     start` del padre —un margen automático en un ítem de grid manda sobre el
-     justify-items heredado—, así que aunque el grid ya alineaba a la
-     izquierda, esta caja se seguía autocentrando por su propio margen. Se
-     anula aquí, solo en el hero: el resto de usos de `.contenedor` en la
-     plataforma no se toca. */
-  margin-inline: 0;
-}
-
-@media (max-width: 640px) {
-  /* En columna estrecha no hay "lado derecho" que respetar: el bloque ocupa
-     todo el ancho disponible, igual que ya hacía centrado. */
-  .seccion--portada .portada__interior { max-width: 100%; }
+  text-align: center;
+  /* Sin tope de ancho: la composición centrada no necesita reservarle la
+     mitad derecha de la ventana al árbol —el `margin-inline: auto` que trae
+     `.contenedor` es justo lo que la centra dentro del grid, y no hay que
+     anularlo como sí hacía falta en el hero de izquierda. */
 }
 
 /* ── Composición sobre la fotografía ──
@@ -1523,12 +1505,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
    El árbol queda entero por debajo del bloque de accesos. Ninguna sombra
    resuelve nada aquí; lo resuelve la posición. */
 .seccion--portada .portada[data-banner="true"] {
-  /* Antes `start center`: el comentario de arriba ya decía «el título no se
-     centra», pero `justify-items: center` seguía centrando la caja del
-     interior en horizontal —el comentario y la regla discrepaban, regla 9,
-     y solo se veía comparando el uno con la otra, nunca mirando la pantalla
-     sola—. `place-items: start` deja los dos ejes en el arranque. */
-  place-items: start;
+  /* Vertical arriba —la banda de cielo vacía de la foto está pegada al borde
+     superior, no en el centro—, horizontal centrado: la composición vigente
+     es de marca centrada, no de izquierda. */
+  place-items: start center;
 
   /* ── Cuando el encuadre no da más de sí, crece el hero ──
      Hay ventanas —muy apaisadas y bajas— en las que el bloque de marca, el
@@ -1569,7 +1549,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
    —«Índice (S&P 500) · Mismo periodo»— mide 555 px de los 860 disponibles, de
    modo que hay holgura de sobra en los dos idiomas. */
 .portada__cifras {
-  display: flex; justify-content: flex-start; flex-wrap: nowrap;
+  display: flex; justify-content: center; flex-wrap: nowrap;
   gap: clamp(26px, 4vw, 64px);
   padding-block-start: 12px;
 }
@@ -1584,7 +1564,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .portada__cifras__celda {
   display: flex; flex-direction: column; gap: 1px;
-  text-align: start;
+  text-align: center;
 }
 
 /* ── La entrada de las tres cifras ──
@@ -1623,13 +1603,32 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ── Separadores entre casillas ──
-   Sin filete: la composición de referencia del hero de izquierda separa las
-   casillas solo con aire —el `gap` de `.portada__cifras`—, no con una línea.
-   Antes había un filete vertical de coste cero en alto (nacía y moría en el
-   borde/padding/margen de la propia casilla, sin nodo nuevo); se retira
-   entero, no solo el color, porque un filete transparente seguiría reservando
-   su padding y desalinearía el texto de la primera fila respecto a la
-   gemela de abajo, que nunca lo tuvo. */
+   Un filete vertical entre casilla y casilla, como el de la composición
+   centrada de referencia. Cuesta CERO alto: se dibuja en el borde de la
+   casilla, dentro del hueco que la rejilla ya reservaba, y no añade nodo ni
+   caja al flujo —de modo que `costeCifras` mide lo mismo con ellos que sin
+   ellos y el presupuesto del hero no se entera—. Van en el borde de entrada
+   de la segunda y la tercera, no en el de salida de la primera, para que no
+   cuelgue ninguno al final.
+
+   El `padding` aparta el texto del filete y el margen negativo devuelve
+   exactamente lo que el `padding` ocupó. Lo que NO devuelve es el borde: la
+   fila acaba 2 px más ancha, uno por filete. En alto sigue costando cero, que
+   es lo único que paga el pliegue, y 2 px sobre 1024 no aprietan a nadie. */
+.portada__cifras__celda + .portada__cifras__celda {
+  border-inline-start: 1px solid var(--linea-portada, var(--linea));
+  padding-inline-start: clamp(12px, 2.25vw, 28px);
+  margin-inline-start: calc(-1 * clamp(12px, 2.25vw, 28px));
+}
+
+/* Envolviendo, un filete vertical entre renglones no separa nada: señala un
+   límite que ya no existe. Con la fila envuelta se retira. */
+@media (max-width: 640px) {
+  .portada__cifras__celda + .portada__cifras__celda {
+    border-inline-start: none;
+    padding-inline-start: 0; margin-inline-start: 0;
+  }
+}
 
 .portada__cifras__valor {
   font-size: 1.3rem; font-weight: 600; line-height: 1.05;
@@ -1658,7 +1657,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .portada__marca-principal {
-  display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1vw, 8px);
+  display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 1vw, 8px);
   margin: 0;
   font-family: var(--geo);
   font-weight: 600; letter-spacing: -0.045em; line-height: 0.98;
@@ -1671,10 +1670,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .portada__accesos {
-  /* `nowrap`: los tres accesos —cobertura, análisis, LinkedIn— van en una
-     sola fila en escritorio. Envolver es cosa solo de la columna estrecha,
-     abajo en el media query de 640px. */
-  display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center;
+  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
   gap: var(--espacio-2);
 }
 
@@ -1793,20 +1789,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
      Antes era un `0%` fijo, y con él la fracción visible de la foto quedaba a
      merced de la relación de aspecto: a 1920×880 se veía el 46,5 % y la cinta
      le cortaba la copa al árbol. */
-  /* Componente horizontal: 100 %, pegado al borde derecho —pedido
-     explícitamente, para dejar la mitad izquierda despejada para el bloque
-     de texto—. Un intento anterior de esta misma sesión, con la caja de
-     texto más ancha (55 %), había descartado el 100 % por recortar la valla
-     del borde derecho de la foto; con la caja actual, más estrecha (50 %,
-     ver `.seccion--portada .portada__interior`), se volvió a comparar en
-     1280/1536/1920 px de ancho y el defecto ya no aparece: el árbol y la
-     valla quedan enteros en las tres. Si una reforma futura ensancha de
-     nuevo la caja de texto, volver a comparar aquí antes de asumir que
-     sigue sin cortarse. La componente VERTICAL sigue intacta: la gestiona
-     `seguirEncuadreBanner()`, un eje que este cambio no toca —el tronco y la
-     copa siguen entre el 30 % y el 60 % de ALTO de la foto (ver nota de
-     `.seccion--portada .portada[data-banner="true"]`). */
-  background-position: 100% var(--encuadre-banner, 0%);
+  /* Componente horizontal: 50 %, centrado. Pivote de vuelta a la composición
+     centrada de referencia —esta misma sesión probó 70 % y 100 % para un
+     hero de izquierda que ya no es el diseño vigente—. La componente VERTICAL
+     sigue intacta: la gestiona `seguirEncuadreBanner()`, un eje que este
+     cambio no toca —el tronco y la copa siguen entre el 30 % y el 60 % de
+     ALTO de la foto (ver nota de `.seccion--portada .portada[data-banner=
+     "true"]`). */
+  background-position: 50% var(--encuadre-banner, 0%);
   background-repeat: no-repeat;
   /* La imagen se sirve a resolución nativa y el navegador solo la reduce, nunca
      la amplía: en pantallas de alta densidad conserva el detalle original. */
