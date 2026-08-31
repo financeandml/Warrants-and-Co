@@ -48,14 +48,19 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    tome altura: es la degradación declarada, y se afirma en las dos direcciones
    —que crece donde debe y que NO crece donde no hace falta—. */
 /* La pieza cedible del hero, ventana a ventana. */
+/* Vuelto a medir tras revertir el titular editorial a la sola línea "Warrants
+   & Co." (sin subtítulo): con menos alto que gastar arriba, el presupuesto
+   sobra en las seis ventanas. 1920×880 deja de necesitar crecer —el encuadre
+   natural ya basta, hero 595 px, exactamente el de la ventana— y la fila de
+   cifras ya no cede en ninguna de las tres ventanas bajas: antes se medía
+   contra el titular de dos líneas + subtítulo, ahora contra una sola línea. */
 const VENTANAS = [
-  { n: '1440×900',  w: 1440, h: 900,  crece: false, cifras: true  },
-  { n: '1680×1050', w: 1680, h: 1050, crece: false, cifras: true  },
-  { n: '1920×880',  w: 1920, h: 880,  crece: true,  cifras: true  },
-  // Aquí ya no cabe la fila de cifras.
-  { n: '1440×700',  w: 1440, h: 700,  crece: true,  cifras: false },
-  { n: '1920×700',  w: 1920, h: 700,  crece: true,  cifras: false },
-  { n: '2560×800',  w: 2560, h: 800,  crece: true,  cifras: false },
+  { n: '1440×900',  w: 1440, h: 900,  crece: false, cifras: true },
+  { n: '1680×1050', w: 1680, h: 1050, crece: false, cifras: true },
+  { n: '1920×880',  w: 1920, h: 880,  crece: false, cifras: true },
+  { n: '1440×700',  w: 1440, h: 700,  crece: true,  cifras: true },
+  { n: '1920×700',  w: 1920, h: 700,  crece: true,  cifras: true },
+  { n: '2560×800',  w: 2560, h: 800,  crece: true,  cifras: true },
 ];
 
 const R = [];
@@ -349,7 +354,12 @@ const medirFichero = (p) => p.evaluate(async () => {
 
     console.log('\n  ── la decisión no oscila (barrido a 1440 px de ancho) ──');
 
-    const bajadaC = hayCifras ? await barrer(760, 690, -1) : [];
+    /* Rango vuelto a medir tras revertir el titular editorial a la sola
+       línea "Warrants & Co.": con menos alto que gastar arriba, el peldaño
+       de las cifras bajó de la banda 690-760 (medida contra el titular de
+       dos líneas + subtítulo) a la banda 615-650 —el punto exacto está entre
+       626 (cede) y 627 (no cede) a 1440 px de ancho. */
+    const bajadaC = hayCifras ? await barrer(660, 595, -1) : [];
     if (!hayCifras) {
       pendiente('el peldaño de las cifras no oscila', CIFRAS_HERO);
     } else {
@@ -357,7 +367,7 @@ const medirFichero = (p) => p.evaluate(async () => {
       bajadaC.length === 1 && bajadaC[0].a === 'false',
       bajadaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
 
-    const subidaC = hayCifras ? await barrer(690, 760, 1) : [];
+    const subidaC = hayCifras ? await barrer(595, 660, 1) : [];
     t('subiendo, las cifras vuelven una sola vez',
       subidaC.length === 1 && subidaC[0].a === 'true',
       subidaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
@@ -403,7 +413,7 @@ const medirFichero = (p) => p.evaluate(async () => {
      ponerse a `false`. */
   {
     console.log('\n  ── fuera del régimen `cover`, la pieza vuelve ──');
-    const ctx = await navegador.newContext({ viewport: { width: 1920, height: 700 } });
+    const ctx = await navegador.newContext({ viewport: { width: 1920, height: 600 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
     await p.goto(`${B}/#/inicio`, { waitUntil: 'domcontentloaded' });
@@ -422,7 +432,7 @@ const medirFichero = (p) => p.evaluate(async () => {
     });
 
     const apaisada = await estado();
-    t('de partida, 1920×700 tiene la pieza cedida',
+    t('de partida, 1920×600 tiene la pieza cedida',
       apaisada.cifras === 'false', `cifras ${apaisada.cifras}`);
 
     await p.setViewportSize({ width: 390, height: 844 });
@@ -451,10 +461,10 @@ const medirFichero = (p) => p.evaluate(async () => {
     t('y una vez vuelta, el estado no se mueve solo', new Set(serie).size === 1, serie.join(' '));
 
     // Y es reversible: al volver a la ventana apaisada, vuelve a ceder.
-    await p.setViewportSize({ width: 1920, height: 700 });
+    await p.setViewportSize({ width: 1920, height: 600 });
     await encuadrada(p);
     const vuelta = await estado();
-    t('al volver a 1920×700 vuelve a ceder',
+    t('al volver a 1920×600 vuelve a ceder',
       vuelta.cifras === 'false', `cifras ${vuelta.cifras}`);
 
     await ctx.close();

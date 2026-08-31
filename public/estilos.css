@@ -1489,11 +1489,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
   gap: clamp(44px, 7vh, 76px);
   padding-block: clamp(60px, 12vh, 140px);
   text-align: start;
-  /* El texto no invade el lado derecho, donde sigue la fotografía: el ancho
-     tope ronda el 55 % de la rejilla del hero. Se aprieta desde 60% al mover el
-     árbol al 70% horizontal (ver `.portada__banner`): con el árbol más a la
-     derecha, un bloque de texto al 60% empezaba a solaparlo en anchos medios. */
-  max-width: min(600px, 55%);
+  /* El texto no invade el lado derecho, donde sigue la fotografía: 50 % de
+     tope, estricto, pedido explícitamente para que el bloque NUNCA alcance
+     la mitad de la ventana donde vive el árbol —ver `.portada__banner`, ahora
+     al 100 % horizontal—. */
+  max-width: min(600px, 50%);
   /* Este nodo también lleva la clase `.contenedor`, que fija
      `margin-inline: auto` para centrar el ancho de página en el resto de la
      plataforma. Dentro del grid del hero eso GANA sobre `justify-items:
@@ -1555,25 +1555,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
      la decisión dejaría de ser estable—. */
   gap: clamp(6px, 1.2vh, 12px);
   padding-block: clamp(18px, 3.6vh, 40px) 0;
-}
-
-/* ── El titular editorial cede tamaño en el banner ──
-   Fuera del banner —sin foto detrás— el titular puede ser tan grande como
-   quiera. Dentro, es una pieza más del mismo presupuesto que la fila de
-   cifras: dos líneas a 4,6rem más la etiqueta y el subtítulo no caben junto al
-   árbol y la cinta en las ventanas apaisadas y bajas, así que aquí se ciñe él
-   solo antes de pedirle nada al hero (`--alto-minimo-banner`) o al asomo del
-   manifiesto. */
-.portada[data-banner="true"] .portada__marca-principal__linea {
-  font-size: clamp(1.6rem, 3vw, 2.6rem);
-}
-.portada[data-banner="true"] .portada__subtitulo {
-  font-size: 0.8rem;
-  line-height: 1.35;
-  max-width: 34ch;
-}
-.portada[data-banner="true"] .portada__marca-etiqueta {
-  font-size: 0.62rem;
 }
 
 /* ── La fila de tres cifras del hero ──
@@ -1676,20 +1657,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   visibility: hidden; pointer-events: none;
 }
 
-/* El subtítulo es la segunda pieza cedible del mismo presupuesto —ver
-   `seguirEncuadreBanner()`—. Misma disciplina que la fila de cifras: oculto
-   pero maquetado, para que su alto siga midiéndose y la decisión de cederlo
-   no dependa de si ya se cedió. */
-.portada[data-subtitulo="false"] .portada__subtitulo {
-  position: absolute; inset-inline: 0; top: 0;
-  visibility: hidden; pointer-events: none;
-}
-
-/* La etiqueta pequeña que conserva la marca sobre el titular editorial. */
-.portada__marca-etiqueta { margin: 0; }
-
-/* El titular es ahora editorial, no la marca: dos líneas del mismo peso, sin
-   la variante «secundaria» en índigo que distinguía nombre de apellido. */
 .portada__marca-principal {
   display: flex; flex-direction: column; align-items: flex-start; gap: clamp(4px, 1vw, 8px);
   margin: 0;
@@ -1701,14 +1668,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: block;
   font-size: clamp(2.3rem, 5.4vw, 4.6rem);
   color: var(--tinta);
-}
-
-.portada__subtitulo {
-  margin: 0;
-  max-width: 46ch;
-  font-size: clamp(0.95rem, 1.6vw, 1.15rem);
-  line-height: 1.5;
-  color: var(--tinta-secundaria);
 }
 
 .portada__accesos {
@@ -1781,11 +1740,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   text-shadow: 0 1px 30px rgba(255, 255, 255, 0.6);
 }
 
-.portada[data-banner="true"] .portada__subtitulo,
-.portada[data-banner="true"] .portada__marca-etiqueta {
-  color: var(--tinta-portada);
-}
-
 /* Solo el contorno sigue la paleta fija de la portada: el sólido es cromo de
    identidad —regla 2— y su `--acento` no depende de estar sobre la foto. */
 .portada[data-banner="true"] .portada__accesos .boton--contorno {
@@ -1839,16 +1793,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
      Antes era un `0%` fijo, y con él la fracción visible de la foto quedaba a
      merced de la relación de aspecto: a 1920×880 se veía el 46,5 % y la cinta
      le cortaba la copa al árbol. */
-  /* Componente horizontal: 70 %, no 50 %. Centrado dejaba el árbol justo detrás
-     del bloque de texto; movido a la derecha despeja la mitad izquierda para el
-     titular editorial y sigue dejando el árbol entero dentro del encuadre —el
-     tronco y la copa caen entre el 30 % y el 60 % de ALTO de la foto (ver nota
-     de `.seccion--portada .portada[data-banner="true"]`), un eje que este cambio
-     no toca. Se comparó visualmente contra 50 % (el árbol tapaba el texto) y
-     contra 100 % (recortaba la valla del borde derecho de la foto); 70 % es el
-     punto donde el árbol queda contenido sin ninguno de los dos defectos. La
-     componente VERTICAL sigue intacta: la gestiona `seguirEncuadreBanner()`. */
-  background-position: 70% var(--encuadre-banner, 0%);
+  /* Componente horizontal: 100 %, pegado al borde derecho —pedido
+     explícitamente, para dejar la mitad izquierda despejada para el bloque
+     de texto—. Un intento anterior de esta misma sesión, con la caja de
+     texto más ancha (55 %), había descartado el 100 % por recortar la valla
+     del borde derecho de la foto; con la caja actual, más estrecha (50 %,
+     ver `.seccion--portada .portada__interior`), se volvió a comparar en
+     1280/1536/1920 px de ancho y el defecto ya no aparece: el árbol y la
+     valla quedan enteros en las tres. Si una reforma futura ensancha de
+     nuevo la caja de texto, volver a comparar aquí antes de asumir que
+     sigue sin cortarse. La componente VERTICAL sigue intacta: la gestiona
+     `seguirEncuadreBanner()`, un eje que este cambio no toca —el tronco y la
+     copa siguen entre el 30 % y el 60 % de ALTO de la foto (ver nota de
+     `.seccion--portada .portada[data-banner="true"]`). */
+  background-position: 100% var(--encuadre-banner, 0%);
   background-repeat: no-repeat;
   /* La imagen se sirve a resolución nativa y el navegador solo la reduce, nunca
      la amplía: en pantallas de alta densidad conserva el detalle original. */
