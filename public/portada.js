@@ -134,6 +134,7 @@ export function seguirEncuadreBanner() {
   const cinta = document.getElementById('ticker-mercado');
   const interior = portada.querySelector('.portada__interior');
   const cifras = portada.querySelector('.portada__cifras');
+  const subtitulo = portada.querySelector('.portada__subtitulo');
 
   // Un elemento oculto no tiene caja: `height` ya vale 0. Mirar ademas `hidden`
   // invitaba a creer que una cinta sin pintar valia 0 por decision y no por
@@ -182,6 +183,7 @@ export function seguirEncuadreBanner() {
     delete portada.dataset.fraccionBanner;
     delete portada.dataset.holguraCinta;
     marcar('cifras', 'true');
+    marcar('subtitulo', 'true');
   };
 
   const publicar = () => {
@@ -225,23 +227,26 @@ export function seguirEncuadreBanner() {
       bloqueDeMarca + (BANNER.base - BANNER.copa) * fotoAlto + BANNER.holguraMinima + cintaAlto);
 
     /*
-     * ── La pieza cedible: un término más de esta misma cuenta ──
+     * ── Las dos piezas cedibles: un término más de esta misma cuenta ──
      *
-     * La fila de cifras cuesta alto de bloque de marca, y el bloque entra entero
-     * en el mínimo: allí donde el hero ya crecía por la foto, ese coste sale del
-     * pliegue. Medido sobre las seis ventanas de `tests/portada.js`: las cifras
-     * cuestan 57-66 px. Cede ella y no la holgura del árbol ni el revelado del
-     * manifiesto, porque es la única de las tres que al faltar no rompe nada.
+     * El subtítulo y la fila de cifras cuestan alto de bloque de marca, y el
+     * bloque entra entero en el mínimo: allí donde el hero ya crecía por la
+     * foto, ese coste sale del pliegue. Ceden ellos y no la holgura del árbol
+     * ni el revelado del manifiesto, porque son lo único de los tres que al
+     * faltar no rompe nada.
      *
-     * Cuándo cede, y por qué, está justo debajo con la escalera.
+     * Cuándo ceden, y en qué orden, está justo debajo con la escalera.
      */
     const cifrasPuestas = portada.dataset.cifras !== 'false';
+    const subtituloPuesto = portada.dataset.subtitulo !== 'false';
     const hueco = parseFloat(getComputedStyle(interior).rowGap) || 0;
     const costeCifras = cifras ? cifras.getBoundingClientRect().height + hueco : 0;
-    /* El bloque de marca desnudo: la misma cifra lleve puesta o no la pieza
-       cedible. Se descuenta solo lo que ESTÁ en flujo; lo oculto ya no suma al
-       alto del interior, aunque siga maquetado. */
-    const marcaSola = interiorAlto - (cifrasPuestas ? costeCifras : 0);
+    const costeSubtitulo = subtitulo ? subtitulo.getBoundingClientRect().height + hueco : 0;
+    /* El bloque de marca desnudo: la misma cifra lleve puestas o no las dos
+       piezas cedibles. Se descuenta solo lo que ESTÁ en flujo; lo oculto ya no
+       suma al alto del interior, aunque siga maquetado. */
+    const marcaSola = interiorAlto
+      - (cifrasPuestas ? costeCifras : 0) - (subtituloPuesto ? costeSubtitulo : 0);
 
     /*
      * Cuánto asomaría el manifiesto en cada hipótesis, sin pintar ninguna. El hero
@@ -253,52 +258,62 @@ export function seguirEncuadreBanner() {
       getComputedStyle(portada).getPropertyValue('--alto-por-ventana')) || caja.height;
     const asomoAhora = asomoDelManifiesto();
 
-    /* Cuánto asomaría el manifiesto con esta hipótesis, sin pintarla. El hero
-       empuja al manifiesto píxel a píxel, así que basta con saber cuánto asoma
-       ahora y cuánto mediría el hero en cada caso. */
-    const asomoSi = (conCifras) => {
+    /* Cuánto asomaría el manifiesto con esta combinación de piezas, sin pintar
+       ninguna. El hero empuja al manifiesto píxel a píxel, así que basta con
+       saber cuánto asoma ahora y cuánto mediría el hero en cada hipótesis. */
+    const asomoSi = (conSubtitulo, conCifras) => {
       if (asomoAhora === null) return null;
-      const alto = Math.max(porVentana, minimoDe(marcaSola + (conCifras ? costeCifras : 0)));
+      const alto = Math.max(porVentana, minimoDe(
+        marcaSola + (conSubtitulo ? costeSubtitulo : 0) + (conCifras ? costeCifras : 0)));
       return asomoAhora + (caja.height - alto);
     };
 
-    /* El renglón de la pieza: lo que ha de sobrar ADEMÁS para que vuelva estando
-       fuera. No es una cifra elegida, es el alto de línea del propio rótulo que
-       ha de asomar, medido. Sin esta banda, un píxel de ventana mueve el asomo
-       0,755 px y bastaría para hacerla parpadear. */
+    /* El renglón de cada pieza: lo que ha de sobrar ADEMÁS para que vuelva
+       estando fuera. No es una cifra elegida, es el alto de línea del propio
+       texto que ha de asomar, medido. Sin esta banda, un píxel de ventana mueve
+       el asomo 0,755 px y bastaría para hacerlas parpadear. */
     const renglonCifras = cifras && cifras.firstElementChild
       ? parseFloat(getComputedStyle(
           cifras.firstElementChild.lastElementChild ?? cifras.firstElementChild).lineHeight) || 0
       : 0;
+    const renglonSubtitulo = subtitulo
+      ? parseFloat(getComputedStyle(subtitulo).lineHeight) || 0 : 0;
 
-    /* ── La escalera: si la fila de cifras cabe ──
+    /* ── La escalera: qué se suelta y en qué orden ──
      *
-     * Se prueba con la cifra puesta y, si no cabe, sin ella. Donde no cabe se
-     * conserva la frase que dice qué es esto y se sueltan los números.
+     * Se prueban las combinaciones de más a menos y se toma la primera que deja
+     * asomar el manifiesto. El ORDEN es la decisión de producto: **cede antes el
+     * subtítulo que la fila de cifras**, porque las cifras son el hecho —la
+     * regla 9, salido de `/api/mercado/cartera`— y el subtítulo es una frase de
+     * apoyo que se puede perder sin que la portada deje de decir nada.
      *
      * ── Por qué no oscila ──
      * Dos cosas, y hacen falta las dos:
      *
      *   1. La ENTRADA de la decisión no depende de la decisión. Se calcula lo que
-     *      asomaría CON la pieza, esté como esté ahora, y para eso el bloque
-     *      oculto sigue maquetado —fuera de flujo, no plegado—. Con
-     *      `display: none` mediría cero, el coste parecería nulo, cabría
+     *      asomaría CON cada pieza, esté como esté ahora, y para eso los bloques
+     *      ocultos siguen maquetados —fuera de flujo, no plegados—. Con
+     *      `display: none` medirían cero, el coste parecería nulo, cabrían
      *      siempre, y a la pasada siguiente ya no.
-     *   2. La pieza que está FUERA necesita un renglón de más para volver. Así
+     *   2. Cada pieza que está FUERA necesita un renglón de más para volver. Así
      *      el umbral de entrar es más alto que el de quedarse, y en el límite no
      *      hay ida y vuelta.
      */
-    const peldanos = [true, false];
-    let conCifras = false;
-    for (const C of peldanos) {
-      const exigido = MARGEN_REVELADO + (C && !cifrasPuestas ? renglonCifras : 0);
-      const a = asomoSi(C);
-      if (a === null || a >= exigido) { conCifras = C; break; }
+    const peldanos = [[true, true], [false, true], [false, false]];
+    let conSubtitulo = false, conCifras = false;
+    for (const [S, C] of peldanos) {
+      const exigido = MARGEN_REVELADO
+        + (S && !subtituloPuesto ? renglonSubtitulo : 0)
+        + (C && !cifrasPuestas ? renglonCifras : 0);
+      const a = asomoSi(S, C);
+      if (a === null || a >= exigido) { conSubtitulo = S; conCifras = C; break; }
     }
 
+    marcar('subtitulo', String(conSubtitulo));
     marcar('cifras', String(conCifras));
 
-    const minimo = minimoDe(marcaSola + (conCifras ? costeCifras : 0));
+    const minimo = minimoDe(
+      marcaSola + (conSubtitulo ? costeSubtitulo : 0) + (conCifras ? costeCifras : 0));
 
     // Lo que de verdad queda tras recortar el encuadre a [0, 1]. Es la cifra que
     // la prueba confronta con lo medido en pantalla; no se deduce del deseo.
@@ -315,7 +330,7 @@ export function seguirEncuadreBanner() {
 
   if ('ResizeObserver' in window) {
     const observador = new ResizeObserver(publicar);
-    for (const el of [portada, cinta, interior, cifras]) if (el) observador.observe(el);
+    for (const el of [portada, cinta, interior, cifras, subtitulo]) if (el) observador.observe(el);
   } else {
     window.addEventListener('resize', publicar);
   }
