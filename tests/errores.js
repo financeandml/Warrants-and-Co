@@ -35,7 +35,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
-const { API, VALIDACION } = require('../src/errores');
+const { API, VALIDACION, cuerpoError } = require('../src/errores');
 
 const ORIGEN = path.join(__dirname, '..', 'public', 'idiomas');
 
@@ -96,6 +96,32 @@ async function cargarRegistro() {
       if (!delCatalogo.has(codigo)) {
         fallos.push(`[${idioma.clave}] «${clave}» no corresponde a ningún código del catálogo`);
       }
+    }
+  }
+
+  // ── Caso E1b: un error real, con el cliente en inglés, no debe verse
+  //    en castellano ──
+  //
+  // `cuerpoError()` es el mismo constructor que usan las rutas: se llama tal
+  // cual lo haría `src/routes/mercado.js` u `opciones.js` al rechazar un
+  // símbolo. Lo que se compara no es la teoría de `rotuloError()` sino su
+  // misma regla —preferir `codigo.<CODIGO>` del diccionario activo y solo caer
+  // al `error` que redactó el servidor cuando el código no tiene rótulo—
+  // aplicada al cuerpo JSON real que el servidor mandaría.
+  {
+    const CODIGO_PRUEBA = 'SIMBOLO_INVALIDO';
+    comprobaciones++;
+    const cuerpoServidor = cuerpoError(CODIGO_PRUEBA, { datos: { simbolo: 'ZXY123' } });
+    const en = IDIOMAS.find((i) => i.clave === 'en');
+    const rotuloIngles = en.diccionario[PREFIJO + cuerpoServidor.codigo];
+    const textoQuePintaria =
+      typeof rotuloIngles === 'string' && rotuloIngles.trim() ? rotuloIngles : cuerpoServidor.error;
+
+    if (textoQuePintaria === cuerpoServidor.error) {
+      fallos.push(
+        `E1b: con idioma «en», un error de «${CODIGO_PRUEBA}» se vería en castellano ` +
+        `(«${cuerpoServidor.error}») porque el código no tiene rótulo en el diccionario inglés`
+      );
     }
   }
 
