@@ -1494,6 +1494,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
      árbol al 70% horizontal (ver `.portada__banner`): con el árbol más a la
      derecha, un bloque de texto al 60% empezaba a solaparlo en anchos medios. */
   max-width: min(600px, 55%);
+  /* Este nodo también lleva la clase `.contenedor`, que fija
+     `margin-inline: auto` para centrar el ancho de página en el resto de la
+     plataforma. Dentro del grid del hero eso GANA sobre `justify-items:
+     start` del padre —un margen automático en un ítem de grid manda sobre el
+     justify-items heredado—, así que aunque el grid ya alineaba a la
+     izquierda, esta caja se seguía autocentrando por su propio margen. Se
+     anula aquí, solo en el hero: el resto de usos de `.contenedor` en la
+     plataforma no se toca. */
+  margin-inline: 0;
 }
 
 @media (max-width: 640px) {
