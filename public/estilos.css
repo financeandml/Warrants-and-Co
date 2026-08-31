@@ -976,11 +976,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .conmutador button:hover { background: var(--superficie-alt); color: var(--tinta); }
 .conmutador button.activo { background: var(--acento); color: var(--tinta-inversa); }
 
-.selector-indice select {
-  padding: 7px 11px; font-size: 0.79rem;
-  border: 1px solid var(--linea-fuerte); border-radius: var(--radio);
-  background: var(--superficie);
+/* Píldoras de benchmark: toggles reales (`aria-pressed`), no un `<select>` de
+   selección única — la cartera admite varios benchmarks activos a la vez. El
+   fondo lleno en el estado activo es CROMO —el botón dice «encendido», no un
+   dato con dirección—, así que usa `--acento` igual que `.conmutador button.
+   activo`: es la cláusula 2, el mismo índigo, el mismo significado neutro. */
+.pastillas-benchmark { display: flex; flex-wrap: wrap; gap: 6px; }
+.pastilla-benchmark {
+  padding: 6px 12px; font-size: 0.76rem; font-weight: 500;
+  border: 1px solid var(--linea-fuerte); border-radius: var(--radio-m);
+  background: var(--superficie); color: var(--tinta-secundaria); cursor: pointer;
+  transition: background var(--transicion), color var(--transicion), border-color var(--transicion);
 }
+.pastilla-benchmark:hover { background: var(--superficie-alt); color: var(--tinta); }
+.pastilla-benchmark[aria-pressed="true"] {
+  background: var(--acento); border-color: var(--acento); color: var(--tinta-inversa);
+}
+.pastilla-benchmark:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 /* ─────────────────────────────── Grafico ──────────────────────────────── */
 
@@ -1007,6 +1019,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
    ruidoso— pero no se retira: sin él, a media serie las dos líneas se
    distinguirían solo por gris, y la etiqueta directa solo resuelve los extremos. */
 .grafico__linea--indice { stroke: var(--serie-indice); stroke-dasharray: 8 5; stroke-width: 1.5; }
+/* Un patrón de trazo por benchmark activo, no un segundo tono: los cuatro
+   siguen siendo `--serie-indice` —regla 2, nada de un azul semántico aparte—
+   y se distinguen entre sí por el discontinuo y, ya en el límite, por opacidad.
+   El nombre pegado al final de cada línea es lo que de verdad los identifica. */
+.grafico__linea--indice-0 { stroke-dasharray: 8 5; }
+.grafico__linea--indice-1 { stroke-dasharray: 3 3; }
+.grafico__linea--indice-2 { stroke-dasharray: 1 4; stroke-linecap: round; }
+.grafico__linea--indice-3 { stroke-dasharray: 10 3 2 3; opacity: 0.82; }
 
 .grafico__marcador { fill: var(--serie-cartera); stroke: var(--superficie); stroke-width: 2; }
 .grafico__marcador--indice { fill: var(--serie-indice); }
@@ -1064,6 +1084,11 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .emergente__fila { display: flex; align-items: center; gap: 9px; padding-block: 3px; }
 .emergente__fila + .emergente__fila { margin-top: 1px; }
 
+/* Separa los dos bloques que pide el tooltip: valores indexados arriba,
+   rentabilidad desde la base del rango debajo — dos preguntas distintas, no
+   la misma cifra repetida. */
+.emergente__separador { height: 0; border-top: 1px solid var(--linea); margin: 8px 0; }
+
 .emergente__clave { width: 15px; height: 0; flex-shrink: 0; border-top: 2px solid var(--serie-cartera); }
 .emergente__clave--indice { border-top-style: dashed; border-top-color: var(--serie-indice); }
 
@@ -1082,6 +1107,25 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* Desde dónde se mide la cifra de la leyenda. Ocupa la línea entera para que se
    lea como una nota de las dos series, no como una tercera. */
 .leyenda__medida { flex-basis: 100%; font-size: 0.72rem; color: var(--tinta-mate); }
+
+/* Tabla de rendimiento: Asset / Start / Current / Return. Sin caja propia —
+   hereda el filete de fila de `.tabla-datos`— y las cifras en monospace del
+   sistema, igual que el resto de tablas de esta sección. */
+.tabla-rendimiento-envoltorio { overflow-x: auto; margin-top: var(--espacio-4); }
+.tabla-rendimiento .num { font-family: var(--mono); }
+
+/* El outperformance: una sola línea bajo la tabla, con su signo explícito y su
+   unidad en `pp` — puntos porcentuales, nunca `%`, porque es una diferencia de
+   dos rentabilidades y no una rentabilidad. El color va solo en la cifra. */
+.outperformance {
+  margin: var(--espacio-3) 0 0; font-size: 0.86rem; color: var(--tinta-secundaria);
+}
+.outperformance strong { margin-inline-start: 8px; font-family: var(--mono); font-weight: 600; }
+
+.nota-metodologica {
+  margin: var(--espacio-4) 0 0; font-size: 0.74rem; line-height: 1.5;
+  color: var(--tinta-mate); max-width: 62ch;
+}
 
 /* Nota de una cifra que la muestra aún no sostiene. La marca es tipográfica, no
    de color: la cursiva la separa de una nota metodológica corriente. */

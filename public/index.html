@@ -889,14 +889,11 @@
               <button type="button" data-rango="MAX" class="activo"
                       data-i18n="cartera.grafico.rango.max">Máx</button>
             </div>
-            <label class="selector-indice">
-              <span class="visualmente-oculto" data-i18n="cartera.grafico.indice">Índice de referencia</span>
-              <!-- Sin opciones escritas: las pone `poblarBenchmarks()` desde el
-                   catálogo que manda el servidor con la cartera. Escribirlas aquí
-                   era la tercera copia del mismo hecho, y la que hacía que añadir
-                   un índice al servidor no llegara nunca a esta lista. -->
-              <select id="selector-benchmark"></select>
-            </label>
+            <!-- Píldoras de benchmark: una por índice del catálogo, pintadas por
+                 `poblarBenchmarks()` desde `datos.benchmarks`. Ninguna se escribe
+                 aquí a mano — el servidor sigue siendo la fuente única. -->
+            <div class="pastillas-benchmark" id="pastillas-benchmark" role="group"
+                 data-i18n-attr="aria-label:cartera.grafico.indice" aria-label="Índice de referencia"></div>
             <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
                     data-i18n="cartera.grafico.verDatos">
               Ver datos
@@ -909,21 +906,38 @@
 
         <div class="leyenda" id="leyenda-grafico"></div>
 
+        <!-- Rendimiento por serie: Asset / Start / Current / Return, una fila
+             por serie activa. `pintarTablaRendimiento()` la reconstruye entera
+             en cada cambio de rango o de benchmarks activos. -->
+        <div class="tabla-rendimiento-envoltorio">
+          <table class="tabla-datos tabla-rendimiento" id="tabla-rendimiento">
+            <caption class="visualmente-oculto" data-i18n="cartera.rendimiento.caption">Rendimiento por serie en el rango seleccionado</caption>
+            <thead>
+              <tr>
+                <th scope="col" data-i18n="cartera.rendimiento.activo">Asset</th>
+                <th scope="col" class="num" data-i18n="cartera.rendimiento.inicio">Start</th>
+                <th scope="col" class="num" data-i18n="cartera.rendimiento.actual">Current</th>
+                <th scope="col" class="num" data-i18n="cartera.rendimiento.retorno">Return</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-tabla-rendimiento"></tbody>
+          </table>
+        </div>
+
+        <p class="nota-metodologica" data-i18n="cartera.metodologia.rebase">
+          Todas las series se normalizan a 100 al inicio del periodo seleccionado. El rendimiento de los
+          benchmarks se muestra con fines comparativos y no representa una posición invertible en el
+          índice subyacente salvo que se indique explícitamente.
+        </p>
+
         <div class="tabla-serie" id="tabla-serie" hidden>
           <div class="tabla-envoltorio">
             <table class="tabla-datos">
-              <caption data-i18n="cartera.serie.caption">Serie histórica de la cartera y del índice de referencia</caption>
+              <caption data-i18n="cartera.serie.caption">Serie histórica de la cartera y de los benchmarks activos</caption>
               <thead>
-                <tr>
-                  <th scope="col" data-i18n="cartera.serie.fecha">Fecha</th>
-                  <th scope="col" class="num" data-i18n="cartera.serie.cartera">Cartera</th>
-                  <!-- Rótulo previo a los datos: `pintarGrafico()` lo sustituye
-                       por el ticker del índice elegido, que no es texto de
-                       interfaz y por tanto no se traduce. -->
-                  <th scope="col" class="num" id="cabecera-indice"
-                      data-i18n="cartera.serie.indice">Índice</th>
-                  <th scope="col" class="num" data-i18n="cartera.serie.diferencial">Diferencial</th>
-                </tr>
+                <!-- Sin columnas escritas: `pintarTablaSerie()` reconstruye la
+                     cabecera entera, una columna por benchmark ACTIVO. -->
+                <tr id="cabecera-tabla-serie"></tr>
               </thead>
               <tbody id="cuerpo-tabla-serie"></tbody>
             </table>
