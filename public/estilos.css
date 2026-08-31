@@ -873,6 +873,95 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .tarjeta__cabecera p { font-size: 0.8rem; color: var(--tinta-mate); margin-top: 3px; }
 
+/* ═══════════════ Cartera: editorial, no tarjeta ═══════════════
+   Rediseño acotado a `#seccion-cartera`: destruye el lenguaje visual "card"
+   —fondo, sombra, borde grueso, radio— que `.tarjeta`, `.cuadro-mando`,
+   `.indicador` y `.tabla-envoltorio` usan en el resto de la plataforma (Radar,
+   Signal, Research, mapa OI…), y lo sustituye por espacio negativo y filetes
+   de 1px con `var(--linea)`, la misma variable de línea que ya usa el resto
+   del sistema — no se inventa un `--borde` nuevo. Todo selector aquí empieza
+   por `#seccion-cartera`: nada de esto toca `.tarjeta` fuera de esta vista. */
+#seccion-cartera .tarjeta {
+  background: none; border: none; border-radius: 0; box-shadow: none;
+  margin-bottom: var(--espacio-6);
+}
+#seccion-cartera .tarjeta__cabecera {
+  padding: 0 0 var(--espacio-3); border-bottom: 1px solid var(--linea);
+  margin-bottom: var(--espacio-4);
+}
+#seccion-cartera .cuadro-mando,
+#seccion-cartera .indicador {
+  background: none; border: none; border-radius: 0; box-shadow: none;
+}
+#seccion-cartera .cuadro-mando { overflow: visible; margin-bottom: var(--espacio-5); }
+#seccion-cartera .tabla-envoltorio {
+  background: none; border: none; border-radius: 0;
+}
+
+/* Cabecera de `resumenPortfolio`: Portfolio Return grande a la izquierda,
+   separado por un filete vertical de 1px del resto de cifras, que se leen
+   más pequeñas a la derecha. Sigue siendo el mismo grupo de `.indicador` que
+   pinta `pintarResumenPortfolio()` — solo cambia cómo se distribuyen. */
+#seccion-cartera #resumen-portfolio {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+}
+#seccion-cartera #resumen-portfolio .indicador { padding: 0; }
+#seccion-cartera #resumen-portfolio .indicador--principal {
+  padding-inline-end: var(--espacio-6);
+  border-inline-end: 1px solid var(--linea);
+}
+#seccion-cartera #resumen-portfolio .indicador--principal .indicador__valor {
+  font-family: var(--geo);
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  font-weight: 500;
+}
+
+/* Etiquetas editoriales: pequeñas, versalitas por transformación, con tracking
+   —el mismo patrón que ya usa `.indicador__etiqueta` en el resto de la
+   plataforma, aquí no hay una segunda regla, solo se hereda. */
+
+/* Tabla fundida: cifras en monospace del sistema (`--mono`, sin fichero
+   propio) y alineadas a la derecha. La cabecera y el filete de fila siguen el
+   mismo `.tabla-datos` de siempre; aquí solo se retira el marco de la caja. */
+#seccion-cartera .tabla-posiciones .num,
+#seccion-cartera #cuerpo-conciliacion .num {
+  font-family: var(--mono);
+}
+#seccion-cartera .tabla-posiciones tbody tr:hover { background: var(--superficie-alt); }
+#seccion-cartera .tabla-posiciones tbody tr.cerrada { opacity: 0.6; }
+
+.fila-cartera__estado {
+  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--tinta-mate);
+}
+.fila-cartera__despliegue {
+  display: grid; grid-template-columns: 16px 1fr; column-gap: 8px;
+  align-items: start; width: 100%; padding: 0; border: none; background: none;
+  font: inherit; color: inherit; text-align: start; cursor: pointer;
+}
+.fila-cartera__despliegue:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
+.fila-cartera__despliegue small { display: block; color: var(--tinta-mate); }
+.fila-cartera__glifo {
+  font-family: var(--mono); color: var(--tinta-mate);
+}
+.fila-cartera__detalle td { padding-block: var(--espacio-3); background: var(--superficie-alt); }
+.fila-cartera__panel {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--espacio-3) var(--espacio-5);
+}
+.fila-cartera__panel dt {
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tinta-mate); margin-bottom: 4px;
+}
+.fila-cartera__panel dd { font-size: 0.86rem; }
+
+/* Barras de contribución: ultra-finas, alineadas con su ticker. El color vive
+   SOLO en la barra y en el signo de la cifra, nunca de fondo de una caja. */
+#seccion-cartera .contribucion-fila__pista { height: 6px; background: none; }
+#seccion-cartera .contribucion-fila__pista::before { background: var(--linea); }
+#seccion-cartera .contribucion-fila__barra { top: 0; bottom: 0; border-radius: 0; }
+
 .controles-grafico { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 
 /* Catalizadores y cartera, las dos convertidas. */
@@ -3488,6 +3577,14 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    llenan esa fila entera— y una franja completa es lo que pide un titular
    grande más el par de cifras secundarias que la acompañan. */
 .bento-home > #home-cartera { grid-column: 1 / -1; }
+/* Cartera destruye el lenguaje "card" del resto del Bento: sin fondo, sin
+   borde cerrado, solo un filete superior de 1px que ya separa cada
+   `.bloque-home` del anterior — cláusula de espacio negativo aplicada aquí. */
+.bento-home > #home-cartera,
+.bento-home > #home-cartera:hover {
+  background: none; border: none; border-block-start: 1px solid var(--linea);
+  padding-block: var(--espacio-4);
+}
 
 @media (max-width: 960px) {
   .bento-home { grid-template-columns: 1fr; }
