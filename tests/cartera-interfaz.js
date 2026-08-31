@@ -1,26 +1,26 @@
 /* ============================================================================
-   El catálogo de índices de referencia: una sola fuente.
+   El catálogo de benchmarks: una sola fuente, y ahora multi-selección.
 
-   Qué índices se ofrecen y cómo se llaman lo declara `src/routes/mercado.js` y
-   nadie más. Antes estaba escrito TRES veces —el conjunto de símbolos en el
-   servidor, un mapa de nombres en `app.js` y las opciones del `<select>` a mano
-   en `index.html`— y nada afirmaba que concordasen.
+   Qué benchmarks se ofrecen y cómo se llaman lo declara `src/routes/mercado.js`
+   y nadie más. Las píldoras de `#pastillas-benchmark` —`poblarBenchmarks()`—
+   sustituyen al `<select>` de selección única: cada una es un
+   `aria-pressed`, la cartera es siempre la serie protagonista y varios
+   benchmarks pueden estar activos a la vez.
 
-   El fallo que eso permitía es invisible navegando: añades un índice al
-   servidor, el selector no lo ofrece, y las tres pantallas siguen pareciendo
-   correctas por separado. Nadie mira las tres a la vez.
+   Se afirman tres cosas:
 
-   Se afirman dos cosas, y la segunda es la que importa:
+     1. LAS PÍLDORAS SE DERIVAN, NO SE COPIAN. Se intercepta la respuesta del
+        servidor y se le añade un benchmark que no existe en ninguna parte del
+        cliente. Si aparece como píldora, es que se lee de ahí.
 
-     1. EL RÓTULO SIGUE AL DATO. Elegir otro índice cambia lo que dicen la
-        leyenda del gráfico y los sub-estadísticos, y lo cambia al nombre que
-        publica el servidor, no a uno guardado aquí.
+     2. ENCENDER Y APAGAR PÍLDORAS MUEVE LA LEYENDA Y LA TABLA DE RENDIMIENTO.
+        Un benchmark apagado no aparece en ninguna de las dos; encendido, sí,
+        con el nombre que publica el servidor.
 
-     2. EL SELECTOR SE DERIVA, NO SE COPIA. Se intercepta la respuesta del
-        servidor y se le añade un índice que no existe en ninguna parte del
-        cliente. Si aparece en el selector, es que el selector lo lee de ahí.
-        Con la lista escrita en el documento —como estaba— esto NO aparece, que
-        es exactamente el fallo que nadie podía detectar.
+     3. EL PRINCIPAL —el que fija beta, correlación y rentabilidadIndice, que
+        el servidor calcula contra uno solo— es el primero del catálogo que
+        esté activo, y cambiarlo dispara una recarga que actualiza esos
+        sub-estadísticos.
 
        BASE_PRUEBA=http://127.0.0.1:4173 node tests/cartera-interfaz.js
 
@@ -29,7 +29,7 @@
 const { exigirPlaywright } = require('./dependencias');
 const { crearTercerEstado } = require('./tercer-estado');
 
-const { chromium } = exigirPlaywright('catálogo de índices de referencia');
+const { chromium } = exigirPlaywright('catálogo de benchmarks');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
 (async () => {
@@ -45,24 +45,29 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       `real ${JSON.stringify(real)}`);
   };
 
-  /* El selector solo existe pintado: `poblarBenchmarks()` lo llena cuando la
-     cartera contesta, y el `<select>` del documento llega vacío a propósito.
+  /* Las píldoras solo existen pintadas: `poblarBenchmarks()` las llena cuando
+     la cartera contesta, y `#pastillas-benchmark` llega vacío a propósito.
      Esperar «que la sección tenga contenido» daría por buena una lista vacía. */
-  const selectorPoblado = (p) => E.esperarDatos(p,
-    () => document.querySelectorAll('#selector-benchmark option').length > 0,
-    null, { nombre: 'el selector de índices se puebla',
-            motivo: 'la cartera no devolvió catálogo, así que el `<select>` quedó vacío',
+  const pastillasPobladas = (p) => E.esperarDatos(p,
+    () => document.querySelectorAll('#pastillas-benchmark .pastilla-benchmark').length > 0,
+    null, { nombre: 'las píldoras de benchmark se pueblan',
+            motivo: 'la cartera no devolvió catálogo, así que el contenedor quedó vacío',
             plazo: 60000 });
 
-  const opciones = (p) => p.$$eval('#selector-benchmark option',
-    (os) => os.map((o) => ({ valor: o.value, rotulo: o.textContent.trim() })));
+  const pildoras = (p) => p.$$eval('#pastillas-benchmark .pastilla-benchmark',
+    (bs) => bs.map((b) => ({
+      valor: b.dataset.simbolo, rotulo: b.textContent.trim(),
+      activo: b.getAttribute('aria-pressed') === 'true',
+    })));
+
+  const pulsarPildora = (p, simbolo) => p.click(`.pastilla-benchmark[data-simbolo="${simbolo}"]`);
 
   /* ── La puerta de arriba ──
-     Todo lo que sigue mide una cartera: el selector se llena cuando la cartera
-     contesta, la leyenda se pinta con el gráfico, el anillo reparte posiciones.
-     Contra una base sin tesis publicadas no hay NADA de eso, y la batería se
-     caía con un plantón de sesenta segundos y un volcado de pila que no decía
-     ni qué se perdía ni contra qué base estaba.
+     Todo lo que sigue mide una cartera: las píldoras se llenan cuando la
+     cartera contesta, la leyenda se pinta con el gráfico, el anillo reparte
+     posiciones. Contra una base sin tesis publicadas no hay NADA de eso, y la
+     batería se caía con un plantón de sesenta segundos y un volcado de pila
+     que no decía ni qué se perdía ni contra qué base estaba.
 
      Se pregunta primero, y si no hay cartera se declara entero pendiente. No es
      un aprobado: sale con código 2. */
@@ -73,12 +78,12 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       'la base no tiene ninguna tesis publicada con ticker: no hay cartera que medir');
     console.log(`\n  Siembra una base con posiciones abiertas y vuelve a apuntar aquí.\n`);
     await navegador.close();
-    process.exit(E.cerrar('catálogo de índices'));
+    process.exit(E.cerrar('catálogo de benchmarks'));
   }
 
   const catalogo = cartera.benchmarks;
 
-  console.log('\n  ── el selector es el catálogo del servidor ──');
+  console.log('\n  ── las píldoras son el catálogo del servidor ──');
   comp('el servidor publica un catálogo con nombre y símbolo',
     Array.isArray(catalogo) && catalogo.length > 0
       && catalogo.every((b) => b.simbolo && b.nombre),
@@ -90,24 +95,27 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     p.on('pageerror', (e) => errores.push(e.message));
     p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
     await p.goto(`${B}/#/cartera`);
-    await selectorPoblado(p);
-    const ops = await opciones(p);
+    await pastillasPobladas(p);
+    const ops = await pildoras(p);
 
-    comp('el selector ofrece exactamente los del catálogo',
+    comp('las píldoras ofrecen exactamente los del catálogo',
       ops.map((o) => o.valor).join(','), catalogo.map((b) => b.simbolo).join(','));
     /* El rótulo compuesto es el mismo hecho que el de las cifras y el de la
        leyenda, y sale de la misma clave de diccionario. Se afirma aquí para que
        no puedan separarse sin que se note. */
-    comp('y los rotula con su nombre y su símbolo',
+    comp('y las rotula con su nombre y su símbolo',
       ops.map((o) => o.rotulo).join(' | '),
       catalogo.map((b) => `${b.nombre} · ${b.simbolo}`).join(' | '));
+    comp('cada botón es un aria-pressed real, operable por teclado',
+      await p.$$eval('#pastillas-benchmark button[aria-pressed]', (bs) => bs.length),
+      catalogo.length);
     await ctx.close();
   }
 
   // ── 2 · Añadir uno en el servidor basta ──
-  /* Se intercepta la respuesta y se le añade un índice que NO existe en ningún
-     sitio del cliente. Es el equivalente exacto a añadirlo al catálogo del
-     servidor, sin tener que reiniciar nada. */
+  /* Se intercepta la respuesta y se le añade un benchmark que NO existe en
+     ningún sitio del cliente. Es el equivalente exacto a añadirlo al catálogo
+     del servidor, sin tener que reiniciar nada. */
   console.log('\n  ── añadir uno al servidor lo hace aparecer solo ──');
   {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 } });
@@ -115,101 +123,112 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
     p.on('pageerror', (e) => errores.push(e.message));
 
     const INVENTADO = { simbolo: 'ZZTEST', nombre: 'Índice de prueba' };
-    /* El servidor simulado no solo OFRECE el índice nuevo: cuando se lo piden,
-       contesta con él. Hace falta para la segunda mitad de esta tanda —que el
-       rótulo también salga del servidor—, porque un nombre que el cliente
-       tuviera guardado coincidiría con los cuatro reales y solo se delata con
-       uno que no puede conocer. */
     await p.route('**/api/mercado/cartera*', async (ruta) => {
       const respuesta = await ruta.fetch();
       const cuerpo = await respuesta.json();
       cuerpo.benchmarks = [...(cuerpo.benchmarks ?? []), INVENTADO];
-      if (new URL(ruta.request().url()).searchParams.get('benchmark') === INVENTADO.simbolo) {
-        cuerpo.benchmark = INVENTADO.simbolo;
-        cuerpo.benchmarkNombre = INVENTADO.nombre;
-      }
       await ruta.fulfill({ response: respuesta, json: cuerpo });
+    });
+    /* El servidor simulado no solo OFRECE el benchmark nuevo: cuando se pide su
+       serie histórica, contesta con una. Hace falta para la segunda mitad de
+       esta tanda —que el rótulo también salga del servidor en la leyenda—,
+       porque sin serie el gráfico no dibuja un benchmark sin datos (regla de
+       «nunca inventar»: no se rellena, se omite). */
+    await p.route('**/api/mercado/serie/ZZTEST*', async (ruta) => {
+      const hoy = new Date();
+      const serie = Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(hoy); d.setDate(d.getDate() - (29 - i));
+        return { fecha: d.toISOString().slice(0, 10), valor: 100 + i };
+      });
+      await ruta.fulfill({ json: { simbolo: 'ZZTEST', serie, disponible: true } });
     });
 
     await p.goto(`${B}/#/cartera`);
-    await selectorPoblado(p);
-    const ops = await opciones(p);
+    await pastillasPobladas(p);
+    const ops = await pildoras(p);
 
-    comp('el índice añadido aparece en el selector',
+    comp('el benchmark añadido aparece como píldora',
       ops.some((o) => o.valor === INVENTADO.simbolo), true);
     comp('y con el nombre que le puso el servidor',
       ops.find((o) => o.valor === INVENTADO.simbolo)?.rotulo ?? null,
       `${INVENTADO.nombre} · ${INVENTADO.simbolo}`);
-    comp('y va el último, en el orden en que lo publica el servidor',
+    comp('y va la última, en el orden en que lo publica el servidor',
       ops[ops.length - 1].valor, INVENTADO.simbolo);
-    comp('sin que el cliente pierda los que ya había',
+    comp('sin que el cliente pierda las que ya había',
       ops.length, catalogo.length + 1);
+    comp('y llega apagada: encender benchmarks nuevos es decisión del usuario',
+      ops.find((o) => o.valor === INVENTADO.simbolo)?.activo, false);
 
-    /* Y el rótulo del índice nuevo también sale del servidor. Esta es la mitad
-       que caza la SEGUNDA copia —un mapa de nombres en el cliente—: con ella,
-       los cuatro reales se rotulan bien por casualidad y solo un índice que el
-       cliente no puede conocer revela de dónde sale el nombre. */
     const rotuloNuevo = `${INVENTADO.nombre} · ${INVENTADO.simbolo}`;
-    await p.selectOption('#selector-benchmark', INVENTADO.simbolo);
+    await pulsarPildora(p, INVENTADO.simbolo);
     await p.waitForFunction((r) => {
       const l = document.querySelector('#leyenda-grafico')?.textContent ?? '';
-      const s = document.querySelector('#sub-estadisticos')?.textContent ?? '';
-      // Basta con que cualquiera de los dos haya repintado: se afirman aparte.
-      return l.includes(r) || s.includes(r) || l.includes('ZZTEST') || s.includes('ZZTEST');
+      const t = document.querySelector('#tabla-rendimiento')?.textContent ?? '';
+      return l.includes(r) || t.includes(r);
     }, rotuloNuevo, { timeout: 60000 });
 
-    comp('la leyenda rotula el índice nuevo con el nombre del servidor',
+    comp('la leyenda rotula el benchmark nuevo con el nombre del servidor',
       await p.$eval('#leyenda-grafico', (e) => e.textContent), (v) => v.includes(rotuloNuevo));
-    comp('y los sub-estadísticos también',
-      await p.$eval('#sub-estadisticos', (e) => e.textContent), (v) => v.includes(rotuloNuevo));
+    comp('y la tabla de rendimiento también',
+      await p.$eval('#tabla-rendimiento', (e) => e.textContent), (v) => v.includes(rotuloNuevo));
+
+    // Apagarlo lo retira de la leyenda: no queda un fantasma pintado antes.
+    await pulsarPildora(p, INVENTADO.simbolo);
+    await E.esperarDatos(p,
+      (r) => !(document.querySelector('#leyenda-grafico')?.textContent ?? '').includes(r),
+      rotuloNuevo, { nombre: 'apagar la píldora retira el benchmark de la leyenda',
+                     motivo: 'la leyenda no repintó al apagar la píldora', plazo: 60000 });
+    comp('apagar la píldora retira el benchmark de la leyenda',
+      await p.$eval('#leyenda-grafico', (e) => e.textContent), (v) => !v.includes(rotuloNuevo));
     await ctx.close();
   }
 
-  // ── 3 · El rótulo sigue al índice elegido ──
-  console.log('\n  ── elegir otro índice arrastra su rótulo ──');
+  // ── 3 · El PRINCIPAL sigue al primero activo del catálogo ──
+  console.log('\n  ── apagar los primeros benchmarks arrastra el principal ──');
   {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 } });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errores.push(e.message));
     p.on('console', (m) => { if (m.type() === 'error') errores.push(m.text()); });
 
-    /* Se prueba con el ÚLTIMO del catálogo y no con el segundo: el de por
-       defecto es el primero, y elegir el vecino dejaría pasar un fuera-de-uno
-       en el índice de la lista. */
+    /* Se apagan todos menos el ÚLTIMO del catálogo: así el principal pasa de
+       ser el primero por defecto a ser justo ese, y se prueba el extremo de la
+       lista en vez del vecino inmediato. */
     const otro = catalogo[catalogo.length - 1];
     const rotulo = `${otro.nombre} · ${otro.simbolo}`;
 
     await p.goto(`${B}/#/cartera`);
-    await selectorPoblado(p);
+    await pastillasPobladas(p);
+
+    const activasAlPrincipio = (await pildoras(p)).filter((o) => o.activo).map((o) => o.valor);
+    for (const simbolo of activasAlPrincipio) {
+      if (simbolo === otro.simbolo) continue;
+      await pulsarPildora(p, simbolo);
+    }
+    if (!activasAlPrincipio.includes(otro.simbolo)) await pulsarPildora(p, otro.simbolo);
+
     // La leyenda se pinta con el gráfico; se espera al nombre nuevo, que solo
-    // aparece cuando la cartera del índice nuevo ha resuelto y repintado.
-    await p.selectOption('#selector-benchmark', otro.simbolo);
+    // aparece cuando la cartera del principal nuevo ha resuelto y repintado.
     const repintoLeyenda = await E.esperarDatos(p,
       (r) => document.querySelector('#leyenda-grafico')?.textContent.includes(r),
-      rotulo, { nombre: 'la leyenda repinta al elegir otro índice',
+      rotulo, { nombre: 'la leyenda repinta al cambiar el principal',
                 motivo: 'el gráfico no llegó a pintar: la cartera no tiene serie que dibujar',
                 plazo: 60000 });
 
     if (repintoLeyenda) {
-    comp('la leyenda del gráfico nombra el índice elegido',
-      await p.$eval('#leyenda-grafico', (e) => e.textContent), (v) => v.includes(rotulo));
-    comp('los sub-estadísticos también',
-      await p.$eval('#sub-estadisticos', (e) => e.textContent), (v) => v.includes(rotulo));
-    /* Y no queda rastro del de por defecto: si alguna de las dos mitades siguiera
-       leyendo una lista propia, aquí saldría el nombre viejo. */
-    comp('y ninguno de los dos se quedó con el anterior',
-      (await p.$eval('#leyenda-grafico', (e) => e.textContent))
-        + (await p.$eval('#sub-estadisticos', (e) => e.textContent)),
-      (v) => !v.includes(catalogo[0].nombre));
+      comp('la leyenda del gráfico nombra el nuevo benchmark principal',
+        await p.$eval('#leyenda-grafico', (e) => e.textContent), (v) => v.includes(rotulo));
+      comp('los sub-estadísticos también', await p.$eval('#sub-estadisticos', (e) => e.textContent),
+        (v) => v.includes(rotulo));
     }
     await ctx.close();
   }
 
-  // ── 4 · Los nombres de índice no se traducen ──
+  // ── 4 · Los nombres de benchmark no se traducen ──
   /* Son nombres propios y siglas: «S&P 500» y «SPY» se escriben igual en los dos
      idiomas. Se afirma porque la clave del rótulo SÍ vive en el diccionario, y
      traducirla un día sería el error que CLAUDE.md prohíbe explícitamente. */
-  console.log('\n  ── los nombres de índice son los mismos en los dos idiomas ──');
+  console.log('\n  ── los nombres de benchmark son los mismos en los dos idiomas ──');
   {
     const ctx = await navegador.newContext({ viewport: { width: 1440, height: 900 } });
     const p = await ctx.newPage();
@@ -219,10 +238,10 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
       await p.goto(`${B}/#/cartera`);
       await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
       await p.reload();
-      await selectorPoblado(p);
-      porIdioma[idioma] = (await opciones(p)).map((o) => o.rotulo).join(' | ');
+      await pastillasPobladas(p);
+      porIdioma[idioma] = (await pildoras(p)).map((o) => o.rotulo).join(' | ');
     }
-    comp('el selector dice lo mismo en castellano y en inglés',
+    comp('las píldoras dicen lo mismo en castellano y en inglés',
       porIdioma.es, porIdioma.en);
     await ctx.close();
   }
