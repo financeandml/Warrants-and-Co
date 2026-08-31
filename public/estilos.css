@@ -3130,17 +3130,15 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   border-block-start: 1px solid var(--linea);
 }
 
-/* ── Bloque de marca: rótulo + titular, único titular del manifiesto ──
-   Mismo `.etiqueta-superior` que el resto de la portada, ninguna regla de
-   color propia (regla 9: un rótulo, una fuente). Sustituyó al antiguo
-   `.manifiesto__enunciado` animado, retirado por repetir en pantalla la misma
-   frase que este bloque ya decía en estático. */
-.manifiesto__intro { max-width: 62ch; }
-.manifiesto__intro__titulo {
+/* El enunciado no ocupa todo el ancho: leer una línea larga cansa. */
+.manifiesto__enunciado { max-width: 62ch; }
+
+.manifiesto__titular {
   font-family: var(--geo);
-  margin-block-start: 10px;
-  font-size: clamp(1.4rem, 2.6vw, 2rem);
-  font-weight: 600; letter-spacing: -0.01em; line-height: 1.2;
+  margin-block: 26px 0;
+  font-size: clamp(1.85rem, 4.2vw, 3.15rem);
+  font-weight: 600; letter-spacing: -0.02em; line-height: 1.14;
+  text-wrap: balance;
 }
 
 /* ── Los cuatro pilares ──

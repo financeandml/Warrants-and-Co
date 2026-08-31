@@ -57,21 +57,9 @@
       <div class="portada__trama" aria-hidden="true"></div>
 
       <div class="contenedor portada__interior">
-        <!-- La marca se conserva como etiqueta pequeña sobre el titular: el
-             hero deja de anunciar el nombre y pasa a anunciar la promesa, pero
-             "Warrants & Co." no desaparece — sigue siendo el ancla visual que
-             conecta con la marca de la cabecera. No es un hecho traducible: es
-             un nombre propio, como en `.manifiesto__intro`. -->
-        <p class="etiqueta-superior portada__marca-etiqueta">Warrants &amp; Co.</p>
-
         <h1 class="portada__marca-principal" id="portada-titulo">
-          <span class="portada__marca-principal__linea" data-i18n="portada.titular.linea1">Análisis independiente.</span>
-          <span class="portada__marca-principal__linea" data-i18n="portada.titular.linea2">Ventaja que compite.</span>
+          <span class="portada__marca-principal__linea">Warrants &amp; Co.</span>
         </h1>
-
-        <p class="portada__subtitulo" data-i18n="portada.subtitulo">
-          Investigación rigurosa sobre empresas y mercados para inversores que buscan calidad y claridad.
-        </p>
 
         <!-- ── Fila de cifras del hero ──
              Las mismas tres cifras que la fila de abajo, en su forma corta. NO
@@ -115,17 +103,13 @@
     <div class="manifiesto">
       <div class="contenedor">
 
-        <!-- Único titular de esta zona: el `.manifiesto__enunciado` animado
-             —relleno por `animarManifiesto()` desde `portada.manifiesto.titular`—
-             se retiró porque su primera línea repetía, literalmente, esta
-             misma frase; tener las dos en pantalla era el mismo hecho dicho
-             dos veces (regla 9). Este bloque queda como único encaje de
-             `.manifiesto .etiqueta-superior` con `querySelector`, así que
-             `asomoDelManifiesto()` en `portada.js` sigue midiendo el mismo
-             hecho —el presupuesto de píxeles del hero— sin tocar el módulo. -->
-        <div class="manifiesto__intro">
+        <div class="manifiesto__enunciado">
           <p class="etiqueta-superior">Warrants &amp; Co.</p>
-          <h2 class="manifiesto__intro__titulo" data-i18n="portada.inteligencia.titulo">Inteligencia de mercado</h2>
+          <!-- El titular llega vacío a propósito: sus líneas las construye
+               `animarManifiesto()` a partir de la lista del diccionario, porque
+               el número de líneas y el punto de corte los decide cada idioma.
+               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
+          <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
         </div>
 
         <div class="pilares">

@@ -92,10 +92,6 @@ export default {
   'general.sinDatos': 'Data unavailable',
   'general.importeDivisa': '{importe} {divisa}',
 
-  // ── Cover · hero ──
-  'portada.titular.linea1': 'Independent research.',
-  'portada.titular.linea2': 'An edge that competes.',
-  'portada.subtitulo': 'Rigorous research on companies and markets for investors who want quality and clarity.',
   'portada.accesos.etiqueta': 'Main entry points',
   // `portada.acceso.radar` is unused while the Market area is hidden.
   // Not deleted: it comes back with it.
@@ -104,11 +100,14 @@ export default {
   'portada.acceso.research': 'View research',
 
   // ── Cover · manifesto ──
-  // The only headline in this zone, static HTML. Replaces the old
-  // `portada.manifiesto.titular` — a list, because the line breaks were
-  // typographic and JavaScript decided them — retired because its first line
-  // literally repeated this same sentence (rule 9: one fact, one source).
-  'portada.inteligencia.titulo': 'Market intelligence',
+  // ONE sentence broken into lines. Where it breaks, and how many lines it
+  // takes, is typography and belongs to each language: English says it in three
+  // lines, and nothing forces Spanish to use three as well.
+  'portada.manifiesto.titular': [
+    'Market intelligence',
+    'for investors who',
+    'think in probabilities.',
+  ],
 
   // The four pillars from the reference mockup, replacing the previous three
   // (Research, Catalysts, Portfolio). They lose the link to their routes

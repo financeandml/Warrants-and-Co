@@ -98,14 +98,6 @@ export default {
   'general.sinDatos': 'Dato no disponible',
   'general.importeDivisa': '{importe} {divisa}',
 
-  // ── Portada · hero ──
-  // Titular editorial de dos líneas. Dos claves y no una lista: a diferencia
-  // del titular del manifiesto, este es corto y fijo —no depende de dónde
-  // tipografía decida cortar— y cada línea es una frase propia, no una pieza
-  // de una sola.
-  'portada.titular.linea1': 'Análisis independiente.',
-  'portada.titular.linea2': 'Ventaja que compite.',
-  'portada.subtitulo': 'Investigación rigurosa sobre empresas y mercados para inversores que buscan calidad y claridad.',
   'portada.accesos.etiqueta': 'Accesos principales',
   // `portada.acceso.radar` queda sin uso mientras el área de Mercado esté
   // oculta. No se borra: vuelve con ella.
@@ -114,11 +106,16 @@ export default {
   'portada.acceso.research': 'Ver el análisis',
 
   // ── Portada · manifiesto ──
-  // Único titular de la zona, HTML estático. Sustituye al antiguo
-  // `portada.manifiesto.titular` —una lista, porque el reparto en líneas era
-  // tipográfico y lo decidía JavaScript—, retirado porque su primera línea
-  // repetía, literalmente, esta misma frase (regla 9: un hecho, una fuente).
-  'portada.inteligencia.titulo': 'Inteligencia de mercado',
+  // El titular es UNA frase repartida en líneas, y el reparto es tipográfico:
+  // cada idioma decide dónde corta y en cuántas líneas le cabe. Por eso es una
+  // lista y no tres claves —tres claves impondrían a todos los idiomas los
+  // cortes del inglés, y un idioma que necesitara cuatro líneas no tendría
+  // dónde ponerlas— y por eso el documento ya no las trae escritas.
+  'portada.manifiesto.titular': [
+    'Inteligencia de mercado',
+    'para quien invierte',
+    'pensando en probabilidades.',
+  ],
 
   // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres
   // anteriores (Análisis, Catalizadores, Cartera). Pierden el enlace a sus
