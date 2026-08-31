@@ -328,4 +328,4 @@ function universo() {
     .filter(Boolean);
 }
 
-module.exports = { listar, detalle, universo, agrupar, CALIDAD };
+module.exports = { listar, detalle, universo, agrupar, estadoPortfolio, CALIDAD };

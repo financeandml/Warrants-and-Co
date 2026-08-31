@@ -252,9 +252,16 @@ function prensaDe(compania, limite = 4) {
 /**
  * Agenda completa.
  *
- * @param {object} opciones { ticker, tipo, horizonte }
+ * @param {object} opciones { ticker, tipo, horizonte, cartera }
+ * @param {object} [opciones.cartera] resultado YA calculado de calcularCartera()
+ *   (ver `src/cartera-referencia.js`), para que cada evento lleve el estado
+ *   real de portfolio —OPEN/CLOSED/NOT_HELD— en vez del booleano `enCartera`
+ *   antiguo, que solo dice si la tesis sigue marcada como vigente, no si la
+ *   posición sigue abierta de verdad. Sin `cartera`, `portfolioStatus` queda
+ *   `null` en cada evento —«no comprobado», el mismo tercer estado que ya usa
+ *   `companias.detalle()`—, nunca se infiere de `enCartera`.
  */
-async function agenda({ ticker = null, tipo = null, horizonte = null } = {}) {
+async function agenda({ ticker = null, tipo = null, horizonte = null, cartera = null } = {}) {
   let cobertura = companias.agrupar();
   if (ticker) {
     const t = String(ticker).toUpperCase();
@@ -270,6 +277,9 @@ async function agenda({ ticker = null, tipo = null, horizonte = null } = {}) {
   );
 
   let eventos = porCompania.flat();
+  // Mismo cruce que `companias.detalle()`, reutilizado, no reimplementado:
+  // la regla 9 aplicada al estado de una posición.
+  for (const e of eventos) e.portfolioStatus = companias.estadoPortfolio(e.ticker, cartera);
   if (tipo) eventos = eventos.filter((e) => e.tipo === tipo);
   if (horizonte) eventos = eventos.filter((e) => e.horizonte === horizonte);
 
@@ -306,7 +316,10 @@ async function agenda({ ticker = null, tipo = null, horizonte = null } = {}) {
       { tipo: TIPOS.INFORME, origen: 'Repositorio de análisis propio', fechas: 'Exactas' },
       { tipo: TIPOS.PRENSA, origen: 'Teletipos sindicados', fechas: 'Exactas; vinculación por mención literal' },
     ],
-    universo: cobertura.map((c) => ({ ticker: c.ticker, empresa: c.empresa, enCartera: c.enCartera })),
+    universo: cobertura.map((c) => ({
+      ticker: c.ticker, empresa: c.empresa, enCartera: c.enCartera,
+      portfolioStatus: companias.estadoPortfolio(c.ticker, cartera),
+    })),
     criterioPrioridad: {
       HIGH: 'Evento a ≤ 14 días sobre una compañía en cartera.',
       MEDIUM: 'Evento a ≤ 45 días, o próximo sobre compañía cubierta sin posición abierta.',
