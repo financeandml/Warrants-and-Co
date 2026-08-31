@@ -749,7 +749,7 @@ const AREAS_OCULTAS = false;
     (await txt('#cifras-hero')) ?? '', (v) => !RETENIDAS.test(v));
 
   if (errores.length) {
-    fallos++;
+    E.fallo('la consola no reporta errores', `${errores.length} error(es)`);
     console.log('\n  errores de consola:');
     for (const e of errores.slice(0, 5)) console.log(`    ${e}`);
   }
