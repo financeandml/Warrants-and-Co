@@ -1468,7 +1468,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
    pantalla distinta. */
 .seccion--portada .portada > .ticker {
   grid-row: 2; align-self: end; justify-self: stretch;
-  width: 100%;
+  /* Antes `width: 100%` la llevaba borde a borde con la sección —`.seccion--
+     portada` va a `padding: 0` y `.portada` no añade ninguno propio—. La
+     píldora pide margen lateral, así que se sustituye por `margin-inline`: el
+     ticker sigue "prácticamente todo el ancho disponible" sin tocar el 0 y
+     0 de la sección. */
+  margin-inline: clamp(20px, 4vw, 56px);
 }
 
 .seccion--portada .portada__interior {
@@ -3262,7 +3267,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__item {
   display: flex; align-items: center; gap: 14px;
   flex-shrink: 0;
-  padding: 18px 24px;
+  /* Menos alto que antes (18px → 14px): la celda pasa de casi cuadrada a
+     rectangular, que es lo que pide la píldora. */
+  padding: 14px 24px;
   font-size: 0.8rem; text-decoration: none; color: var(--tinta);
   border-inline-end: 1px solid var(--linea-hairline);
   white-space: nowrap;
