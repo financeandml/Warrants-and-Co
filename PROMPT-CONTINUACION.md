@@ -26,14 +26,19 @@ y multer. Código en español, interfaz bilingüe ES/EN.
 - Servidor: node --env-file=.env server.js en puerto 4173
 
 ## Pendiente por orden
-1. E1b: errores de rutas en castellano aunque interfaz en inglés.
-   Deuda en src/errores.js:18-32. Ficheros afectados:
-   routes/informes.js, routes/noticias.js, routes/mercado.js,
-   routes/opciones.js.
-2. Beta y correlación sin suelo de muestra.
-3. Reetiquetado de noticias al añadir tesis nueva.
-4. Fase 5 del multiidioma.
-5. Fusionar rediseno a main.
+1. ✅ E1b: errores de rutas en castellano aunque interfaz en inglés — cerrado.
+   `src/errores.js` amplía el catálogo (SIMBOLO_INVALIDO, SIN_SERIE_HISTORICA,
+   los códigos de lectura de PDF); las rutas ya no filtran frase propia en
+   `detalle`; `api()` en `public/app.js` traduce por `datos.codigo` desde el
+   origen. `node tests/errores.js` en verde.
+2. ✅ Beta y correlación sin suelo de muestra — cerrado (`ed5bca6`, 30-ago-2026).
+   Entran en `SUELO_POR_CIFRA` de `src/cartera.js` con el mismo suelo que el
+   alfa de Jensen del que son insumo.
+3. ✅ Reetiquetado de noticias al añadir tesis nueva — cerrado (`36190fc`).
+   Alta y edición de tesis llaman a `sincronizacion.vincularNoticiasACompania()`.
+4. ✅ Fase 5 del multiidioma — cerrado (`f8556ae`). Ver README.md §Diseño,
+   "La deuda de `src/` —fase 5— está saldada".
+5. Fusionar rediseno a main. Único ítem vivo de esta lista.
 
 ## Instrucción
 Lee CLAUDE.md antes de tocar nada. Confirma la rama y el estado del
