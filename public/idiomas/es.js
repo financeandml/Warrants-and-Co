@@ -1132,6 +1132,8 @@ export default {
   // ═════════════════════════ Catalizadores ═════════════════════════════════
   'catalizadores.etiqueta': 'Análisis',
   'catalizadores.titulo': 'Catalizadores',
+  'catalizadores.enVivo': 'EN VIVO',
+  'catalizadores.hub.subtitulo': 'La agenda de lo que puede mover cada tesis, con fecha verificable de una fuente conectada.',
   'catalizadores.filtros.etiqueta': 'Filtros de agenda',
   'catalizadores.horizonte.proximos': 'Próximos',
   'catalizadores.horizonte.pasados': 'Pasados',
@@ -1141,6 +1143,31 @@ export default {
   'catalizadores.filtro.todosTipos': 'Todos los tipos',
   'catalizadores.carencias.titulo': 'Sin fuente conectada',
   'catalizadores.carencias.subtitulo': 'Categorías que la agenda reconoce pero que hoy nadie alimenta',
+
+  // Ventana rápida: filtro adicional sobre Próximos, no sustituye al
+  // conmutador Próximos/Pasados.
+  'catalizadores.ventana.etiqueta': 'Ventana temporal',
+  'catalizadores.ventana.hoy': 'HOY',
+  'catalizadores.ventana.7d': '7D',
+  'catalizadores.ventana.30d': '30D',
+  'catalizadores.ventana.todos': 'TODOS',
+
+  'catalizadores.metricas.proximos': 'Próximos',
+  'catalizadores.metricas.alta': 'Prioridad alta',
+  'catalizadores.metricas.pasados': 'Pasados',
+
+  'catalizadores.siguiente.titulo': 'Siguiente catalizador',
+  'catalizadores.siguiente.vacio': 'No hay catalizadores próximos agendados.',
+  'catalizadores.siguiente.abrir': 'Abrir ficha de {empresa}',
+
+  'catalizadores.dato.tipo': 'Tipo',
+  'catalizadores.dato.prioridad': 'Prioridad',
+
+  // Conexión con la cartera por evento: mismo texto que la ficha de Companies.
+  'catalizadores.portfolio.abierta': 'En cartera',
+  'catalizadores.portfolio.cerrada': 'Posición cerrada',
+  'catalizadores.portfolio.noTenida': 'No tenida en cartera',
+  'catalizadores.portfolio.sinComprobar': 'Cartera sin comprobar',
 
   // Tres datos independientes unidos por el separador de lista, no una frase
   // partida: el orden no cambia de un idioma a otro.

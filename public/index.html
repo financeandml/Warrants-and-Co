@@ -599,12 +599,50 @@
   <section class="seccion" id="seccion-catalizadores" data-seccion-panel="catalizadores" hidden>
     <div class="contenedor">
 
-      <div class="titulo-seccion">
-        <div>
+      <!-- Hero editorial, mismo patrón que Companies: eyebrow + título +
+           subtítulo, con el indicador LIVE —la agenda se refresca contra
+           datos en vivo del servidor, no es un histórico cerrado—. -->
+      <div class="catalizadores-hero">
+        <div class="catalizadores-hero__interior">
           <p class="etiqueta-superior" data-i18n="catalizadores.etiqueta">Análisis</p>
-          <h1 data-i18n="catalizadores.titulo">Catalizadores</h1>
+          <div class="catalizadores-hero__titulo-fila">
+            <h1 data-i18n="catalizadores.titulo">Catalizadores</h1>
+            <span class="indicador-vivo" aria-hidden="true">
+              <span class="indicador-vivo__punto"></span>
+              <span data-i18n="catalizadores.enVivo">EN VIVO</span>
+            </span>
+          </div>
+          <p class="catalizadores-hero__subtitulo" data-i18n="catalizadores.hub.subtitulo">
+            La agenda de lo que puede mover cada tesis, con fecha verificable de una fuente conectada.</p>
         </div>
         <div class="estado-datos" id="estado-catalizadores"></div>
+      </div>
+
+      <!-- Top metrics: mismo patrón que #companias-metricas / #resumen-portfolio. -->
+      <div class="catalizadores-metricas" id="catalizadores-metricas"></div>
+
+      <!-- Next Catalyst: pieza asimétrica de dos columnas, mismo patrón que
+           Featured Research de Companies (`.destacada-principal`). -->
+      <section class="catalizadores-bloque" aria-labelledby="titulo-siguiente-catalizador">
+        <h2 class="movimiento" id="titulo-siguiente-catalizador"
+            data-i18n="catalizadores.siguiente.titulo">Siguiente catalizador</h2>
+        <div id="siguiente-catalizador"></div>
+      </section>
+
+      <!-- Filtros rápidos de ventana + densidad de eventos próximos. -->
+      <div class="catalizadores-controles">
+        <div class="conmutador conmutador--ventana" id="conmutador-ventana" role="tablist"
+             data-i18n-attr="aria-label:catalizadores.ventana.etiqueta" aria-label="Ventana temporal">
+          <button type="button" role="tab" data-ventana="HOY" aria-selected="false"
+                  data-i18n="catalizadores.ventana.hoy">HOY</button>
+          <button type="button" role="tab" data-ventana="7D" aria-selected="false"
+                  data-i18n="catalizadores.ventana.7d">7D</button>
+          <button type="button" role="tab" data-ventana="30D" aria-selected="false"
+                  data-i18n="catalizadores.ventana.30d">30D</button>
+          <button type="button" role="tab" data-ventana="" aria-selected="true"
+                  data-i18n="catalizadores.ventana.todos">TODOS</button>
+        </div>
+        <div class="densidad-eventos" id="densidad-eventos" aria-hidden="true"></div>
       </div>
 
       <div class="barra-busqueda barra-busqueda--filtros" role="group"
@@ -627,13 +665,15 @@
 
       <div id="agenda-completa" aria-live="polite"></div>
 
-      <section class="bloque-panel" aria-labelledby="titulo-sin-calendario">
+      <!-- Sin fuente conectada: nota discreta al pie, no bloque separado
+           gigante — sigue siendo la transparencia que exige CLAUDE.md. -->
+      <section class="catalizadores-carencias" aria-labelledby="titulo-sin-calendario">
         <div class="bloque-panel__cabecera">
           <h2 id="titulo-sin-calendario"
               data-i18n="catalizadores.carencias.titulo">Sin fuente conectada</h2>
           <p data-i18n="catalizadores.carencias.subtitulo">Categorías que la agenda reconoce pero que hoy nadie alimenta</p>
         </div>
-        <div class="rejilla-carencias" id="carencias-catalizadores"></div>
+        <div class="rejilla-carencias rejilla-carencias--discreta" id="carencias-catalizadores"></div>
       </section>
 
     </div>

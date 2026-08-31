@@ -26,13 +26,25 @@ const noDisponible = () => t('general.noDisponible');
 const distancia = (dias) =>
   (Number.isFinite(dias) ? distanciaEnDias(dias) : noDisponible());
 
-export function pintarAgenda(datos, { horizonte, alAbrirCompania }) {
+/* Prioridad → lectura contenida. Nunca badge sólido: mismo criterio que
+ * `.lectura` en Recommendation de Companies (regla 1 de CLAUDE.md, el color
+ * nunca carga solo). La prioridad no es direccional —no hay «alza» ni «baja»
+ * de un evento—, así que solo usa `--aviso` para HIGH y el tono neutro para el
+ * resto; nunca `--acento`, que la cláusula 2 reserva para lo no direccional
+ * de cromo, y una prioridad sí lleva juicio, aunque no lleve dirección. */
+function claseLecturaPrioridad(prioridad) {
+  if (prioridad === 'HIGH') return 'lectura lectura--aviso';
+  return 'lectura lectura--nula';
+}
+
+export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }) {
   const raiz = $('#agenda-completa');
   const estado = $('#estado-catalizadores');
   if (!raiz) return;
   raiz.textContent = '';
 
-  const eventos = horizonte === 'PAST' ? datos.pasados : datos.proximos;
+  let eventos = horizonte === 'PAST' ? datos.pasados : datos.proximos;
+  if (horizonte === 'UPCOMING' && ventana) eventos = filtrarPorVentana(eventos, ventana);
 
   if (estado) {
     // Tres datos independientes unidos por el separador de lista, no una frase
@@ -46,7 +58,7 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania }) {
   }
 
   // Los eventos sin fecha se agrupan aparte y jamás se ordenan entre los datados.
-  if (horizonte === 'UPCOMING' && datos.sinFecha?.length) {
+  if (horizonte === 'UPCOMING' && !ventana && datos.sinFecha?.length) {
     raiz.appendChild(grupoSinFecha(datos.sinFecha));
   }
 
@@ -75,30 +87,35 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania }) {
     grupo.appendChild(cabecera);
 
     const eventosDom = elemento('div', 'grupo-agenda__eventos');
-    for (const e of lista) eventosDom.appendChild(tarjetaEvento(e, alAbrirCompania));
+    for (const e of lista) eventosDom.appendChild(filaEvento(e, alAbrirCompania));
     grupo.appendChild(eventosDom);
 
     raiz.appendChild(grupo);
   }
 }
 
-function tarjetaEvento(e, alAbrirCompania) {
-  const tarjeta = elemento('article', 'evento');
-  tarjeta.dataset.prioridad = e.prioridad;
+/** Ventana temporal sobre `dias`: 0 = hoy, ≤7, ≤30. Agregación en cliente. */
+function filtrarPorVentana(eventos, ventana) {
+  const limite = ventana === 'HOY' ? 0 : ventana === '7D' ? 7 : ventana === '30D' ? 30 : null;
+  if (limite === null) return eventos;
+  return eventos.filter((e) => Number.isFinite(e.dias) && e.dias >= 0 && e.dias <= limite);
+}
 
-  // ── Franja izquierda: prioridad ──
-  const marca = elemento('div', 'evento__prioridad');
-  // El código sigue en `dataset.prioridad`, que es de donde cuelga el color.
-  marca.appendChild(elemento('span', 'evento__prioridad-texto', etiquetaPrioridad(e.prioridad)));
-  marca.title = e.motivo ?? '';
-  tarjeta.appendChild(marca);
+/**
+ * Fila editorial: línea divisoria fina, sin card. Ticker/tipo/prioridad a la
+ * izquierda, fecha/countdown a la derecha. El hover desplaza 3px —fundido y
+ * traslación, nunca reordenación FLIP—.
+ */
+function filaEvento(e, alAbrirCompania) {
+  const fila = elemento('article', 'evento');
+  fila.dataset.prioridad = e.prioridad;
 
-  // ── Cuerpo ──
   const cuerpo = elemento('div', 'evento__cuerpo');
 
   const superior = elemento('div', 'evento__superior');
   superior.appendChild(elemento('span', 'evento__tipo', etiquetaTipoEvento(e.tipo)));
-  if (e.enCartera) superior.appendChild(elemento('span', 'chip chip--cartera', t('catalizadores.enCartera')));
+  superior.appendChild(elemento('span',
+    `evento__prioridad-texto ${claseLecturaPrioridad(e.prioridad)}`, etiquetaPrioridad(e.prioridad)));
   if (e.parcial) superior.appendChild(elemento('span', 'chip chip--aviso', t('catalizadores.parcial')));
   cuerpo.appendChild(superior);
 
@@ -109,6 +126,8 @@ function tarjetaEvento(e, alAbrirCompania) {
   compania.textContent = [e.ticker, e.compania].filter(Boolean).join(t('general.separadorLista'));
   compania.addEventListener('click', () => alAbrirCompania(e.ticker ?? e.compania));
   cuerpo.appendChild(compania);
+
+  cuerpo.appendChild(vinculoPortfolio(e, alAbrirCompania));
 
   // ── Detalle específico del tipo de evento ──
   const detalle = detalleDe(e);
@@ -129,8 +148,37 @@ function tarjetaEvento(e, alAbrirCompania) {
   }
   cuerpo.appendChild(pie);
 
-  tarjeta.appendChild(cuerpo);
-  return tarjeta;
+  fila.appendChild(cuerpo);
+
+  const derecha = elemento('div', 'evento__derecha');
+  derecha.appendChild(elemento('span', 'evento__fecha', formatearFecha(e.fecha)));
+  derecha.appendChild(elemento('span', 'evento__distancia', distancia(e.dias)));
+  fila.appendChild(derecha);
+
+  return fila;
+}
+
+/**
+ * Portfolio Connection por evento. Cuatro estados —`portfolioStatus` puede ser
+ * `null` (no comprobado) y eso no es lo mismo que `NOT_HELD` (comprobado, no
+ * tenida)—, mismo criterio que la ficha de Companies. OPEN/CLOSED enlazan a la
+ * ficha de la compañía vía la navegación SPA inyectada (`alAbrirCompania`),
+ * no a Cartera: el evento es sobre una compañía, y es ahí donde ya vive el
+ * mismo bloque de conexión con la posición.
+ */
+function vinculoPortfolio(e, alAbrirCompania) {
+  const estado = e.portfolioStatus;
+  if (estado === 'OPEN' || estado === 'CLOSED') {
+    const boton = elemento('button', 'evento__portfolio');
+    boton.type = 'button';
+    boton.textContent = t(estado === 'OPEN'
+      ? 'catalizadores.portfolio.abierta' : 'catalizadores.portfolio.cerrada');
+    boton.addEventListener('click', () => alAbrirCompania(e.ticker ?? e.compania));
+    return boton;
+  }
+  const texto = elemento('span', 'evento__portfolio', t(estado === 'NOT_HELD'
+    ? 'catalizadores.portfolio.noTenida' : 'catalizadores.portfolio.sinComprobar'));
+  return texto;
 }
 
 function detalleDe(e) {
@@ -165,10 +213,10 @@ function detalleDe(e) {
   return null;
 }
 
-function par(etiqueta, valor) {
+function par(etiqueta, valor, clase = '') {
   const p = elemento('div', 'par-dato');
   p.appendChild(elemento('span', 'par-dato__etiqueta', etiqueta));
-  const v = elemento('strong', 'par-dato__valor', valor);
+  const v = elemento('strong', `par-dato__valor${clase ? ` ${clase}` : ''}`, valor);
   if (valor === noDisponible()) v.classList.add('par-dato__valor--ausente');
   p.appendChild(v);
   return p;
@@ -224,5 +272,96 @@ export function pintarFiltros(datos, { compania = '', tipo = '' } = {}) {
     // El valor sigue siendo el código —viaja al servidor—; se traduce el rótulo.
     for (const codigo of tipos) selTipo.appendChild(new Option(etiquetaTipoEvento(codigo), codigo));
     selTipo.value = previo;
+  }
+}
+
+/** Top metrics: Upcoming / High Priority / Past — mismo patrón que Companies. */
+export function pintarMetricas(datos) {
+  const caja = $('#catalizadores-metricas');
+  if (!caja) return;
+  caja.textContent = '';
+
+  const metrica = (etiqueta, valor, principal = false) => {
+    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    bloque.appendChild(elemento('strong', 'indicador__valor', valor));
+    caja.appendChild(bloque);
+  };
+
+  metrica(t('catalizadores.metricas.proximos'), String(datos.resumen?.proximos ?? 0), true);
+  metrica(t('catalizadores.metricas.alta'), String(datos.resumen?.alta ?? 0));
+  metrica(t('catalizadores.metricas.pasados'), String(datos.resumen?.pasados ?? 0));
+}
+
+/**
+ * Next Catalyst: el evento próximo más inminente. `proximos` ya llega
+ * ordenado por `dias` ascendente desde el servidor —el criterio es el más
+ * cercano en el tiempo, aunque su prioridad no sea la más alta—, así que es
+ * simplemente el primero de la lista. Sin evento próximo, tercer estado
+ * explícito: nunca una pieza vacía o rota.
+ */
+export function pintarSiguiente(datos, alAbrirCompania) {
+  const raiz = $('#siguiente-catalizador');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const e = datos.proximos?.[0];
+  if (!e) {
+    const vacio = elemento('div', 'siguiente-catalizador__vacio',
+      t('catalizadores.siguiente.vacio'));
+    raiz.appendChild(vacio);
+    return;
+  }
+
+  const pieza = elemento('article', 'siguiente-catalizador');
+  pieza.tabIndex = 0;
+  pieza.setAttribute('role', 'button');
+  pieza.setAttribute('aria-label', t('catalizadores.siguiente.abrir', { empresa: e.compania ?? e.ticker ?? '' }));
+
+  const izquierda = elemento('div', 'siguiente-catalizador__izquierda');
+  izquierda.appendChild(elemento('span', 'siguiente-catalizador__ticker',
+    [e.ticker, e.compania].filter(Boolean).join(t('general.separadorLista')) || '—'));
+  izquierda.appendChild(elemento('strong', 'siguiente-catalizador__cuenta', distancia(e.dias)));
+  izquierda.appendChild(elemento('p', 'siguiente-catalizador__titulo', e.titulo));
+  pieza.appendChild(izquierda);
+
+  const derecha = elemento('div', 'siguiente-catalizador__derecha');
+  derecha.appendChild(par(t('catalizadores.dato.tipo'), etiquetaTipoEvento(e.tipo)));
+  derecha.appendChild(par(t('catalizadores.dato.prioridad'), etiquetaPrioridad(e.prioridad),
+    claseLecturaPrioridad(e.prioridad)));
+  const d = e.detalle ?? {};
+  derecha.appendChild(par(t('catalizadores.dato.interesAbierto'),
+    Number.isFinite(d.interesAbierto) ? formatearNumero(d.interesAbierto, 0) : noDisponible()));
+  derecha.appendChild(par(t('catalizadores.dato.volumen'),
+    Number.isFinite(d.volumen) ? formatearNumero(d.volumen, 0) : noDisponible()));
+  pieza.appendChild(derecha);
+
+  const abrir = () => alAbrirCompania(e.ticker ?? e.compania);
+  pieza.addEventListener('click', abrir);
+  pieza.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); }
+  });
+  raiz.appendChild(pieza);
+}
+
+/**
+ * Event density: una celda por día del rango 0..30 sobre `proximos`,
+ * agregado en cliente —sin pedir nada nuevo al servidor—.
+ */
+export function pintarDensidad(datos) {
+  const raiz = $('#densidad-eventos');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const diasConEvento = new Set(
+    (datos.proximos ?? [])
+      .filter((e) => Number.isFinite(e.dias) && e.dias >= 0 && e.dias <= 30)
+      .map((e) => e.dias));
+
+  for (let dia = 0; dia <= 30; dia += 1) {
+    const celda = elemento('span',
+      `densidad-eventos__celda${diasConEvento.has(dia) ? ' densidad-eventos__celda--activa' : ''}`);
+    celda.title = `${distancia(dia)}${diasConEvento.has(dia) ? ` · ${t('catalizadores.metricas.proximos')}` : ''}`;
+    raiz.appendChild(celda);
   }
 }

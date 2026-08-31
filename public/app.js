@@ -26,6 +26,8 @@ import {
 import { pintarCompanias, pintarSectores, pintarFicha, pintarHubCompanias, pintarTrazaHeroCompanias } from './companias.js';
 import {
   pintarAgenda, pintarCarencias, pintarFiltros as pintarFiltrosCatalizadores,
+  pintarMetricas as pintarMetricasCatalizadores, pintarSiguiente as pintarSiguienteCatalizador,
+  pintarDensidad as pintarDensidadCatalizadores,
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
@@ -72,7 +74,7 @@ const estado = {
     // repintar por idioma ni al volver a entrar en la sección.
     seriesTicker: new Map(), trazaHero: null,
   },
-  catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', agenda: null },
+  catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', ventana: '', agenda: null },
   vocabulariosNoticias: null,
   opciones: { estado: null, inusual: null, cadena: null, flujo: null, pestana: 'inusual', filtros: {} },
   // Última lectura de un PDF adjunto, con las propuestas que quedan por revisar.
@@ -1897,18 +1899,35 @@ function pintarAgendaCompleta() {
   const datos = estado.catalizadores.agenda;
   if (!datos) return;
   pintarFiltrosCatalizadores(datos, estado.catalizadores);
+  pintarMetricasCatalizadores(datos);
+  pintarSiguienteCatalizador(datos, (clave) => abrirCompania(clave));
+  pintarDensidadCatalizadores(datos);
   pintarAgenda(datos, {
     horizonte: estado.catalizadores.horizonte,
+    ventana: estado.catalizadores.ventana,
     alAbrirCompania: (clave) => abrirCompania(clave),
   });
   pintarCarencias(datos);
   marcarHorizonte();
+  marcarVentana();
 }
 
 function marcarHorizonte() {
   for (const boton of $$('#conmutador-horizonte [data-horizonte]')) {
     const activo = boton.dataset.horizonte === estado.catalizadores.horizonte;
     boton.setAttribute('aria-selected', String(activo));
+  }
+}
+
+/* La ventana TODAY/7D/30D es un filtro adicional sobre Próximos, no un
+   sustituto del conmutador Próximos/Pasados: solo tiene efecto ahí, y se
+   deshabilita visualmente en Pasados para no sugerir un filtro que no aplica. */
+function marcarVentana() {
+  const enProximos = estado.catalizadores.horizonte === 'UPCOMING';
+  for (const boton of $$('#conmutador-ventana [data-ventana]')) {
+    const activo = enProximos && boton.dataset.ventana === estado.catalizadores.ventana;
+    boton.setAttribute('aria-selected', String(activo));
+    boton.disabled = !enProximos;
   }
 }
 
@@ -3792,7 +3811,16 @@ function enlazarEventos() {
   for (const boton of $$('#conmutador-horizonte [data-horizonte]')) {
     boton.addEventListener('click', () => {
       estado.catalizadores.horizonte = boton.dataset.horizonte;
-      cargarCatalizadores();
+      pintarAgendaCompleta();
+    });
+  }
+  // Filtro cliente, sin pedir nada nuevo al servidor: la carga ya trae todos
+  // los próximos, y la ventana solo recorta lo ya pintado.
+  for (const boton of $$('#conmutador-ventana [data-ventana]')) {
+    boton.addEventListener('click', () => {
+      if (boton.disabled) return;
+      estado.catalizadores.ventana = boton.dataset.ventana;
+      pintarAgendaCompleta();
     });
   }
   $('#filtro-compania-catalizador')?.addEventListener('change', (ev) => {

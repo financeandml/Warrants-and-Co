@@ -1082,6 +1082,8 @@ export default {
   // ════════════════════════════ Catalysts ══════════════════════════════════
   'catalizadores.etiqueta': 'Research',
   'catalizadores.titulo': 'Catalysts',
+  'catalizadores.enVivo': 'LIVE',
+  'catalizadores.hub.subtitulo': 'The calendar of what can move each thesis, with a verifiable date from a connected source.',
   'catalizadores.filtros.etiqueta': 'Calendar filters',
   'catalizadores.horizonte.proximos': 'Upcoming',
   'catalizadores.horizonte.pasados': 'Past',
@@ -1091,6 +1093,28 @@ export default {
   'catalizadores.filtro.todosTipos': 'All types',
   'catalizadores.carencias.titulo': 'No connected source',
   'catalizadores.carencias.subtitulo': 'Categories the calendar recognises but nothing feeds today',
+
+  'catalizadores.ventana.etiqueta': 'Time window',
+  'catalizadores.ventana.hoy': 'TODAY',
+  'catalizadores.ventana.7d': '7D',
+  'catalizadores.ventana.30d': '30D',
+  'catalizadores.ventana.todos': 'ALL',
+
+  'catalizadores.metricas.proximos': 'Upcoming',
+  'catalizadores.metricas.alta': 'High priority',
+  'catalizadores.metricas.pasados': 'Past',
+
+  'catalizadores.siguiente.titulo': 'Next catalyst',
+  'catalizadores.siguiente.vacio': 'No upcoming catalysts scheduled.',
+  'catalizadores.siguiente.abrir': 'Open {empresa} profile',
+
+  'catalizadores.dato.tipo': 'Type',
+  'catalizadores.dato.prioridad': 'Priority',
+
+  'catalizadores.portfolio.abierta': 'In portfolio',
+  'catalizadores.portfolio.cerrada': 'Closed position',
+  'catalizadores.portfolio.noTenida': 'Not held',
+  'catalizadores.portfolio.sinComprobar': 'Portfolio not checked',
 
   'catalizadores.resumen.proximos': { one: '{n} upcoming', other: '{n} upcoming' },
   'catalizadores.resumen.pasados': { one: '{n} past', other: '{n} past' },

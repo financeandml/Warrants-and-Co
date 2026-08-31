@@ -3247,94 +3247,207 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 /* ─────────────────────────────── CATALYSTS ─────────────────────────────── */
 
-.grupo-agenda { margin-bottom: 34px; }
-.grupo-agenda__cabecera {
+/* ── Hero + indicador EN VIVO ──
+   El punto pulsa muy sutil —opacidad y halo, 1.8s— porque la agenda se sirve
+   de una carga que puede refrescarse; nunca parpadeo agresivo. Bajo
+   `prefers-reduced-motion: reduce` el punto queda estático y visible: no es
+   negociable (cláusula 5 de CLAUDE.md). */
+#seccion-catalizadores .catalizadores-hero {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: var(--espacio-5); flex-wrap: wrap;
+  padding-block: clamp(32px, 6vw, 60px) var(--espacio-5);
+  border-block-end: 1px solid var(--linea);
+}
+#seccion-catalizadores .catalizadores-hero__interior { max-width: 62ch; }
+#seccion-catalizadores .catalizadores-hero__titulo-fila {
   display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
-  padding-bottom: 10px; margin-bottom: 16px;
+}
+#seccion-catalizadores .catalizadores-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
+
+#seccion-catalizadores .indicador-vivo {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
+  color: var(--alcista);
+}
+#seccion-catalizadores .indicador-vivo__punto {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--alcista);
+  animation: catalizadores-pulso-vivo 1.8s ease-in-out infinite;
+}
+@keyframes catalizadores-pulso-vivo {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 var(--alcista-tenue); }
+  50% { opacity: 0.55; box-shadow: 0 0 0 4px var(--alcista-tenue); }
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-catalizadores .indicador-vivo__punto { animation: none; opacity: 1; box-shadow: none; }
+}
+
+/* ── Top metrics: mismo patrón que #companias-metricas ── */
+#seccion-catalizadores .catalizadores-metricas {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
+}
+#seccion-catalizadores .catalizadores-metricas .indicador { padding: 0; }
+#seccion-catalizadores .catalizadores-metricas .indicador--principal {
+  padding-inline-end: var(--espacio-6);
+  border-inline-end: 1px solid var(--linea);
+}
+
+#seccion-catalizadores .catalizadores-bloque { margin-block: var(--espacio-6); }
+
+/* ── Next Catalyst: pieza de dos columnas, mismo patrón que Featured Research ── */
+#seccion-catalizadores .siguiente-catalizador {
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
+  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
+  cursor: pointer;
+}
+#seccion-catalizadores .siguiente-catalizador:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+#seccion-catalizadores .siguiente-catalizador__ticker {
+  display: block; font-family: var(--mono, monospace);
+  font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
+}
+#seccion-catalizadores .siguiente-catalizador__cuenta {
+  font-family: var(--geo); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 500;
+  margin-top: 6px; transition: color var(--transicion);
+}
+#seccion-catalizadores .siguiente-catalizador:hover .siguiente-catalizador__cuenta { color: var(--acento); }
+#seccion-catalizadores .siguiente-catalizador__titulo { margin-top: 10px; max-width: 62ch; color: var(--tinta-secundaria); line-height: 1.6; }
+#seccion-catalizadores .siguiente-catalizador__derecha {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--espacio-4);
+  align-content: start; padding-inline-start: var(--espacio-6);
+  border-inline-start: 1px solid var(--linea);
+}
+#seccion-catalizadores .siguiente-catalizador__vacio {
+  padding-block: var(--espacio-5); color: var(--tinta-mate);
+  border-block-end: 1px solid var(--linea);
+}
+@media (max-width: 720px) {
+  #seccion-catalizadores .siguiente-catalizador { grid-template-columns: 1fr; }
+  #seccion-catalizadores .siguiente-catalizador__derecha {
+    border-inline-start: none; border-block-start: 1px solid var(--linea);
+    padding-inline-start: 0; padding-block-start: var(--espacio-4);
+  }
+}
+
+/* ── Filtros de ventana + densidad ── */
+#seccion-catalizadores .catalizadores-controles {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--espacio-4); flex-wrap: wrap; margin-block: var(--espacio-5);
+}
+#seccion-catalizadores .conmutador--ventana button {
+  font-size: 0.68rem; letter-spacing: 0.08em;
+}
+#seccion-catalizadores .densidad-eventos {
+  display: flex; gap: 3px; flex: 1 1 240px; min-width: 160px; max-width: 420px;
+}
+#seccion-catalizadores .densidad-eventos__celda {
+  flex: 1 1 auto; height: 5px; border-radius: 2px;
+  background: var(--linea);
+}
+#seccion-catalizadores .densidad-eventos__celda--activa { background: var(--linea-fuerte); }
+
+/* ── Upcoming & Past: listas editoriales, fila con línea divisoria fina ── */
+#seccion-catalizadores .grupo-agenda { margin-bottom: 28px; }
+#seccion-catalizadores .grupo-agenda__cabecera {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  padding-bottom: 8px; margin-bottom: 4px;
   border-bottom: 1px solid var(--linea-fuerte);
 }
-.grupo-agenda__fecha { font-size: 0.94rem; font-weight: 600; letter-spacing: -0.01em; }
-.grupo-agenda__distancia {
-  font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
+#seccion-catalizadores .grupo-agenda__fecha { font-size: 0.9rem; font-weight: 600; letter-spacing: -0.01em; }
+#seccion-catalizadores .grupo-agenda__distancia {
+  font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--tinta-mate);
 }
-.grupo-agenda__eventos { display: flex; flex-direction: column; gap: 12px; }
+#seccion-catalizadores .grupo-agenda__eventos {
+  display: flex; flex-direction: column;
+  transition: opacity 200ms ease;
+}
 
-.evento {
-  display: grid; grid-template-columns: 92px 1fr;
-  background: var(--superficie);
-  border: 1px solid var(--linea); border-radius: var(--radio-l);
-  overflow: hidden;
+#seccion-catalizadores .evento {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: var(--espacio-5);
+  padding-block: 14px; border-bottom: 1px solid var(--linea);
+  transition: transform 200ms ease;
 }
-.evento__prioridad {
-  display: flex; align-items: center; justify-content: center;
-  padding: 18px 10px; text-align: center;
-  border-inline-end: 1px solid var(--linea);
-  background: var(--superficie-alt);
-}
-.evento__prioridad-texto {
-  font-size: 0.64rem; font-weight: 700; letter-spacing: 0.1em;
-  color: var(--tinta-mate);
-}
-/* La jerarquía se marca con peso de línea, no con color: la casa es en gris. */
-.evento[data-prioridad="HIGH"] { border-inline-start: 3px solid var(--tinta); }
-.evento[data-prioridad="HIGH"] .evento__prioridad-texto { color: var(--tinta); }
-.evento[data-prioridad="MEDIUM"] { border-inline-start: 3px solid var(--tinta-mate); }
-.evento[data-prioridad="LOW"] { border-inline-start: 3px solid var(--linea-fuerte); }
-.evento[data-prioridad="UNKNOWN"] .evento__prioridad-texto { opacity: 0.7; }
-
-.evento__cuerpo { padding: 18px 22px; min-width: 0; }
-.evento__superior { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 8px; }
-.evento__tipo {
+#seccion-catalizadores .evento:hover { transform: translateX(3px); }
+#seccion-catalizadores .evento__cuerpo { min-width: 0; flex: 1 1 auto; }
+#seccion-catalizadores .evento__superior { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 4px; }
+#seccion-catalizadores .evento__tipo {
   font-size: 0.64rem; font-weight: 600; letter-spacing: 0.11em;
   text-transform: uppercase; color: var(--tinta-mate);
 }
-.evento__titulo { font-size: 1rem; font-weight: 600; line-height: 1.35; }
-.evento__compania {
-  display: inline-block; margin-top: 5px; padding: 0;
-  font-family: inherit; font-size: 0.8rem; color: var(--tinta-mate);
+#seccion-catalizadores .evento__prioridad-texto { font-size: 0.72rem; font-weight: 600; }
+#seccion-catalizadores .evento__titulo { font-size: 0.94rem; font-weight: 600; line-height: 1.35; }
+#seccion-catalizadores .evento__compania {
+  display: inline-block; margin-top: 4px; padding: 0;
+  font-family: inherit; font-size: 0.78rem; color: var(--tinta-mate);
   background: none; border: none; cursor: pointer; text-decoration: underline;
   text-underline-offset: 3px;
 }
-.evento__compania:hover { color: var(--tinta); }
-
-.evento__datos {
-  display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  padding: 14px 0 0; margin-top: 14px; border-top: 1px solid var(--linea);
+#seccion-catalizadores .evento__compania:hover { color: var(--tinta); }
+#seccion-catalizadores .evento__portfolio {
+  display: inline-block; margin-top: 4px; margin-inline-start: 10px;
+  font-size: 0.72rem; color: var(--tinta-mate);
 }
-.par-dato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.par-dato__etiqueta {
+#seccion-catalizadores button.evento__portfolio {
+  padding: 0; font-family: inherit; background: none; border: none;
+  cursor: pointer; text-decoration: underline; text-underline-offset: 3px;
+}
+#seccion-catalizadores button.evento__portfolio:hover { color: var(--tinta); }
+
+#seccion-catalizadores .evento__datos {
+  display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  padding: 10px 0 0; margin-top: 10px;
+}
+#seccion-catalizadores .par-dato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+#seccion-catalizadores .par-dato__etiqueta {
   font-size: 0.62rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tinta-mate);
 }
-.par-dato__valor { font-size: 0.88rem; font-weight: 600; }
-.par-dato__valor--ausente { color: var(--tinta-mate); font-weight: 400; }
+#seccion-catalizadores .par-dato__valor { font-size: 0.86rem; font-weight: 600; }
+#seccion-catalizadores .par-dato__valor--ausente { color: var(--tinta-mate); font-weight: 400; }
 
-.evento__motivo {
-  font-size: 0.78rem; line-height: 1.6; color: var(--tinta-mate);
-  margin-top: 12px; max-width: 74ch;
+#seccion-catalizadores .evento__motivo {
+  font-size: 0.76rem; line-height: 1.6; color: var(--tinta-mate);
+  margin-top: 8px; max-width: 74ch;
 }
-.evento__pie {
+#seccion-catalizadores .evento__pie {
   display: flex; flex-wrap: wrap; gap: 4px 16px;
-  font-size: 0.7rem; color: var(--tinta-mate);
-  padding-top: 12px; margin-top: 12px; border-top: 1px solid var(--linea);
+  font-size: 0.68rem; color: var(--tinta-mate);
+  margin-top: 8px;
+}
+#seccion-catalizadores .evento__derecha {
+  flex: 0 0 auto; text-align: end; white-space: nowrap;
+}
+#seccion-catalizadores .evento__fecha { font-size: 0.82rem; font-weight: 600; }
+#seccion-catalizadores .evento__distancia { display: block; font-size: 0.7rem; color: var(--tinta-mate); margin-top: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #seccion-catalizadores .evento,
+  #seccion-catalizadores .grupo-agenda__eventos,
+  #seccion-catalizadores .siguiente-catalizador__cuenta { transition: none; }
+  #seccion-catalizadores .evento:hover { transform: none; }
 }
 
-.rejilla-carencias {
-  display: grid; gap: 16px;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+/* ── Sin fuente conectada: nota discreta al pie, no bloque separado gigante ── */
+#seccion-catalizadores .catalizadores-carencias {
+  margin-top: var(--espacio-6); padding-top: var(--espacio-5);
+  border-top: 1px solid var(--linea);
 }
-/* El trazo discontinuo se queda: dice «aquí falta un dato», que es información
-   y no decoración. Solo cambia la esquina. */
-.carencia {
-  padding: var(--espacio-4); background: var(--superficie);
-  border: 1px dashed var(--linea-fuerte); border-radius: var(--radio-l);
+#seccion-catalizadores .rejilla-carencias--discreta {
+  display: grid; gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+}
+#seccion-catalizadores .rejilla-carencias--discreta .carencia {
+  padding: var(--espacio-3) var(--espacio-4);
+  border: 1px dashed var(--linea);
+  border-radius: var(--radio-l);
 }
 .carencia__tipo {
   font-size: 0.62rem; font-weight: 600; letter-spacing: 0.11em;
   text-transform: uppercase; color: var(--tinta-mate);
 }
-.carencia__titulo { font-size: 0.94rem; font-weight: 600; margin: 7px 0 9px; }
-.carencia__motivo { font-size: 0.78rem; line-height: 1.6; color: var(--tinta-mate); }
+.carencia__titulo { font-size: 0.88rem; font-weight: 600; margin: 6px 0 6px; }
+.carencia__motivo { font-size: 0.74rem; line-height: 1.6; color: var(--tinta-mate); }
 
 /* ──────────────────────────────── MARKETS ──────────────────────────────── */
 
