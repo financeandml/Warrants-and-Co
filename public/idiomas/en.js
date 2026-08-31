@@ -1003,10 +1003,12 @@ export default {
     one: '{n} document',
     other: '{n} documents',
   },
+  'companias.tarjeta.ver': 'View research →',
 
   // ── Data points, shared by the card and the profile ──
   'companias.dato.recomendacion': 'Recommendation',
   'companias.dato.objetivo': 'Target price',
+  'companias.dato.actual': 'Current price',
   'companias.dato.informes': 'Reports',
   'companias.dato.recorrido': 'Upside to target',
   'companias.dato.peso': 'Portfolio weight',
@@ -1015,12 +1017,37 @@ export default {
   'companias.dato.stopLoss': 'Stop loss',
   'companias.dato.distancia': 'Distance to take profit',
 
+  // ── Hub: header, Featured, Latest, Sector ──
+  'companias.hub.subtitulo': 'Fundamental coverage of the companies under watch.',
+  'companias.hub.cubiertas': 'Companies covered',
+  'companias.hub.activas': 'Active coverage',
+  'companias.hub.activas.nota': 'Companies with at least one published report',
+  'companias.hub.informes': 'Research reports',
+  'companias.hub.destacadas': 'Featured research',
+  'companias.hub.recientes': 'Latest coverage',
+  'companias.hub.sectores': 'Coverage by sector',
+  'companias.hub.todas': 'All companies',
+
   // ── Profile ──
   'companias.cotizacion.sinDato': 'No quote available',
   'companias.cotizacion.selloNota': 'Consolidated with a delay; the platform carries no real-time feed.',
   'companias.tesis.titulo': 'Current thesis',
   'companias.tesis.sinResumen': 'Data unavailable — no report includes an executive summary.',
   'companias.niveles.titulo': 'Trading levels',
+  'companias.catalizadores.titulo': 'Upcoming catalysts',
+  'companias.catalizadores.vacio': 'No upcoming catalysts scheduled for this company.',
+  'companias.catalizadores.sinComprobar': 'Data unavailable — the catalyst calendar could not be checked.',
+  'companias.catalizadores.tipoReserva': 'Event',
+  'companias.catalizadores.notaResumen':
+    '{pasados} past catalyst(s) and {sinFuente} without a confirmed source in this company’s history.',
+  'companias.riesgos.titulo': 'Key risks',
+  'companias.riesgos.vacio': 'Data unavailable — no report has recorded key risks yet.',
+  'companias.portfolio.titulo': 'Portfolio connection',
+  'companias.portfolio.abierta': 'Currently held in the portfolio.',
+  'companias.portfolio.cerrada': 'Previously held in the portfolio.',
+  'companias.portfolio.noTenida': 'Not currently part of the portfolio.',
+  'companias.portfolio.sinComprobar': 'Data unavailable — the portfolio status could not be checked on this load.',
+  'companias.portfolio.verPosicion': 'View position',
   'companias.informes.titulo': 'Published research ({n})',
   'companias.informes.tipoReserva': 'Report',
   'companias.informes.adjuntos': {

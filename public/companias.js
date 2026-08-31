@@ -41,7 +41,184 @@ function sello(calidad, explicacion = '') {
   return s;
 }
 
+/** Recomendación → lectura direccional. Nunca badge sólido: solo lectura de texto,
+ * y el signo (▲/▼/●) viaja siempre junto al color, nunca solo — cláusula 1. */
+function claseRecomendacion(rec) {
+  if (!rec) return 'lectura lectura--nula';
+  const r = String(rec).toUpperCase();
+  if (/COMPRAR|BUY|OVERWEIGHT|ACCUMULATE|ACUMULAR/.test(r)) return 'lectura lectura--alza';
+  if (/VENDER|SELL|UNDERWEIGHT|REDUCE|REDUCIR/.test(r)) return 'lectura lectura--baja';
+  return 'lectura lectura--nula';
+}
+function glifoRecomendacion(rec) {
+  if (!rec) return '';
+  const r = String(rec).toUpperCase();
+  if (/COMPRAR|BUY|OVERWEIGHT|ACCUMULATE|ACUMULAR/.test(r)) return '▲ ';
+  if (/VENDER|SELL|UNDERWEIGHT|REDUCE|REDUCIR/.test(r)) return '▼ ';
+  return '';
+}
+
+/**
+ * Una tarjeta de compañía, en dos densidades: `completa` (rejilla y destacadas)
+ * y `compacta` (cobertura reciente, fila tipográfica sin rejilla de datos).
+ * Una sola función: Featured, Latest y Grid pintan la misma tarjeta, nunca
+ * cuatro variantes que puedan divergir en lo que cuentan de una compañía.
+ */
+function tarjetaCompania(c, alAbrir, densidad = 'completa') {
+  const tarjeta = elemento('article',
+    `tarjeta-compania${densidad === 'compacta' ? ' tarjeta-compania--compacta' : ''}`);
+  tarjeta.tabIndex = 0;
+  tarjeta.setAttribute('role', 'button');
+  tarjeta.setAttribute('aria-label', t('companias.tarjeta.abrir', { empresa: c.empresa }));
+
+  const cabecera = elemento('div', 'tarjeta-compania__cabecera');
+  const identidad = elemento('div');
+  identidad.appendChild(elemento('span', 'tarjeta-compania__ticker', c.ticker ?? '—'));
+  identidad.appendChild(elemento('h3', 'tarjeta-compania__nombre', c.empresa));
+  cabecera.appendChild(identidad);
+  if (c.enCartera) cabecera.appendChild(elemento('span', 'chip chip--cartera', t('companias.enCartera')));
+  tarjeta.appendChild(cabecera);
+
+  if (densidad === 'compacta') {
+    tarjeta.appendChild(elemento('span', 'tarjeta-compania__fecha',
+      formatearFecha(c.ultimaPublicacion)));
+  } else {
+    const meta = elemento('p', 'tarjeta-compania__meta',
+      [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible());
+    tarjeta.appendChild(meta);
+
+    const datosClave = elemento('div', 'tarjeta-compania__datos');
+    datosClave.appendChild(dato(t('companias.dato.recomendacion'),
+      `${glifoRecomendacion(c.recomendacion)}${c.recomendacion ?? noDisponible()}`,
+      claseRecomendacion(c.recomendacion)));
+    datosClave.appendChild(dato(t('companias.dato.objetivo'),
+      Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
+    // Cotización y recorrido solo llegan cuando la lista se pidió con
+    // `detalle=1` —el listado barato no resuelve proveedor en vivo por
+    // compañía—; sin ellos el tercer estado es explícito, nunca un hueco.
+    datosClave.appendChild(dato(t('companias.dato.actual'),
+      c.cotizacion?.disponible ? importe(cifra(c.cotizacion.precio), c.cotizacion.divisa) : noDisponible()));
+    const recorrido = c.recorridoObjetivo;
+    datosClave.appendChild(dato(t('companias.dato.recorrido'),
+      recorrido?.disponible ? formatearPorcentaje(recorrido.porcentaje) : noDisponible(),
+      recorrido?.disponible ? claseVariacion(recorrido.porcentaje) : ''));
+    tarjeta.appendChild(datosClave);
+
+    const pie = elemento('div', 'tarjeta-compania__pie');
+    pie.appendChild(elemento('span', '',
+      t('companias.tarjeta.ultimo', { fecha: formatearFecha(c.ultimaPublicacion) })));
+    if (c.totalAdjuntos > 0) {
+      pie.appendChild(elemento('span', '', t('companias.tarjeta.documentos', { n: c.totalAdjuntos })));
+    }
+    pie.appendChild(elemento('span', 'tarjeta-compania__enlace', t('companias.tarjeta.ver')));
+    tarjeta.appendChild(pie);
+  }
+
+  const abrir = () => alAbrir(c.ticker ?? c.clave);
+  tarjeta.addEventListener('click', abrir);
+  tarjeta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
+  });
+  return tarjeta;
+}
+
 // ───────────────────────────────── listado ─────────────────────────────────
+
+/** Cabecera del hub: compañías cubiertas, cobertura activa, informes totales. */
+export function pintarCabeceraCompanias(companias) {
+  const caja = $('#companias-metricas');
+  if (!caja) return;
+  caja.textContent = '';
+
+  const metrica = (etiqueta, valor, nota, principal = false) => {
+    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    bloque.appendChild(elemento('strong', 'indicador__valor', valor));
+    if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
+    caja.appendChild(bloque);
+  };
+
+  const total = companias.length;
+  // «Cobertura activa»: no existe un campo de vigencia en el modelo, y
+  // `agrupar()` solo crea una compañía a partir de informes existentes —toda
+  // compañía listada tiene ya `totalInformes >= 1`—, así que este criterio
+  // coincide siempre con el total. Se deja explícito en vez de inventar un
+  // umbral de fecha que parecería preciso sin serlo (regla 1 de CLAUDE.md).
+  const activas = companias.filter((c) => c.totalInformes > 0).length;
+  const informes = companias.reduce((a, c) => a + (c.totalInformes ?? 0), 0);
+
+  metrica(t('companias.hub.cubiertas'), String(total), null, true);
+  metrica(t('companias.hub.activas'), String(activas), t('companias.hub.activas.nota'));
+  metrica(t('companias.hub.informes'), String(informes));
+}
+
+/** Featured Research: compañías con algún informe destacado. */
+function pintarDestacadasCompanias(companias, alAbrir) {
+  const bloque = $('#bloque-destacadas-companias');
+  const caja = $('#destacadas-companias');
+  if (!bloque || !caja) return;
+  const destacadas = companias.filter((c) => c.destacada);
+  caja.textContent = '';
+  bloque.hidden = destacadas.length === 0;
+  for (const c of destacadas) caja.appendChild(tarjetaCompania(c, alAbrir, 'completa'));
+}
+
+/** Latest Coverage: las más recientes por fecha de última publicación. */
+function pintarRecientesCompanias(companias, alAbrir) {
+  const bloque = $('#bloque-recientes-companias');
+  const caja = $('#recientes-companias');
+  if (!bloque || !caja) return;
+  const recientes = [...companias]
+    .filter((c) => c.ultimaPublicacion)
+    .sort((a, b) => new Date(b.ultimaPublicacion) - new Date(a.ultimaPublicacion))
+    .slice(0, 6);
+  caja.textContent = '';
+  bloque.hidden = recientes.length === 0;
+  for (const c of recientes) caja.appendChild(tarjetaCompania(c, alAbrir, 'compacta'));
+}
+
+/** Coverage by Sector: recuento por sector con barra fina de magnitud. */
+function pintarSectoresCobertura(companias) {
+  const bloque = $('#bloque-sectores-companias');
+  const caja = $('#sectores-companias');
+  if (!bloque || !caja) return;
+  caja.textContent = '';
+
+  const porSector = new Map();
+  for (const c of companias) {
+    const s = c.sector || noDisponible();
+    porSector.set(s, (porSector.get(s) ?? 0) + 1);
+  }
+  const filas = [...porSector.entries()].sort((a, b) => b[1] - a[1]);
+  bloque.hidden = filas.length === 0;
+  if (!filas.length) return;
+
+  const maximo = Math.max(...filas.map(([, n]) => n));
+  for (const [sector, n] of filas) {
+    const fila = elemento('div', 'sector-fila');
+    fila.appendChild(elemento('span', 'sector-fila__nombre', sector));
+    const pista = elemento('div', 'sector-fila__pista');
+    const barra = elemento('div', 'sector-fila__barra');
+    barra.style.width = `${(n / maximo) * 100}%`;
+    pista.appendChild(barra);
+    fila.appendChild(pista);
+    fila.appendChild(elemento('span', 'sector-fila__valor', String(n)));
+    caja.appendChild(fila);
+  }
+}
+
+/** Orquesta el hub entero a partir de una carga ya resuelta. */
+export function pintarHubCompanias(datos, alAbrir) {
+  // `datos.fichas` —modo `detalle=1`— trae cotización y recorrido por
+  // compañía; sin él, se usa el listado ligero y esas dos cifras quedan N/A
+  // explícito en la tarjeta, nunca inventadas en el cliente.
+  const companias = datos.fichas ?? datos.companias;
+  pintarCabeceraCompanias(companias);
+  pintarDestacadasCompanias(companias, alAbrir);
+  pintarRecientesCompanias(companias, alAbrir);
+  pintarSectoresCobertura(companias);
+  pintarCompanias({ ...datos, companias }, alAbrir);
+}
 
 export function pintarCompanias(datos, alAbrir) {
   const rejilla = $('#rejilla-companias');
@@ -70,47 +247,7 @@ export function pintarCompanias(datos, alAbrir) {
     return;
   }
 
-  for (const c of datos.companias) {
-    const tarjeta = elemento('article', 'tarjeta-compania');
-    tarjeta.tabIndex = 0;
-    tarjeta.setAttribute('role', 'button');
-    tarjeta.setAttribute('aria-label', t('companias.tarjeta.abrir', { empresa: c.empresa }));
-
-    const cabecera = elemento('div', 'tarjeta-compania__cabecera');
-    const identidad = elemento('div');
-    identidad.appendChild(elemento('span', 'tarjeta-compania__ticker', c.ticker ?? '—'));
-    identidad.appendChild(elemento('h3', 'tarjeta-compania__nombre', c.empresa));
-    cabecera.appendChild(identidad);
-    if (c.enCartera) cabecera.appendChild(elemento('span', 'chip chip--cartera', t('companias.enCartera')));
-    tarjeta.appendChild(cabecera);
-
-    const meta = elemento('p', 'tarjeta-compania__meta',
-      [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible());
-    tarjeta.appendChild(meta);
-
-    const datosClave = elemento('div', 'tarjeta-compania__datos');
-    datosClave.appendChild(dato(t('companias.dato.recomendacion'), c.recomendacion ?? noDisponible()));
-    datosClave.appendChild(dato(t('companias.dato.objetivo'),
-      Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
-    datosClave.appendChild(dato(t('companias.dato.informes'), String(c.totalInformes)));
-    tarjeta.appendChild(datosClave);
-
-    const pie = elemento('div', 'tarjeta-compania__pie');
-    pie.appendChild(elemento('span', '',
-      t('companias.tarjeta.ultimo', { fecha: formatearFecha(c.ultimaPublicacion) })));
-    if (c.totalAdjuntos > 0) {
-      pie.appendChild(elemento('span', '', t('companias.tarjeta.documentos', { n: c.totalAdjuntos })));
-    }
-    tarjeta.appendChild(pie);
-
-    const abrir = () => alAbrir(c.ticker ?? c.clave);
-    tarjeta.addEventListener('click', abrir);
-    tarjeta.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
-    });
-
-    rejilla.appendChild(tarjeta);
-  }
+  for (const c of datos.companias) rejilla.appendChild(tarjetaCompania(c, alAbrir, 'completa'));
 }
 
 /** Rellena el desplegable de sectores conservando la selección vigente. */
@@ -126,7 +263,7 @@ export function pintarSectores(sectores, seleccionado = '') {
 
 // ────────────────────────────────── ficha ──────────────────────────────────
 
-export function pintarFicha(c, { alAbrirInforme, alVerCatalizadores }) {
+export function pintarFicha(c, { alAbrirInforme, alVerCatalizadores, alIrCartera }) {
   const raiz = $('#ficha-compania');
   if (!raiz) return;
   raiz.textContent = '';
@@ -152,6 +289,15 @@ export function pintarFicha(c, { alAbrirInforme, alVerCatalizadores }) {
 
   // ── Niveles operativos ──
   raiz.appendChild(bloqueNiveles(c));
+
+  // ── Catalizadores próximos ──
+  raiz.appendChild(bloqueCatalizadores(c));
+
+  // ── Riesgos clave ──
+  raiz.appendChild(bloqueRiesgos(c));
+
+  // ── Conexión con la cartera ──
+  raiz.appendChild(bloquePortfolio(c, alIrCartera));
 
   // ── Informes ──
   raiz.appendChild(bloqueInformes(c, alAbrirInforme));
@@ -256,6 +402,99 @@ function bloqueNiveles(c) {
     distancia === null ? noDisponible() : formatearPorcentaje(distancia)));
 
   bloque.appendChild(rejilla);
+  return bloque;
+}
+
+/** Catalizadores próximos. `catalysts` es un objeto —`{proximos, pasados,
+ * resumen}`—, no una lista plana: viene ya filtrado a esta compañía por
+ * `agendaDe()` en `src/routes/companias.js`. */
+function bloqueCatalizadores(c) {
+  const bloque = elemento('section', 'bloque-ficha');
+  bloque.appendChild(elemento('h3', 'bloque-ficha__titulo', t('companias.catalizadores.titulo')));
+
+  const proximos = c.catalysts?.proximos ?? [];
+  if (!proximos.length) {
+    // Tercer estado explícito: «no hay catalizadores próximos» no es lo mismo
+    // que «no se pudo comprobar la agenda» —si `catalysts` ni siquiera llegó,
+    // se dice también, en vez de mostrar el mismo vacío para los dos casos.
+    bloque.appendChild(elemento('p', 'bloque-ficha__vacio',
+      c.catalysts ? t('companias.catalizadores.vacio') : t('companias.catalizadores.sinComprobar')));
+  } else {
+    const lista = elemento('ul', 'lista-catalizadores');
+    for (const ev of proximos) {
+      const fila = elemento('li', 'fila-catalizador');
+      fila.appendChild(elemento('strong', '', ev.titulo ?? ev.tipo ?? t('companias.catalizadores.tipoReserva')));
+      fila.appendChild(elemento('span', 'fila-catalizador__meta', formatearFecha(ev.fecha)));
+      lista.appendChild(fila);
+    }
+    bloque.appendChild(lista);
+  }
+
+  // Un resumen con pasados/sin-fuente informativos no debe quedar oculto:
+  // se anota como nota de pie, sin fingir que no hay nada más que decir.
+  const resumen = c.catalysts?.resumen;
+  if (resumen && (resumen.pasados > 0 || resumen.sinFuente > 0)) {
+    bloque.appendChild(elemento('p', 'bloque-ficha__nota',
+      t('companias.catalizadores.notaResumen', { pasados: resumen.pasados ?? 0, sinFuente: resumen.sinFuente ?? 0 })));
+  }
+
+  return bloque;
+}
+
+/** Riesgos clave: juicio narrativo del analista, nunca derivado. */
+function bloqueRiesgos(c) {
+  const bloque = elemento('section', 'bloque-ficha');
+  bloque.appendChild(elemento('h3', 'bloque-ficha__titulo', t('companias.riesgos.titulo')));
+
+  if (!c.riesgosClave) {
+    bloque.appendChild(elemento('p', 'bloque-ficha__vacio', t('companias.riesgos.vacio')));
+    return bloque;
+  }
+
+  // Respeta los saltos de párrafo del texto del analista: un párrafo por línea.
+  for (const parrafo of c.riesgosClave.split(/\n+/).filter((p) => p.trim())) {
+    bloque.appendChild(elemento('p', 'bloque-ficha__resumen', parrafo));
+  }
+  return bloque;
+}
+
+/**
+ * Conexión con la cartera. Cuatro estados, no tres: `portfolioStatus` puede
+ * ser `null` —el motor de cartera no se pudo calcular en esta carga—, que no
+ * es lo mismo que `NOT_HELD` —sí se comprobó y la respuesta es «no»—. Fundir
+ * los dos habría sido la regla del tercer estado rota justo donde más importa.
+ */
+function bloquePortfolio(c, alIrCartera) {
+  const bloque = elemento('section', 'bloque-ficha');
+  bloque.appendChild(elemento('h3', 'bloque-ficha__titulo', t('companias.portfolio.titulo')));
+
+  const estado = c.portfolioStatus;
+  // Contenido pintado en cliente: no hay `enlazarEventos()` posterior que lo
+  // recorra, así que sigue el mismo patrón que `inicio.js` para navegación
+  // dentro de la SPA —un botón con su callback— y no un `<a data-ruta>`, que
+  // solo se intercepta en los enlaces que ya existían al arrancar.
+  const enlaceCartera = () => {
+    const boton = elemento('button', 'enlace-avance');
+    boton.type = 'button';
+    boton.appendChild(elemento('span', null, t('companias.portfolio.verPosicion')));
+    boton.appendChild(elemento('span', 'enlace-avance__flecha', '→'));
+    boton.addEventListener('click', () => alIrCartera());
+    return boton;
+  };
+
+  if (estado === 'OPEN') {
+    bloque.appendChild(elemento('p', 'bloque-ficha__resumen', t('companias.portfolio.abierta')));
+    bloque.appendChild(enlaceCartera());
+  } else if (estado === 'CLOSED') {
+    bloque.appendChild(elemento('p', 'bloque-ficha__resumen', t('companias.portfolio.cerrada')));
+    bloque.appendChild(enlaceCartera());
+  } else if (estado === 'NOT_HELD') {
+    bloque.appendChild(elemento('p', 'bloque-ficha__vacio', t('companias.portfolio.noTenida')));
+  } else {
+    // null: no se ha comprobado, distinto y visible aparte de «no está en cartera».
+    bloque.appendChild(elemento('p', 'bloque-ficha__vacio', t('companias.portfolio.sinComprobar')));
+  }
+
   return bloque;
 }
 

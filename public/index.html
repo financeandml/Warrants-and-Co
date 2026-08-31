@@ -514,21 +514,53 @@
 
       <!-- ── Listado ── -->
       <div id="vista-companias-lista">
-        <form class="barra-busqueda" id="form-companias" role="search">
-          <label class="visualmente-oculto" for="busca-compania"
-                 data-i18n="companias.busqueda">Buscar compañía</label>
-          <input type="search" id="busca-compania" autocomplete="off"
-                 data-i18n-attr="placeholder:companias.busqueda.hint"
-                 placeholder="Nombre, ticker, sector o tema…">
-          <select id="filtro-sector-compania"
-                  data-i18n-attr="aria-label:companias.filtro.sector" aria-label="Sector">
-            <option value="" data-i18n="companias.filtro.todosSectores">Todos los sectores</option>
-          </select>
-          <button class="boton boton--texto" type="button" id="btn-limpiar-companias"
-                  data-i18n="companias.limpiar">Limpiar</button>
-        </form>
 
-        <div class="rejilla-companias" id="rejilla-companias" aria-live="polite"></div>
+        <!-- Cabecera del hub: subtítulo + tres métricas, mismo patrón que
+             `#resumen-portfolio` de Cartera (número grande + filete + cifras
+             menores). `pintarCabeceraCompanias()` la rellena. -->
+        <div class="companias-cabecera">
+          <p class="companias-cabecera__subtitulo" data-i18n="companias.hub.subtitulo">
+            Cobertura fundamental de las compañías bajo seguimiento.</p>
+          <div class="companias-metricas" id="companias-metricas"></div>
+        </div>
+
+        <!-- Featured Research -->
+        <section class="companias-bloque" id="bloque-destacadas-companias" hidden>
+          <h2 class="movimiento" data-i18n="companias.hub.destacadas">Análisis destacado</h2>
+          <div class="companias-destacadas" id="destacadas-companias"></div>
+        </section>
+
+        <!-- Latest Coverage -->
+        <section class="companias-bloque" id="bloque-recientes-companias" hidden>
+          <h2 class="movimiento" data-i18n="companias.hub.recientes">Cobertura reciente</h2>
+          <div class="companias-recientes" id="recientes-companias"></div>
+        </section>
+
+        <!-- Coverage by Sector -->
+        <section class="companias-bloque" id="bloque-sectores-companias" hidden>
+          <h2 class="movimiento" data-i18n="companias.hub.sectores">Cobertura por sector</h2>
+          <div id="sectores-companias"></div>
+        </section>
+
+        <!-- All Companies -->
+        <section class="companias-bloque">
+          <h2 class="movimiento" data-i18n="companias.hub.todas">Todas las compañías</h2>
+          <form class="barra-busqueda" id="form-companias" role="search">
+            <label class="visualmente-oculto" for="busca-compania"
+                   data-i18n="companias.busqueda">Buscar compañía</label>
+            <input type="search" id="busca-compania" autocomplete="off"
+                   data-i18n-attr="placeholder:companias.busqueda.hint"
+                   placeholder="Nombre, ticker, sector o tema…">
+            <select id="filtro-sector-compania"
+                    data-i18n-attr="aria-label:companias.filtro.sector" aria-label="Sector">
+              <option value="" data-i18n="companias.filtro.todosSectores">Todos los sectores</option>
+            </select>
+            <button class="boton boton--texto" type="button" id="btn-limpiar-companias"
+                    data-i18n="companias.limpiar">Limpiar</button>
+          </form>
+
+          <div class="rejilla-companias" id="rejilla-companias" aria-live="polite"></div>
+        </section>
       </div>
 
       <!-- ── Ficha ── -->

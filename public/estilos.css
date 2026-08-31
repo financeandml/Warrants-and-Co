@@ -2898,17 +2898,25 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
+/* ═══════════ Research Hub: editorial, no tarjeta ═══════════
+   Mismo precedente que `#seccion-cartera .tarjeta`: destruye fondo, sombra,
+   borde grueso y radio, y los sustituye por un filete de 1px en `var(--linea)`.
+   Todo selector empieza por `#seccion-companias`: no toca `.tarjeta-compania`
+   si algún día se usa fuera de esta sección. */
 .tarjeta-compania {
   display: flex; flex-direction: column; gap: 14px;
-  padding: var(--espacio-4);
-  background: var(--superficie);
-  border: 1px solid var(--linea); border-radius: var(--radio-l);
   cursor: pointer;
-  transition: border-color var(--transicion), transform var(--transicion);
+  transition: border-color var(--transicion), background var(--transicion);
 }
-/* La tarjeta ENTERA es pulsable, así que su realce es cromo y le toca el acento.
-   Lo que lleva dentro —el ticker, las cifras— conserva su lectura. */
-.tarjeta-compania:hover { border-color: var(--acento); transform: translateY(-2px); }
+#seccion-companias .tarjeta-compania {
+  padding: var(--espacio-4) 0; background: none;
+  border: none; border-bottom: 1px solid var(--linea); border-radius: 0;
+}
+/* El realce ya no es transform —eso movía la caja que ya no existe—: el
+   nombre pasa al acento y aparece «Ver informe →», sin desplazar nada. */
+#seccion-companias .tarjeta-compania:hover { border-color: var(--linea-fuerte); }
+#seccion-companias .tarjeta-compania:hover .tarjeta-compania__nombre { color: var(--acento); }
+#seccion-companias .tarjeta-compania:hover .tarjeta-compania__enlace { opacity: 1; }
 .tarjeta-compania:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
 .tarjeta-compania__cabecera { display: flex; align-items: flex-start; gap: 12px; }
@@ -2916,7 +2924,10 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   display: block; font-family: var(--mono, monospace);
   font-size: 0.72rem; letter-spacing: 0.12em; color: var(--tinta-mate);
 }
-.tarjeta-compania__nombre { font-size: 1.02rem; font-weight: 600; line-height: 1.3; margin-top: 4px; }
+.tarjeta-compania__nombre {
+  font-size: 1.02rem; font-weight: 600; line-height: 1.3; margin-top: 4px;
+  transition: color var(--transicion);
+}
 .tarjeta-compania__meta { font-size: 0.78rem; color: var(--tinta-mate); }
 
 .tarjeta-compania__datos {
@@ -2924,8 +2935,77 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   padding-top: 14px; border-top: 1px solid var(--linea);
 }
 .tarjeta-compania__pie {
-  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px;
   font-size: 0.72rem; color: var(--tinta-mate);
+}
+/* «Ver informe →», oculta hasta el hover; `opacity` no mueve nada alrededor,
+   así que no hay salto de maqueta que `prefers-reduced-motion` deba frenar. */
+.tarjeta-compania__enlace {
+  margin-inline-start: auto; color: var(--acento); font-weight: 500;
+  opacity: 0; transition: opacity var(--transicion);
+}
+@media (prefers-reduced-motion: reduce) {
+  .tarjeta-compania__enlace { transition: none; }
+}
+
+/* Densidad compacta: fila tipográfica de «Latest Coverage», sin la rejilla de
+   datos ni el pie de documentos. */
+.tarjeta-compania--compacta {
+  flex-direction: row; align-items: baseline; gap: 14px; flex-wrap: wrap;
+}
+.tarjeta-compania--compacta .tarjeta-compania__cabecera { align-items: baseline; gap: 10px; }
+.tarjeta-compania--compacta .tarjeta-compania__nombre { margin-top: 0; font-size: 0.88rem; }
+.tarjeta-compania--compacta .tarjeta-compania__fecha {
+  margin-inline-start: auto; font-size: 0.76rem; color: var(--tinta-mate);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Cabecera del hub: número grande a la izquierda, filete vertical, resto
+   de cifras leídas más pequeñas a la derecha. Mismo patrón que
+   `#seccion-cartera #resumen-portfolio`, aquí escrito para `#seccion-companias`. */
+#seccion-companias .companias-cabecera {
+  margin-bottom: var(--espacio-6);
+}
+#seccion-companias .companias-cabecera__subtitulo {
+  max-width: 52ch; color: var(--tinta-secundaria); margin-top: 6px;
+}
+#seccion-companias .companias-metricas {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+  margin-top: var(--espacio-5);
+}
+#seccion-companias .companias-metricas .indicador { padding: 0; }
+#seccion-companias .companias-metricas .indicador--principal {
+  padding-inline-end: var(--espacio-6);
+  border-inline-end: 1px solid var(--linea);
+}
+#seccion-companias .companias-metricas .indicador--principal .indicador__valor {
+  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
+}
+
+/* ── Secciones del hub: títulos editoriales ya cubiertos por `.movimiento`;
+   aquí solo el espaciado entre bloques. */
+#seccion-companias .companias-bloque { margin-bottom: var(--espacio-6); }
+#seccion-companias .companias-destacadas,
+#seccion-companias .companias-recientes { display: flex; flex-direction: column; }
+
+/* ── Cobertura por sector: la misma barra de 6px que ya usa el análisis de
+   contribución de Cartera, sin eje central —aquí no hay signo, solo recuento. */
+#seccion-companias .sector-fila {
+  display: grid; grid-template-columns: 160px 1fr 48px;
+  align-items: center; gap: 14px; padding: 7px 0;
+}
+#seccion-companias .sector-fila__nombre {
+  font-size: 0.82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+#seccion-companias .sector-fila__pista {
+  position: relative; height: 6px; border-radius: 0; background: var(--superficie-alt);
+}
+#seccion-companias .sector-fila__barra {
+  position: absolute; inset-block: 0; left: 0; background: var(--acento-pleno);
+}
+#seccion-companias .sector-fila__valor {
+  text-align: end; font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--tinta-mate);
 }
 
 .dato { display: flex; flex-direction: column; gap: 3px; min-width: 0; }

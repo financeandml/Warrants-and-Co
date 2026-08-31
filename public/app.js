@@ -23,7 +23,7 @@ import {
   pintarAlcance, pintarTablaInusual, pintarDestacadas, construirDetalleInusual,
   pintarCadena, pintarMapaInteres, pintarFlujo, reiniciarPaginacion,
 } from './opciones.js';
-import { pintarCompanias, pintarSectores, pintarFicha } from './companias.js';
+import { pintarCompanias, pintarSectores, pintarFicha, pintarHubCompanias } from './companias.js';
 import {
   pintarAgenda, pintarCarencias, pintarFiltros as pintarFiltrosCatalizadores,
 } from './catalizadores.js';
@@ -1736,10 +1736,14 @@ async function cargarCompanias() {
   const parametros = new URLSearchParams();
   if (estado.companias.q) parametros.set('q', estado.companias.q);
   if (estado.companias.sector) parametros.set('sector', estado.companias.sector);
+  // El hub necesita cotización y recorrido por compañía para Current Price /
+  // Implied Upside de la tarjeta: `detalle=1` los trae en una sola llamada
+  // (`datos.fichas`), en vez de que el cliente pida la ficha una a una.
+  parametros.set('detalle', '1');
 
   try {
     // Se guarda la carga para repintar al cambiar de idioma sin volver a pedirla.
-    estado.companias.lista = await api(`/api/companias${parametros.toString() ? `?${parametros}` : ''}`);
+    estado.companias.lista = await api(`/api/companias?${parametros}`);
     pintarListaCompanias();
   } catch (err) {
     avisar(t('companias.error', { detalle: err.message }));
@@ -1751,7 +1755,7 @@ function pintarListaCompanias() {
   const datos = estado.companias.lista;
   if (!datos) return;
   pintarSectores(datos.sectores, estado.companias.sector);
-  pintarCompanias(datos, (clave) => abrirCompania(clave));
+  pintarHubCompanias(datos, (clave) => abrirCompania(clave));
 }
 
 /** Abre la ficha de una compañía. */
@@ -1793,6 +1797,7 @@ function pintarFichaCompania() {
       estado.catalizadores.horizonte = 'UPCOMING';
       irA('catalizadores');
     },
+    alIrCartera: () => irA('cartera'),
   });
 }
 

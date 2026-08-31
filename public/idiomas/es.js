@@ -1051,10 +1051,12 @@ export default {
     one: '{n} documento',
     other: '{n} documentos',
   },
+  'companias.tarjeta.ver': 'Ver informe →',
 
   // ── Datos, compartidos por la tarjeta y la ficha ──
   'companias.dato.recomendacion': 'Recomendación',
   'companias.dato.objetivo': 'Precio objetivo',
+  'companias.dato.actual': 'Precio actual',
   'companias.dato.informes': 'Informes',
   'companias.dato.recorrido': 'Recorrido al objetivo',
   'companias.dato.peso': 'Peso en cartera',
@@ -1063,12 +1065,37 @@ export default {
   'companias.dato.stopLoss': 'Stop loss',
   'companias.dato.distancia': 'Distancia al take profit',
 
+  // ── Hub: cabecera, Featured, Latest, Sector ──
+  'companias.hub.subtitulo': 'Cobertura fundamental de las compañías bajo seguimiento.',
+  'companias.hub.cubiertas': 'Compañías cubiertas',
+  'companias.hub.activas': 'Cobertura activa',
+  'companias.hub.activas.nota': 'Compañías con al menos un informe publicado',
+  'companias.hub.informes': 'Informes de research',
+  'companias.hub.destacadas': 'Análisis destacado',
+  'companias.hub.recientes': 'Cobertura reciente',
+  'companias.hub.sectores': 'Cobertura por sector',
+  'companias.hub.todas': 'Todas las compañías',
+
   // ── Ficha ──
   'companias.cotizacion.sinDato': 'Sin cotización disponible',
   'companias.cotizacion.selloNota': 'Dato consolidado con retraso; la plataforma no dispone de tiempo real.',
   'companias.tesis.titulo': 'Tesis vigente',
   'companias.tesis.sinResumen': 'Dato no disponible — ningún informe incluye resumen ejecutivo.',
   'companias.niveles.titulo': 'Niveles operativos',
+  'companias.catalizadores.titulo': 'Catalizadores próximos',
+  'companias.catalizadores.vacio': 'No hay catalizadores próximos agendados para esta compañía.',
+  'companias.catalizadores.sinComprobar': 'Dato no disponible — no se pudo comprobar la agenda de catalizadores.',
+  'companias.catalizadores.tipoReserva': 'Evento',
+  'companias.catalizadores.notaResumen':
+    '{pasados} catalizador(es) pasado(s) y {sinFuente} sin fuente confirmada en el histórico de esta compañía.',
+  'companias.riesgos.titulo': 'Riesgos clave',
+  'companias.riesgos.vacio': 'Dato no disponible — ningún informe recoge riesgos clave todavía.',
+  'companias.portfolio.titulo': 'Conexión con la cartera',
+  'companias.portfolio.abierta': 'Posición actualmente en cartera.',
+  'companias.portfolio.cerrada': 'Posición mantenida anteriormente en cartera.',
+  'companias.portfolio.noTenida': 'No forma parte de la cartera actual.',
+  'companias.portfolio.sinComprobar': 'Dato no disponible — no se pudo comprobar el estado en cartera en esta carga.',
+  'companias.portfolio.verPosicion': 'Ver posición',
   // Sin formas de plural: el número va entre paréntesis y no concuerda con nada.
   'companias.informes.titulo': 'Análisis publicado ({n})',
   'companias.informes.tipoReserva': 'Informe',
