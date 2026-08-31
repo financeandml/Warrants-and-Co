@@ -15,6 +15,36 @@ import { t } from './i18n.js';
 import {
   etiquetaTipoEvento, etiquetaPrioridad, etiquetaCalidadFecha, etiquetaVinculacion,
 } from './vocabulario.js';
+import { revelar, observarEntrada, sinMovimiento } from './movimiento.js';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/* Escalonado entre filas consecutivas al entrar en pantalla: 55ms, dentro de
+ * los 40-70ms pedidos. Un contador de módulo, no por grupo —para que el
+ * escalonado se lea continuo cruzando fechas—, y se reinicia en cada pintado
+ * completo de la agenda. */
+let contadorFilas = 0;
+
+/*
+ * Countdown con fundido, no salto. La agenda se repinta entera en cada carga
+ * —`raiz.textContent = ''`—, así que no hay nodo persistente que comparar: el
+ * valor anterior se guarda aquí, por clave estable (`e.id`, o «siguiente»
+ * para Next Catalyst), y si el texto nuevo difiere del último visto para esa
+ * clave, se dispara la animación CSS `.valor-fundido`. La primera vez que se
+ * ve una clave no hay «antes» que fundir: se pinta directo, tercer estado.
+ */
+const ultimosValoresCountdown = new Map();
+function pintarValorFundido(nodo, clave, texto) {
+  const anterior = ultimosValoresCountdown.get(clave);
+  nodo.textContent = texto;
+  if (anterior !== undefined && anterior !== texto && !sinMovimiento()) {
+    nodo.classList.remove('valor-fundido');
+    void nodo.offsetWidth; // fuerza reflow para poder repetir la animación
+    nodo.classList.add('valor-fundido');
+  }
+  ultimosValoresCountdown.set(clave, texto);
+  return nodo;
+}
 
 /* El rótulo de ausencia se resuelve al pintar, que es cuando se sabe el idioma. */
 const noDisponible = () => t('general.noDisponible');
@@ -42,6 +72,7 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
   const estado = $('#estado-catalizadores');
   if (!raiz) return;
   raiz.textContent = '';
+  contadorFilas = 0;
 
   let eventos = horizonte === 'PAST' ? datos.pasados : datos.proximos;
   if (horizonte === 'UPCOMING' && ventana) eventos = filtrarPorVentana(eventos, ventana);
@@ -83,11 +114,18 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
 
     const cabecera = elemento('div', 'grupo-agenda__cabecera');
     cabecera.appendChild(elemento('h2', 'grupo-agenda__fecha', formatearFecha(fecha)));
-    cabecera.appendChild(elemento('span', 'grupo-agenda__distancia', distancia(lista[0].dias)));
+    const distanciaGrupo = elemento('span', 'grupo-agenda__distancia');
+    pintarValorFundido(distanciaGrupo, `grupo-${fecha}`, distancia(lista[0].dias));
+    cabecera.appendChild(distanciaGrupo);
     grupo.appendChild(cabecera);
 
     const eventosDom = elemento('div', 'grupo-agenda__eventos');
-    for (const e of lista) eventosDom.appendChild(filaEvento(e, alAbrirCompania));
+    for (const e of lista) {
+      const fila = filaEvento(e, alAbrirCompania);
+      revelar(fila, contadorFilas * 55);
+      contadorFilas += 1;
+      eventosDom.appendChild(fila);
+    }
     grupo.appendChild(eventosDom);
 
     raiz.appendChild(grupo);
@@ -96,7 +134,11 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
 
 /** Ventana temporal sobre `dias`: 0 = hoy, ≤7, ≤30. Agregación en cliente. */
 function filtrarPorVentana(eventos, ventana) {
-  const limite = ventana === 'HOY' ? 0 : ventana === '7D' ? 7 : ventana === '30D' ? 30 : null;
+  const limite = ventana === 'HOY' ? 0
+    : ventana === '7D' ? 7
+    : ventana === '30D' ? 30
+    : ventana === '90D' ? 90
+    : null;
   if (limite === null) return eventos;
   return eventos.filter((e) => Number.isFinite(e.dias) && e.dias >= 0 && e.dias <= limite);
 }
@@ -152,7 +194,10 @@ function filaEvento(e, alAbrirCompania) {
 
   const derecha = elemento('div', 'evento__derecha');
   derecha.appendChild(elemento('span', 'evento__fecha', formatearFecha(e.fecha)));
-  derecha.appendChild(elemento('span', 'evento__distancia', distancia(e.dias)));
+  const distanciaEvento = elemento('span', 'evento__distancia');
+  pintarValorFundido(distanciaEvento, e.id ?? `${e.ticker ?? ''}-${e.fecha ?? ''}-${e.titulo ?? ''}`,
+    distancia(e.dias));
+  derecha.appendChild(distanciaEvento);
   fila.appendChild(derecha);
 
   return fila;
@@ -321,7 +366,9 @@ export function pintarSiguiente(datos, alAbrirCompania) {
   const izquierda = elemento('div', 'siguiente-catalizador__izquierda');
   izquierda.appendChild(elemento('span', 'siguiente-catalizador__ticker',
     [e.ticker, e.compania].filter(Boolean).join(t('general.separadorLista')) || '—'));
-  izquierda.appendChild(elemento('strong', 'siguiente-catalizador__cuenta', distancia(e.dias)));
+  const cuenta = elemento('strong', 'siguiente-catalizador__cuenta');
+  pintarValorFundido(cuenta, 'siguiente', distancia(e.dias));
+  izquierda.appendChild(cuenta);
   izquierda.appendChild(elemento('p', 'siguiente-catalizador__titulo', e.titulo));
   pieza.appendChild(izquierda);
 
@@ -345,6 +392,54 @@ export function pintarSiguiente(datos, alAbrirCompania) {
 }
 
 /**
+ * Timeline abstracta del hero: un punto por evento próximo con fecha cierta,
+ * su posición horizontal proporcional a `dias` sobre el más lejano de los
+ * propios datos —nunca aleatoria—. Sin eje ni leyenda, solo el pulso de la
+ * agenda. Sin eventos próximos, tercer estado: no se dibuja nada, ni una
+ * línea vacía fingiendo actividad.
+ */
+export function pintarHeroLinea(datos) {
+  const raiz = $('#catalizadores-hero-linea');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const eventos = (datos.proximos ?? []).filter((e) => Number.isFinite(e.dias) && e.dias >= 0);
+  if (!eventos.length) return;
+
+  const maxDias = Math.max(...eventos.map((e) => e.dias), 1);
+  const ancho = 400;
+  const alto = 18;
+
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${ancho} ${alto}`);
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  svg.classList.add('catalizadores-hero__linea');
+
+  const eje = document.createElementNS(SVG_NS, 'line');
+  eje.setAttribute('class', 'catalizadores-hero__linea-eje');
+  eje.setAttribute('x1', '0'); eje.setAttribute('x2', String(ancho));
+  eje.setAttribute('y1', String(alto - 1)); eje.setAttribute('y2', String(alto - 1));
+  svg.appendChild(eje);
+
+  eventos.forEach((e, i) => {
+    const x = maxDias > 0 ? (e.dias / maxDias) * (ancho - 8) + 4 : ancho / 2;
+    const punto = document.createElementNS(SVG_NS, 'circle');
+    punto.setAttribute('class',
+      `catalizadores-hero__linea-punto${e.prioridad === 'HIGH' ? ' catalizadores-hero__linea-punto--alta' : ''}`);
+    punto.setAttribute('cx', x.toFixed(1));
+    punto.setAttribute('cy', String(alto - 1));
+    punto.setAttribute('r', e.prioridad === 'HIGH' ? '3' : '2');
+    punto.style.setProperty('--retardo', `${i * 45}ms`);
+    svg.appendChild(punto);
+  });
+
+  raiz.appendChild(svg);
+  observarEntrada(svg);
+}
+
+/**
  * Event density: una celda por día del rango 0..30 sobre `proximos`,
  * agregado en cliente —sin pedir nada nuevo al servidor—.
  */
@@ -353,15 +448,47 @@ export function pintarDensidad(datos) {
   if (!raiz) return;
   raiz.textContent = '';
 
-  const diasConEvento = new Set(
-    (datos.proximos ?? [])
-      .filter((e) => Number.isFinite(e.dias) && e.dias >= 0 && e.dias <= 30)
-      .map((e) => e.dias));
+  // Misma agrupación para la celda activa y para el tooltip: un hecho, una
+  // fuente (regla 9). Sin `.title` nativo —no es accesible por teclado y no
+  // se puede estilar—, se sustituye por un globo real.
+  const porDia = new Map();
+  for (const e of datos.proximos ?? []) {
+    if (!Number.isFinite(e.dias) || e.dias < 0 || e.dias > 30) continue;
+    if (!porDia.has(e.dias)) porDia.set(e.dias, []);
+    porDia.get(e.dias).push(e);
+  }
+
+  const globo = elemento('div', 'densidad-eventos__globo');
+  globo.setAttribute('role', 'tooltip');
+  globo.id = 'densidad-eventos-globo';
+  raiz.appendChild(globo);
+
+  const cerrar = () => { globo.dataset.abierto = 'false'; };
 
   for (let dia = 0; dia <= 30; dia += 1) {
+    const eventosDia = porDia.get(dia);
+    const activa = Boolean(eventosDia?.length);
     const celda = elemento('span',
-      `densidad-eventos__celda${diasConEvento.has(dia) ? ' densidad-eventos__celda--activa' : ''}`);
-    celda.title = `${distancia(dia)}${diasConEvento.has(dia) ? ` · ${t('catalizadores.metricas.proximos')}` : ''}`;
+      `densidad-eventos__celda${activa ? ' densidad-eventos__celda--activa' : ''}`);
+    if (activa) {
+      celda.tabIndex = 0;
+      celda.setAttribute('role', 'button');
+      celda.setAttribute('aria-describedby', globo.id);
+      celda.setAttribute('aria-label', `${distancia(dia)} · ${
+        eventosDia.map((e) => e.ticker ?? e.compania).filter(Boolean).join(t('general.separadorLista'))}`);
+      const abrir = () => {
+        globo.textContent = '';
+        globo.appendChild(elemento('strong', '', distancia(dia)));
+        globo.appendChild(elemento('span', '',
+          eventosDia.map((e) => e.ticker ?? e.compania).filter(Boolean).join(t('general.separadorLista'))));
+        globo.style.left = `${celda.offsetLeft}px`;
+        globo.dataset.abierto = 'true';
+      };
+      celda.addEventListener('mouseenter', abrir);
+      celda.addEventListener('focus', abrir);
+      celda.addEventListener('mouseleave', cerrar);
+      celda.addEventListener('blur', cerrar);
+    }
     raiz.appendChild(celda);
   }
 }

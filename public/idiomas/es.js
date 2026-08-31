@@ -1150,6 +1150,7 @@ export default {
   'catalizadores.ventana.hoy': 'HOY',
   'catalizadores.ventana.7d': '7D',
   'catalizadores.ventana.30d': '30D',
+  'catalizadores.ventana.90d': '90D',
   'catalizadores.ventana.todos': 'TODOS',
 
   'catalizadores.metricas.proximos': 'Próximos',

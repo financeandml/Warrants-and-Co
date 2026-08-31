@@ -27,7 +27,7 @@ import { pintarCompanias, pintarSectores, pintarFicha, pintarHubCompanias, pinta
 import {
   pintarAgenda, pintarCarencias, pintarFiltros as pintarFiltrosCatalizadores,
   pintarMetricas as pintarMetricasCatalizadores, pintarSiguiente as pintarSiguienteCatalizador,
-  pintarDensidad as pintarDensidadCatalizadores,
+  pintarDensidad as pintarDensidadCatalizadores, pintarHeroLinea as pintarHeroLineaCatalizadores,
 } from './catalizadores.js';
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
@@ -1902,6 +1902,7 @@ function pintarAgendaCompleta() {
   pintarMetricasCatalizadores(datos);
   pintarSiguienteCatalizador(datos, (clave) => abrirCompania(clave));
   pintarDensidadCatalizadores(datos);
+  pintarHeroLineaCatalizadores(datos);
   pintarAgenda(datos, {
     horizonte: estado.catalizadores.horizonte,
     ventana: estado.catalizadores.ventana,
@@ -1924,11 +1925,29 @@ function marcarHorizonte() {
    deshabilita visualmente en Pasados para no sugerir un filtro que no aplica. */
 function marcarVentana() {
   const enProximos = estado.catalizadores.horizonte === 'UPCOMING';
+  let botonActivo = null;
   for (const boton of $$('#conmutador-ventana [data-ventana]')) {
     const activo = enProximos && boton.dataset.ventana === estado.catalizadores.ventana;
     boton.setAttribute('aria-selected', String(activo));
     boton.disabled = !enProximos;
+    if (activo) botonActivo = boton;
   }
+  moverIndicadorVentana(botonActivo);
+}
+
+/*
+ * El indicador se posiciona sobre el ancho y el desplazamiento REALES del
+ * botón activo —`offsetLeft`/`offsetWidth`—, nunca sobre una cifra fija: el
+ * texto de un mismo botón mide distinto en inglés y en castellano
+ * («TODOS» contra «ALL»), y un valor a mano se habría desincronizado ahí.
+ */
+function moverIndicadorVentana(boton) {
+  const indicador = $('#conmutador-ventana-indicador');
+  if (!indicador) return;
+  if (!boton) { indicador.style.opacity = '0'; return; }
+  indicador.style.opacity = '1';
+  indicador.style.width = `${boton.offsetWidth}px`;
+  indicador.style.transform = `translateX(${boton.offsetLeft}px)`;
 }
 
 // ════════════════════════════════ MARKETS ═══════════════════════════════

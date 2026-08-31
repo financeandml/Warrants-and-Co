@@ -614,6 +614,7 @@
           </div>
           <p class="catalizadores-hero__subtitulo" data-i18n="catalizadores.hub.subtitulo">
             La agenda de lo que puede mover cada tesis, con fecha verificable de una fuente conectada.</p>
+          <div id="catalizadores-hero-linea" aria-hidden="true"></div>
         </div>
         <div class="estado-datos" id="estado-catalizadores"></div>
       </div>
@@ -633,12 +634,15 @@
       <div class="catalizadores-controles">
         <div class="conmutador conmutador--ventana" id="conmutador-ventana" role="tablist"
              data-i18n-attr="aria-label:catalizadores.ventana.etiqueta" aria-label="Ventana temporal">
+          <span class="conmutador--ventana__indicador" id="conmutador-ventana-indicador" aria-hidden="true"></span>
           <button type="button" role="tab" data-ventana="HOY" aria-selected="false"
                   data-i18n="catalizadores.ventana.hoy">HOY</button>
           <button type="button" role="tab" data-ventana="7D" aria-selected="false"
                   data-i18n="catalizadores.ventana.7d">7D</button>
           <button type="button" role="tab" data-ventana="30D" aria-selected="false"
                   data-i18n="catalizadores.ventana.30d">30D</button>
+          <button type="button" role="tab" data-ventana="90D" aria-selected="false"
+                  data-i18n="catalizadores.ventana.90d">90D</button>
           <button type="button" role="tab" data-ventana="" aria-selected="true"
                   data-i18n="catalizadores.ventana.todos">TODOS</button>
         </div>

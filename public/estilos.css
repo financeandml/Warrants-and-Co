@@ -3264,6 +3264,27 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 #seccion-catalizadores .catalizadores-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
 
+/* Timeline abstracta del hero: puntos según `dias` real de cada evento
+   próximo, nunca decorativa —mismo principio que la traza de SPY del hero de
+   Companies—. Muy tenue, sin eje ni leyenda; si no hay eventos, no se pinta
+   nada (tercer estado, cláusula 1 de CLAUDE.md no aplica a color aquí porque
+   no hay dirección, pero sí a «no fingir dato»). */
+#seccion-catalizadores .catalizadores-hero__linea {
+  width: 100%; max-width: 420px; height: 18px; margin-top: var(--espacio-5);
+  display: block; overflow: visible;
+}
+#seccion-catalizadores .catalizadores-hero__linea-eje { stroke: var(--linea); stroke-width: 1; }
+#seccion-catalizadores .catalizadores-hero__linea-punto {
+  fill: var(--tinta-mate);
+  opacity: 0; transform-origin: center;
+  transition: opacity 500ms cubic-bezier(0.22, 1, 0.36, 1) var(--retardo, 0ms);
+}
+#seccion-catalizadores .catalizadores-hero__linea-punto--alta { fill: var(--aviso); }
+#seccion-catalizadores .catalizadores-hero__linea[data-visible="true"] .catalizadores-hero__linea-punto { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  #seccion-catalizadores .catalizadores-hero__linea-punto { transition: none; opacity: 1; }
+}
+
 #seccion-catalizadores .indicador-vivo {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 0.68rem; font-weight: 600; letter-spacing: 0.1em;
@@ -3335,17 +3356,67 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   display: flex; align-items: center; justify-content: space-between;
   gap: var(--espacio-4); flex-wrap: wrap; margin-block: var(--espacio-5);
 }
+#seccion-catalizadores .conmutador--ventana { position: relative; }
 #seccion-catalizadores .conmutador--ventana button {
+  position: relative; z-index: 1; background: none;
   font-size: 0.68rem; letter-spacing: 0.08em;
 }
+/* El fondo sólido del botón activo —antes un salto instantáneo de
+   `background`— pasa a vivir en este indicador, que es quien se desplaza.
+   `app.js` mide `offsetLeft`/`offsetWidth` del botón real: nunca una cifra
+   fija, que se desincronizaría si el idioma cambia y el texto mide
+   distinto (p. ej. «TODOS» contra «ALL»). */
+#seccion-catalizadores .conmutador--ventana__indicador {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0; z-index: 0;
+  background: var(--tinta); opacity: 0;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), width 260ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#seccion-catalizadores .conmutador--ventana button[aria-selected="true"] {
+  background: none; color: var(--tinta-inversa);
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-catalizadores .conmutador--ventana__indicador { transition: none; }
+}
 #seccion-catalizadores .densidad-eventos {
+  position: relative;
   display: flex; gap: 3px; flex: 1 1 240px; min-width: 160px; max-width: 420px;
 }
 #seccion-catalizadores .densidad-eventos__celda {
   flex: 1 1 auto; height: 5px; border-radius: 2px;
-  background: var(--linea);
+  background: var(--linea); border: none; padding: 0; cursor: default;
 }
-#seccion-catalizadores .densidad-eventos__celda--activa { background: var(--linea-fuerte); }
+#seccion-catalizadores .densidad-eventos__celda--activa {
+  background: var(--linea-fuerte); cursor: pointer;
+}
+#seccion-catalizadores .densidad-eventos__celda--activa:focus-visible {
+  outline: 2px solid var(--foco); outline-offset: 2px;
+}
+/* Tooltip real: lista de tickers del día, tomada de la misma agrupación que
+   ya construye la densidad —una fuente, regla 9—, no una segunda petición. */
+#seccion-catalizadores .densidad-eventos__globo {
+  position: absolute; bottom: calc(100% + 8px); left: 0;
+  min-width: 120px; max-width: 220px; padding: 8px 10px;
+  background: var(--superficie); border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+  font-size: 0.72rem; line-height: 1.5; color: var(--tinta);
+  pointer-events: none; z-index: 5;
+  opacity: 0; transform: translateY(4px);
+  transition: opacity 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#seccion-catalizadores .densidad-eventos__globo[data-abierto="true"] { opacity: 1; transform: translateY(0); }
+#seccion-catalizadores .densidad-eventos__globo strong { display: block; font-size: 0.66rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tinta-mate); margin-bottom: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  #seccion-catalizadores .densidad-eventos__globo { transition: none; }
+}
+@media (max-width: 560px) {
+  /* Timeline horizontal en móvil: scroll nativo, sin JS de arrastre. */
+  #seccion-catalizadores .densidad-eventos {
+    overflow-x: auto; max-width: none; padding-bottom: 4px;
+  }
+  #seccion-catalizadores .densidad-eventos__celda { flex: 0 0 10px; }
+}
 
 /* ── Upcoming & Past: listas editoriales, fila con línea divisoria fina ── */
 #seccion-catalizadores .grupo-agenda { margin-bottom: 28px; }
@@ -3367,9 +3438,20 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 #seccion-catalizadores .evento {
   display: flex; align-items: flex-start; justify-content: space-between; gap: var(--espacio-5);
   padding-block: 14px; border-bottom: 1px solid var(--linea);
-  transition: transform 200ms ease;
+  transition: border-color 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  /* La fila entera lleva `.revelado` para el fade+translateY de entrada
+     —opacity+transform a 700ms, la curva y el mecanismo únicos de
+     `movimiento.js`—. El desplazamiento de hover NO vive aquí: iría sobre la
+     misma propiedad `transform` que usa el reveal y heredaría sus 700ms, que
+     es justo lo mecánico que este encargo pide evitar. Vive en los dos hijos
+     de abajo, con su propia transición de 220ms. */
 }
-#seccion-catalizadores .evento:hover { transform: translateX(3px); }
+#seccion-catalizadores .evento:hover { border-color: var(--linea-fuerte); }
+#seccion-catalizadores .evento__cuerpo, #seccion-catalizadores .evento__derecha {
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+#seccion-catalizadores .evento:hover .evento__cuerpo,
+#seccion-catalizadores .evento:hover .evento__derecha { transform: translateX(3px); }
 #seccion-catalizadores .evento__cuerpo { min-width: 0; flex: 1 1 auto; }
 #seccion-catalizadores .evento__superior { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; margin-bottom: 4px; }
 #seccion-catalizadores .evento__tipo {
@@ -3421,11 +3503,27 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 #seccion-catalizadores .evento__fecha { font-size: 0.82rem; font-weight: 600; }
 #seccion-catalizadores .evento__distancia { display: block; font-size: 0.7rem; color: var(--tinta-mate); margin-top: 2px; }
 
+/* Countdown que cambia entre una carga y otra: fundido, no salto. Se aplica
+   con la misma clase a `.evento__distancia`, `.grupo-agenda__distancia` y
+   `.siguiente-catalizador__cuenta` cuando el texto pintado difiere del
+   anterior —CSS puro, la clase se retira sola al terminar la animación. */
+.valor-fundido { animation: catalizadores-valor-fundido 260ms cubic-bezier(0.22, 1, 0.36, 1); }
+@keyframes catalizadores-valor-fundido {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .valor-fundido { animation: none; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   #seccion-catalizadores .evento,
+  #seccion-catalizadores .evento__cuerpo,
+  #seccion-catalizadores .evento__derecha,
   #seccion-catalizadores .grupo-agenda__eventos,
   #seccion-catalizadores .siguiente-catalizador__cuenta { transition: none; }
-  #seccion-catalizadores .evento:hover { transform: none; }
+  #seccion-catalizadores .evento:hover .evento__cuerpo,
+  #seccion-catalizadores .evento:hover .evento__derecha { transform: none; }
 }
 
 /* ── Sin fuente conectada: nota discreta al pie, no bloque separado gigante ── */
