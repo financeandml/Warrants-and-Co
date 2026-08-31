@@ -10,6 +10,7 @@ import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
 import { pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import { pintarAnillo } from './anillo.js';
+import { alinearContraMaestra, rebasarBase100 } from './benchmarks.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
@@ -52,7 +53,15 @@ const estado = {
   cartera: null,
   mercado: null,
   rangoGrafico: 'MAX',
-  benchmark: 'SPY',
+  /* Benchmarks activos en el gráfico: símbolos del catálogo, en el orden en que
+     el usuario los fue encendiendo. El PRINCIPAL —el que alimenta beta,
+     correlación y rentabilidadIndice, que el servidor calcula contra UNO solo—
+     es siempre el primero del catálogo que esté activo, no el último tocado:
+     así no cambia de estadísticas cada vez que se enciende y apaga un segundo
+     benchmark que no es el principal. */
+  benchmarksActivos: new Set(['SPY', 'QQQ', 'DIA']),
+  // Series crudas ya pedidas a `/api/mercado/serie/:simbolo`, por símbolo.
+  seriesBenchmark: new Map(),
   grafico: null,
   filtrosNoticias: {},
   paginaNoticias: 1,
@@ -1895,10 +1904,14 @@ async function cargarCartera({ silencioso = false } = {}) {
   if (!silencioso) for (const tarjeta of tarjetas) tarjeta?.classList.add('cargando');
 
   try {
-    const datos = await api(`/api/mercado/cartera?benchmark=${encodeURIComponent(estado.benchmark)}`);
+    const principal = benchmarkPrincipal(estado.catalogoBenchmarks);
+    const datos = await api(`/api/mercado/cartera?benchmark=${encodeURIComponent(principal)}`);
     // Si mientras volaba se pidió otra carga, esta respuesta ya nació vieja.
     if (!vigente()) return;
     estado.cartera = datos;
+    estado.catalogoBenchmarks = datos.benchmarks;
+    await cargarSeriesBenchmark(datos);
+    if (!vigente()) return;
     pintarCartera(datos);
   } catch (err) {
     if (!vigente()) return;
@@ -2157,49 +2170,128 @@ function filtrarPorRango(serie, rango) {
   return filtrada.length >= 2 ? filtrada : serie;
 }
 
-/** Rebasa una serie a 100 en su primer punto, para que el rango elegido sea comparable. */
-function rebasar(serie) {
-  if (!serie?.length) return [];
-  const base = serie[0].valor;
-  if (!Number.isFinite(base) || base === 0) return serie;
-  return serie.map((p) => ({ fecha: p.fecha, valor: (p.valor / base) * 100 }));
-}
-
 /**
- * Puebla el selector de índice desde el catálogo que manda el servidor.
- *
- * No hay lista de índices en el cliente. La había —un mapa de nombres aquí y las
- * cuatro opciones escritas a mano en el documento—, y era la segunda y la tercera
- * copia de un hecho que ya declaraba `src/routes/mercado.js`: añadir uno al
- * servidor no lo hacía aparecer aquí, y nada lo decía.
- *
- * Conserva la selección vigente: repoblar no debe deshacer lo que el usuario
- * eligió. Y no se reconstruye por idioma —los nombres de índice son nombres
- * propios y no se traducen—, de modo que no figura en `repintarVistas()`.
+ * Rótulo del benchmark PRINCIPAL —nombre y símbolo, los dos del servidor—, para
+ * los sub-estadísticos que `calcularCartera()` computa contra uno solo.
  */
-function poblarBenchmarks(catalogo) {
-  const sel = $('#selector-benchmark');
-  if (!sel || !catalogo?.length) return;
-
-  const elegido = estado.benchmark;
-  sel.textContent = '';
-  for (const b of catalogo) {
-    const op = document.createElement('option');
-    op.value = b.simbolo;
-    // El mismo rótulo compuesto que llevan las cifras, del mismo diccionario.
-    op.textContent = t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo });
-    sel.appendChild(op);
-  }
-  // Si el elegido ya no está en el catálogo, manda lo que diga el selector.
-  if (catalogo.some((b) => b.simbolo === elegido)) sel.value = elegido;
-  else estado.benchmark = sel.value;
-}
-
-/** Rótulo del índice de referencia: nombre y símbolo, los dos del servidor. */
 function rotuloBenchmark(datos) {
   return datos.benchmarkNombre
     ? t('cartera.benchmark.rotulo', { nombre: datos.benchmarkNombre, simbolo: datos.benchmark })
     : datos.benchmark;
+}
+
+/**
+ * El benchmark PRINCIPAL: el que alimenta beta, correlación y rentabilidadIndice,
+ * que `calcularCartera()` computa contra uno solo y no contra varios. Es siempre
+ * el primero del catálogo —el orden que publica el servidor— que esté activo,
+ * nunca el último que se tocó: así encender o apagar un segundo benchmark no le
+ * cambia las estadísticas al primero sin que el usuario lo haya pedido.
+ */
+function benchmarkPrincipal(catalogo) {
+  const activo = (catalogo ?? []).find((b) => estado.benchmarksActivos.has(b.simbolo));
+  return activo?.simbolo ?? catalogo?.[0]?.simbolo ?? 'SPY';
+}
+
+/**
+ * Pide la serie cruda de cada benchmark activo que aún no está en caché. Una
+ * llamada por símbolo, en paralelo, contra `/api/mercado/serie/:simbolo` —la
+ * misma ruta que ya sirve la portada—: ni una segunda arquitectura de datos ni
+ * un segundo cálculo de cartera.
+ *
+ * `dias` cubre el tramo real de la cartera hasta el tope de 400 que la propia
+ * ruta impone (`src/routes/mercado.js`): un benchmark no puede tener más
+ * historia que la que esa ruta esté dispuesta a servir, y eso es una frontera
+ * de la infraestructura existente, no algo que este módulo pueda estirar.
+ */
+async function cargarSeriesBenchmark(datos) {
+  const primera = datos.serie?.[0]?.fecha;
+  const dias = primera
+    ? Math.min(400, Math.ceil((Date.now() - new Date(`${primera}T00:00:00Z`).getTime()) / 86_400_000) + 5)
+    : 180;
+
+  const pendientes = [...estado.benchmarksActivos].filter((s) => !estado.seriesBenchmark.has(s));
+  await Promise.all(pendientes.map(async (simbolo) => {
+    try {
+      const r = await api(`/api/mercado/serie/${encodeURIComponent(simbolo)}?dias=${dias}`);
+      estado.seriesBenchmark.set(simbolo, { disponible: true, serie: r.serie ?? [] });
+    } catch {
+      // Sin serie: se declara N/A en el gráfico y en las tablas, nunca se omite en
+      // silencio ni se rellena con la de otro benchmark.
+      estado.seriesBenchmark.set(simbolo, { disponible: false, serie: [] });
+    }
+  }));
+}
+
+/**
+ * Puebla las píldoras de benchmark desde el catálogo que manda el servidor.
+ *
+ * No hay lista de índices en el cliente: la había —un mapa de nombres y las
+ * opciones de un `<select>` escritas a mano— y era la segunda y la tercera
+ * copia de un hecho que ya declaraba `src/routes/mercado.js`.
+ *
+ * Cada píldora es un `<button aria-pressed>` real, operable por teclado. La
+ * cartera no es una píldora más: es la serie protagonista y siempre está
+ * visible, así que no lleva control propio.
+ */
+function poblarBenchmarks(catalogo) {
+  const cont = $('#pastillas-benchmark');
+  if (!cont || !catalogo?.length) return;
+
+  // Los símbolos que ya no están en el catálogo se sueltan del conjunto activo.
+  const vigentes = new Set(catalogo.map((b) => b.simbolo));
+  for (const s of [...estado.benchmarksActivos]) if (!vigentes.has(s)) estado.benchmarksActivos.delete(s);
+
+  cont.textContent = '';
+  for (const b of catalogo) {
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'pastilla-benchmark';
+    boton.dataset.simbolo = b.simbolo;
+    const activo = estado.benchmarksActivos.has(b.simbolo);
+    boton.setAttribute('aria-pressed', String(activo));
+    // El mismo rótulo compuesto que llevan las cifras, del mismo diccionario.
+    boton.textContent = t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo });
+    boton.addEventListener('click', () => alPulsarPastillaBenchmark(b.simbolo));
+    cont.appendChild(boton);
+  }
+}
+
+/** Alterna un benchmark y decide si hace falta recargar la cartera entera. */
+async function alPulsarPastillaBenchmark(simbolo) {
+  const principalAntes = estado.cartera?.benchmark;
+  if (estado.benchmarksActivos.has(simbolo)) estado.benchmarksActivos.delete(simbolo);
+  else estado.benchmarksActivos.add(simbolo);
+
+  const boton = $(`.pastilla-benchmark[data-simbolo="${CSS.escape(simbolo)}"]`);
+  if (boton) boton.setAttribute('aria-pressed', String(estado.benchmarksActivos.has(simbolo)));
+
+  if (!estado.cartera) return;
+
+  // El principal solo cambia si el que se tocó desplazó al que ya lo era: eso
+  // recalcula beta/correlación en el servidor. Cualquier otro toque es puramente
+  // de cliente: la cartera y sus estadísticos no se mueven.
+  const principalDespues = benchmarkPrincipal(estado.catalogoBenchmarks);
+  if (principalDespues !== principalAntes) {
+    await cargarCartera({ silencioso: true });
+    return;
+  }
+  await cargarSeriesBenchmark(estado.cartera);
+  pintarGrafico(estado.cartera);
+}
+
+/** Series de los benchmarks activos, alineadas contra `filtrada` y a base 100. */
+function benchmarksActivosParaGrafico(datos, filtrada) {
+  return (estado.catalogoBenchmarks ?? [])
+    .filter((b) => estado.benchmarksActivos.has(b.simbolo))
+    .map((b) => {
+      const entrada = estado.seriesBenchmark.get(b.simbolo);
+      if (!entrada) return { simbolo: b.simbolo, nombre: b.nombre, disponible: false, serie: [] };
+      const alineada = alinearContraMaestra(filtrada, entrada.serie);
+      return {
+        simbolo: b.simbolo, nombre: b.nombre,
+        disponible: entrada.disponible, serie: rebasarBase100(alineada),
+      };
+    });
 }
 
 function pintarGrafico(datos) {
@@ -2208,21 +2300,19 @@ function pintarGrafico(datos) {
 
   const filtrada = filtrarPorRango(datos.serie, estado.rangoGrafico);
   /*
-   * Un rango que abarca la serie entera NO se rebasa. El índice ya está en base
-   * 100 = capital, y rebasarlo a su primer punto descartaría el movimiento de la
+   * Un rango que abarca la serie entera NO se rebasa. La cartera ya está en base
+   * 100 = capital, y rebasarla a su primer punto descartaría el movimiento de la
    * sesión de alta —que es rendimiento real, porque el precio de compra no es el
-   * cierre de esa jornada— y publicaría en la leyenda una cifra distinta de la
-   * rentabilidad total. Un rango parcial sí se rebasa: ahí la pregunta es otra,
-   * cuánto ha hecho la cartera en ese tramo, y así se compara con el índice.
+   * cierre de esa jornada— y publicaría una cifra distinta de la rentabilidad
+   * total. Un rango parcial sí se rebasa: ahí la pregunta es otra, cuánto ha
+   * hecho la cartera en ese tramo, y así se compara con los benchmarks.
    */
   const completa = Boolean(filtrada.length) && filtrada[0].fecha === datos.serie?.[0]?.fecha;
   const baseCapital = datos.baseCapital ?? 100;
-  const serie = completa ? filtrada : rebasar(filtrada);
-  const fechas = new Set(serie.map((p) => p.fecha));
-  const serieIndice = rebasar((datos.serieIndice ?? []).filter((p) => fechas.has(p.fecha)));
+  const serie = completa ? filtrada : rebasarBase100(filtrada);
+  const benchmarks = benchmarksActivosParaGrafico(datos, filtrada);
 
-  const nombreIndice = rotuloBenchmark(datos);
-  estado.grafico.actualizar(serie, serieIndice, nombreIndice);
+  estado.grafico.actualizar(serie, benchmarks);
 
   $('#subtitulo-grafico').textContent = completa
     ? t('cartera.grafico.subtitulo.completa', {
@@ -2231,33 +2321,36 @@ function pintarGrafico(datos) {
     : t('cartera.grafico.subtitulo.serie', {
       n: serie.length, fecha: formatearFecha(serie[0]?.fecha),
     });
-  $('#cabecera-indice').textContent = datos.benchmark;
 
-  pintarLeyenda(serie, serieIndice, nombreIndice, {
+  pintarLeyenda(serie, benchmarks, {
     base: completa ? baseCapital : null,
     desde: serie[0]?.fecha,
   });
-  pintarTablaSerie(serie, serieIndice, nombreIndice);
+  pintarTablaRendimiento(serie, benchmarks);
+  pintarTablaSerie(serie, benchmarks);
 }
 
-function pintarLeyenda(serie, serieIndice, nombreIndice, medida = {}) {
+function pintarLeyenda(serie, benchmarks, medida = {}) {
   const leyenda = $('#leyenda-grafico');
   leyenda.textContent = '';
 
   // `base` fija desde dónde se mide. Sin ella, desde el primer punto del rango.
   const entrada = (nombre, valores, esIndice, base = null) => {
-    if (!valores?.length) return;
+    const conValor = (valores ?? []).filter((p) => Number.isFinite(p.valor));
+    if (!conValor.length) return;
     const el = elemento('span', 'leyenda__elemento');
     el.appendChild(elemento('span', `leyenda__clave${esIndice ? ' leyenda__clave--indice' : ''}`));
     el.appendChild(elemento('span', null, nombre));
-    const partida = base ?? valores[0].valor;
-    const variacion = partida > 0 ? (valores[valores.length - 1].valor / partida - 1) * 100 : null;
+    const partida = base ?? conValor[0].valor;
+    const variacion = partida > 0 ? (conValor[conValor.length - 1].valor / partida - 1) * 100 : null;
     el.appendChild(elemento('strong', `leyenda__valor ${claseVariacion(variacion)}`, formatearPorcentaje(variacion)));
     leyenda.appendChild(el);
   };
 
   entrada(t('cartera.leyenda.cartera'), serie, false, medida.base);
-  entrada(nombreIndice, serieIndice, true);
+  for (const b of benchmarks) {
+    entrada(t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }), b.serie, true);
+  }
 
   /* Desde dónde se mide, dicho en la propia leyenda: sobre la serie completa la
      cifra es la rentabilidad total y coincide con el titular, pero en un rango
@@ -2268,24 +2361,102 @@ function pintarLeyenda(serie, serieIndice, nombreIndice, medida = {}) {
     : t('cartera.leyenda.medida.rango', { fecha: formatearFecha(medida.desde) })));
 }
 
-function pintarTablaSerie(serie, serieIndice, nombreIndice) {
-  const cuerpo = $('#cuerpo-tabla-serie');
+/**
+ * Rentabilidad de una serie ya rebasada, desde su primer punto CON valor hasta
+ * el último. `null` si no hay ni dos puntos con valor —no hay tramo que medir.
+ */
+function retornoDeSerie(serie) {
+  const conValor = (serie ?? []).filter((p) => Number.isFinite(p.valor));
+  if (conValor.length < 2) return null;
+  const inicio = conValor[0].valor;
+  const fin = conValor[conValor.length - 1].valor;
+  return inicio > 0 ? (fin / inicio - 1) * 100 : null;
+}
+
+/**
+ * Asset / Start / Current / Return, una fila por serie activa, y el
+ * outperformance de la cartera contra el benchmark PRINCIPAL —el mismo que fija
+ * beta y correlación arriba, por la regla del hecho único: no tendría sentido
+ * decir «supera al índice» con un número y a la vez fijar el beta contra otro.
+ *
+ * `Start` nunca se escribe «100,00» a mano: sale de `retornoDeSerie`/`serie[0]`
+ * como cualquier otra cifra, para que si el rebase cambiara de base algún día
+ * esta tabla no mienta sola.
+ */
+function pintarTablaRendimiento(serie, benchmarks) {
+  const cuerpo = $('#cuerpo-tabla-rendimiento');
+  if (!cuerpo) return;
   cuerpo.textContent = '';
-  const porFecha = new Map(serieIndice.map((p) => [p.fecha, p.valor]));
+
+  const fila = (nombre, valores) => {
+    const conValor = (valores ?? []).filter((p) => Number.isFinite(p.valor));
+    const tr = document.createElement('tr');
+    tr.appendChild(elemento('td', null, nombre));
+    tr.appendChild(elemento('td', 'num', conValor.length ? formatearNumero(conValor[0].valor) : '—'));
+    tr.appendChild(elemento('td', 'num', conValor.length ? formatearNumero(conValor[conValor.length - 1].valor) : '—'));
+    const retorno = retornoDeSerie(valores);
+    tr.appendChild(elemento('td', `num ${claseVariacion(retorno)}`, formatearPorcentaje(retorno)));
+    cuerpo.appendChild(tr);
+  };
+
+  fila(t('cartera.leyenda.cartera'), serie);
+  for (const b of benchmarks) {
+    fila(t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }), b.serie);
+  }
+
+  const principal = benchmarks.find((b) => b.simbolo === estado.cartera?.benchmark) ?? benchmarks[0];
+  const bloque = $('#bloque-outperformance');
+  bloque?.remove();
+  if (!principal) return;
+
+  const retornoCartera = retornoDeSerie(serie);
+  const retornoPrincipal = retornoDeSerie(principal.serie);
+  const outperformance = Number.isFinite(retornoCartera) && Number.isFinite(retornoPrincipal)
+    ? retornoCartera - retornoPrincipal
+    : null;
+
+  const p = elemento('p', 'outperformance', null);
+  p.id = 'bloque-outperformance';
+  p.appendChild(document.createTextNode(t('cartera.outperformance.rotulo', {
+    nombre: principal.nombre, simbolo: principal.simbolo,
+  })));
+  const cifra = Number.isFinite(outperformance)
+    ? `${outperformance > 0 ? '+' : outperformance < 0 ? '−' : ''}${formatearNumero(Math.abs(outperformance))} pp`
+    : '—';
+  p.appendChild(elemento('strong', claseVariacion(outperformance), cifra));
+  cuerpo.closest('table')?.insertAdjacentElement('afterend', p);
+}
+
+/** Cabecera y cuerpo de la tabla desplegable: Fecha, Cartera y una columna por benchmark activo. */
+function pintarTablaSerie(serie, benchmarks) {
+  const cabecera = $('#cabecera-tabla-serie');
+  const cuerpo = $('#cuerpo-tabla-serie');
+  if (!cabecera || !cuerpo) return;
+  cabecera.textContent = '';
+  cuerpo.textContent = '';
+
+  cabecera.appendChild(elemento('th', null, t('cartera.serie.fecha')));
+  cabecera.firstChild.setAttribute('scope', 'col');
+  const thCartera = elemento('th', 'num', t('cartera.serie.cartera'));
+  thCartera.setAttribute('scope', 'col');
+  cabecera.appendChild(thCartera);
+  for (const b of benchmarks) {
+    const th = elemento('th', 'num', t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }));
+    th.setAttribute('scope', 'col');
+    cabecera.appendChild(th);
+  }
+
+  const porFecha = benchmarks.map((b) => new Map(b.serie.map((p) => [p.fecha, p.valor])));
 
   // Orden descendente: la sesion mas reciente encabeza la tabla.
   for (const p of [...serie].reverse()) {
     const fila = document.createElement('tr');
     fila.appendChild(elemento('td', null, formatearFecha(p.fecha)));
     fila.appendChild(elemento('td', 'num', formatearNumero(p.valor)));
-
-    const vIndice = porFecha.get(p.fecha);
-    fila.appendChild(elemento('td', 'num', Number.isFinite(vIndice) ? formatearNumero(vIndice) : '—'));
-
-    const diferencial = Number.isFinite(vIndice) ? p.valor - vIndice : null;
-    const celda = elemento('td', `num ${claseVariacion(diferencial)}`,
-      diferencial === null ? '—' : formatearNumero(Math.abs(diferencial)));
-    fila.appendChild(celda);
+    for (const mapa of porFecha) {
+      const v = mapa.get(p.fecha);
+      fila.appendChild(elemento('td', 'num', Number.isFinite(v) ? formatearNumero(v) : '—'));
+    }
     cuerpo.appendChild(fila);
   }
 }
@@ -3730,10 +3901,9 @@ function enlazarEventos() {
     });
   }
 
-  $('#selector-benchmark').addEventListener('change', (ev) => {
-    estado.benchmark = ev.target.value;
-    cargarCartera();
-  });
+  // Las píldoras de benchmark llevan su propio manejador: lo añade
+  // `poblarBenchmarks()` a cada botón en cuanto lo pinta, porque el conjunto de
+  // botones cambia con el catálogo y no existe uno fijo que delegar aquí.
 
   const btnTabla = $('#btn-tabla-serie');
   btnTabla.addEventListener('click', () => {

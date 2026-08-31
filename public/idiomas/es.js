@@ -559,11 +559,22 @@ export default {
   'cartera.leyenda.medida.total': 'Medido desde el capital invertido · es la rentabilidad total',
   'cartera.leyenda.medida.rango': 'Medido desde el inicio del rango, {fecha} · no es la rentabilidad total',
 
-  'cartera.serie.caption': 'Serie histórica de la cartera y del índice de referencia',
+  'cartera.serie.caption': 'Serie histórica de la cartera y de los benchmarks activos',
   'cartera.serie.fecha': 'Fecha',
   'cartera.serie.cartera': 'Cartera',
-  'cartera.serie.indice': 'Índice',
-  'cartera.serie.diferencial': 'Diferencial',
+
+  // ── Cartera · tabla de rendimiento y outperformance ──
+  'cartera.rendimiento.caption': 'Rendimiento por serie en el rango seleccionado',
+  'cartera.rendimiento.activo': 'Activo',
+  'cartera.rendimiento.inicio': 'Inicio',
+  'cartera.rendimiento.actual': 'Actual',
+  'cartera.rendimiento.retorno': 'Rentabilidad',
+  // El outperformance se mide siempre contra el benchmark PRINCIPAL —el mismo
+  // que fija beta y correlación—, nunca contra «el último que se tocó»: es la
+  // regla 9 aplicada aquí, un solo hecho con una sola fuente.
+  'cartera.outperformance.rotulo': 'Frente a {nombre} · {simbolo}',
+
+  'cartera.metodologia.rebase': 'Todas las series se normalizan a 100 al inicio del periodo seleccionado. El rendimiento de los benchmarks se muestra con fines comparativos y no representa una posición invertible en el índice subyacente salvo que se indique explícitamente.',
 
   // ════════════════════════ Cartera · composición ════════════════════════
   'cartera.posiciones.titulo': 'Composición de la cartera',

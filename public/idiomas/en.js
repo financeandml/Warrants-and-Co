@@ -544,11 +544,22 @@ export default {
   'cartera.leyenda.medida.total': 'Measured from invested capital · this is the total return',
   'cartera.leyenda.medida.rango': 'Measured from the start of the range, {fecha} · not the total return',
 
-  'cartera.serie.caption': 'Historical series of the portfolio and its benchmark',
+  'cartera.serie.caption': 'Historical series of the portfolio and the active benchmarks',
   'cartera.serie.fecha': 'Date',
   'cartera.serie.cartera': 'Portfolio',
-  'cartera.serie.indice': 'Index',
-  'cartera.serie.diferencial': 'Spread',
+
+  // ── Portfolio · performance table and outperformance ──
+  'cartera.rendimiento.caption': 'Performance by series over the selected range',
+  'cartera.rendimiento.activo': 'Asset',
+  'cartera.rendimiento.inicio': 'Start',
+  'cartera.rendimiento.actual': 'Current',
+  'cartera.rendimiento.retorno': 'Return',
+  // Outperformance is always measured against the PRINCIPAL benchmark — the
+  // same one that drives beta and correlation, never "whichever was toggled
+  // last": one fact, one source.
+  'cartera.outperformance.rotulo': 'Vs. {nombre} · {simbolo}',
+
+  'cartera.metodologia.rebase': 'All series are normalized to 100 at the start of the selected period. Benchmark performance is shown for comparison purposes only and does not represent an investable position in the underlying index unless explicitly stated.',
 
   // ════════════════════════ Portfolio · holdings ════════════════════════
   'cartera.posiciones.titulo': 'Portfolio composition',
