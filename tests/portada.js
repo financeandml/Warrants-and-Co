@@ -546,16 +546,14 @@ const medirFichero = (p) => p.evaluate(async () => {
       return { hero, abajo };
     });
 
-    /* ── Geometría de los separadores de la fila del hero ──
-       Los filetes entre casillas se dibujan en el BORDE de la casilla, dentro del
-       hueco que la rejilla ya reservaba: el relleno los aparta del texto y un
-       margen negativo del mismo tamaño devuelve lo que el relleno ocupó. De ahí
-       que no cuesten alto —y el alto es lo que paga el pliegue—.
-
-       Lo que se afirma es esa cancelación, no su apariencia. Si alguien retira el
-       margen negativo, la fila se ensancha 56 px de golpe y las tres casillas se
-       estrujan: nada de eso da error, ninguna prueba de «tiene contenido» lo ve, y
-       en pantalla solo se aprecia como un apretón que se achaca a la ventana. */
+    /* ── Geometría de la fila del hero, sin filete ──
+       El rediseño del hero de izquierda retiró el filete vertical entre
+       casillas —separaban con línea, ahora separan solo con aire—. Lo que se
+       afirma aquí es que ninguna casilla arrastra borde/relleno/margen
+       residual del filete retirado, y que la distancia entre casillas sigue
+       siendo justo el hueco de la rejilla: un filete «transparente» que
+       conservara su padding desalinearía el texto sin que ninguna prueba de
+       «tiene contenido» lo viera. */
     const separadores = () => p.evaluate(() => {
       const fila = document.getElementById('cifras-hero');
       const hueco = parseFloat(getComputedStyle(fila).columnGap) || 0;
@@ -597,29 +595,19 @@ const medirFichero = (p) => p.evaluate(async () => {
 
       const { hueco, celdas } = await separadores();
 
-      // Dos filetes para tres casillas, y en las dos ÚLTIMAS: uno en la primera
-      // abriría la fila por la izquierda y otro al final la cerraría por la derecha.
+      // Sin filete: ninguna casilla lleva borde. La composición de izquierda
+      // separa solo con aire.
       const conFilete = celdas.map((c, i) => (c.borde > 0 ? i : -1)).filter((i) => i >= 0);
-      t(`[${idioma}] hay filete entre casillas, y solo entre ellas`,
-        conFilete.length === 2 && conFilete[0] === 1 && conFilete[1] === 2,
+      t(`[${idioma}] ninguna casilla lleva filete`, conFilete.length === 0,
         `casillas con filete: [${conFilete.join(', ')}]`);
 
-      // El margen negativo devuelve exactamente lo que el relleno ocupó. Sin él,
-      // cada filete ensancharía la fila su relleno entero.
-      for (const i of conFilete) {
-        t(`[${idioma}] el filete ${i} no ensancha la fila`,
-          Math.abs(celdas[i].relleno + celdas[i].margen) < 0.5,
-          `relleno ${celdas[i].relleno} · margen ${celdas[i].margen}`);
-      }
-
-      /* Y la comprobación que no se fía de las dos anteriores: la distancia entre
-         el texto de una casilla y el de la siguiente ha de seguir siendo el hueco
-         de la rejilla, más el píxel del propio filete. Se mide en pantalla. */
+      // Sin borde ni relleno propios, la distancia entre el texto de una
+      // casilla y el de la siguiente es exactamente el hueco de la rejilla.
       for (let i = 1; i < celdas.length; i++) {
-        const entreTextos = (celdas[i].izq + celdas[i].borde + celdas[i].relleno) - celdas[i - 1].der;
-        t(`[${idioma}] entre las casillas ${i - 1} y ${i} sigue habiendo el hueco de siempre`,
-          Math.abs(entreTextos - (hueco + celdas[i].borde)) < 1.5,
-          `medido ${entreTextos.toFixed(1)} · esperado ${(hueco + celdas[i].borde).toFixed(1)}`);
+        const entreTextos = celdas[i].izq - celdas[i - 1].der;
+        t(`[${idioma}] entre las casillas ${i - 1} y ${i} hay justo el hueco de la rejilla`,
+          Math.abs(entreTextos - hueco) < 1.5,
+          `medido ${entreTextos.toFixed(1)} · esperado ${hueco.toFixed(1)}`);
       }
     }
     await ctx.close();

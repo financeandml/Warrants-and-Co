@@ -1456,7 +1456,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
    empuje en lugar de superponerse al bloque de accesos. */
 .seccion--portada .portada {
   min-height: calc(75.5svh - var(--alto-cabecera));
-  display: grid; grid-template-rows: 1fr auto; place-items: center;
+  /* `justify-items: start`, no `center`: el hero es de composición izquierda
+     desde el rediseño del hero, pero `place-items: center` seguía centrando
+     `.portada__interior` como CAJA dentro del grid, aunque su texto ya
+     estuviera alineado a la izquierda por dentro —dos alineaciones distintas,
+     la de la caja y la de su contenido, y solo se había corregido la segunda.
+     `align-items` se queda en `center`: solo el eje horizontal era el bug. */
+  display: grid; grid-template-rows: 1fr auto; align-items: center; justify-items: start;
   border-bottom: none;
   overflow: hidden;
 }
@@ -1508,7 +1514,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
    El árbol queda entero por debajo del bloque de accesos. Ninguna sombra
    resuelve nada aquí; lo resuelve la posición. */
 .seccion--portada .portada[data-banner="true"] {
-  place-items: start center;
+  /* Antes `start center`: el comentario de arriba ya decía «el título no se
+     centra», pero `justify-items: center` seguía centrando la caja del
+     interior en horizontal —el comentario y la regla discrepaban, regla 9,
+     y solo se veía comparando el uno con la otra, nunca mirando la pantalla
+     sola—. `place-items: start` deja los dos ejes en el arranque. */
+  place-items: start;
 
   /* ── Cuando el encuadre no da más de sí, crece el hero ──
      Hay ventanas —muy apaisadas y bajas— en las que el bloque de marca, el
@@ -1622,33 +1633,13 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* ── Separadores entre casillas ──
-   Un filete vertical entre casilla y casilla, como el de la composición de
-   referencia. Cuesta CERO alto: se dibuja en el borde de la casilla, dentro del
-   hueco que la rejilla ya reservaba, y no añade nodo ni caja al flujo —de modo
-   que `costeCifras` mide lo mismo con ellos que sin ellos y el presupuesto del
-   hero no se entera—. Van en el borde de entrada de la segunda y la tercera, no
-   en el de salida de la primera, para que no cuelgue ninguno al final.
-
-   El `padding` aparta el texto del filete y el margen negativo devuelve
-   exactamente lo que el `padding` ocupó. Lo que NO devuelve es el borde: la fila
-   acaba 2 px más ancha, uno por filete. En alto sigue costando cero, que es lo
-   único que paga el pliegue, y 2 px sobre 1024 no aprietan a nadie. Quien retire
-   el margen y deje el `padding` ensancha la fila 56 px de golpe, y eso solo se ve
-   como un apretón: lo afirma `tests/portada.js`. */
-.portada__cifras__celda + .portada__cifras__celda {
-  border-inline-start: 1px solid var(--linea-portada, var(--linea));
-  padding-inline-start: clamp(12px, 2.25vw, 28px);
-  margin-inline-start: calc(-1 * clamp(12px, 2.25vw, 28px));
-}
-
-/* Envolviendo, un filete vertical entre renglones no separa nada: señala un
-   límite que ya no existe. Con la fila envuelta se retira. */
-@media (max-width: 640px) {
-  .portada__cifras__celda + .portada__cifras__celda {
-    border-inline-start: none;
-    padding-inline-start: 0; margin-inline-start: 0;
-  }
-}
+   Sin filete: la composición de referencia del hero de izquierda separa las
+   casillas solo con aire —el `gap` de `.portada__cifras`—, no con una línea.
+   Antes había un filete vertical de coste cero en alto (nacía y moría en el
+   borde/padding/margen de la propia casilla, sin nodo nuevo); se retira
+   entero, no solo el color, porque un filete transparente seguiría reservando
+   su padding y desalinearía el texto de la primera fila respecto a la
+   gemela de abajo, que nunca lo tuvo. */
 
 .portada__cifras__valor {
   font-size: 1.3rem; font-weight: 600; line-height: 1.05;
@@ -1712,7 +1703,10 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 
 .portada__accesos {
-  display: flex; flex-wrap: wrap; justify-content: flex-start; align-items: center;
+  /* `nowrap`: los tres accesos —cobertura, análisis, LinkedIn— van en una
+     sola fila en escritorio. Envolver es cosa solo de la columna estrecha,
+     abajo en el media query de 640px. */
+  display: flex; flex-direction: row; flex-wrap: nowrap; justify-content: flex-start; align-items: center;
   gap: var(--espacio-2);
 }
 
@@ -1731,6 +1725,20 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: rgba(255, 255, 255, 0.46);
   backdrop-filter: saturate(120%) blur(6px);
 }
+/* ── Excepción deliberada a la Regla 2 de CLAUDE.md, solo aquí ──
+   El botón primario de la plataforma es siempre `--acento`: es cromo de
+   identidad y esta regla no se toca en ningún otro sitio. El CTA del hero es
+   la única excepción, pedida y confirmada explícitamente por el dueño del
+   repo por encima de la regla, no un descuido: usa `--tinta-portada` —el
+   mismo negro que ya fija la tinta del hero con banner activo, no un literal
+   nuevo— en vez de `--acento`. Si el hero deja de tener banner algún día,
+   cae a `--tinta` como respaldo. */
+.portada__accesos .boton--solido {
+  background: var(--tinta-portada, var(--tinta));
+  border-color: var(--tinta-portada, var(--tinta));
+  color: var(--tinta-inversa);
+}
+.portada__accesos .boton--solido:hover:not(:disabled) { opacity: 0.86; }
 .portada__accesos svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
 
 .portada__accion__flecha { display: inline-block; transition: transform var(--transicion); }
