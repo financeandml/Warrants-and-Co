@@ -770,6 +770,74 @@ button, input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
 }
 
+/* Cabecera de `resumenPortfolio`: siete cifras, no seis. Mismo lenguaje visual
+   —`.indicador` ya dibuja el filete de 1px con `var(--linea)` vía box-shadow—,
+   solo cambia el número de columnas. */
+.cuadro-mando--7 { grid-template-columns: repeat(7, 1fr); }
+
+/* ── Realizada / no realizada, comparadas ──
+   Dos cifras y una barra fina, sin rejilla propia: vive dentro de la misma
+   tarjeta que `#resumen-portfolio`, debajo del cuadro. La barra reparte el
+   ancho por magnitud absoluta —cuánto pesa cada lado en el total de lo que hay
+   que repartir—, no por signo: el signo ya lo dice la cifra, con su glifo. */
+.realizado-comparativa {
+  display: flex; flex-direction: column; gap: 16px;
+  margin-top: var(--espacio-4); padding-top: var(--espacio-4);
+  border-top: 1px solid var(--linea);
+}
+.realizado-comparativa__cifras { display: flex; flex-wrap: wrap; gap: clamp(24px, 5vw, 56px); }
+.realizado-comparativa__celda { display: flex; flex-direction: column; gap: 4px; }
+.realizado-comparativa__valor {
+  font-size: clamp(1.5rem, 3vw, 1.9rem); font-weight: 600;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+}
+.realizado-comparativa__etiqueta {
+  font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tinta-mate);
+}
+.realizado-comparativa__barra {
+  display: flex; height: 6px; border-radius: 3px;
+  background: var(--superficie-alt); overflow: hidden;
+}
+.realizado-comparativa__tramo { height: 100%; }
+.realizado-comparativa__tramo--alza { background: var(--alcista); }
+.realizado-comparativa__tramo--baja { background: var(--bajista); }
+.realizado-comparativa__tramo--nula { background: var(--linea-fuerte); }
+
+/* ── Análisis de contribución: barras horizontales ──
+   Diverge desde un eje central: a la derecha del eje, contribución positiva;
+   a la izquierda, negativa. El color es SOLO en la barra —nunca de fondo— y
+   viaja siempre con la cifra firmada de al lado, que es donde vive el signo. */
+.contribucion-barras {
+  display: flex; flex-direction: column; gap: 2px;
+  margin-bottom: var(--espacio-4);
+}
+.contribucion-fila {
+  display: grid; grid-template-columns: 110px 1fr 84px;
+  align-items: center; gap: 14px;
+  padding: 7px 0;
+}
+.contribucion-fila__ticker {
+  font-family: var(--mono); font-size: 0.78rem; letter-spacing: 0.04em;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.contribucion-fila__pista {
+  position: relative; height: 14px;
+  background: var(--superficie-alt); border-radius: 3px; overflow: hidden;
+}
+/* El eje central: un filete de 1px en el mismo tono de línea que usa el resto
+   de la plataforma, nunca un gris inventado. */
+.contribucion-fila__pista::before {
+  content: ''; position: absolute; inset-block: 0; left: 50%; width: 1px;
+  background: var(--linea-fuerte); z-index: 1;
+}
+.contribucion-fila__barra {
+  position: absolute; top: 1px; bottom: 1px; border-radius: 2px;
+}
+.contribucion-fila__barra--alza { background: var(--alcista); left: 50%; }
+.contribucion-fila__barra--baja { background: var(--bajista); right: 50%; }
+.contribucion-fila__valor { text-align: end; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
+
 .indicador {
   padding: 20px 22px; background: var(--superficie);
   box-shadow: 1px 0 0 var(--linea), 0 1px 0 var(--linea);
@@ -2544,6 +2612,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .cabecera__acciones { margin-inline-start: auto; }
   .cinta-metricas { margin-top: 32px; }
   .cuadro-mando { grid-template-columns: repeat(3, 1fr); }
+  .cuadro-mando--7 { grid-template-columns: repeat(4, 1fr); }
   .tarjeta__cabecera { flex-direction: column; align-items: flex-start; }
   .rejilla-noticias { grid-template-columns: 1fr; }
   /* El panel se repliega por bloques: dos columnas en tableta, una en móvil. */
@@ -2568,6 +2637,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 @media (max-width: 560px) {
   .cuadro-mando { grid-template-columns: repeat(2, 1fr); }
+  .cuadro-mando--7 { grid-template-columns: repeat(2, 1fr); }
   .snapshot { grid-template-columns: 1fr; }
   .portada__accesos { flex-direction: column; width: 100%; max-width: 300px; }
   .portada__accesos .boton { width: 100%; }
@@ -3413,6 +3483,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .bento-home > .bloque-home:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
 .bento-home > #home-pulse { grid-column: 1 / -1; }
+/* Cartera se cuenta en cifras, no en curva, pero es tan ancha como el pulso:
+   una casilla a mitad de rejilla dejaría su vecina vacía —radar y señal ya
+   llenan esa fila entera— y una franja completa es lo que pide un titular
+   grande más el par de cifras secundarias que la acompañan. */
+.bento-home > #home-cartera { grid-column: 1 / -1; }
 
 @media (max-width: 960px) {
   .bento-home { grid-template-columns: 1fr; }
@@ -3458,6 +3533,25 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .pulse-indice__var { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .pulse-indice__pie { font-size: 0.68rem; color: var(--tinta-mate); }
+
+/* ── 3 · CARTERA (bloque de portada) ──
+   Una cifra grande —`resumenPortfolio.retornoPct`, el mismo hecho que el
+   titular del cuadro de mando en `#/cartera`— y dos de apoyo, sin ROIC: esa
+   cifra solo tiene sentido junto al desglose de capital que trae la vista
+   analítica, y aquí la línea roja del dueño la deja fuera. */
+.cartera-home {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  gap: 10px clamp(20px, 4vw, 40px);
+}
+.cartera-home__valor {
+  font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600;
+  letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+}
+.cartera-home__detalle {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: 0.82rem; color: var(--tinta-secundaria);
+}
+.cartera-home__detalle strong { color: var(--tinta); font-weight: 600; }
 
 /* ── El gráfico ── */
 .grafico-linea {

@@ -29,7 +29,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarCifras, pintarCifrasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, pintarCifrasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -1485,6 +1485,10 @@ const PINTORES_INICIO = {
   // porque el repintado por idioma recorre esta lista: sin figurar se quedaría en
   // el idioma anterior, y sus rótulos sí se traducen.
   cifrasHero: () => pintarCifrasHero(datosInicio.cartera),
+  // Bloque Bento: misma cartera, otro corte —`resumenPortfolio`— y su propia
+  // entrada por la misma razón que `cifrasHero`: el repintado por idioma
+  // recorre esta lista, y sus rótulos también se traducen.
+  cartera: () => pintarCarteraHome(datosInicio.cartera),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
@@ -1529,6 +1533,7 @@ async function cargarInicio() {
     // se quedaría en el idioma anterior.
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifrasHero'),
+    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de
     // modo que se pide con ficha. Una sola llamada trae la cobertura entera:
@@ -1930,15 +1935,21 @@ function pintarCartera(datos, { avisos = true } = {}) {
     vacio.appendChild(elemento('strong', null, t('cartera.vacia.titulo')));
     vacio.appendChild(document.createTextNode(datos.mensaje));
     $('#cuadro-mando').appendChild(vacio);
+    $('#resumen-portfolio').textContent = '';
+    $('#realizado-comparativa').textContent = '';
+    $('#contribucion-barras').textContent = '';
     $('#cuerpo-posiciones').textContent = '';
     $('#rejilla-estadisticos').textContent = '';
     return;
   }
 
+  pintarResumenPortfolio(datos);
+  pintarRealizadoComparativa(datos);
   pintarCuadroMando(datos);
   pintarGrafico(datos);
   pintarPosiciones(datos);
   pintarCerradas(datos);
+  pintarContribucion(datos);
   pintarConciliacion(datos);
   pintarEstadisticos(datos);
   pintarAvisoCierre(datos);
@@ -1955,6 +1966,122 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarPanelCartera(datos);
 
   if (avisos) for (const a of datos.avisos ?? []) avisar(a, { claro: true, duracion: 8000 });
+}
+
+/**
+ * Cabecera de `resumenPortfolio`: siete cifras — rentabilidad, realizada, no
+ * realizada, capital desplegado, ROIC y el recuento de posiciones abiertas y
+ * cerradas.
+ *
+ * Cada campo que el motor entrega en `null` se rotula «N/A», nunca con un cero
+ * ni con el guion silencioso de `formatearPorcentaje()`: aquí el hueco es una
+ * afirmación —«esta cifra no aplica todavía»—, no un adorno tipográfico. Las
+ * dos que pueden faltar de verdad son `retornoRealizadoPct` y
+ * `retornoNoRealizadoPct`: una cartera recién nacida no tiene nada cerrado, y
+ * eso no es una rentabilidad realizada del 0 %, es la ausencia del tercer
+ * estado que exige CLAUDE.md.
+ */
+function pintarResumenPortfolio(datos) {
+  const cuadro = $('#resumen-portfolio');
+  if (!cuadro) return;
+  cuadro.textContent = '';
+
+  const r = datos.resumenPortfolio;
+  const na = t('general.noDisponible');
+  const cifraPct = (v) => (v === null || v === undefined ? na : formatearPorcentaje(v));
+
+  const indicador = (etiqueta, valor, nota, { principal = false, variacion = null } = {}) => {
+    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    const v = elemento('strong', 'indicador__valor', valor);
+    if (variacion !== null) v.className = `indicador__valor ${claseVariacion(variacion)}`;
+    bloque.appendChild(v);
+    if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
+    cuadro.appendChild(bloque);
+  };
+
+  if (!r) {
+    const vacio = elemento('div', 'vacio');
+    vacio.appendChild(elemento('strong', null, t('cartera.resumen.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('cartera.resumen.vacio.motivo')));
+    cuadro.appendChild(vacio);
+    return;
+  }
+
+  // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
+  // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
+  // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
+  indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
+    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct });
+  indicador(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct),
+    r.retornoRealizadoPct === null ? t('cartera.resumen.realizado.vacio') : t('cartera.resumen.realizado.nota'),
+    { variacion: r.retornoRealizadoPct });
+  indicador(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct),
+    r.retornoNoRealizadoPct === null ? t('cartera.resumen.noRealizado.vacio') : t('cartera.resumen.noRealizado.nota'),
+    { variacion: r.retornoNoRealizadoPct });
+  indicador(t('cartera.resumen.capital'), porcentaje(r.capitalDesplegadoPct),
+    t('cartera.resumen.capital.nota'));
+  indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
+    r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
+    { variacion: r.roicPct });
+  indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
+    t('cartera.resumen.abiertas.nota'));
+  indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
+    t('cartera.resumen.cerradas.nota'));
+}
+
+/**
+ * Realizada frente a no realizada: dos cifras y una barra de magnitud debajo.
+ *
+ * La barra NO reparte por signo —para eso ya están el color y el glifo de cada
+ * cifra—: reparte por peso, cuánto pesa cada lado sobre la suma de los dos
+ * valores absolutos. Con un solo lado presente, ese lado se lleva la barra
+ * entera y el otro no dibuja tramo; con los dos en `null` no hay pista que
+ * pintar, y se declara sin datos en vez de una barra vacía sin explicación.
+ */
+function pintarRealizadoComparativa(datos) {
+  const destino = $('#realizado-comparativa');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const r = datos.resumenPortfolio;
+  const realizado = r?.retornoRealizadoPct ?? null;
+  const noRealizado = r?.retornoNoRealizadoPct ?? null;
+  if (!r || (realizado === null && noRealizado === null)) return;
+
+  const na = t('general.noDisponible');
+  const cifras = elemento('div', 'realizado-comparativa__cifras');
+  const celda = (etiqueta, valor) => {
+    const c = elemento('div', 'realizado-comparativa__celda');
+    c.appendChild(elemento('strong',
+      `realizado-comparativa__valor ${claseVariacion(valor)}`,
+      valor === null ? na : formatearPorcentaje(valor)));
+    c.appendChild(elemento('span', 'realizado-comparativa__etiqueta', etiqueta));
+    cifras.appendChild(c);
+  };
+  celda(t('cartera.resumen.realizado'), realizado);
+  celda(t('cartera.resumen.noRealizado'), noRealizado);
+  destino.appendChild(cifras);
+
+  const magRealizado = Math.abs(realizado ?? 0);
+  const magNoRealizado = Math.abs(noRealizado ?? 0);
+  const total = magRealizado + magNoRealizado;
+  if (total > 0) {
+    const barra = elemento('div', 'realizado-comparativa__barra');
+    if (realizado !== null) {
+      const tramo = elemento('div',
+        `realizado-comparativa__tramo realizado-comparativa__tramo--${realizado > 0 ? 'alza' : realizado < 0 ? 'baja' : 'nula'}`);
+      tramo.style.width = `${(magRealizado / total) * 100}%`;
+      barra.appendChild(tramo);
+    }
+    if (noRealizado !== null) {
+      const tramo = elemento('div',
+        `realizado-comparativa__tramo realizado-comparativa__tramo--${noRealizado > 0 ? 'alza' : noRealizado < 0 ? 'baja' : 'nula'}`);
+      tramo.style.width = `${(magNoRealizado / total) * 100}%`;
+      barra.appendChild(tramo);
+    }
+    destino.appendChild(barra);
+  }
 }
 
 function pintarCuadroMando(datos) {
@@ -2296,6 +2423,45 @@ function pintarCerradas(datos) {
     fila.appendChild(motivo);
 
     cuerpo.appendChild(fila);
+  }
+}
+
+/**
+ * Análisis de contribución: una barra horizontal por posición, abierta o
+ * cerrada, ordenada de mayor a menor `contribucionPct` — la misma cifra que
+ * pinta la tabla de conciliación de abajo, en la misma unidad (puntos del
+ * índice base 100). No es una segunda fuente: es la MISMA columna, vista como
+ * barra en vez de como número. SVG a mano no hacía falta — la plataforma ya
+ * resuelve una magnitud proporcional con una `<div>` de ancho relativo en
+ * `celdaRecorrido()`; aquí se reutiliza la misma idea, dos tramos que
+ * divergen desde un eje central en vez de uno que avanza desde cero.
+ */
+function pintarContribucion(datos) {
+  const destino = $('#contribucion-barras');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const lineas = [...(datos.posiciones ?? []), ...(datos.cerradas ?? [])]
+    .filter((p) => Number.isFinite(p.contribucionPct))
+    .sort((a, b) => b.contribucionPct - a.contribucionPct);
+  if (!lineas.length) return;
+
+  const maxAbs = Math.max(...lineas.map((p) => Math.abs(p.contribucionPct)), 0.0001);
+
+  for (const p of lineas) {
+    const fila = elemento('div', 'contribucion-fila');
+    fila.appendChild(elemento('span', 'contribucion-fila__ticker', p.ticker));
+
+    const pista = elemento('div', 'contribucion-fila__pista');
+    const barra = elemento('div',
+      `contribucion-fila__barra contribucion-fila__barra--${p.contribucionPct >= 0 ? 'alza' : 'baja'}`);
+    barra.style.width = `${(Math.abs(p.contribucionPct) / maxAbs) * 50}%`;
+    pista.appendChild(barra);
+    fila.appendChild(pista);
+
+    fila.appendChild(elemento('span', `contribucion-fila__valor ${claseVariacion(p.contribucionPct)}`,
+      formatearPorcentaje(p.contribucionPct)));
+    destino.appendChild(fila);
   }
 }
 

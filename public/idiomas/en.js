@@ -182,6 +182,16 @@ export default {
     other: 'Curve: {curva}. No connected provider carries a historical series for {indice}; the ETF that replicates it is not the index and is labelled as such. {n} sessions · historical data.',
   },
 
+  // ── Home · Portfolio (bento) ──
+  'inicio.cartera.etiqueta': 'Portfolio management',
+  'inicio.cartera.titulo': 'Portfolio',
+  'inicio.cartera.enlace': 'View full portfolio',
+  'inicio.cartera.capital': 'Capital deployed',
+  'inicio.cartera.posiciones.abiertas': { one: '{n} open', other: '{n} open' },
+  'inicio.cartera.posiciones.cerradas': { one: '{n} closed', other: '{n} closed' },
+  'inicio.cartera.vacio.titulo': 'Portfolio not yet constituted',
+  'inicio.cartera.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
+
   // ── Home · W&C Radar ──
   'inicio.radar.etiqueta': 'Market intelligence',
   'inicio.radar.enlace': 'View full radar',
@@ -468,6 +478,29 @@ export default {
   'cartera.vacia.titulo': 'Portfolio not constituted',
   'cartera.estado.actualizado': 'Updated at {hora}',
   'cartera.pie.fuente': 'Market data: {fuentes}. Last updated: {momento}.',
+
+  // ═════════════════════ Portfolio · capital summary ═════════════════════
+  'cartera.resumen.titulo': 'Capital summary',
+  'cartera.resumen.subtitulo': 'How much capital is committed and where the return comes from',
+  'cartera.resumen.vacio.titulo': 'No summary to publish',
+  'cartera.resumen.vacio.motivo': 'The portfolio has no positions constituted yet.',
+  'cartera.resumen.retorno': 'Portfolio return',
+  'cartera.resumen.retorno.nota': 'On invested capital',
+  'cartera.resumen.realizado': 'Realized return',
+  'cartera.resumen.realizado.nota': 'Sum of the contribution of closed positions',
+  'cartera.resumen.realizado.vacio': 'No closed position yet',
+  'cartera.resumen.noRealizado': 'Unrealized return',
+  'cartera.resumen.noRealizado.nota': 'Sum of the contribution of open positions',
+  'cartera.resumen.noRealizado.vacio': 'No open position yet',
+  'cartera.resumen.capital': 'Capital deployed',
+  'cartera.resumen.capital.nota': 'Fraction of capital committed to positions',
+  'cartera.resumen.roic': 'ROIC',
+  'cartera.resumen.roic.nota': 'Return on capital deployed',
+  'cartera.resumen.roic.vacio': 'No capital deployed to divide by',
+  'cartera.resumen.abiertas': 'Open positions',
+  'cartera.resumen.abiertas.nota': 'Live theses in the portfolio',
+  'cartera.resumen.cerradas': 'Closed positions',
+  'cartera.resumen.cerradas.nota': 'Liquidated theses',
 
   // ═══════════════════════ Portfolio · dashboard ═══════════════════════
   'cartera.indicador.rentabilidad': 'Cumulative return',

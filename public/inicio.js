@@ -626,6 +626,55 @@ export function pintarCifras(cartera) {
   revelar(pie);
 }
 
+// ═══════════════════════════ 3b · CARTERA (bento) ══════════════════════════
+
+/**
+ * Bloque Bento de portada para la cartera.
+ *
+ * Sale de `resumenPortfolio`, dentro de la misma respuesta de
+ * `/api/mercado/cartera` que ya trae `pintarCifras()` — no se pide nada aparte.
+ * Publica una sola cifra de rendimiento y el tamaño de la muestra que la
+ * sostiene; el desglose realizado/no realizado y el ROIC son de la vista
+ * analítica en `#/cartera`; aquí, junto al titular, dirían más de lo que un
+ * bloque de portada tiene que decir.
+ *
+ * Sin ROIC: decisión explícita. Esa cifra solo se lee bien junto al capital
+ * desplegado que la explica, y ese desglose vive en la cabecera de `#/cartera`.
+ */
+export function pintarCarteraHome(cartera) {
+  const raiz = $('#home-cartera-cuerpo');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const r = cartera?.resumenPortfolio;
+  if (!r || r.retornoPct === null || r.retornoPct === undefined) {
+    raiz.appendChild(bloqueSinDatos(t('inicio.cartera.vacio.titulo'),
+      cartera?.mensaje ?? t('inicio.cartera.vacio.motivo')));
+    return;
+  }
+
+  const bloque = elemento('div', 'cartera-home');
+
+  const principal = elemento('div');
+  principal.appendChild(elemento('strong',
+    `cartera-home__valor ${claseDireccion(r.retornoPct)}`, formatearPorcentaje(r.retornoPct)));
+  bloque.appendChild(principal);
+
+  const detalle = elemento('div', 'cartera-home__detalle');
+  const capital = document.createElement('span');
+  capital.appendChild(document.createTextNode(`${t('inicio.cartera.capital')} `));
+  capital.appendChild(elemento('strong', '', porcentaje(r.capitalDesplegadoPct)));
+  detalle.appendChild(capital);
+
+  detalle.appendChild(elemento('span', '', [
+    t('inicio.cartera.posiciones.abiertas', { n: r.posicionesAbiertas }),
+    t('inicio.cartera.posiciones.cerradas', { n: r.posicionesCerradas }),
+  ].join(' · ')));
+
+  bloque.appendChild(detalle);
+  raiz.appendChild(bloque);
+}
+
 // ════════════════════════════ 4 · MARKET PULSE ════════════════════════════
 
 /**

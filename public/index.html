@@ -240,6 +240,28 @@
       </div>
     </section>
 
+    <!-- ═══════════════════════════ CARTERA (home) ═══════════════════════════
+         Resumen de `resumenPortfolio` — el mismo objeto que ya calcula
+         `calcularCartera()` para la sección `#/cartera`. No pide nada nuevo:
+         llega dentro de la misma respuesta de `/api/mercado/cartera` que ya
+         alimenta la cinta y la fila de cifras (`datosInicio.cartera`). -->
+    <section class="bloque-home" id="home-cartera" aria-labelledby="titulo-home-cartera">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.cartera.etiqueta">Gestión de cartera</p>
+            <h2 id="titulo-home-cartera" class="bloque-home__titulo"
+                data-i18n="inicio.cartera.titulo">Cartera</h2>
+          </div>
+          <a class="enlace-avance" href="#/cartera" data-ruta>
+            <span data-i18n="inicio.cartera.enlace">Ver cartera completa</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div id="home-cartera-cuerpo" aria-live="polite"></div>
+      </div>
+    </section>
+
     </div>
 
     <!-- ════════════════════════════ RESEARCH ══════════════════════════════ -->
@@ -822,6 +844,27 @@
       <!-- ══ I · RENDIMIENTO ══ Qué ha hecho la cartera. -->
       <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
 
+      <!-- Cabecera de `resumenPortfolio`: no repite `#cuadro-mando` de abajo
+           —ese habla del día, el riesgo y la caja—, habla de otra cosa: cuánto
+           capital se ha comprometido y de dónde sale la rentabilidad, realizada
+           o no. La primera casilla SÍ comparte hecho con la de abajo —ambas
+           leen, en última instancia, `estadisticos.rentabilidadTotal`—, y viaja
+           aquí porque el resto de esta fila no se entiende sin ella. -->
+      <section class="tarjeta" aria-labelledby="titulo-resumen-portfolio">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-resumen-portfolio" data-i18n="cartera.resumen.titulo">Resumen de capital</h2>
+            <p data-i18n="cartera.resumen.subtitulo">Cuánto capital está comprometido y de dónde sale la rentabilidad</p>
+          </div>
+        </div>
+        <div class="cuadro-mando cuadro-mando--7" id="resumen-portfolio"></div>
+        <!-- Realizada frente a no realizada: mismas dos cifras que ya van en
+             el cuadro de arriba, comparadas una junto a otra con una barra de
+             magnitud. `pintarRealizadoComparativa()` respeta el mismo tercer
+             estado —null, no 0, cuando no hay nada de un lado—. -->
+        <div class="realizado-comparativa" id="realizado-comparativa"></div>
+      </section>
+
       <div class="cuadro-mando" id="cuadro-mando"></div>
 
       <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
@@ -974,6 +1017,11 @@
             <p data-i18n="cartera.conciliacion.subtitulo">Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total</p>
           </div>
         </div>
+        <!-- El gráfico de barras es la lectura rápida —quién suma, quién resta,
+             y cuánto—; la tabla de abajo sigue siendo el detalle exacto, con la
+             procedencia de cada precio. No se fusionan: la tabla explica CÓMO
+             se llega a cada barra, y esa cuenta no cabe en una barra. -->
+        <div class="contribucion-barras" id="contribucion-barras"></div>
         <div class="tabla-envoltorio">
           <table class="tabla-datos">
             <caption class="visualmente-oculto"

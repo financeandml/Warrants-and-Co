@@ -190,6 +190,16 @@ export default {
     other: 'Curva: {curva}. El índice {indice} no tiene serie histórica en ningún proveedor conectado; el ETF que lo replica no es el índice y se rotula como tal. {n} sesiones · dato histórico.',
   },
 
+  // ── Inicio · Cartera (bento) ──
+  'inicio.cartera.etiqueta': 'Gestión de cartera',
+  'inicio.cartera.titulo': 'Cartera',
+  'inicio.cartera.enlace': 'Ver cartera completa',
+  'inicio.cartera.capital': 'Capital desplegado',
+  'inicio.cartera.posiciones.abiertas': { one: '{n} abierta', other: '{n} abiertas' },
+  'inicio.cartera.posiciones.cerradas': { one: '{n} cerrada', other: '{n} cerradas' },
+  'inicio.cartera.vacio.titulo': 'Cartera sin constituir',
+  'inicio.cartera.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
+
   // ── Inicio · W&C Radar ──
   'inicio.radar.etiqueta': 'Inteligencia de mercado',
   'inicio.radar.enlace': 'Ver el radar completo',
@@ -480,6 +490,32 @@ export default {
   'cartera.vacia.titulo': 'Cartera no constituida',
   'cartera.estado.actualizado': 'Actualizado a las {hora}',
   'cartera.pie.fuente': 'Datos de mercado: {fuentes}. Última actualización: {momento}.',
+
+  // ══════════════════════ Cartera · resumen de capital ══════════════════════
+  // Las siete cifras de `resumenPortfolio`. «Realizada» y «no realizada» usan
+  // dos rótulos de nota distintos: uno para cuando hay una cifra que explicar
+  // y otro para cuando no hay nada de ese lado todavía —tercer estado, no cero—.
+  'cartera.resumen.titulo': 'Resumen de capital',
+  'cartera.resumen.subtitulo': 'Cuánto capital está comprometido y de dónde sale la rentabilidad',
+  'cartera.resumen.vacio.titulo': 'Sin resumen que publicar',
+  'cartera.resumen.vacio.motivo': 'La cartera no tiene posiciones constituidas todavía.',
+  'cartera.resumen.retorno': 'Rentabilidad de la cartera',
+  'cartera.resumen.retorno.nota': 'Sobre el capital invertido',
+  'cartera.resumen.realizado': 'Rentabilidad realizada',
+  'cartera.resumen.realizado.nota': 'Suma de la contribución de las posiciones cerradas',
+  'cartera.resumen.realizado.vacio': 'Ninguna posición cerrada todavía',
+  'cartera.resumen.noRealizado': 'Rentabilidad no realizada',
+  'cartera.resumen.noRealizado.nota': 'Suma de la contribución de las posiciones abiertas',
+  'cartera.resumen.noRealizado.vacio': 'Ninguna posición abierta todavía',
+  'cartera.resumen.capital': 'Capital desplegado',
+  'cartera.resumen.capital.nota': 'Fracción del capital comprometida en posiciones',
+  'cartera.resumen.roic': 'ROIC',
+  'cartera.resumen.roic.nota': 'Rentabilidad sobre el capital desplegado',
+  'cartera.resumen.roic.vacio': 'Sin capital desplegado que dividir',
+  'cartera.resumen.abiertas': 'Posiciones abiertas',
+  'cartera.resumen.abiertas.nota': 'Tesis vivas en cartera',
+  'cartera.resumen.cerradas': 'Posiciones cerradas',
+  'cartera.resumen.cerradas.nota': 'Tesis liquidadas',
 
   // ═══════════════════════ Cartera · cuadro de mando ═══════════════════════
   'cartera.indicador.rentabilidad': 'Rentabilidad acumulada',
