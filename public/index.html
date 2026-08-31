@@ -124,44 +124,59 @@
           <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
         </div>
 
+        <!-- Bloque nuevo pedido por el dueño: mismo rótulo de marca —reutiliza
+             `.etiqueta-superior`, que dentro de #seccion-inicio ya sale en
+             --acento (línea ~339 de estilos.css), así que no hace falta una
+             segunda regla de color— más un titular propio, antes de los
+             pilares. Se AÑADE sin tocar `.manifiesto__enunciado`: su titular
+             (animado por `animarManifiesto()`) empieza, en el diccionario, con
+             la misma frase "Inteligencia de mercado" que este bloque repite en
+             estático — es una duplicación real, ver el informe. Va DESPUÉS del
+             enunciado en el documento a propósito: `asomoDelManifiesto()` en
+             `portada.js` mide `.manifiesto .etiqueta-superior` con
+             `querySelector` —el PRIMER encaje—, y colocar este rótulo antes
+             habría cambiado qué etiqueta mide el presupuesto de píxeles del
+             hero sin que nadie se lo hubiera pedido. -->
+        <div class="manifiesto__intro">
+          <p class="etiqueta-superior">Warrants &amp; Co.</p>
+          <h2 class="manifiesto__intro__titulo" data-i18n="portada.inteligencia.titulo">Inteligencia de mercado</h2>
+        </div>
+
         <div class="pilares">
           <article class="pilar">
             <span class="pilar__numero" aria-hidden="true">01</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.research.titulo">Análisis</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.research.texto">
-              Análisis fundamental profundo, centrado en compañías, catalizadores,
-              valoración y tesis de inversión.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.investigacion.titulo">Investigación rigurosa</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.investigacion.texto">
+              Análisis fundamental propio, sin ruido ni atajos, sobre las
+              compañías y catalizadores que de verdad mueven la tesis.
             </p>
-            <a class="pilar__enlace" href="#/companias" data-ruta>
-              <span data-i18n="portada.pilar.explorar">Explorar</span>
-              <span class="pilar__flecha" aria-hidden="true">→</span>
-            </a>
           </article>
 
           <article class="pilar">
             <span class="pilar__numero" aria-hidden="true">02</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.catalizadores.titulo">Catalizadores</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.catalizadores.texto">
-              La agenda de lo que puede mover cada tesis: resultados, vencimientos
-              y fechas con impacto sobre la cobertura.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.cobertura.titulo">Cobertura selectiva</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.cobertura.texto">
+              Un universo reducido de compañías, seguidas con la profundidad
+              que la calidad exige antes que la cantidad.
             </p>
-            <a class="pilar__enlace" href="#/catalizadores" data-ruta>
-              <span data-i18n="portada.pilar.explorar">Explorar</span>
-              <span class="pilar__flecha" aria-hidden="true">→</span>
-            </a>
           </article>
 
           <article class="pilar">
             <span class="pilar__numero" aria-hidden="true">03</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.cartera.titulo">Cartera</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.cartera.texto">
-              Lo que las tesis publicadas han hecho: posiciones vivas, cerradas y
-              el historial calculado desde su precio y su fecha.
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.riesgo.titulo">Gestión del riesgo</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.riesgo.texto">
+              Cada posición entra con su tamaño, su horizonte y su salida
+              definidos, no como una apuesta suelta.
             </p>
-            <a class="pilar__enlace" href="#/cartera" data-ruta>
-              <span data-i18n="portada.pilar.explorar">Explorar</span>
-              <span class="pilar__flecha" aria-hidden="true">→</span>
-            </a>
+          </article>
+
+          <article class="pilar">
+            <span class="pilar__numero" aria-hidden="true">04</span>
+            <h3 class="pilar__titulo" data-i18n="portada.pilar.independencia.titulo">Independencia</h3>
+            <p class="pilar__texto" data-i18n="portada.pilar.independencia.texto">
+              Sin conflictos de interés ni banca de inversión detrás: el
+              análisis solo responde a quien lo lee.
+            </p>
           </article>
         </div>
 

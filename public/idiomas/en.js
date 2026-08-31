@@ -113,6 +113,27 @@ export default {
     'think in probabilities.',
   ],
 
+  // New block before the pillars. The text matches the first line of
+  // `portada.manifiesto.titular` above — a real duplication, not an oversight,
+  // see the comment next to `.manifiesto__intro` in index.html — but it is its
+  // own fact (a different key, a different section), kept separate so the two
+  // titles aren't coupled when they already break lines differently today.
+  'portada.inteligencia.titulo': 'Market intelligence',
+
+  // The four pillars from the reference mockup, replacing the previous three
+  // (Research, Catalysts, Portfolio). They lose the link to their routes
+  // —#/companias, #/catalizadores, #/cartera—: a decision, not an oversight.
+  // The old pillar keys stay unused, same as Radar and Options: they come back
+  // if the mockup changes again.
+  'portada.pilar.investigacion.titulo': 'Rigorous research',
+  'portada.pilar.investigacion.texto': 'Original fundamental analysis, no noise or shortcuts, on the companies and catalysts that actually move the thesis.',
+  'portada.pilar.cobertura.titulo': 'Selective coverage',
+  'portada.pilar.cobertura.texto': 'A narrow universe of companies, followed with the depth that quality demands over quantity.',
+  'portada.pilar.riesgo.titulo': 'Risk management',
+  'portada.pilar.riesgo.texto': 'Every position enters with its size, horizon and exit defined, not as a loose bet.',
+  'portada.pilar.independencia.titulo': 'Independence',
+  'portada.pilar.independencia.texto': 'No conflicts of interest and no investment bank behind it: the research answers only to the reader.',
+
   'portada.pilar.research.titulo': 'Research',
   'portada.pilar.research.texto': 'Deep fundamental analysis focused on companies, catalysts, valuation and investment thesis.',
   // The Radar and Options pillars are unused while their areas are hidden;

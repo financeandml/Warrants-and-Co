@@ -3124,12 +3124,26 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   text-wrap: balance;
 }
 
-/* ── Los tres pilares ──
-   Bento: tres tarjetas propias en rejilla, no columnas separadas por filete.
+/* ── Bloque nuevo: rótulo + titular antes de los pilares ──
+   Mismo `.etiqueta-superior` que `.manifiesto__enunciado`, ninguna regla de
+   color propia (regla 9: un rótulo, una fuente). El titular es más pequeño que
+   `.manifiesto__titular` —ese sigue siendo la pieza mayor del manifiesto—. */
+.manifiesto__intro { margin-block-start: clamp(40px, 6vh, 72px); max-width: 62ch; }
+.manifiesto__intro__titulo {
+  font-family: var(--geo);
+  margin-block-start: 10px;
+  font-size: clamp(1.4rem, 2.6vw, 2rem);
+  font-weight: 600; letter-spacing: -0.01em; line-height: 1.2;
+}
+
+/* ── Los cuatro pilares ──
+   Bento: tarjetas propias en rejilla, no columnas separadas por filete.
    El hueco entre celdas es lo que las separa; una línea aquí diría dos veces
    lo mismo. */
 .pilares {
-  display: grid; grid-template-columns: repeat(3, 1fr);
+  /* Cuatro pilares, no tres —Investigación rigurosa, Cobertura selectiva,
+     Gestión del riesgo, Independencia—, según la maqueta de referencia. */
+  display: grid; grid-template-columns: repeat(4, 1fr);
   gap: var(--espacio-3);
   margin-block-start: clamp(64px, 9vh, 104px);
 }
@@ -3213,10 +3227,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .cifras__enlace:hover .cifras__flecha { transform: translateX(4px); }
 
 @media (max-width: 900px) {
-  /* En tableta, dos columnas y la tercera abajo entera. Con cajas ya no hay que
-     desmontarle el filete: una caja ancha se lee como caja igual. */
+  /* En tableta, dos columnas: con cuatro pilares caen 2×2 sin resto, así que
+     no hace falta la caja ancha que sí exigía un tercero sobrante. */
   .pilares { grid-template-columns: repeat(2, 1fr); }
-  .pilar:nth-child(3) { grid-column: 1 / -1; }
 }
 
 @media (max-width: 620px) {

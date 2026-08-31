@@ -125,6 +125,28 @@ export default {
     'pensando en probabilidades.',
   ],
 
+  // Bloque nuevo antes de los pilares. El texto coincide con la primera línea
+  // de `portada.manifiesto.titular` de arriba —es una duplicación real, no un
+  // descuido: ver el comentario en index.html junto a `.manifiesto__intro`—,
+  // pero es un hecho propio (otra clave, otra sección) y no se reutiliza la
+  // clave del manifiesto animado para no acoplar dos titulares que ya hoy
+  // cortan sus líneas de forma distinta.
+  'portada.inteligencia.titulo': 'Inteligencia de mercado',
+
+  // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres
+  // anteriores (Análisis, Catalizadores, Cartera). Pierden el enlace a sus
+  // rutas —#/companias, #/catalizadores, #/cartera—: decisión tomada, no un
+  // olvido. Las claves antiguas de pilar se conservan sin uso, como ya se
+  // hacía con Radar y Opciones: vuelven si la maqueta cambia otra vez.
+  'portada.pilar.investigacion.titulo': 'Investigación rigurosa',
+  'portada.pilar.investigacion.texto': 'Análisis fundamental propio, sin ruido ni atajos, sobre las compañías y catalizadores que de verdad mueven la tesis.',
+  'portada.pilar.cobertura.titulo': 'Cobertura selectiva',
+  'portada.pilar.cobertura.texto': 'Un universo reducido de compañías, seguidas con la profundidad que la calidad exige antes que la cantidad.',
+  'portada.pilar.riesgo.titulo': 'Gestión del riesgo',
+  'portada.pilar.riesgo.texto': 'Cada posición entra con su tamaño, su horizonte y su salida definidos, no como una apuesta suelta.',
+  'portada.pilar.independencia.titulo': 'Independencia',
+  'portada.pilar.independencia.texto': 'Sin conflictos de interés ni banca de inversión detrás: el análisis solo responde a quien lo lee.',
+
   'portada.pilar.research.titulo': 'Análisis',
   'portada.pilar.research.texto': 'Análisis fundamental profundo, centrado en compañías, catalizadores, valoración y tesis de inversión.',
   // Los pilares de Radar y Opciones quedan sin uso mientras sus áreas estén
