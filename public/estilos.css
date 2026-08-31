@@ -3008,6 +3008,17 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   text-align: end; font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--tinta-mate);
 }
 
+/* Catalizadores próximos en la ficha: fila tipográfica con tipo y fecha, sin
+   caja — mismo lenguaje visual que `.dato` y `.fila-informe` de esta vista. */
+.lista-catalizadores { list-style: none; display: flex; flex-direction: column; }
+.fila-catalizador {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding: 8px 0; border-bottom: 1px solid var(--linea); font-size: 0.86rem;
+}
+.fila-catalizador__meta {
+  color: var(--tinta-mate); font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
 .dato { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .dato__etiqueta {
   font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase;

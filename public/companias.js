@@ -10,7 +10,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, claseVariacion,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
-import { etiquetaSello, claseSello } from './vocabulario.js';
+import { etiquetaSello, claseSello, etiquetaTipoEvento } from './vocabulario.js';
 
 /* El rótulo de ausencia es una función y no una constante: se resuelve al
    pintar, que es cuando se sabe el idioma. Escrito a mano —«N/A»— quedaba fuera
@@ -41,21 +41,15 @@ function sello(calidad, explicacion = '') {
   return s;
 }
 
-/** Recomendación → lectura direccional. Nunca badge sólido: solo lectura de texto,
- * y el signo (▲/▼/●) viaja siempre junto al color, nunca solo — cláusula 1. */
+/** Recomendación → lectura direccional. Reutiliza `.lectura` —ya usada en Radar
+ * y Signal—, que pone el glifo por CSS (`.lectura--alza::before`); nunca badge
+ * sólido, y el signo viaja siempre junto al color, nunca solo — cláusula 1. */
 function claseRecomendacion(rec) {
   if (!rec) return 'lectura lectura--nula';
   const r = String(rec).toUpperCase();
-  if (/COMPRAR|BUY|OVERWEIGHT|ACCUMULATE|ACUMULAR/.test(r)) return 'lectura lectura--alza';
-  if (/VENDER|SELL|UNDERWEIGHT|REDUCE|REDUCIR/.test(r)) return 'lectura lectura--baja';
+  if (/COMPRAR|BUY|OVERWEIGHT|SOBREPONDERAR|ACCUMULATE|ACUMULAR/.test(r)) return 'lectura lectura--alza';
+  if (/VENDER|SELL|UNDERWEIGHT|INFRAPONDERAR|REDUCE|REDUCIR/.test(r)) return 'lectura lectura--baja';
   return 'lectura lectura--nula';
-}
-function glifoRecomendacion(rec) {
-  if (!rec) return '';
-  const r = String(rec).toUpperCase();
-  if (/COMPRAR|BUY|OVERWEIGHT|ACCUMULATE|ACUMULAR/.test(r)) return '▲ ';
-  if (/VENDER|SELL|UNDERWEIGHT|REDUCE|REDUCIR/.test(r)) return '▼ ';
-  return '';
 }
 
 /**
@@ -89,7 +83,7 @@ function tarjetaCompania(c, alAbrir, densidad = 'completa') {
 
     const datosClave = elemento('div', 'tarjeta-compania__datos');
     datosClave.appendChild(dato(t('companias.dato.recomendacion'),
-      `${glifoRecomendacion(c.recomendacion)}${c.recomendacion ?? noDisponible()}`,
+      c.recomendacion ?? noDisponible(),
       claseRecomendacion(c.recomendacion)));
     datosClave.appendChild(dato(t('companias.dato.objetivo'),
       Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
@@ -351,7 +345,8 @@ function bloqueTesis(c) {
   bloque.appendChild(elemento('h3', 'bloque-ficha__titulo', t('companias.tesis.titulo')));
 
   const rejilla = elemento('div', 'rejilla-datos');
-  rejilla.appendChild(dato(t('companias.dato.recomendacion'), c.recomendacion ?? noDisponible()));
+  rejilla.appendChild(dato(t('companias.dato.recomendacion'),
+    c.recomendacion ?? noDisponible(), claseRecomendacion(c.recomendacion)));
   rejilla.appendChild(dato(t('companias.dato.objetivo'),
     Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
 
@@ -423,7 +418,12 @@ function bloqueCatalizadores(c) {
     const lista = elemento('ul', 'lista-catalizadores');
     for (const ev of proximos) {
       const fila = elemento('li', 'fila-catalizador');
-      fila.appendChild(elemento('strong', '', ev.titulo ?? ev.tipo ?? t('companias.catalizadores.tipoReserva')));
+      // El tipo se traduce con el mismo vocabulario que ya usa la Agenda de
+      // catalizadores; el título del evento («Vencimiento de opciones ·
+      // fecha») ya repite la fecha, así que aquí solo va el tipo, sin duplicar
+      // el mismo hecho en dos formatos —regla 9—.
+      fila.appendChild(elemento('strong', '',
+        ev.tipo ? etiquetaTipoEvento(ev.tipo) : t('companias.catalizadores.tipoReserva')));
       fila.appendChild(elemento('span', 'fila-catalizador__meta', formatearFecha(ev.fecha)));
       lista.appendChild(fila);
     }
