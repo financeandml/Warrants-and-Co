@@ -35,21 +35,7 @@
 
        BASE_PRUEBA=http://127.0.0.1:4174 npm run test:portada
 
-   Solo lee: no escribe en la base.
-
-   ═══ Hallazgo conocido, no fallo intermitente ═══
-
-   A 1920×700 el manifiesto asoma 41 px bajo el pliegue y a 2560×800, 52 —hacen
-   falta 60 en las dos—: un déficit medido y estable, no un parpadeo entre
-   corridas. Viene de dos cambios encadenados de esta misma sesión: retirar la
-   pieza de líneas del presupuesto de píxeles (`marcaSola` ya no resta su coste)
-   y, después, que la cinta pasara a dos líneas —el rediseño de la cinta de
-   mercado en formato píldora—, que le resta más alto disponible al manifiesto
-   del que tenía antes. No se ha retocado aquí porque el Bloque 3 —Bento— va a
-   reestructurar este mismo presupuesto. Ajustar constantes ahora sería trabajo
-   que el Bento probablemente repite. Queda para entonces, no para un retoque
-   de paso.
-   ========================================================================= */
+   Solo lee: no escribe en la base. */
 
 const { exigirPlaywright } = require('./dependencias');
 const { crearTercerEstado } = require('./tercer-estado');
@@ -82,8 +68,6 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
 const E = crearTercerEstado(B);
 const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
 const CIFRAS_HERO = 'las cifras del hero no se pintan: la base no tiene cartera publicada';
-const ASOMO_CORTO = 'déficit conocido, ver la nota de cabecera — pendiente del Bloque 3 (Bento)';
-const VENTANAS_ASOMO_CORTO = new Set(['1920×700', '2560×800']);
 
 /**
  * Espera a que la portada esté encuadrada de verdad.
@@ -293,13 +277,9 @@ const medirFichero = (p) => p.evaluate(async () => {
        la franja muerta del observador NO llega a revelarse y aparecería una caja
        vacía. Es el invariante que justifica que la fila ceda, así que se
        afirma contra la MISMA cifra con la que el hero decide. */
-    if (VENTANAS_ASOMO_CORTO.has(v.n)) {
-      pendiente(`${v.n} · el manifiesto asoma lo bastante para revelarse`, ASOMO_CORTO);
-    } else {
-      t(`${v.n} · el manifiesto asoma lo bastante para revelarse`,
-        m.asomaEtiqueta !== null && m.asomaEtiqueta > m.margenRevelado,
-        `asoman ${m.asomaEtiqueta?.toFixed(0)} px, franja muerta ${m.margenRevelado}`);
-    }
+    t(`${v.n} · el manifiesto asoma lo bastante para revelarse`,
+      m.asomaEtiqueta !== null && m.asomaEtiqueta > m.margenRevelado,
+      `asoman ${m.asomaEtiqueta?.toFixed(0)} px, franja muerta ${m.margenRevelado}`);
 
     /* ── La fila de cifras del hero, en las dos direcciones ──
        Se pinta donde cabe y desaparece donde no, y «desaparecer» se comprueba

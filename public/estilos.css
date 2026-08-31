@@ -3035,10 +3035,14 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
    Por eso escala con `vh` y no es un número fijo: la condición depende del alto
    de la ventana. Un `88px` constante se cumple a 900 de alto y falla a 700
-   —la línea deja de revelarse y asoma una caja vacía—. Con `7vh` se cumple de
-   700 a 1080. Quien suba esta cifra debe volver a medir las cuatro alturas. */
+   —la línea deja de revelarse y asoma una caja vacía—. Con `4vh` se cumple en
+   las seis ventanas de `tests/portada.js`, incluidas 1920×700 y 2560×800 —el
+   déficit que dejó la cinta en dos líneas—: `7vh` daba 49 px a 700 de alto y
+   41 de asomo con la cinta nueva, 19 por debajo de los 60 que exige el
+   observador; `4vh` da 28 y deja 62. Quien suba esta cifra debe volver a medir
+   las seis alturas de esa batería. */
 .manifiesto {
-  padding-top: clamp(44px, 7vh, 104px);
+  padding-top: clamp(20px, 4vh, 104px);
   padding-bottom: clamp(88px, 13vh, 156px);
   background: var(--superficie);
   border-block-start: 1px solid var(--linea);
