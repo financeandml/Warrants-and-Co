@@ -87,8 +87,7 @@ router.get('/serie/:simbolo', async (req, res, next) => {
 
     if (serie.length < 2) {
       return res.status(404).json({
-        error: 'Sin serie histórica utilizable para el instrumento.',
-        codigo: 'SIN_SERIE',
+        ...cuerpoError('SIN_SERIE_HISTORICA', { datos: { simbolo } }),
         simbolo,
         disponible: false,
       });
@@ -115,11 +114,9 @@ router.get('/serie/:simbolo', async (req, res, next) => {
   } catch (err) {
     if (/Sin datos de mercado|Fecha de inicio/i.test(err?.message ?? '')) {
       return res.status(404).json({
-        error: 'Ningún proveedor conectado publica la serie de este instrumento.',
-        codigo: 'SIN_SERIE',
+        ...cuerpoError('SIN_SERIE_HISTORICA', { datos: { simbolo }, detalle: err.message }),
         simbolo,
         disponible: false,
-        detalle: err.message,
       });
     }
     next(err);
@@ -165,7 +162,9 @@ router.get('/cotizacion/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(q);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
+    if (err.codigo === 'SIMBOLO_INVALIDO') {
+      return res.status(400).json(cuerpoError('SIMBOLO_INVALIDO', { datos: { simbolo: req.params.simbolo } }));
+    }
     if (err.codigo === 'SIN_DATOS_MERCADO') return res.status(502).json(cuerpoError('PROVEEDOR_NO_RESPONDE', { detalle: err.message }));
     next(err);
   }

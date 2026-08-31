@@ -33,7 +33,9 @@ router.get('/cadena/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(cadena);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
+    if (err.codigo === 'SIMBOLO_INVALIDO') {
+      return res.status(400).json(cuerpoError('SIMBOLO_INVALIDO', { datos: { simbolo: req.params.simbolo } }));
+    }
     // Una carencia del proveedor no es un fallo del servicio: se distingue del error.
     if (err.name === 'ErrorProveedorOpciones') {
       const codigo = err.transitorio ? 'PROVEEDOR_NO_RESPONDE' : 'CAPACIDAD_NO_DISPONIBLE';
@@ -87,7 +89,9 @@ router.get('/historico/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json(datos);
   } catch (err) {
-    if (err.codigo === 'SIMBOLO_INVALIDO') return res.status(400).json(cuerpoError('VALIDACION', { detalle: err.message }));
+    if (err.codigo === 'SIMBOLO_INVALIDO') {
+      return res.status(400).json(cuerpoError('SIMBOLO_INVALIDO', { datos: { simbolo: req.params.simbolo } }));
+    }
     next(err);
   }
 });
