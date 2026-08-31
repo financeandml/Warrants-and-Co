@@ -535,17 +535,33 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
     };
   }
 
-  // Equiponderacion para las lineas sin peso explicito, sobre el remanente.
+  /*
+   * Equiponderacion para las lineas sin peso explicito, sobre el remanente.
+   *
+   * El peso es una fraccion ABSOLUTA del capital, no relativa entre las
+   * posiciones publicadas: cinco tesis al 4 % declaran 20 % desplegado y un
+   * 80 % que sigue en caja de verdad, no un 4 % que el motor infla al 20 %
+   * cada una para que sumen 100. Antes SI se renormalizaba —vease el commit
+   * que anadio `resumenPortfolio`—, y eso hacia imposible declarar capital
+   * sin desplegar: cualquier conjunto de pesos explicitos terminaba sumando
+   * 100 igual, aunque el analista hubiera escrito 4 %.
+   *
+   * Solo se guarda una red de seguridad: si la suma declarada excede 100 —
+   * dato imposible, no una decision de cartera—, se recorta proporcionalmente
+   * y se avisa, en vez de publicar una cartera que pesa mas de si misma. */
   const conPeso = posiciones.filter((p) => p.peso !== null);
   const sinPeso = posiciones.filter((p) => p.peso === null);
   const asignado = conPeso.reduce((a, p) => a + p.peso, 0);
   if (sinPeso.length) {
     const remanente = Math.max(100 - asignado, 0);
-    const cuota = remanente > 0 ? remanente / sinPeso.length : 100 / posiciones.length;
+    const cuota = remanente > 0 ? remanente / sinPeso.length : 0;
     for (const p of sinPeso) p.peso = cuota;
   }
-  const sumaPesos = posiciones.reduce((a, p) => a + p.peso, 0) || 1;
-  for (const p of posiciones) p.peso = (p.peso / sumaPesos) * 100;
+  const sumaPesos = posiciones.reduce((a, p) => a + p.peso, 0);
+  if (sumaPesos > 100) {
+    avisos.push(`Los pesos declarados suman ${redondear(sumaPesos)} %; se recortan a 100 % en proporción.`);
+    for (const p of posiciones) p.peso = (p.peso / sumaPesos) * 100;
+  }
 
   const desde = posiciones.reduce((min, p) => (p.fechaAlta < min ? p.fechaAlta : min), posiciones[0].fechaAlta);
 
@@ -731,12 +747,58 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   const porSector = new Map();
   for (const p of abiertas) porSector.set(p.sector, (porSector.get(p.sector) ?? 0) + (p.pesoVigente ?? 0));
 
+  /*
+   * Resumen "Portfolio": capital desplegado, ROIC y el desglose realizado /
+   * no realizado, para el bloque de portada y la vista analitica.
+   *
+   * No es un motor aparte: descompone el MISMO hecho que ya vigila
+   * `tests/cartera.js` —Σ peso × rentabilidad = rentabilidad total—, porque
+   * `contribucionPct` de cada linea (abierta o cerrada) ya esta en puntos del
+   * indice base 100, y una liquidada transfiere su valorTramo integro a la
+   * caja al cerrarse. Sumar contribucionPct de TODAS las lineas da,
+   * exactamente, `estadisticos.rentabilidadTotal` partido entre lo realizado
+   * y lo que aun no lo esta —no una segunda fuente, la misma cifra vista con
+   * otro corte.
+   *
+   * capitalDesplegadoPct usa el peso de ENTRADA (abierta + cerrada), no el
+   * vigente: es cuanto capital ha llegado a comprometerse alguna vez, y una
+   * posicion cerrada sigue contando aunque su importe ya este en caja.
+   *
+   * Tres estados, no dos: sin posiciones de un lado (ninguna cerrada, o
+   * ninguna abierta todavia) el campo es `null` —nada que realizar/no
+   * realizar todavia—, nunca 0, que leeria como "rendimiento plano" en vez
+   * de "no aplica".
+   */
+  const capitalDesplegadoPct = redondear(
+    abiertas.reduce((a, p) => a + (p.peso ?? 0), 0) + liquidadas.reduce((a, p) => a + (p.peso ?? 0), 0)
+  );
+  const retornoRealizadoPct = liquidadas.length
+    ? redondear(liquidadas.reduce((a, p) => a + (p.contribucionPct ?? 0), 0))
+    : null;
+  const retornoNoRealizadoPct = abiertas.length
+    ? redondear(abiertas.reduce((a, p) => a + (p.contribucionPct ?? 0), 0))
+    : null;
+  const roicPct = (estadisticos?.rentabilidadTotal != null && capitalDesplegadoPct > 0)
+    ? redondear((estadisticos.rentabilidadTotal / capitalDesplegadoPct) * 100)
+    : null;
+
+  const resumenPortfolio = {
+    retornoPct: estadisticos?.rentabilidadTotal ?? null,
+    capitalDesplegadoPct,
+    roicPct,
+    retornoRealizadoPct,
+    retornoNoRealizadoPct,
+    posicionesAbiertas: abiertas.length,
+    posicionesCerradas: liquidadas.length,
+  };
+
   return {
     posiciones: abiertas.sort((a, b) => (b.pesoVigente ?? 0) - (a.pesoVigente ?? 0)),
     cerradas: liquidadas.sort((a, b) => String(b.fechaCierre).localeCompare(String(a.fechaCierre))),
     serie,
     serieIndice,
     estadisticos,
+    resumenPortfolio,
     liquidez: bloqueLiquidez,
     exposicionSectorial: [...porSector]
       .map(([sector, peso]) => ({ sector, peso: redondear(peso) }))

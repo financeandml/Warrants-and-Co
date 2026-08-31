@@ -589,12 +589,121 @@ async function caso9() {
     v?.fechaCierre === f[2], `cierre ${v?.fechaCierre} vs ${f[2]}`);
 }
 
+/*
+ * Caso 10 — resumenPortfolio: capital desplegado, ROIC y realizado/no realizado.
+ *
+ * El mock de validación del bloque «Portfolio»: cinco líneas al 4 % cada una, dos
+ * ya liquidadas (IOVA, RDDT) y tres vivas (ORCL, QCOM, UBER). No es una cuenta
+ * nueva — es la misma Σ peso × rentabilidad de siempre, partida entre lo
+ * realizado y lo que no lo está, así que las cifras se verifican a mano con la
+ * misma aritmética que el resto de la batería, no contra un valor mágico.
+ */
+async function caso10() {
+  const f = sesiones(2);
+  escenario = {
+    barras: {
+      IOVA: barras(f, [2.20, 8.00], [2.20, 8.00]),
+      RDDT: barras(f, [146.60, 206.00], [146.60, 206.00]),
+      ORCL: barras(f, [120.00, 150.85]),
+      QCOM: barras(f, [143.50, 164.19]),
+      UBER: barras(f, [78.00, 78.82]),
+    },
+    cotizaciones: {
+      ORCL: { precio: 150.85, divisa: 'USD', variacionPct: 0 },
+      QCOM: { precio: 164.19, divisa: 'USD', variacionPct: 0 },
+      UBER: { precio: 78.82, divisa: 'USD', variacionPct: 0 },
+    },
+  };
+
+  const cartera = await calcularCartera([
+    linea({ ticker: 'IOVA', fecha_publicacion: f[0], peso_cartera: 4, precio_compra: 2.20, take_profit: 8.00 }),
+    linea({ ticker: 'RDDT', fecha_publicacion: f[0], peso_cartera: 4, precio_compra: 146.60, take_profit: 206.00 }),
+    linea({ ticker: 'ORCL', fecha_publicacion: f[0], peso_cartera: 4, precio_compra: 120.00 }),
+    linea({ ticker: 'QCOM', fecha_publicacion: f[0], peso_cartera: 4, precio_compra: 143.50 }),
+    linea({ ticker: 'UBER', fecha_publicacion: f[0], peso_cartera: 4, precio_compra: 78.00 }),
+  ]);
+
+  const { suma, total } = comprobarIdentidad('resumenPortfolio', cartera);
+  const r = cartera.resumenPortfolio;
+
+  t('resumenPortfolio · 3 abiertas, 2 cerradas',
+    r.posicionesAbiertas === 3 && r.posicionesCerradas === 2,
+    `abiertas ${r.posicionesAbiertas} · cerradas ${r.posicionesCerradas}`);
+
+  t('resumenPortfolio · capital desplegado 20,00 %', casiIgual(r.capitalDesplegadoPct, 20, 0.01),
+    `${r.capitalDesplegadoPct} %`);
+
+  // Contribuciones esperadas, calculadas a mano: peso 4 % × rentabilidad de la línea.
+  const contribucionEsperada = {
+    IOVA: 4 * (8.00 / 2.20 - 1),
+    RDDT: 4 * (206.00 / 146.60 - 1),
+    ORCL: 4 * (150.85 / 120.00 - 1),
+    QCOM: 4 * (164.19 / 143.50 - 1),
+    UBER: 4 * (78.82 / 78.00 - 1),
+  };
+  const todas = [...cartera.posiciones, ...cartera.cerradas];
+  for (const [tk, esperada] of Object.entries(contribucionEsperada)) {
+    const linea_ = todas.find((p) => p.ticker === tk);
+    t(`resumenPortfolio · contribución de ${tk} ≈ ${esperada.toFixed(2)} %`,
+      casiIgual(linea_?.contribucionPct, esperada, 0.02),
+      `publicada ${linea_?.contribucionPct} vs a mano ${esperada.toFixed(4)}`);
+  }
+
+  const retornoEsperado = Object.values(contribucionEsperada).reduce((a, b) => a + b, 0);
+  t('resumenPortfolio · retorno de cartera ≈ +13,81 %', casiIgual(retornoEsperado, 13.81, 0.05),
+    `a mano ${retornoEsperado.toFixed(4)}`);
+  t('resumenPortfolio · retornoPct coincide con la rentabilidad total',
+    casiIgual(r.retornoPct, total, margenRedondeo(5)),
+    `resumen ${r.retornoPct} vs total ${total}`);
+
+  const realizadoEsperado = contribucionEsperada.IOVA + contribucionEsperada.RDDT;
+  const noRealizadoEsperado = contribucionEsperada.ORCL + contribucionEsperada.QCOM + contribucionEsperada.UBER;
+  t('resumenPortfolio · retorno realizado (IOVA + RDDT)',
+    casiIgual(r.retornoRealizadoPct, realizadoEsperado, 0.03),
+    `publicado ${r.retornoRealizadoPct} vs a mano ${realizadoEsperado.toFixed(4)}`);
+  t('resumenPortfolio · retorno no realizado (ORCL + QCOM + UBER)',
+    casiIgual(r.retornoNoRealizadoPct, noRealizadoEsperado, 0.03),
+    `publicado ${r.retornoNoRealizadoPct} vs a mano ${noRealizadoEsperado.toFixed(4)}`);
+  t('resumenPortfolio · realizado + no realizado = retorno total',
+    casiIgual((r.retornoRealizadoPct ?? 0) + (r.retornoNoRealizadoPct ?? 0), r.retornoPct, margenRedondeo(5)),
+    `${r.retornoRealizadoPct} + ${r.retornoNoRealizadoPct} vs ${r.retornoPct}`);
+
+  const roicEsperado = (retornoEsperado / 20) * 100;
+  t('resumenPortfolio · ROIC ≈ +69,07 %', casiIgual(r.roicPct, roicEsperado, 0.3),
+    `publicado ${r.roicPct} vs a mano ${roicEsperado.toFixed(4)}`);
+}
+
+/*
+ * Caso 11 — sin cerradas o sin abiertas, el campo es null, no 0.
+ *
+ * Una sola línea viva: retornoRealizadoPct no tiene nada que sumar —ninguna
+ * posición se ha liquidado todavía— y publicar 0 leería como «rendimiento
+ * realizado plano» en vez de «no aplica». Tres estados, no dos.
+ */
+async function caso11() {
+  const f = sesiones(3);
+  escenario = {
+    barras: { N: barras(f, [50, 55, 60]) },
+    cotizaciones: { N: { precio: 60, divisa: 'USD', variacionPct: 0 } },
+  };
+  const cartera = await calcularCartera([
+    linea({ ticker: 'N', fecha_publicacion: f[0], precio_compra: 50 }),
+  ]);
+
+  t('sin cerradas · retornoRealizadoPct es null, no 0',
+    cartera.resumenPortfolio.retornoRealizadoPct === null,
+    `${cartera.resumenPortfolio.retornoRealizadoPct}`);
+  t('sin cerradas · retornoNoRealizadoPct sí tiene dato',
+    Number.isFinite(cartera.resumenPortfolio.retornoNoRealizadoPct),
+    `${cartera.resumenPortfolio.retornoNoRealizadoPct}`);
+}
+
 // ─────────────────────────────── ejecución ───────────────────────────────
 
 (async () => {
   for (const [nombre, caso] of [['caso 1', caso1], ['caso 2', caso2], ['caso 3', caso3], ['caso 4', caso4],
     ['caso 5', caso5], ['caso 5 bis', caso5bis], ['caso 5 ter', caso5ter], ['caso 6', caso6], ['caso 7', caso7],
-    ['caso 8', caso8], ['caso 9', caso9]]) {
+    ['caso 8', caso8], ['caso 9', caso9], ['caso 10', caso10], ['caso 11', caso11]]) {
     try {
       await caso();
     } catch (e) {
