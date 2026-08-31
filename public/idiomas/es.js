@@ -1075,6 +1075,10 @@ export default {
   'companias.hub.recientes': 'Cobertura reciente',
   'companias.hub.sectores': 'Cobertura por sector',
   'companias.hub.todas': 'Todas las compañías',
+  'companias.hub.posiciones': 'Posiciones activas',
+  'companias.hub.posiciones.nota': 'Compañías cubiertas con posición abierta en cartera',
+  'companias.cta.texto': 'Sigue nuestro research.',
+  'companias.cta.enlace': 'Ver agenda de catalizadores',
 
   // ── Ficha ──
   'companias.cotizacion.sinDato': 'Sin cotización disponible',

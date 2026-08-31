@@ -3008,6 +3008,143 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   text-align: end; font-variant-numeric: tabular-nums; font-size: 0.8rem; color: var(--tinta-mate);
 }
 
+/* ── Hero: eyebrow + título + subtítulo, con la traza real de SPY de fondo.
+   `padding-block` sigue el mismo `clamp()` que el hero de portada —espacio
+   negativo, no un valor fijo—. */
+#seccion-companias .companias-hero {
+  position: relative; overflow: hidden;
+  padding-block: clamp(40px, 7vw, 76px) var(--espacio-6);
+  border-block-end: 1px solid var(--linea);
+}
+#seccion-companias .companias-hero__interior { position: relative; z-index: 1; max-width: 58ch; }
+#seccion-companias .companias-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
+/* Puramente decorativa: sin eje, sin tooltip, tenue de sobra para no competir
+   con el texto que tiene encima. Se oculta en móvil —no vale el coste de red
+   ahí, y `cargarTrazaHeroCompanias()` tampoco la pide—. */
+#seccion-companias .companias-hero__traza {
+  position: absolute; inset-block-end: 0; inset-inline-end: 0;
+  width: min(48%, 520px); height: 110px;
+  opacity: 0; transition: opacity 480ms ease;
+}
+#seccion-companias .companias-hero__traza--visible { opacity: 1; }
+#seccion-companias .companias-hero__traza-linea {
+  fill: none; stroke: var(--tinta-mate); stroke-width: 1; opacity: 0.55;
+  vector-effect: non-scaling-stroke;
+}
+@media (max-width: 640px) {
+  #seccion-companias .companias-hero__traza { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-companias .companias-hero__traza { transition: none; }
+}
+
+/* ── Featured Research: pieza principal asimétrica, dos columnas. La tesis y
+   la identidad mandan a la izquierda; las cifras, tabulares, a la derecha —el
+   mismo lenguaje de `.dato` que el resto de la plataforma, no uno nuevo. */
+#seccion-companias .destacada-principal {
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
+  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
+  cursor: pointer;
+}
+#seccion-companias .destacada-principal:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+#seccion-companias .destacada-principal__ticker {
+  display: block; font-family: var(--mono, monospace);
+  font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
+}
+#seccion-companias .destacada-principal__nombre {
+  font-family: var(--geo); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
+  margin-top: 6px; transition: color var(--transicion);
+}
+#seccion-companias .destacada-principal:hover .destacada-principal__nombre { color: var(--acento); }
+#seccion-companias .destacada-principal__tesis {
+  margin-top: 14px; max-width: 62ch; color: var(--tinta-secundaria); line-height: 1.6;
+}
+#seccion-companias .destacada-principal__enlace {
+  display: inline-block; margin-top: 14px; color: var(--acento); font-weight: 500;
+}
+#seccion-companias .destacada-principal__derecha {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--espacio-4);
+  align-content: start; padding-inline-start: var(--espacio-6);
+  border-inline-start: 1px solid var(--linea);
+}
+#seccion-companias .companias-destacadas__resto {
+  display: flex; flex-direction: column;
+}
+@media (max-width: 720px) {
+  #seccion-companias .destacada-principal { grid-template-columns: 1fr; }
+  #seccion-companias .destacada-principal__derecha {
+    border-inline-start: none; border-block-start: 1px solid var(--linea);
+    padding-inline-start: 0; padding-block-start: var(--espacio-4);
+  }
+}
+
+/* ── Latest Coverage: fila con línea divisoria, sin tarjeta. El hover ya movía
+   solo el color y «Ver informe →» —ver comentario arriba—; aquí se añade un
+   desplazamiento lateral leve, propio de la fila compacta. */
+#seccion-companias .tarjeta-compania--compacta {
+  transition: transform var(--transicion), border-color var(--transicion);
+}
+#seccion-companias .tarjeta-compania--compacta:hover { transform: translateX(4px); }
+@media (prefers-reduced-motion: reduce) {
+  #seccion-companias .tarjeta-compania--compacta {
+    transition: border-color var(--transicion), background var(--transicion);
+  }
+  #seccion-companias .tarjeta-compania--compacta:hover { transform: none; }
+}
+
+/* ── All Companies — grid: identidad visual (marca de agua tipográfica) +
+   sparkline diferido + hover propio de card, distinto del de fila. */
+#seccion-companias .rejilla-companias .tarjeta-compania {
+  position: relative; overflow: hidden;
+  transition: border-color var(--transicion), background var(--transicion), transform var(--transicion);
+}
+#seccion-companias .rejilla-companias .tarjeta-compania:hover {
+  background: var(--superficie-alt); transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-companias .rejilla-companias .tarjeta-compania { transition: border-color var(--transicion), background var(--transicion); }
+  #seccion-companias .rejilla-companias .tarjeta-compania:hover { transform: none; }
+}
+/* La inicial, grande y casi invisible, detrás de todo el contenido real —que
+   se eleva con z-index para que nunca pierda legibilidad ni contraste. */
+#seccion-companias .tarjeta-compania__marca {
+  position: absolute; top: -6px; right: 2px; z-index: 0;
+  font-family: var(--geo); font-size: 5.2rem; line-height: 1; font-weight: 500;
+  color: var(--acento); opacity: 0.07; pointer-events: none; user-select: none;
+}
+#seccion-companias .tarjeta-compania__cabecera,
+#seccion-companias .tarjeta-compania__meta,
+#seccion-companias .tarjeta-compania__datos,
+#seccion-companias .tarjeta-compania__pie,
+#seccion-companias .tarjeta-compania__chispa {
+  position: relative; z-index: 1;
+}
+#seccion-companias .tarjeta-compania__chispa {
+  height: 28px; margin-top: 2px;
+  opacity: 0; transition: opacity 320ms ease;
+}
+#seccion-companias .tarjeta-compania__chispa--visible { opacity: 1; }
+#seccion-companias .tarjeta-compania__chispa svg { width: 100%; height: 100%; display: block; }
+#seccion-companias .tarjeta-compania__chispa-linea {
+  fill: none; stroke: var(--tinta-mate); stroke-width: 1.4; vector-effect: non-scaling-stroke;
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-companias .tarjeta-compania__chispa { transition: none; }
+}
+
+/* ── Búsqueda y filtro: fundido CSS puro al reorganizar la rejilla. Nunca FLIP
+   ni reordenación animada de posiciones —la rejilla se reconstruye entera y
+   solo su opacidad transiciona. */
+#seccion-companias .rejilla-companias { transition: opacity 200ms ease; }
+@media (prefers-reduced-motion: reduce) {
+  #seccion-companias .rejilla-companias { transition: none; }
+}
+
+/* ── CTA final. */
+#seccion-companias .companias-cta { text-align: center; padding-block: var(--espacio-5) 0; }
+#seccion-companias .companias-cta__texto { color: var(--tinta-secundaria); }
+#seccion-companias .companias-cta .enlace-avance { margin-inline-start: 8px; }
+
 /* Catalizadores próximos en la ficha: fila tipográfica con tipo y fecha, sin
    caja — mismo lenguaje visual que `.dato` y `.fila-informe` de esta vista. */
 .lista-catalizadores { list-style: none; display: flex; flex-direction: column; }

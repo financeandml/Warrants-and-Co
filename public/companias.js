@@ -58,12 +58,22 @@ function claseRecomendacion(rec) {
  * Una sola función: Featured, Latest y Grid pintan la misma tarjeta, nunca
  * cuatro variantes que puedan divergir en lo que cuentan de una compañía.
  */
-function tarjetaCompania(c, alAbrir, densidad = 'completa') {
+function tarjetaCompania(c, alAbrir, densidad = 'completa', cargarSerie = null) {
   const tarjeta = elemento('article',
     `tarjeta-compania${densidad === 'compacta' ? ' tarjeta-compania--compacta' : ''}`);
   tarjeta.tabIndex = 0;
   tarjeta.setAttribute('role', 'button');
   tarjeta.setAttribute('aria-label', t('companias.tarjeta.abrir', { empresa: c.empresa }));
+
+  if (densidad === 'completa') {
+    // Marca de agua tipográfica: la inicial del ticker (o del nombre, si no hay
+    // ticker), en `--acento` a opacidad muy baja. Puro adorno de fondo —por eso
+    // `aria-hidden`—, nunca un color por compañía, que sería un sistema nuevo.
+    const inicial = (c.ticker || c.empresa || '?').trim().charAt(0).toUpperCase();
+    const marca = elemento('span', 'tarjeta-compania__marca', inicial);
+    marca.setAttribute('aria-hidden', 'true');
+    tarjeta.appendChild(marca);
+  }
 
   const cabecera = elemento('div', 'tarjeta-compania__cabecera');
   const identidad = elemento('div');
@@ -106,6 +116,10 @@ function tarjetaCompania(c, alAbrir, densidad = 'completa') {
     }
     pie.appendChild(elemento('span', 'tarjeta-compania__enlace', t('companias.tarjeta.ver')));
     tarjeta.appendChild(pie);
+
+    if (c.ticker && typeof cargarSerie === 'function') {
+      tarjeta.appendChild(chispaDiferida(c.ticker, cargarSerie));
+    }
   }
 
   const abrir = () => alAbrir(c.ticker ?? c.clave);
@@ -116,9 +130,110 @@ function tarjetaCompania(c, alAbrir, densidad = 'completa') {
   return tarjeta;
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg';
+
+/**
+ * Sparkline de card, con carga diferida por `IntersectionObserver`: la card se
+ * pinta completa desde el primer momento —con la marca de agua tipográfica—, y
+ * la petición de serie solo se dispara cuando entra en el viewport. Si falla,
+ * tarda o el ticker no tiene serie, el hueco se queda vacío sin más —nunca un
+ * error visible ni una carga que bloquee el resto de la tarjeta.
+ */
+function chispaDiferida(ticker, cargarSerie) {
+  const caja = elemento('div', 'tarjeta-compania__chispa');
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', '0 0 100 28');
+  svg.setAttribute('preserveAspectRatio', 'none');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.setAttribute('focusable', 'false');
+  const linea = document.createElementNS(SVG_NS, 'polyline');
+  linea.setAttribute('class', 'tarjeta-compania__chispa-linea');
+  svg.appendChild(linea);
+  caja.appendChild(svg);
+
+  const observador = new IntersectionObserver((entradas) => {
+    for (const entrada of entradas) {
+      if (!entrada.isIntersecting) continue;
+      observador.disconnect(); // una sola petición por card, nunca observers colgados.
+      cargarSerie(ticker)
+        .then((r) => {
+          const puntos = trazarPuntos(r?.serie, 100, 28);
+          if (!puntos) return; // sin serie utilizable: la card se queda tal cual.
+          linea.setAttribute('points', puntos);
+          requestAnimationFrame(() => caja.classList.add('tarjeta-compania__chispa--visible'));
+        })
+        .catch(() => {});
+      return;
+    }
+  }, { rootMargin: '120px' });
+  observador.observe(caja);
+
+  return caja;
+}
+
+/** Traza una polilínea normalizada al lienzo `ancho×alto` a partir de una serie
+ * `{fecha, valor}`. Devuelve `null` si no hay al menos dos puntos con valor. */
+function trazarPuntos(serie, ancho, alto) {
+  if (!Array.isArray(serie) || serie.length < 2) return null;
+  const valores = serie.map((p) => p?.valor).filter(Number.isFinite);
+  if (valores.length < 2) return null;
+  const min = Math.min(...valores);
+  const max = Math.max(...valores);
+  const rango = max - min || 1;
+  const n = serie.length;
+  return serie
+    .map((p, i) => (Number.isFinite(p?.valor)
+      ? `${(i / (n - 1)) * ancho},${alto - ((p.valor - min) / rango) * alto}`
+      : null))
+    .filter(Boolean)
+    .join(' ');
+}
+
+/**
+ * Featured Research, pieza principal: dos columnas, jerarquía muy superior al
+ * resto —ticker, nombre y tesis a un lado; recommendation/target/current/upside
+ * al otro—. Reutiliza los mismos helpers de formato que `tarjetaCompania`, no
+ * inventa una segunda lectura de los mismos campos.
+ */
+function tarjetaDestacadaPrincipal(c, alAbrir) {
+  const pieza = elemento('article', 'destacada-principal');
+  pieza.tabIndex = 0;
+  pieza.setAttribute('role', 'button');
+  pieza.setAttribute('aria-label', t('companias.tarjeta.abrir', { empresa: c.empresa }));
+
+  const izquierda = elemento('div', 'destacada-principal__izquierda');
+  izquierda.appendChild(elemento('span', 'destacada-principal__ticker', c.ticker ?? '—'));
+  izquierda.appendChild(elemento('h3', 'destacada-principal__nombre', c.empresa));
+  const resumen = c.informes?.find((i) => i.resumen)?.resumen;
+  izquierda.appendChild(elemento('p', 'destacada-principal__tesis',
+    resumen || t('companias.tesis.sinResumen')));
+  izquierda.appendChild(elemento('span', 'destacada-principal__enlace', t('companias.tarjeta.ver')));
+  pieza.appendChild(izquierda);
+
+  const derecha = elemento('div', 'destacada-principal__derecha');
+  derecha.appendChild(dato(t('companias.dato.recomendacion'),
+    c.recomendacion ?? noDisponible(), claseRecomendacion(c.recomendacion)));
+  derecha.appendChild(dato(t('companias.dato.objetivo'),
+    Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
+  derecha.appendChild(dato(t('companias.dato.actual'),
+    c.cotizacion?.disponible ? importe(cifra(c.cotizacion.precio), c.cotizacion.divisa) : noDisponible()));
+  const recorrido = c.recorridoObjetivo;
+  derecha.appendChild(dato(t('companias.dato.recorrido'),
+    recorrido?.disponible ? formatearPorcentaje(recorrido.porcentaje) : noDisponible(),
+    recorrido?.disponible ? claseVariacion(recorrido.porcentaje) : ''));
+  pieza.appendChild(derecha);
+
+  const abrir = () => alAbrir(c.ticker ?? c.clave);
+  pieza.addEventListener('click', abrir);
+  pieza.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
+  });
+  return pieza;
+}
+
 // ───────────────────────────────── listado ─────────────────────────────────
 
-/** Cabecera del hub: compañías cubiertas, cobertura activa, informes totales. */
+/** Cabecera del hub: compañías cubiertas, informes, sectores y posiciones activas. */
 export function pintarCabeceraCompanias(companias) {
   const caja = $('#companias-metricas');
   if (!caja) return;
@@ -133,28 +248,47 @@ export function pintarCabeceraCompanias(companias) {
   };
 
   const total = companias.length;
-  // «Cobertura activa»: no existe un campo de vigencia en el modelo, y
-  // `agrupar()` solo crea una compañía a partir de informes existentes —toda
-  // compañía listada tiene ya `totalInformes >= 1`—, así que este criterio
-  // coincide siempre con el total. Se deja explícito en vez de inventar un
-  // umbral de fecha que parecería preciso sin serlo (regla 1 de CLAUDE.md).
-  const activas = companias.filter((c) => c.totalInformes > 0).length;
   const informes = companias.reduce((a, c) => a + (c.totalInformes ?? 0), 0);
+  const sectores = new Set(companias.map((c) => c.sector).filter(Boolean)).size;
+
+  // Posiciones activas: `portfolioStatus` solo llega con `datos.fichas`
+  // (`detalle=1`); si ninguna compañía lo trae, el motor de cartera no se
+  // resolvió en esta carga y la cifra se rotula N/A —tercer estado explícito—
+  // en vez de mostrar un cero que afirmaría «cero posiciones abiertas».
+  const conEstado = companias.filter((c) => 'portfolioStatus' in c);
+  const posiciones = conEstado.length
+    ? String(conEstado.filter((c) => c.portfolioStatus === 'OPEN').length)
+    : noDisponible();
 
   metrica(t('companias.hub.cubiertas'), String(total), null, true);
-  metrica(t('companias.hub.activas'), String(activas), t('companias.hub.activas.nota'));
   metrica(t('companias.hub.informes'), String(informes));
+  metrica(t('companias.hub.sectores'), String(sectores));
+  metrica(t('companias.hub.posiciones'), posiciones, t('companias.hub.posiciones.nota'));
 }
 
-/** Featured Research: compañías con algún informe destacado. */
+/**
+ * Featured Research: la destacada más reciente compone una pieza única
+ * asimétrica, muy por encima del resto en jerarquía; si hay más destacadas,
+ * van debajo en una lista compacta —nunca repetidas a la misma escala.
+ */
 function pintarDestacadasCompanias(companias, alAbrir) {
   const bloque = $('#bloque-destacadas-companias');
   const caja = $('#destacadas-companias');
   if (!bloque || !caja) return;
-  const destacadas = companias.filter((c) => c.destacada);
+  const destacadas = companias
+    .filter((c) => c.destacada)
+    .sort((a, b) => new Date(b.ultimaPublicacion) - new Date(a.ultimaPublicacion));
   caja.textContent = '';
   bloque.hidden = destacadas.length === 0;
-  for (const c of destacadas) caja.appendChild(tarjetaCompania(c, alAbrir, 'completa'));
+  if (!destacadas.length) return;
+
+  const [principal, ...resto] = destacadas;
+  caja.appendChild(tarjetaDestacadaPrincipal(principal, alAbrir));
+  if (resto.length) {
+    const lista = elemento('div', 'companias-destacadas__resto');
+    for (const c of resto) lista.appendChild(tarjetaCompania(c, alAbrir, 'compacta'));
+    caja.appendChild(lista);
+  }
 }
 
 /** Latest Coverage: las más recientes por fecha de última publicación. */
@@ -202,7 +336,7 @@ function pintarSectoresCobertura(companias) {
 }
 
 /** Orquesta el hub entero a partir de una carga ya resuelta. */
-export function pintarHubCompanias(datos, alAbrir) {
+export function pintarHubCompanias(datos, alAbrir, cargarSerie = null) {
   // `datos.fichas` —modo `detalle=1`— trae cotización y recorrido por
   // compañía; sin él, se usa el listado ligero y esas dos cifras quedan N/A
   // explícito en la tarjeta, nunca inventadas en el cliente.
@@ -211,10 +345,10 @@ export function pintarHubCompanias(datos, alAbrir) {
   pintarDestacadasCompanias(companias, alAbrir);
   pintarRecientesCompanias(companias, alAbrir);
   pintarSectoresCobertura(companias);
-  pintarCompanias({ ...datos, companias }, alAbrir);
+  pintarCompanias({ ...datos, companias }, alAbrir, cargarSerie);
 }
 
-export function pintarCompanias(datos, alAbrir) {
+export function pintarCompanias(datos, alAbrir, cargarSerie = null) {
   const rejilla = $('#rejilla-companias');
   const estado = $('#estado-companias');
   if (!rejilla) return;
@@ -241,7 +375,33 @@ export function pintarCompanias(datos, alAbrir) {
     return;
   }
 
-  for (const c of datos.companias) rejilla.appendChild(tarjetaCompania(c, alAbrir, 'completa'));
+  for (const c of datos.companias) rejilla.appendChild(tarjetaCompania(c, alAbrir, 'completa', cargarSerie));
+
+  // Fundido CSS puro al reorganizar por búsqueda/filtro: nunca FLIP ni
+  // reordenación animada de posiciones. La rejilla ya se reconstruyó entera
+  // arriba; aquí solo se pide un fotograma para que la transición de opacidad
+  // tenga un punto de partida distinto del de llegada.
+  rejilla.classList.add('rejilla-companias--transicion');
+  rejilla.style.opacity = '0';
+  requestAnimationFrame(() => { rejilla.style.opacity = '1'; });
+}
+
+/**
+ * Traza decorativa del hero: histórico real del S&P 500, sin eje ni tooltip.
+ * `serieHero` es `{disponible, serie}` —ya resuelto por quien hizo la
+ * petición—; si no hay serie utilizable el SVG se queda vacío y el hero sigue
+ * completo sin ella.
+ */
+export function pintarTrazaHeroCompanias(serieHero) {
+  const svg = $('#companias-hero-traza');
+  if (!svg) return;
+  const linea = svg.querySelector('.companias-hero__traza-linea');
+  if (!linea) return;
+
+  const puntos = serieHero?.disponible ? trazarPuntos(serieHero.serie, 400, 120) : null;
+  if (!puntos) return;
+  linea.setAttribute('points', puntos);
+  requestAnimationFrame(() => svg.classList.add('companias-hero__traza--visible'));
 }
 
 /** Rellena el desplegable de sectores conservando la selección vigente. */

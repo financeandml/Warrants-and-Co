@@ -504,23 +504,33 @@
   <section class="seccion" id="seccion-companias" data-seccion-panel="companias" hidden>
     <div class="contenedor">
 
-      <div class="titulo-seccion">
-        <div>
+      <!-- Hero editorial: eyebrow + título + subtítulo, con una traza MUY fina y
+           tenue del histórico real del S&P 500 de fondo —puramente decorativa,
+           sin eje ni tooltip—. Se pinta con `pintarTrazaHeroCompanias()` desde
+           `/api/mercado/serie/SPY`; si la petición falla o tarda, el hero queda
+           igual de completo sin ella. Oculta en móvil (ver CSS). -->
+      <div class="companias-hero">
+        <svg class="companias-hero__traza" id="companias-hero-traza"
+             viewBox="0 0 400 120" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+          <polyline class="companias-hero__traza-linea"></polyline>
+        </svg>
+        <div class="companias-hero__interior">
           <p class="etiqueta-superior" data-i18n="companias.etiqueta">Análisis</p>
           <h1 data-i18n="companias.titulo">Compañías</h1>
+          <p class="companias-hero__subtitulo" data-i18n="companias.hub.subtitulo">
+            Cobertura fundamental de las compañías bajo seguimiento.</p>
         </div>
-        <div class="estado-datos" id="estado-companias"></div>
       </div>
+      <div class="estado-datos" id="estado-companias"></div>
 
       <!-- ── Listado ── -->
       <div id="vista-companias-lista">
 
-        <!-- Cabecera del hub: subtítulo + tres métricas, mismo patrón que
-             `#resumen-portfolio` de Cartera (número grande + filete + cifras
-             menores). `pintarCabeceraCompanias()` la rellena. -->
+        <!-- Cabecera del hub: cuatro métricas —Companies / Reports / Sectors /
+             Active Positions—, mismo patrón que `#resumen-portfolio` de Cartera
+             (número grande + filete + cifras menores). `pintarCabeceraCompanias()`
+             la rellena. -->
         <div class="companias-cabecera">
-          <p class="companias-cabecera__subtitulo" data-i18n="companias.hub.subtitulo">
-            Cobertura fundamental de las compañías bajo seguimiento.</p>
           <div class="companias-metricas" id="companias-metricas"></div>
         </div>
 
@@ -560,6 +570,18 @@
           </form>
 
           <div class="rejilla-companias" id="rejilla-companias" aria-live="polite"></div>
+        </section>
+
+        <!-- CTA final: navegación SPA hacia la agenda de catalizadores, no un
+             <a href> suelto —`data-ruta` es lo que intercepta el router. -->
+        <section class="companias-bloque companias-cta">
+          <p class="companias-cta__texto">
+            <span data-i18n="companias.cta.texto">Sigue nuestro research.</span>
+            <a class="enlace-avance" href="#/catalizadores" data-ruta>
+              <span data-i18n="companias.cta.enlace">Ver agenda de catalizadores</span>
+              <span class="enlace-avance__flecha">→</span>
+            </a>
+          </p>
         </section>
       </div>
 

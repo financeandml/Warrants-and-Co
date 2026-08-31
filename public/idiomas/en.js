@@ -1027,6 +1027,10 @@ export default {
   'companias.hub.recientes': 'Latest coverage',
   'companias.hub.sectores': 'Coverage by sector',
   'companias.hub.todas': 'All companies',
+  'companias.hub.posiciones': 'Active positions',
+  'companias.hub.posiciones.nota': 'Covered companies with an open portfolio position',
+  'companias.cta.texto': 'Follow our research.',
+  'companias.cta.enlace': 'View the catalyst calendar',
 
   // ── Profile ──
   'companias.cotizacion.sinDato': 'No quote available',

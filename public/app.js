@@ -23,7 +23,7 @@ import {
   pintarAlcance, pintarTablaInusual, pintarDestacadas, construirDetalleInusual,
   pintarCadena, pintarMapaInteres, pintarFlujo, reiniciarPaginacion,
 } from './opciones.js';
-import { pintarCompanias, pintarSectores, pintarFicha, pintarHubCompanias } from './companias.js';
+import { pintarCompanias, pintarSectores, pintarFicha, pintarHubCompanias, pintarTrazaHeroCompanias } from './companias.js';
 import {
   pintarAgenda, pintarCarencias, pintarFiltros as pintarFiltrosCatalizadores,
 } from './catalizadores.js';
@@ -65,7 +65,13 @@ const estado = {
   grafico: null,
   filtrosNoticias: {},
   paginaNoticias: 1,
-  companias: { q: '', sector: '', ficha: null, lista: null, datosFicha: null },
+  companias: {
+    q: '', sector: '', ficha: null, lista: null, datosFicha: null,
+    // Series por ticker para el sparkline diferido de cada card, y la traza del
+    // hero —una sola petición por símbolo, cacheada para no repetirla al
+    // repintar por idioma ni al volver a entrar en la sección.
+    seriesTicker: new Map(), trazaHero: null,
+  },
   catalizadores: { horizonte: 'UPCOMING', compania: '', tipo: '', agenda: null },
   vocabulariosNoticias: null,
   opciones: { estado: null, inusual: null, cadena: null, flujo: null, pestana: 'inusual', filtros: {} },
@@ -1741,6 +1747,10 @@ async function cargarCompanias() {
   // (`datos.fichas`), en vez de que el cliente pida la ficha una a una.
   parametros.set('detalle', '1');
 
+  // La traza del hero es independiente del listado —no bloquea su pintado— y se
+  // pide una sola vez: se cachea en `estado.companias.trazaHero`.
+  cargarTrazaHeroCompanias();
+
   try {
     // Se guarda la carga para repintar al cambiar de idioma sin volver a pedirla.
     estado.companias.lista = await api(`/api/companias?${parametros}`);
@@ -1755,7 +1765,44 @@ function pintarListaCompanias() {
   const datos = estado.companias.lista;
   if (!datos) return;
   pintarSectores(datos.sectores, estado.companias.sector);
-  pintarHubCompanias(datos, (clave) => abrirCompania(clave));
+  pintarHubCompanias(datos, (clave) => abrirCompania(clave), cargarSerieCompania);
+}
+
+/**
+ * Serie por ticker para el sparkline diferido de cada card. Una llamada por
+ * símbolo, cacheada en `estado.companias.seriesTicker` —cachea la promesa, no
+ * solo el resultado, para que dos cards del mismo ticker que entren en el
+ * viewport casi a la vez no disparen dos peticiones—. Si falla, el sparkline
+ * simplemente no aparece: nunca un hueco vacío ni un error visible.
+ */
+function cargarSerieCompania(ticker) {
+  if (estado.companias.seriesTicker.has(ticker)) return estado.companias.seriesTicker.get(ticker);
+  const promesa = api(`/api/mercado/serie/${encodeURIComponent(ticker)}?dias=90`)
+    .then((r) => ({ disponible: true, serie: r.serie ?? [] }))
+    .catch(() => ({ disponible: false, serie: [] }));
+  estado.companias.seriesTicker.set(ticker, promesa);
+  return promesa;
+}
+
+/**
+ * Traza decorativa del hero: histórico real de SPY, mismo endpoint que ya usa
+ * `cargarSeriesBenchmark()`. Decorativa y prescindible —se omite en móvil, no
+ * vale el coste de red ahí— y nunca bloquea el resto del hero: si falla o
+ * tarda, el hero queda igual de completo sin la traza.
+ */
+async function cargarTrazaHeroCompanias() {
+  if (estado.companias.trazaHero) {
+    pintarTrazaHeroCompanias(estado.companias.trazaHero);
+    return;
+  }
+  if (window.matchMedia('(max-width: 640px)').matches) return;
+  try {
+    const r = await api('/api/mercado/serie/SPY?dias=180');
+    estado.companias.trazaHero = { disponible: true, serie: r.serie ?? [] };
+  } catch {
+    estado.companias.trazaHero = { disponible: false, serie: [] };
+  }
+  pintarTrazaHeroCompanias(estado.companias.trazaHero);
 }
 
 /** Abre la ficha de una compañía. */
