@@ -166,7 +166,13 @@ function chispaDiferida(ticker, cargarSerie) {
       return;
     }
   }, { rootMargin: '120px' });
-  observador.observe(caja);
+  // `caja` todavía no está insertada en el documento en este punto —esta
+  // función devuelve el nodo y quien la llama lo añade después—, y
+  // observar un nodo desconectado deja al observer sin disparar nunca: se
+  // registra la intersección, pero como el nodo no tiene todavía caja de
+  // layout real, no llega ninguna entrada. Un `requestAnimationFrame` basta
+  // para que la inserción síncrona del llamador ya haya ocurrido.
+  requestAnimationFrame(() => observador.observe(caja));
 
   return caja;
 }
