@@ -1947,8 +1947,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarRealizadoComparativa(datos);
   pintarCuadroMando(datos);
   pintarGrafico(datos);
-  pintarPosiciones(datos);
-  pintarCerradas(datos);
+  pintarTablaCartera(datos);
   pintarContribucion(datos);
   pintarConciliacion(datos);
   pintarEstadisticos(datos);
@@ -2324,37 +2323,115 @@ function celdaRecorrido(p) {
   return celda;
 }
 
-function pintarPosiciones(datos) {
+/**
+ * Fila de detalle expandible: lo que sobraba de las dos tablas separadas —
+ * recorrido a TP, take profit, precio objetivo y recomendación de las
+ * abiertas; fecha de cierre y motivo de las cerradas— sin segunda fuente,
+ * de los mismos campos de `p` que ya pintó la fila principal.
+ *
+ * Varios paneles pueden estar abiertos a la vez: cada fila lleva su propio
+ * estado en su botón (`aria-expanded`) y no cierra a las demás al abrirse.
+ * Es una tabla de lectura comparativa —se abre una posición para ver por qué
+ * rindió lo que rindió mientras se sigue viendo la fila de al lado—, y
+ * obligar a una sola abierta estorbaría justo esa comparación.
+ */
+function filaDetalle(p, idDetalle) {
+  const fila = document.createElement('tr');
+  fila.id = idDetalle;
+  fila.className = 'fila-cartera__detalle';
+  fila.hidden = true;
+
+  const celda = document.createElement('td');
+  celda.colSpan = 7;
+
+  const lista = elemento('dl', 'fila-cartera__panel');
+  const par = (etiqueta, valor) => {
+    lista.appendChild(elemento('dt', null, etiqueta));
+    const dd = document.createElement('dd');
+    if (valor instanceof Node) dd.appendChild(valor);
+    else dd.textContent = valor;
+    lista.appendChild(dd);
+  };
+
+  par(t('cartera.fila.detalle.alta'), formatearFecha(p.fechaEntrada ?? p.fechaAlta));
+
+  if (p.cerrada) {
+    par(t('cartera.fila.detalle.cierre'), formatearFecha(p.fechaCierre));
+    par(t('cartera.cerradas.col.motivo'), p.motivoCierre ?? t('cartera.cerradas.motivo'));
+  } else {
+    par(t('cartera.col.takeProfit'), formatearMoneda(p.takeProfit, p.divisa));
+    par(t('cartera.col.recorrido'), celdaRecorrido(p).firstChild ?? document.createTextNode('—'));
+    par(t('cartera.col.precioObjetivo'), formatearMoneda(p.precioObjetivo, p.divisa));
+    par(t('cartera.col.recomendacion'), p.recomendacion ?? '—');
+  }
+
+  celda.appendChild(lista);
+  fila.appendChild(celda);
+  return fila;
+}
+
+/**
+ * Tabla única de posiciones, abiertas y cerradas fundidas por `Status`.
+ *
+ * Antes eran dos tablas —`pintarPosiciones()` y `pintarCerradas()`— con
+ * columnas propias cada una. Fundidas, las columnas comunes (peso, compra,
+ * actual/salida, rentabilidad, contribución) se leen de un único cálculo
+ * —`pesoVigente`/`peso`, `contribucionPct`— para las dos clases de fila, y lo
+ * que solo aplicaba a una pasa a `filaDetalle()`.
+ */
+function pintarTablaCartera(datos) {
   const cuerpo = $('#cuerpo-posiciones');
   cuerpo.textContent = '';
 
-  for (const p of datos.posiciones ?? []) {
+  const posiciones = datos.posiciones ?? [];
+  const cerradas = datos.cerradas ?? [];
+  const filas = [...posiciones, ...cerradas];
+
+  for (const p of filas) {
+    const cerrada = cerradas.includes(p);
+    const idDetalle = `detalle-${cerrada ? 'cerrada' : 'abierta'}-${p.ticker}`;
+
     const fila = document.createElement('tr');
+    if (cerrada) fila.className = 'cerrada';
 
-    const valor = elemento('td', 'celda-empresa celda-valor');
-    valor.appendChild(document.createTextNode(p.empresa));
-    const sub = elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`);
-    valor.appendChild(sub);
-    fila.appendChild(valor);
+    const celdaPosicion = elemento('td', 'celda-empresa celda-valor');
+    const boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'fila-cartera__despliegue';
+    boton.setAttribute('aria-expanded', 'false');
+    boton.setAttribute('aria-controls', idDetalle);
+    boton.setAttribute('aria-label', t('cartera.fila.desplegar', { ticker: p.ticker }));
+    boton.appendChild(elemento('span', 'fila-cartera__glifo', '+'));
+    const textoPosicion = elemento('span', null);
+    textoPosicion.appendChild(document.createTextNode(p.empresa));
+    textoPosicion.appendChild(elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`));
+    boton.appendChild(textoPosicion);
+    celdaPosicion.appendChild(boton);
+    fila.appendChild(celdaPosicion);
 
+    fila.appendChild(elemento('td', 'fila-cartera__estado',
+      t(cerrada ? 'cartera.estado.cerrada' : 'cartera.estado.abierta')));
     fila.appendChild(elemento('td', 'num', porcentaje(p.pesoVigente ?? p.peso)));
-    fila.appendChild(elemento('td', null, formatearFecha(p.fechaEntrada ?? p.fechaAlta)));
     fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioEntrada, p.divisa)));
-    fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioActual, p.divisa)));
-    fila.appendChild(elemento('td', `num ${claseVariacion(p.variacionDiaPct)}`, formatearPorcentaje(p.variacionDiaPct)));
-    fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`, formatearPorcentaje(p.rentabilidadPct)));
-    fila.appendChild(elemento('td', 'num', formatearMoneda(p.takeProfit, p.divisa)));
-    fila.appendChild(celdaRecorrido(p));
-    fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioObjetivo, p.divisa)));
-
-    const rec = document.createElement('td');
-    if (p.recomendacion) rec.appendChild(elemento('span', 'distintivo distintivo--fuerte', p.recomendacion));
-    else rec.textContent = '—';
-    fila.appendChild(rec);
+    fila.appendChild(elemento('td', 'num',
+      formatearMoneda(cerrada ? p.precioCierre : p.precioActual, p.divisa)));
+    fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`,
+      formatearPorcentaje(p.rentabilidadPct)));
+    fila.appendChild(elemento('td', `num ${claseVariacion(p.contribucionPct)}`,
+      Number.isFinite(p.contribucionPct) ? formatearPorcentaje(p.contribucionPct) : '—'));
 
     cuerpo.appendChild(fila);
-  }
 
+    const panel = filaDetalle({ ...p, cerrada }, idDetalle);
+    cuerpo.appendChild(panel);
+
+    boton.addEventListener('click', () => {
+      const abierto = boton.getAttribute('aria-expanded') === 'true';
+      boton.setAttribute('aria-expanded', String(!abierto));
+      boton.querySelector('.fila-cartera__glifo').textContent = abierto ? '+' : '–';
+      panel.hidden = abierto;
+    });
+  }
 }
 
 /**
@@ -2393,38 +2470,6 @@ function pintarMetodologia(datos) {
   }
 }
 
-/** Posiciones liquidadas al alcanzar su take profit. */
-function pintarCerradas(datos) {
-  const tarjeta = $('#tarjeta-cerradas');
-  const cuerpo = $('#cuerpo-cerradas');
-  const cerradas = datos.cerradas ?? [];
-
-  cuerpo.textContent = '';
-  if (!cerradas.length) { tarjeta.hidden = true; return; }
-  tarjeta.hidden = false;
-
-  for (const p of cerradas) {
-    const fila = document.createElement('tr');
-
-    const valor = elemento('td', 'celda-empresa celda-valor');
-    valor.appendChild(document.createTextNode(p.empresa));
-    valor.appendChild(elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`));
-    fila.appendChild(valor);
-
-    fila.appendChild(elemento('td', null, formatearFecha(p.fechaEntrada ?? p.fechaAlta)));
-    fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioEntrada, p.divisa)));
-    fila.appendChild(elemento('td', null, formatearFecha(p.fechaCierre)));
-    fila.appendChild(elemento('td', 'num', formatearMoneda(p.precioCierre, p.divisa)));
-    fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`, formatearPorcentaje(p.rentabilidadPct)));
-
-    const motivo = document.createElement('td');
-    motivo.appendChild(elemento('span', 'distintivo distintivo--fuerte',
-      p.motivoCierre ?? t('cartera.cerradas.motivo')));
-    fila.appendChild(motivo);
-
-    cuerpo.appendChild(fila);
-  }
-}
 
 /**
  * Análisis de contribución: una barra horizontal por posición, abierta o

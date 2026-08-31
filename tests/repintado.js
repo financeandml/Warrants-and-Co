@@ -150,7 +150,7 @@ const AREAS_OCULTAS = false;
 
   seccion('\n  ── cartera · castellano de partida ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
-  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Peso actual');
+  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Estado');
   // Pintado en JavaScript: la liquidez de la composición y la nota del total de la
   // conciliación. Se afirman en los dos idiomas —la nota, por la palabra que cambia—
   // porque una tabla que no se repintara conservaría el castellano de partida.
@@ -187,7 +187,7 @@ const AREAS_OCULTAS = false;
     (v) => v && /\(1 año\)/.test(v) && !/756/.test(v));
   await compConDatos('porcentaje con espacio duro',
     '#cuerpo-posiciones', '#cuerpo-posiciones tr',
-    '#cuerpo-posiciones tr:first-child td:nth-child(2)', (v) => v && / %$/.test(v),
+    '#cuerpo-posiciones tr:first-child td:nth-child(3)', (v) => v && / %$/.test(v),
     'la cartera de esta base no tiene posiciones abiertas que medir');
 
   // El conmutador de la tabla del gráfico lleva `data-i18n`, que la pasada
@@ -202,7 +202,7 @@ const AREAS_OCULTAS = false;
   await idioma('en');
   seccion('\n  ── cartera · repintada al conmutar, sin recargar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
-  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Current weight');
+  comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Status');
   comp('liquidez en el anillo de composición',
     await txtSvg('#anillo-composicion .anillo__fila--caja .anillo__nombre'), 'Cash');
   comp('nota del total de la conciliación',
@@ -225,7 +225,7 @@ const AREAS_OCULTAS = false;
   comp('periodo de estadísticos', await txt('#sub-estadisticos'), (v) => v && /^Period /.test(v));
   await compConDatos('porcentaje sin espacio',
     '#cuerpo-posiciones', '#cuerpo-posiciones tr',
-    '#cuerpo-posiciones tr:first-child td:nth-child(2)', (v) => v && /\d%$/.test(v),
+    '#cuerpo-posiciones tr:first-child td:nth-child(3)', (v) => v && /\d%$/.test(v),
     'la cartera de esta base no tiene posiciones abiertas que medir');
 
   comp('el conmutador sigue al estado de la tabla, no al de partida',

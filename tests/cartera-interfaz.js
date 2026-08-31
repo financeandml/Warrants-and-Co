@@ -273,12 +273,16 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
 
   const leerTabla = (p) => p.evaluate(() => {
     const num = (x) => Number(String(x).replace(/[^\d,.-]/g, '').replace(',', '.'));
-    return [...document.querySelectorAll('#cuerpo-posiciones tr')].map((tr) => ({
+    /* La tabla fusiona abiertas y cerradas, más una fila de detalle oculta por
+       cada una (`.fila-cartera__detalle`). El anillo solo reparte lo que sigue
+       en cartera hoy: se filtran las cerradas y los paneles de detalle, que no
+       llevan ni ticker ni peso propio que comparar. */
+    return [...document.querySelectorAll('#cuerpo-posiciones tr:not(.cerrada):not(.fila-cartera__detalle)')].map((tr) => ({
       /* La primera celda lleva el NOMBRE de la empresa y, en un `small`, el
          ticker con su sector: «Oracle» / «ORCL · Tecnología…». El anillo rotula
          con el ticker, así que se emparejan por ahí. */
       ticker: tr.querySelector('.celda-valor small')?.textContent.split('·')[0].trim(),
-      peso: num(tr.children[1]?.textContent),
+      peso: num(tr.children[2]?.textContent),
     }));
   });
 

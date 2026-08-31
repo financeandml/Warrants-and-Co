@@ -949,6 +949,11 @@
         <div class="anillo" id="anillo-composicion"></div>
       </section>
 
+      <!-- Tabla única, abiertas y cerradas fundidas: `Status` distingue la fila,
+           y lo que solo aplicaba a un estado —recorrido a TP, motivo de cierre,
+           recomendación, fechas— pasa al panel de detalle que despliega cada
+           fila. `pintarTablaCartera()` construye las dos, fila y panel, del
+           mismo objeto de posición: no hay una segunda lectura que discrepar. -->
       <section class="tarjeta" aria-labelledby="titulo-posiciones">
         <div class="tarjeta__cabecera">
           <div>
@@ -963,16 +968,12 @@
             <thead>
               <tr>
                 <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                <th scope="col" data-i18n="cartera.col.estado">Estado</th>
                 <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
-                <th scope="col" data-i18n="cartera.col.alta">Alta</th>
                 <th scope="col" class="num" data-i18n="cartera.col.compra">Compra</th>
-                <th scope="col" class="num" data-i18n="cartera.col.cotizacion">Cotización</th>
-                <th scope="col" class="num" data-i18n="cartera.col.dia">Día</th>
+                <th scope="col" class="num" data-i18n="cartera.col.actual">Actual/Salida</th>
                 <th scope="col" class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
-                <th scope="col" class="num" data-i18n="cartera.col.takeProfit">Take profit</th>
-                <th scope="col" data-i18n="cartera.col.recorrido">Recorrido a TP</th>
-                <th scope="col" class="num" data-i18n="cartera.col.precioObjetivo">P. objetivo</th>
-                <th scope="col" data-i18n="cartera.col.recomendacion">Recomendación</th>
+                <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
               </tr>
             </thead>
             <tbody id="cuerpo-posiciones"></tbody>
@@ -981,34 +982,6 @@
       </section>
 
       <!-- ══ III · PROCEDENCIA ══ De dónde sale esa rentabilidad. -->
-      <h2 class="movimiento" data-i18n="cartera.mov.procedencia">Procedencia</h2>
-
-      <section class="tarjeta" id="tarjeta-cerradas" aria-labelledby="titulo-cerradas" hidden>
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-cerradas" data-i18n="cartera.cerradas.titulo">Posiciones liquidadas</h2>
-            <p data-i18n="cartera.cerradas.subtitulo">Tesis cerradas automáticamente al alcanzar su take profit</p>
-          </div>
-        </div>
-        <div class="tabla-envoltorio">
-          <table class="tabla-datos">
-            <caption class="visualmente-oculto"
-                     data-i18n="cartera.cerradas.caption">Detalle de las posiciones liquidadas</caption>
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
-                <th scope="col" data-i18n="cartera.col.alta">Alta</th>
-                <th scope="col" class="num" data-i18n="cartera.col.compra">Compra</th>
-                <th scope="col" data-i18n="cartera.cerradas.col.cierre">Cierre</th>
-                <th scope="col" class="num" data-i18n="cartera.cerradas.col.precioSalida">Precio de salida</th>
-                <th scope="col" class="num" data-i18n="cartera.cerradas.col.resultado">Resultado</th>
-                <th scope="col" data-i18n="cartera.cerradas.col.motivo">Motivo</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpo-cerradas"></tbody>
-          </table>
-        </div>
-      </section>
 
       <section class="tarjeta" aria-labelledby="titulo-conciliacion">
         <div class="tarjeta__cabecera">
