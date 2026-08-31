@@ -93,6 +93,9 @@ export default {
   'general.importeDivisa': '{importe} {divisa}',
 
   // ── Cover · hero ──
+  'portada.titular.linea1': 'Independent research.',
+  'portada.titular.linea2': 'An edge that competes.',
+  'portada.subtitulo': 'Rigorous research on companies and markets for investors who want quality and clarity.',
   'portada.accesos.etiqueta': 'Main entry points',
   // `portada.acceso.radar` is unused while the Market area is hidden.
   // Not deleted: it comes back with it.

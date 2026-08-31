@@ -99,6 +99,13 @@ export default {
   'general.importeDivisa': '{importe} {divisa}',
 
   // ── Portada · hero ──
+  // Titular editorial de dos líneas. Dos claves y no una lista: a diferencia
+  // del titular del manifiesto, este es corto y fijo —no depende de dónde
+  // tipografía decida cortar— y cada línea es una frase propia, no una pieza
+  // de una sola.
+  'portada.titular.linea1': 'Análisis independiente.',
+  'portada.titular.linea2': 'Ventaja que compite.',
+  'portada.subtitulo': 'Investigación rigurosa sobre empresas y mercados para inversores que buscan calidad y claridad.',
   'portada.accesos.etiqueta': 'Accesos principales',
   // `portada.acceso.radar` queda sin uso mientras el área de Mercado esté
   // oculta. No se borra: vuelve con ella.
