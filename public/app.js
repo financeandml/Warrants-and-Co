@@ -115,12 +115,19 @@ async function api(ruta, opciones = {}) {
       sessionStorage.removeItem(CLAVE_SESION);
       actualizarIndicadorSesion();
     }
-    // El servidor redacta su propio error en castellano; solo se traduce el
-    // de reserva, que es el único que pone el cliente.
-    const error = new Error(datos?.error ?? t('error.solicitud', { codigo: respuesta.status }));
+    // El servidor manda su reparo en castellano y, junto a el, un codigo del
+    // catalogo. Se prefiere el codigo -rotuloError()- para que el mensaje nazca
+    // ya en el idioma de quien mira; solo cuando no hay codigo, o el codigo aun
+    // no tiene rotulo, se cae a la frase castellana del servidor.
+    const error = new Error(
+      datos?.codigo
+        ? rotuloError(datos.codigo, datos.error, datos.datos)
+        : (datos?.error ?? t('error.solicitud', { codigo: respuesta.status }))
+    );
     error.status = respuesta.status;
     error.codigo = datos?.codigo;
     error.errores = datos?.errores;
+    error.datos = datos?.datos;
     throw error;
   }
   return datos;
@@ -138,11 +145,12 @@ async function api(ruta, opciones = {}) {
  *
  * @param {string|undefined} codigo
  * @param {string} reserva  lo que redacto el servidor
+ * @param {object|null} [datos]  parametros de la plantilla, p.ej. {simbolo}
  */
-function rotuloError(codigo, reserva) {
+function rotuloError(codigo, reserva, datos = null) {
   if (!codigo) return reserva;
   const clave = `codigo.${codigo}`;
-  return existe(clave) ? t(clave) : reserva;
+  return existe(clave) ? t(clave, datos) : reserva;
 }
 
 // ─────────────────────────────── navegacion ──────────────────────────────
