@@ -3,10 +3,13 @@ import { t } from './i18n.js';
 /* ============================================================================
    Grafico de evolucion de cartera — SVG, sin dependencias externas.
 
-   Dos series sobre un unico eje, ambas indexadas a base 100, de modo que la
-   comparacion es directa y no existe el sesgo de un segundo eje.
-   Al prescindir del color, la identidad de cada serie recae en el trazo
-   (continuo frente a discontinuo), la leyenda y las etiquetas de extremo.
+   La cartera y N benchmarks activos sobre un unico eje, todos indexados a base
+   100, de modo que la comparacion es directa y no existe el sesgo de un
+   segundo eje. Al prescindir del color como unico portador —regla 1—, la
+   identidad de cada serie recae en el TRAZO (continuo para la cartera,
+   discontinuo con un patron propio para cada benchmark), la leyenda y las
+   etiquetas de extremo. La cartera lleva siempre la mayor jerarquia visual:
+   trazo mas grueso y sin discontinuar.
    ========================================================================= */
 
 const NS = 'http://www.w3.org/2000/svg';
@@ -18,6 +21,13 @@ const NS = 'http://www.w3.org/2000/svg';
    cifras del eje contra el borde. */
 const MARGEN = { arriba: 20, derecha: 148, abajo: 34, izquierda: 10 };
 const ALTURA = 340;
+
+/* Un patron de trazo distinto por posicion en la lista de benchmarks activos,
+   no por simbolo: el catalogo puede crecer y esto sigue dando patrones
+   distinguibles a los primeros cuatro sin tocar la hoja de estilos por cada
+   indice nuevo. A partir del quinto se repite —cuatro es mas de lo que un
+   grafico de lineas puede distinguir de un vistazo de todos modos—. */
+const CLASES_BENCHMARK = ['indice-0', 'indice-1', 'indice-2', 'indice-3'];
 
 const crear = (nombre, atributos = {}) => {
   const el = document.createElementNS(NS, nombre);
@@ -63,7 +73,7 @@ export class GraficoCartera {
   #contenedor;
   #emergente;
   #svg = null;
-  #datos = { cartera: [], indice: [], nombreIndice: '' };
+  #datos = { cartera: [], benchmarks: [] };
   #geometria = null;
   #indiceActivo = null;
   #observador = null;
@@ -97,20 +107,26 @@ export class GraficoCartera {
 
   /**
    * @param {Array<{fecha,valor}>} cartera
-   * @param {Array<{fecha,valor}>} indice
-   * @param {string} nombreIndice
+   * @param {Array<{simbolo,nombre,disponible,serie:Array<{fecha,valor}>}>} benchmarks
+   *   Ya alineados contra `cartera` y rebasados a 100, en el orden en que deben
+   *   dibujarse. Un benchmark con `serie` vacía o toda en `null` —sin dato en
+   *   todo el rango— no se dibuja, pero conserva su hueco de leyenda en las
+   *   tablas que lee `app.js`, no aquí.
    */
-  actualizar(cartera, indice, nombreIndice) {
+  actualizar(cartera, benchmarks) {
     this.#datos = {
       cartera: Array.isArray(cartera) ? cartera.filter((p) => Number.isFinite(p.valor)) : [],
-      indice: Array.isArray(indice) ? indice.filter((p) => Number.isFinite(p.valor)) : [],
-      nombreIndice: nombreIndice || t('grafico.indice'),
+      benchmarks: (Array.isArray(benchmarks) ? benchmarks : []).map((b) => ({
+        simbolo: b.simbolo,
+        nombre: b.nombre || t('grafico.indice'),
+        serie: Array.isArray(b.serie) ? b.serie : [],
+      })),
     };
     this.#dibujar();
   }
 
   #dibujar() {
-    const { cartera, indice, nombreIndice } = this.#datos;
+    const { cartera, benchmarks } = this.#datos;
     this.#contenedor.querySelector('svg')?.remove();
     this.#ocultarEmergente();
 
@@ -134,14 +150,30 @@ export class GraficoCartera {
     const anchoUtil = ancho - MARGEN.izquierda - MARGEN.derecha;
     const altoUtil = ALTURA - MARGEN.arriba - MARGEN.abajo;
 
-    // Dominio comun a ambas series: un solo eje, sin doble escala.
-    const valores = [...cartera.map((p) => p.valor), ...indice.map((p) => p.valor)];
+    const fechas = cartera.map((p) => p.fecha);
+
+    // Cada benchmark, reducido a los puntos con valor real, indexados a la
+    // posicion `i` que ocupa esa fecha en el calendario de la cartera.
+    const puntosPorBenchmark = benchmarks.map((b) => {
+      const porFecha = new Map(b.serie.map((p) => [p.fecha, p.valor]));
+      const puntos = [];
+      fechas.forEach((f, i) => {
+        const v = porFecha.get(f);
+        if (Number.isFinite(v)) puntos.push({ i, v });
+      });
+      return { ...b, porFecha, puntos };
+    });
+
+    // Dominio comun a todas las series: un solo eje, sin doble escala.
+    const valores = [
+      ...cartera.map((p) => p.valor),
+      ...puntosPorBenchmark.flatMap((b) => b.puntos.map((p) => p.v)),
+    ];
     /* Tres marcas de altura, no cinco. Sin retícula que las prolongue, cada
        cifra es una referencia suelta contra el borde: cinco se leen como una
        lista de números y tres como una escala. */
     const { inicio, fin, ticks } = escalaY(Math.min(...valores), Math.max(...valores), 3);
 
-    const fechas = cartera.map((p) => p.fecha);
     const x = (i) => MARGEN.izquierda + (anchoUtil * i) / Math.max(fechas.length - 1, 1);
     const y = (v) => MARGEN.arriba + altoUtil - (altoUtil * (v - inicio)) / Math.max(fin - inicio, 1e-9);
 
@@ -219,24 +251,19 @@ export class GraficoCartera {
       svg.appendChild(et);
     }
 
-    // ── Serie del indice de referencia (fondo) ──
-    const porFechaIndice = new Map(indice.map((p) => [p.fecha, p.valor]));
-    const puntosIndice = [];
-    fechas.forEach((f, i) => {
-      const v = porFechaIndice.get(f);
-      if (Number.isFinite(v)) puntosIndice.push({ i, v });
+    // ── Series de benchmark (fondo), cada una con su propio patron de trazo ──
+    puntosPorBenchmark.forEach((b, k) => {
+      if (b.puntos.length < 2) return;
+      const clase = CLASES_BENCHMARK[k % CLASES_BENCHMARK.length];
+      const d = b.puntos.map((p, j) => `${j === 0 ? 'M' : 'L'} ${x(p.i).toFixed(2)} ${y(p.v).toFixed(2)}`).join(' ');
+      svg.appendChild(crear('path', { class: `grafico__linea grafico__linea--indice grafico__linea--${clase}`, d }));
     });
 
-    if (puntosIndice.length > 1) {
-      const d = puntosIndice.map((p, k) => `${k === 0 ? 'M' : 'L'} ${x(p.i).toFixed(2)} ${y(p.v).toFixed(2)}`).join(' ');
-      svg.appendChild(crear('path', { class: 'grafico__linea grafico__linea--indice', d }));
-    }
-
-    // ── Serie de la cartera: area de acompañamiento y trazo ──
+    // ── Serie de la cartera: trazo protagonista, sin area de acompañamiento ──
     const dLinea = cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ');
     /* Sin área bajo la serie. Un relleno mide superficie, y aquí la superficie
        no significa nada: lo que se lee es la ALTURA sobre la base 100. Además
-       tapaba la serie del índice justo donde las dos se cruzan, que es el punto
+       tapaba las series de benchmark justo donde se cruzan, que es el punto
        más interesante del gráfico. */
     svg.appendChild(crear('path', { class: 'grafico__linea', d: dLinea }));
 
@@ -246,50 +273,52 @@ export class GraficoCartera {
        cuadradito de una leyenda con una línea del dibujo, porque la línea lleva
        su nombre escrito al lado. La leyenda de abajo conserva otra cosa —la
        rentabilidad medida y desde dónde se mide—, que es un hecho distinto. */
-    const rotularFin = (punto, nombre, indice, yRotulo = null) => {
+    const finesOcupados = [];
+    const rotularFin = (punto, nombre, esBenchmark, claseIndice) => {
       const px = x(punto.i);
-      const py = y(punto.v);
-      const yTexto = yRotulo ?? py;
+      const pyReal = y(punto.v);
+      /* Empuja el rótulo hacia abajo hasta que no choque con ninguno de los ya
+         colocados. El marcador se queda donde de verdad acaba la serie —mover
+         el punto sería mover el dato—; solo el rótulo de dos renglones se
+         desplaza. */
+      let yTexto = pyReal;
+      let intentos = 0;
+      while (finesOcupados.some((o) => Math.abs(yTexto - o) < 24) && intentos < 8) { yTexto += 26; intentos++; }
+      finesOcupados.push(yTexto);
+
       svg.appendChild(crear('circle', {
-        class: `grafico__marcador${indice ? ' grafico__marcador--indice' : ''}`,
-        cx: px, cy: py, r: indice ? 3.5 : 4,
+        class: `grafico__marcador${esBenchmark ? ' grafico__marcador--indice' : ''}`,
+        cx: px, cy: pyReal, r: esBenchmark ? 3.5 : 4,
       }));
-      const g = crear('g', { class: `grafico__fin${indice ? ' grafico__fin--indice' : ''}` });
-      const etNombre = crear('text', {
-        class: 'grafico__fin-nombre', x: px + 10, y: yTexto - 3,
-      });
+      const g = crear('g', { class: `grafico__fin${esBenchmark ? ` grafico__fin--indice grafico__fin--${claseIndice}` : ''}` });
+      const etNombre = crear('text', { class: 'grafico__fin-nombre', x: px + 10, y: yTexto - 3 });
       etNombre.textContent = nombre;
-      const etValor = crear('text', {
-        class: 'grafico__fin-valor', x: px + 10, y: yTexto + 13,
-      });
+      const etValor = crear('text', { class: 'grafico__fin-valor', x: px + 10, y: yTexto + 13 });
       etValor.textContent = num(punto.v);
       g.append(etNombre, etValor);
       svg.appendChild(g);
-      return py;
     };
 
     const finCartera = cartera[cartera.length - 1];
-    const yCartera = rotularFin(
-      { i: cartera.length - 1, v: finCartera.valor }, t('grafico.serie.cartera'), false);
+    rotularFin({ i: cartera.length - 1, v: finCartera.valor }, t('grafico.serie.cartera'), false);
 
-    if (puntosIndice.length > 1) {
-      const finIndice = puntosIndice[puntosIndice.length - 1];
-      /* Cada rótulo ocupa dos renglones. Si las series acaban juntas se pisan, de
-         modo que el de abajo se empuja lo justo y su marcador se queda donde de
-         verdad acaba la serie: mover el punto sería mover el dato. */
-      const py = y(finIndice.v);
-      const desplazado = Math.abs(py - yCartera) < 34
-        ? yCartera + (finIndice.v < finCartera.valor ? 34 : -34)
-        : py;
-      rotularFin(finIndice, nombreIndice, true, desplazado);
-    }
+    puntosPorBenchmark.forEach((b, k) => {
+      if (b.puntos.length < 2) return;
+      const finB = b.puntos[b.puntos.length - 1];
+      rotularFin(finB, t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }),
+        true, CLASES_BENCHMARK[k % CLASES_BENCHMARK.length]);
+    });
 
     // ── Capa de interaccion ──
     const capa = crear('g', { class: 'grafico__interaccion' });
     const cruz = crear('line', { class: 'grafico__cruz', y1: MARGEN.arriba, y2: MARGEN.arriba + altoUtil, x1: 0, x2: 0, opacity: 0 });
     const focoCartera = crear('circle', { class: 'grafico__foco', r: 4.5, stroke: 'var(--serie-cartera)', opacity: 0 });
-    const focoIndice = crear('circle', { class: 'grafico__foco', r: 4, stroke: 'var(--serie-indice)', opacity: 0 });
-    capa.append(cruz, focoCartera, focoIndice);
+    capa.append(cruz, focoCartera);
+    const focosBenchmark = puntosPorBenchmark.map(() => {
+      const c = crear('circle', { class: 'grafico__foco', r: 4, stroke: 'var(--serie-indice)', opacity: 0 });
+      capa.appendChild(c);
+      return c;
+    });
 
     const superficie = crear('rect', {
       x: MARGEN.izquierda, y: MARGEN.arriba,
@@ -300,7 +329,10 @@ export class GraficoCartera {
     svg.appendChild(capa);
 
     this.#svg = svg;
-    this.#geometria = { x, y, anchoUtil, cartera, porFechaIndice, fechas, cruz, focoCartera, focoIndice, nombreIndice };
+    this.#geometria = {
+      x, y, anchoUtil, cartera, fechas, cruz, focoCartera,
+      benchmarks: puntosPorBenchmark.map((b, k) => ({ ...b, foco: focosBenchmark[k] })),
+    };
 
     superficie.addEventListener('pointermove', (ev) => this.#alDesplazar(ev));
     superficie.addEventListener('pointerleave', () => this.#ocultarEmergente());
@@ -317,10 +349,11 @@ export class GraficoCartera {
   #describir() {
     const destino = document.getElementById('descripcion-grafico');
     if (!destino) return;
-    const { cartera, nombreIndice } = this.#datos;
+    const { cartera, benchmarks } = this.#datos;
     const primero = cartera[0];
     const ultimo = cartera[cartera.length - 1];
     const variacion = (ultimo.valor / primero.valor - 1) * 100;
+    const nombresBenchmark = benchmarks.map((b) => t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo })).join(', ');
     destino.textContent = t('grafico.descripcion', {
       n: cartera.length,
       desde: fechaLarga(primero.fecha),
@@ -328,7 +361,7 @@ export class GraficoCartera {
       inicial: num(primero.valor),
       final: num(ultimo.valor),
       variacion: formatearPorcentaje(variacion),
-      indice: nombreIndice,
+      indice: nombresBenchmark || t('grafico.indice'),
     });
   }
 
@@ -378,7 +411,6 @@ export class GraficoCartera {
 
     const fecha = g.fechas[i];
     const valorCartera = g.cartera[i].valor;
-    const valorIndice = g.porFechaIndice.get(fecha);
 
     const px = g.x(i);
     g.cruz.setAttribute('x1', px);
@@ -389,18 +421,28 @@ export class GraficoCartera {
     g.focoCartera.setAttribute('cy', g.y(valorCartera));
     g.focoCartera.setAttribute('opacity', 1);
 
-    if (Number.isFinite(valorIndice)) {
-      g.focoIndice.setAttribute('cx', px);
-      g.focoIndice.setAttribute('cy', g.y(valorIndice));
-      g.focoIndice.setAttribute('opacity', 1);
-    } else {
-      g.focoIndice.setAttribute('opacity', 0);
-    }
+    const valoresBenchmark = g.benchmarks.map((b) => {
+      const v = b.porFecha.get(fecha);
+      if (Number.isFinite(v)) {
+        b.foco.setAttribute('cx', px);
+        b.foco.setAttribute('cy', g.y(v));
+        b.foco.setAttribute('opacity', 1);
+      } else {
+        b.foco.setAttribute('opacity', 0);
+      }
+      return { simbolo: b.simbolo, nombre: b.nombre, valor: Number.isFinite(v) ? v : null };
+    });
 
-    this.#pintarEmergente(fecha, valorCartera, valorIndice, px);
+    this.#pintarEmergente(fecha, valorCartera, valoresBenchmark, px);
   }
 
-  #pintarEmergente(fecha, valorCartera, valorIndice, px) {
+  /**
+   * Dos bloques, como pidió el dueño: los valores indexados de cada serie
+   * activa en esa fecha, y debajo su rentabilidad desde la base del rango —no
+   * la misma cifra repetida dos veces, sino dos preguntas distintas: «dónde
+   * está» y «cuánto ha hecho desde que empezó a medirse».
+   */
+  #pintarEmergente(fecha, valorCartera, valoresBenchmark, px) {
     const e = this.#emergente;
     e.textContent = '';
 
@@ -409,44 +451,60 @@ export class GraficoCartera {
     cab.textContent = fechaLarga(fecha);
     e.appendChild(cab);
 
-    const base = this.#datos.cartera[0]?.valor ?? 100;
+    const baseCartera = this.#datos.cartera[0]?.valor ?? 100;
+    const basesBenchmark = new Map(
+      this.#datos.benchmarks.map((b) => [b.simbolo, b.serie.find((p) => Number.isFinite(p.valor))?.valor ?? null]));
 
-    const fila = (nombre, valor, esIndice) => {
+    const filaValor = (nombre, valor, esIndice) => {
       const f = document.createElement('div');
       f.className = 'emergente__fila';
-
       const clave = document.createElement('span');
       clave.className = `emergente__clave${esIndice ? ' emergente__clave--indice' : ''}`;
       f.appendChild(clave);
-
       const n = document.createElement('span');
       n.className = 'emergente__nombre';
       // Los nombres proceden de la API: se insertan siempre como texto.
       n.textContent = nombre;
       f.appendChild(n);
-
       const v = document.createElement('span');
       v.className = 'emergente__valor';
       v.textContent = Number.isFinite(valor) ? num(valor) : '—';
       f.appendChild(v);
-
       e.appendChild(f);
     };
 
-    fila(t('grafico.serie.cartera'), valorCartera, false);
-    if (Number.isFinite(valorIndice)) fila(this.#datos.nombreIndice, valorIndice, true);
+    filaValor(t('grafico.serie.cartera'), valorCartera, false);
+    for (const b of valoresBenchmark) {
+      filaValor(t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }), b.valor, true);
+    }
 
-    const variacion = document.createElement('div');
-    variacion.className = 'emergente__fila';
-    const etq = document.createElement('span');
-    etq.className = 'emergente__nombre';
-    etq.textContent = t('grafico.emergente.acumulado');
-    const val = document.createElement('span');
-    val.className = 'emergente__valor';
-    const pct = (valorCartera / base - 1) * 100;
-    val.textContent = formatearPorcentaje(pct);
-    variacion.append(etq, val);
-    e.appendChild(variacion);
+    const separador = document.createElement('div');
+    separador.className = 'emergente__separador';
+    e.appendChild(separador);
+
+    const filaRetorno = (nombre, valor, base, esIndice) => {
+      const f = document.createElement('div');
+      f.className = 'emergente__fila';
+      const clave = document.createElement('span');
+      clave.className = `emergente__clave${esIndice ? ' emergente__clave--indice' : ''}`;
+      f.appendChild(clave);
+      const n = document.createElement('span');
+      n.className = 'emergente__nombre';
+      n.textContent = nombre;
+      f.appendChild(n);
+      const v = document.createElement('span');
+      const pct = Number.isFinite(valor) && Number.isFinite(base) && base > 0 ? (valor / base - 1) * 100 : null;
+      v.className = `emergente__valor ${pct === null ? '' : (pct > 0 ? 'variacion--positiva' : pct < 0 ? 'variacion--negativa' : 'variacion--nula')}`;
+      v.textContent = formatearPorcentaje(pct);
+      f.appendChild(v);
+      e.appendChild(f);
+    };
+
+    filaRetorno(t('grafico.emergente.acumulado'), valorCartera, baseCartera, false);
+    for (const b of valoresBenchmark) {
+      filaRetorno(t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }),
+        b.valor, basesBenchmark.get(b.simbolo), true);
+    }
 
     e.dataset.visible = 'true';
 
@@ -474,7 +532,7 @@ export class GraficoCartera {
     if (this.#geometria) {
       this.#geometria.cruz.setAttribute('opacity', 0);
       this.#geometria.focoCartera.setAttribute('opacity', 0);
-      this.#geometria.focoIndice.setAttribute('opacity', 0);
+      for (const b of this.#geometria.benchmarks) b.foco.setAttribute('opacity', 0);
     }
   }
 }
