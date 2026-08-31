@@ -3357,6 +3357,35 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 .vacio--home { padding: 46px 34px; }
 
+/* ── Bento de portada: panorama, radar y señal ──
+   Mismo lenguaje visual que `.pilar` —borde, fondo, radio, sin divisores— y no
+   columnas apiladas con filete. Panorama es la celda ancha porque lleva un
+   gráfico; radar y señal caen debajo, a la mitad cada una. Por debajo de
+   960 px, donde el gráfico ya no gana nada de una fila propia, se apila a una
+   columna igual que el resto de `.bloque-home`. */
+.bento-home {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--espacio-3);
+  padding-block: clamp(78px, 11vh, 132px);
+}
+.bento-home > .bloque-home {
+  grid-column: span 1;
+  padding: var(--espacio-4);
+  background: var(--superficie);
+  border: 1px solid var(--linea);
+  border-block-start: 1px solid var(--linea);
+  border-radius: var(--radio-l);
+  transition: border-color var(--transicion), background var(--transicion);
+}
+.bento-home > .bloque-home:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
+.bento-home > #home-pulse { grid-column: 1 / -1; }
+
+@media (max-width: 960px) {
+  .bento-home { grid-template-columns: 1fr; }
+  .bento-home > .bloque-home { grid-column: 1; }
+}
+
 /* ──────────────────────────── 2 · MARKET PULSE ──────────────────────────── */
 
 .pulse { display: grid; gap: 30px; }
