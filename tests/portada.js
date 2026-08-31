@@ -47,19 +47,15 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    extremos del mecanismo. `crece` dice si en esa ventana se espera que el hero
    tome altura: es la degradación declarada, y se afirma en las dos direcciones
    —que crece donde debe y que NO crece donde no hace falta—. */
-/* Las dos piezas cedibles del hero, ventana a ventana. El subtítulo cede
-   ANTES que la fila de cifras —ver la escalera en `seguirEncuadreBanner()`—,
-   así que en 1440×700 solo cede él y las cifras, el hecho de la regla 9, se
-   quedan puestas. */
+/* La pieza cedible del hero, ventana a ventana. */
 const VENTANAS = [
-  { n: '1440×900',  w: 1440, h: 900,  crece: false, subtitulo: true,  cifras: true  },
-  { n: '1680×1050', w: 1680, h: 1050, crece: false, subtitulo: true,  cifras: true  },
-  { n: '1920×880',  w: 1920, h: 880,  crece: true,  subtitulo: true,  cifras: true  },
-  // Aquí ya no cabe el subtítulo, pero las cifras siguen puestas.
-  { n: '1440×700',  w: 1440, h: 700,  crece: true,  subtitulo: false, cifras: true  },
-  // Y aquí tampoco cabe la fila de cifras.
-  { n: '1920×700',  w: 1920, h: 700,  crece: true,  subtitulo: false, cifras: false },
-  { n: '2560×800',  w: 2560, h: 800,  crece: true,  subtitulo: false, cifras: false },
+  { n: '1440×900',  w: 1440, h: 900,  crece: false, cifras: true  },
+  { n: '1680×1050', w: 1680, h: 1050, crece: false, cifras: true  },
+  { n: '1920×880',  w: 1920, h: 880,  crece: true,  cifras: true  },
+  // Aquí ya no cabe la fila de cifras.
+  { n: '1440×700',  w: 1440, h: 700,  crece: true,  cifras: false },
+  { n: '1920×700',  w: 1920, h: 700,  crece: true,  cifras: false },
+  { n: '2560×800',  w: 2560, h: 800,  crece: true,  cifras: false },
 ];
 
 const R = [];
@@ -113,7 +109,6 @@ const medir = (p) => p.evaluate(async () => {
   const etiqueta = document.querySelector('.manifiesto .etiqueta-superior');
 
   const filaCifras = po.querySelector('.portada__cifras');
-  const subtitulo = po.querySelector('.portada__subtitulo');
   // El asomo se acumula con `offsetTop`: el `translateY` de la aparición mueve el
   // rectángulo y daría una cifra distinta antes y después de revelarse.
   let yEtiqueta = 0;
@@ -153,11 +148,6 @@ const medir = (p) => p.evaluate(async () => {
       .map((e) => Math.round(e.getBoundingClientRect().height
         / parseFloat(getComputedStyle(e).lineHeight))),
     cifrasDesborda: filaCifras.scrollWidth > interior.width + 1,
-    // El subtítulo: la pieza que cede primero. Misma pareja de comprobaciones
-    // que la fila de cifras —atributo y lo que de verdad se ve.
-    subtitulo: po.dataset.subtitulo,
-    subtituloVisible: getComputedStyle(subtitulo).visibility === 'visible',
-    subtituloEnFlujo: getComputedStyle(subtitulo).position === 'static',
   };
 });
 
@@ -302,14 +292,6 @@ const medirFichero = (p) => p.evaluate(async () => {
       m.cifrasVisibles === v.cifras && m.cifrasEnFlujo === v.cifras,
       `visibles ${m.cifrasVisibles} · en flujo ${m.cifrasEnFlujo}`);
 
-    /* El subtítulo, la pieza que cede primero: se afirma con la misma pareja de
-       comprobaciones que la fila de cifras. */
-    t(`${v.n} · el subtítulo ${v.subtitulo ? 'se pinta porque cabe' : 'cede porque no cabe'}`,
-      m.subtitulo === String(v.subtitulo), `data-subtitulo="${m.subtitulo}"`);
-    t(`${v.n} · y se ve o no se ve en consecuencia`,
-      m.subtituloVisible === v.subtitulo && m.subtituloEnFlujo === v.subtitulo,
-      `visible ${m.subtituloVisible} · en flujo ${m.subtituloEnFlujo}`);
-
     /* La fila existe como armazón desde el primer pintado, pero sus rótulos
        solo llegan con la cartera. Sin ellos no hay renglones que contar, y
        decir «envuelve» de una fila vacía sería denunciar la falta de datos. */
@@ -349,18 +331,16 @@ const medirFichero = (p) => p.evaluate(async () => {
     const hayCifras = await p.evaluate(() =>
       document.querySelectorAll('.portada__cifras__etiqueta').length > 0);
 
-    // El peldaño se nombra: el subtítulo y las cifras se barren igual, cada
-    // uno con su propio atributo.
-    const estado = async (cual = 'cifras') => {
+    const estado = async () => {
       await p.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
-      return p.evaluate((c) => document.getElementById('portada').dataset[c], cual);
+      return p.evaluate(() => document.getElementById('portada').dataset.cifras);
     };
-    const barrer = async (desde, hasta, paso, cual = 'cifras') => {
+    const barrer = async (desde, hasta, paso) => {
       const cambios = [];
       let previo = null;
       for (let h = desde; paso > 0 ? h <= hasta : h >= hasta; h += paso) {
         await p.setViewportSize({ width: 1440, height: h });
-        const e = await estado(cual);
+        const e = await estado();
         if (previo !== null && e !== previo) cambios.push({ h, de: previo, a: e });
         previo = e;
       }
@@ -369,36 +349,7 @@ const medirFichero = (p) => p.evaluate(async () => {
 
     console.log('\n  ── la decisión no oscila (barrido a 1440 px de ancho) ──');
 
-    /* El peldaño del subtítulo, que cede ANTES que el de las cifras y por tanto
-       cae más arriba —medido: cede en 749, vuelve en 771—. Necesita su propia
-       banda: son dos decisiones distintas y una histéresis compartida no
-       impediría que parpadeara la otra. */
-    const bajadaS = await barrer(800, 715, -1, 'subtitulo');
-    t('bajando, el subtítulo cede una sola vez',
-      bajadaS.length === 1 && bajadaS[0].a === 'false',
-      bajadaS.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
-
-    const subidaS = await barrer(715, 800, 1, 'subtitulo');
-    t('subiendo, el subtítulo vuelve una sola vez',
-      subidaS.length === 1 && subidaS[0].a === 'true',
-      subidaS.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
-
-    t('el subtítulo vuelve más arriba de donde cedió, y no por el paso del barrido',
-      bajadaS.length === 1 && subidaS.length === 1 && subidaS[0].h - bajadaS[0].h > 4,
-      `cede en ${bajadaS[0]?.h} · vuelve en ${subidaS[0]?.h}`);
-
-    if (bajadaS.length === 1) {
-      await p.setViewportSize({ width: 1440, height: bajadaS[0].h });
-      const serie = [];
-      for (let i = 0; i < 8; i++) serie.push(await estado('subtitulo'));
-      t('en el punto de cambio del subtítulo, el estado no se mueve solo',
-        new Set(serie).size === 1, serie.join(','));
-    }
-
-    /* El peldaño de las cifras cede más abajo —medido: cede en 680, vuelve en
-       698—, porque ellas son el hecho —regla 9— y el subtítulo es la pieza de
-       apoyo que se suelta primero. */
-    const bajadaC = hayCifras ? await barrer(710, 650, -1) : [];
+    const bajadaC = hayCifras ? await barrer(760, 690, -1) : [];
     if (!hayCifras) {
       pendiente('el peldaño de las cifras no oscila', CIFRAS_HERO);
     } else {
@@ -406,7 +357,7 @@ const medirFichero = (p) => p.evaluate(async () => {
       bajadaC.length === 1 && bajadaC[0].a === 'false',
       bajadaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
 
-    const subidaC = hayCifras ? await barrer(650, 710, 1) : [];
+    const subidaC = hayCifras ? await barrer(690, 760, 1) : [];
     t('subiendo, las cifras vuelven una sola vez',
       subidaC.length === 1 && subidaC[0].a === 'true',
       subidaC.map((c) => `${c.h}: ${c.de}→${c.a}`).join(' | ') || 'ningún cambio');
