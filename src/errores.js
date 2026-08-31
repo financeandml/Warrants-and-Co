@@ -50,6 +50,35 @@ const API = {
     status: 501,
     mensaje: 'Ningún proveedor conectado ofrece esta capacidad.',
   },
+  /* Un símbolo lleva viajando incrustado en una frase castellana dentro de
+     `detalle`, que el cliente ni siquiera reenvía a `err`. Va en `datos`, que
+     sí llega. */
+  SIMBOLO_INVALIDO: { status: 400, mensaje: 'Símbolo no válido.' },
+  /* Dos frases del servidor —«sin serie utilizable» y «ningún proveedor la
+     publica»— compartían hoy el mismo `codigo:'SIN_SERIE'`, que no está en
+     ningún catálogo. La acción del usuario no cambia entre una y otra, así
+     que un solo código basta; el matiz, si hace falta, va en `datos`. */
+  SIN_SERIE_HISTORICA: {
+    status: 404,
+    mensaje: 'No hay serie histórica disponible para este instrumento.',
+  },
+  /* Uno por cada motivo de `CODIGOS_LECTURA` (`src/extraccion/pdf.js`). El
+     mismo status —422— que usaba `ErrorLectura` antes de tener catálogo
+     propio. Su traducción al cliente no pasa por aquí: la ruta de subida de
+     documentos (`informes.js`, único punto que los lanza) ya los rotula por
+     `extraccion.motivo.<CODIGO>`, un catálogo distinto y ya completo en los
+     dos idiomas. Añadir también `codigo.<CODIGO>` sería el mismo hecho por
+     partida doble —regla 9—, así que estos códigos quedan aquí solo para que
+     `cuerpoError()` no caiga al «Error» genérico; se listan como «sin rótulo»
+     en el aviso de esta prueba, y es lo correcto: no les hace falta uno propio. */
+  NO_ES_PDF: { status: 422, mensaje: 'El fichero no es un PDF.' },
+  PDF_CIFRADO: { status: 422, mensaje: 'El PDF está cifrado y su texto no puede leerse.' },
+  PDF_DEMASIADO_GRANDE: { status: 422, mensaje: 'El PDF supera el tamaño máximo admitido.' },
+  PDF_SIN_PAGINAS: { status: 422, mensaje: 'No ha sido posible determinar las páginas del PDF.' },
+  PDF_SIN_CAPA_DE_TEXTO: {
+    status: 422,
+    mensaje: 'El PDF no lleva capa de texto: es un documento escaneado.',
+  },
 };
 
 /* Errores de validación: van por campo, y pueden acumularse varios en una misma

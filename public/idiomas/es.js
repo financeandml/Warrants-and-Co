@@ -717,6 +717,8 @@ export default {
   'codigo.ERROR_INTERNO': 'Se ha producido un error interno en el servidor.',
   'codigo.PROVEEDOR_NO_RESPONDE': 'Un proveedor externo no ha respondido.',
   'codigo.CAPACIDAD_NO_DISPONIBLE': 'Ningún proveedor conectado ofrece esta capacidad.',
+  'codigo.SIMBOLO_INVALIDO': 'Símbolo no válido: {simbolo}',
+  'codigo.SIN_SERIE_HISTORICA': 'No hay serie histórica disponible para este instrumento.',
 
   // ══════════════════════════ Acceso de analista ═══════════════════════════
   'acceso.credencialInvalida': 'Credencial no válida.',

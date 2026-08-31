@@ -693,6 +693,8 @@ export default {
   'codigo.ERROR_INTERNO': 'An internal server error has occurred.',
   'codigo.PROVEEDOR_NO_RESPONDE': 'An external provider did not respond.',
   'codigo.CAPACIDAD_NO_DISPONIBLE': 'No connected provider offers this capability.',
+  'codigo.SIMBOLO_INVALIDO': 'Invalid symbol: {simbolo}',
+  'codigo.SIN_SERIE_HISTORICA': 'No historical series available for this instrument.',
 
   // ═══════════════════════════ Analyst access ═════════════════════════════
   'acceso.credencialInvalida': 'Invalid credentials.',
