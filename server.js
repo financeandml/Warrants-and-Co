@@ -247,16 +247,24 @@ app.use((err, req, res, next) => {
 
 const servidor = app.listen(PUERTO, HOST, () => {
   const url = `http://${HOST}:${PUERTO}`;
+  /* La clave SÍ se imprime aquí, a partir de ahora, por decisión explícita
+     del propio desarrollador para su entorno local (no es el valor por
+     defecto del proyecto: sigue sin haber ninguno, y el servidor sigue sin
+     arrancar sin WARRANTS_CLAVE — ver el bloque de arriba). Antes se ocultaba
+     a propósito, precisamente por el riesgo que esto reintroduce: la consola
+     acaba en registros, capturas y salida de CI. Queda escrito por si algún
+     día alguien se pregunta por qué cambió. */
+  const raya = '━'.repeat(38);
   console.log('');
-  console.log('  WARRANTS & CO.  ·  Plataforma de análisis e inversión');
-  console.log('  ' + '-'.repeat(58));
-  console.log(`  Servidor operativo      ${url}`);
-  /* La clave NO se imprime. Confirmar que se recibio es util; enseñarla es la
-     misma fuga por otra via: la consola acaba en registros, en capturas y en la
-     salida de la integracion continua. Se dice su longitud, que basta para ver
-     si se paso la que uno creia y no revela cual es. */
-  console.log(`  Clave de analistas      definida por entorno (${CLAVE_ANALISTAS.length} caracteres)`);
-  console.log('  ' + '-'.repeat(58));
+  console.log(raya);
+  console.log('  WARRANTS & CO. — SERVIDOR INICIADO');
+  console.log(raya);
+  console.log(`  URL: ${url}`);
+  console.log(`  Clave de analista: ${CLAVE_ANALISTAS}`);
+  console.log(raya);
+  console.log('  Copia la clave anterior para publicar,');
+  console.log('  editar o eliminar informes.');
+  console.log(raya);
   console.log('');
 
   // La sindicacion arranca en segundo plano: no retrasa la disponibilidad del servicio.

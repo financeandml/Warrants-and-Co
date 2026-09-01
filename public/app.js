@@ -50,6 +50,8 @@ const estado = {
   // lo que ya hay en memoria en vez de volver a pedirlo: cambian los rótulos,
   // no los datos.
   informes: null,
+  // Hub del repositorio: destacado + métricas globales de GET /api/informes/destacados.
+  informesDestacados: null,
   noticias: null,
   sincronizacion: null,
   cartera: null,
@@ -228,7 +230,7 @@ function irA(seccion, pestana = null, { empujar = true } = {}) {
 const CARGADORES = {
   inicio: () => cargarInicio(),
   radar: () => cargarPanel(),
-  repositorio: () => cargarInformes(),
+  repositorio: () => { cargarInformes(); cargarHubRepositorio(); },
   noticias: () => { cargarNoticias(); cargarEstadoSincronizacion(); },
   opciones: () => cargarOpciones(),
   cartera: () => cargarCartera(),
@@ -282,7 +284,7 @@ const MEMORIAS_DERIVADAS = {
   // El catálogo también guarda su última carga para repintarse por idioma: sin
   // retirarla, publicar una tesis y conmutar el idioma repintaría la tabla con
   // la lista anterior, que es exactamente lo que este mapa existe para impedir.
-  repositorio: () => { estado.informes = null; },
+  repositorio: () => { estado.informes = null; estado.informesDestacados = null; },
   // La cobertura guarda listado y ficha para repintarse por idioma: publicar una
   // tesis y conmutar repintaría con la lista anterior si no se retiraran.
   companias: () => { estado.companias.lista = null; estado.companias.datosFicha = null; },
@@ -595,6 +597,96 @@ async function cargarInformes() {
   } finally {
     envoltorio?.classList.remove('cargando');
   }
+}
+
+/**
+ * Hub del repositorio: métricas globales + análisis destacado.
+ *
+ * `GET /api/informes/destacados` ya calcula `metricas` (total, cubiertas,
+ * analistas, sectores) en el servidor —la misma consulta que hoy alimenta el
+ * panel de Radar, oculto—; aquí solo se pinta, nunca se recalcula. Las cifras
+ * representan la cobertura GLOBAL, no el resultado de los filtros activos: por
+ * eso viven en su propia carga, independiente de `cargarInformes()`.
+ */
+async function cargarHubRepositorio() {
+  try {
+    estado.informesDestacados = await api('/api/informes/destacados');
+    pintarHubRepositorio(estado.informesDestacados);
+  } catch {
+    estado.informesDestacados = null;
+    pintarHubRepositorio(null);
+  }
+}
+
+function pintarHubRepositorio(datos) {
+  pintarMetricasRepositorio(datos?.metricas ?? null);
+  pintarDestacadoRepositorio(datos?.destacados?.[0] ?? null);
+}
+
+function pintarMetricasRepositorio(metricas) {
+  const caja = $('#repositorio-metricas');
+  if (!caja) return;
+  caja.textContent = '';
+  if (!metricas) return;
+
+  const metrica = (etiqueta, valor, principal = false) => {
+    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    bloque.appendChild(elemento('strong', 'indicador__valor', String(valor)));
+    caja.appendChild(bloque);
+  };
+  metrica(t('repositorio.hub.total'), metricas.total, true);
+  metrica(t('repositorio.hub.cubiertas'), metricas.cubiertas);
+  metrica(t('repositorio.hub.analistas'), metricas.analistas);
+  metrica(t('repositorio.hub.sectores'), metricas.sectores);
+}
+
+/**
+ * Pieza única de "Análisis destacado". Si no hay ningún informe destacado el
+ * bloque entero se oculta con `hidden` —nunca CSS a medias—: la sección no
+ * declara nada que no pueda respaldar. El clic abre `#dialogo-detalle` con
+ * `abrirDetalle()`, el mismo mecanismo que ya usa cada fila de la tabla: no
+ * hay un segundo sistema de navegación para lo mismo.
+ */
+function pintarDestacadoRepositorio(informe) {
+  const bloque = $('#repositorio-destacado-bloque');
+  const contenedor = $('#repositorio-destacado');
+  if (!bloque || !contenedor) return;
+  contenedor.textContent = '';
+
+  if (!informe) {
+    bloque.hidden = true;
+    return;
+  }
+  bloque.hidden = false;
+
+  const pieza = elemento('article', 'repositorio-destacado');
+  pieza.tabIndex = 0;
+  pieza.setAttribute('role', 'button');
+  pieza.setAttribute('aria-label', t('repositorio.destacado.abrir', { empresa: informe.empresa }));
+
+  const izquierda = elemento('div', 'repositorio-destacado__izquierda');
+  izquierda.appendChild(elemento('span', 'repositorio-destacado__ticker', informe.ticker ?? '—'));
+  izquierda.appendChild(elemento('h3', 'repositorio-destacado__nombre', informe.empresa));
+  izquierda.appendChild(elemento('p', 'repositorio-destacado__resumen',
+    informe.resumen_ejecutivo || t('repositorio.destacado.sinResumen')));
+  izquierda.appendChild(elemento('span', 'repositorio-destacado__enlace', t('repositorio.destacado.ver')));
+  pieza.appendChild(izquierda);
+
+  const derecha = elemento('div', 'repositorio-destacado__derecha');
+  if (informe.recomendacion) derecha.appendChild(elemento('span', 'distintivo distintivo--fuerte', informe.recomendacion));
+  const fecha = elemento('div', 'dato');
+  fecha.appendChild(elemento('span', 'dato__etiqueta', t('repositorio.col.fecha')));
+  fecha.appendChild(elemento('strong', 'dato__valor', formatearFecha(informe.fecha_publicacion)));
+  derecha.appendChild(fecha);
+  pieza.appendChild(derecha);
+
+  const abrir = () => abrirDetalle(informe.id);
+  pieza.addEventListener('click', abrir);
+  pieza.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); abrir(); }
+  });
+  contenedor.appendChild(pieza);
 }
 
 /** Pinta la tabla del repositorio a partir de una carga ya resuelta. */
@@ -1680,6 +1772,7 @@ function repintarVistas() {
   // vigente: repoblar por idioma no debe deshacer lo que el usuario eligió.
   if (estado.vocabularios) { poblarFiltros(); poblarFormulario(); }
   if (estado.informes) pintarInformes(estado.informes);
+  if (estado.informesDestacados) pintarHubRepositorio(estado.informesDestacados);
   if (estado.cartera) pintarCartera(estado.cartera, { avisos: false });
   reflejarModoTablaSerie();
 

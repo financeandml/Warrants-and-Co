@@ -49,7 +49,7 @@ export default {
 
   'nav.research.companias': 'Compañías',
   'nav.research.companias.desc': 'Cobertura por compañía',
-  'nav.research.tesis': 'Tesis de inversión',
+  'nav.research.tesis': 'Repositorio',
   'nav.research.tesis.desc': 'Repositorio de informes',
   'nav.research.catalizadores': 'Catalizadores',
   'nav.research.catalizadores.desc': 'Agenda de eventos',
@@ -274,7 +274,21 @@ export default {
   // ═══════════════════════ Repositorio · catálogo ═══════════════════════
   'repositorio.etiqueta': 'Repositorio documental',
   'repositorio.titulo': 'Catálogo de informes',
+  'repositorio.hub.subtitulo': 'Cobertura fundamental publicada por el equipo de análisis, con su ficha completa y su documentación de origen.',
   'repositorio.publicar': 'Publicar informe',
+
+  // Cabecera de cifras del hub: las cuatro salen de GET /api/informes/destacados
+  // (`metricas`), ya calculadas en el servidor.
+  'repositorio.hub.total': 'Informes',
+  'repositorio.hub.cubiertas': 'Compañías cubiertas',
+  'repositorio.hub.analistas': 'Analistas',
+  'repositorio.hub.sectores': 'Sectores',
+
+  // Análisis destacado: una única pieza, mismo patrón que Companies.
+  'repositorio.hub.destacado': 'Análisis destacado',
+  'repositorio.destacado.ver': 'Ver informe →',
+  'repositorio.destacado.abrir': 'Abrir informe de {empresa}',
+  'repositorio.destacado.sinResumen': 'Este informe todavía no tiene resumen ejecutivo.',
 
   'repositorio.busqueda': 'Búsqueda',
   'repositorio.busqueda.hint': 'Empresa, ticker, analista o palabra clave…',

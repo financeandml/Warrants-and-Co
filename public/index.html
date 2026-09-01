@@ -411,14 +411,36 @@
   <section class="seccion" id="seccion-repositorio" data-seccion-panel="repositorio" hidden>
     <div class="contenedor">
 
-      <div class="titulo-seccion">
-        <div>
+      <!-- Hero editorial condensado, mismo patrón que Companies/Catalysts/
+           Noticias: eyebrow + título + subtítulo. El CTA de publicación es
+           transaccional, así que se queda dentro del propio hero —igual que
+           en Noticias— en vez de separarse a una barra aparte. Comportamiento
+           de #btn-nuevo-informe sin tocar: mismo id, mismo listener. -->
+      <div class="repositorio-hero">
+        <div class="repositorio-hero__interior">
           <p class="etiqueta-superior" data-i18n="repositorio.etiqueta">Repositorio documental</p>
           <h1 data-i18n="repositorio.titulo">Catálogo de informes</h1>
+          <p class="repositorio-hero__subtitulo" data-i18n="repositorio.hub.subtitulo">
+            Cobertura fundamental publicada por el equipo de análisis, con su ficha completa y su
+            documentación de origen.</p>
         </div>
         <button class="boton boton--solido" id="btn-nuevo-informe" type="button"
                 data-i18n="repositorio.publicar">Publicar informe</button>
       </div>
+
+      <!-- Cabecera de cifras del hub: total, cobertura, analistas y sectores.
+           Las cuatro salen de GET /api/informes/destacados (`metricas`), ya
+           calculadas en el servidor — no se recalcula nada aquí. -->
+      <div class="repositorio-metricas" id="repositorio-metricas"></div>
+
+      <!-- Análisis destacado: una única pieza, no una rejilla. Se oculta por
+           completo si no hay ningún informe destacado —`pintarDestacadoRepositorio()`
+           decide, nunca CSS a medias—. El clic abre el mismo #dialogo-detalle
+           de siempre: ningún sistema de navegación nuevo. -->
+      <section class="repositorio-destacado-bloque" id="repositorio-destacado-bloque" hidden>
+        <h2 class="movimiento" data-i18n="repositorio.hub.destacado">Análisis destacado</h2>
+        <div id="repositorio-destacado"></div>
+      </section>
 
       <form class="panel-filtros" id="form-filtros" role="search">
         <div class="panel-filtros__principal">
@@ -1215,6 +1237,7 @@
     <nav class="pie__navegacion"
          data-i18n-attr="aria-label:pie.nav.etiqueta" aria-label="Secciones de Warrants &amp; Co.">
       <a href="#/companias" data-ruta data-i18n="nav.research">Research</a>
+      <a href="#/repositorio" data-ruta data-i18n="nav.research.tesis">Tesis de inversión</a>
       <a href="#/catalizadores" data-ruta data-i18n="nav.research.catalizadores">Catalizadores</a>
       <a href="#/cartera" data-ruta data-i18n="nav.portfolio">Portfolio</a>
       <a href="#/noticias" data-ruta data-i18n="nav.research.noticias">News</a>

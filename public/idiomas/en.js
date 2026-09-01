@@ -48,7 +48,7 @@ export default {
 
   'nav.research.companias': 'Companies',
   'nav.research.companias.desc': 'Coverage by company',
-  'nav.research.tesis': 'Investment theses',
+  'nav.research.tesis': 'Research Repository',
   'nav.research.tesis.desc': 'Report repository',
   'nav.research.catalizadores': 'Catalysts',
   'nav.research.catalizadores.desc': 'Event calendar',
@@ -266,7 +266,21 @@ export default {
   // ═══════════════════════ Repository · catalogue ═══════════════════════
   'repositorio.etiqueta': 'Document repository',
   'repositorio.titulo': 'Research catalogue',
+  'repositorio.hub.subtitulo': 'Fundamental coverage published by the research team, with its full record and source documentation.',
   'repositorio.publicar': 'Publish report',
+
+  // Hub metrics header: all four come from GET /api/informes/destacados
+  // (`metricas`), already computed server-side.
+  'repositorio.hub.total': 'Reports',
+  'repositorio.hub.cubiertas': 'Companies covered',
+  'repositorio.hub.analistas': 'Analysts',
+  'repositorio.hub.sectores': 'Sectors',
+
+  // Featured research: a single piece, same pattern as Companies.
+  'repositorio.hub.destacado': 'Featured research',
+  'repositorio.destacado.ver': 'View report →',
+  'repositorio.destacado.abrir': 'Open report for {empresa}',
+  'repositorio.destacado.sinResumen': 'This report does not have an executive summary yet.',
 
   'repositorio.busqueda': 'Search',
   'repositorio.busqueda.hint': 'Company, ticker, analyst or keyword…',

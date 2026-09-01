@@ -603,6 +603,80 @@ button, input, select, textarea { font: inherit; color: inherit; }
   color: var(--tinta-secundaria); white-space: nowrap;
 }
 
+/* ── Repositorio: hero, métricas, destacado ──
+   Mismo patrón que `#seccion-companias`/`#seccion-catalizadores`/
+   `#seccion-noticias`: hero editorial condensado + fila de métricas + una
+   pieza destacada. Todo selector prefijado por `#seccion-repositorio`: nada
+   de esto toca `.panel-filtros`/`.tabla-datos`, compartidas con Noticias y
+   con el resto de tablas de la plataforma. */
+#seccion-repositorio .repositorio-hero {
+  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+  gap: var(--espacio-5) var(--espacio-6);
+  padding-block: clamp(40px, 7vw, 76px) var(--espacio-6);
+  border-block-end: 1px solid var(--linea);
+}
+#seccion-repositorio .repositorio-hero__interior { max-width: 58ch; }
+#seccion-repositorio .repositorio-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
+
+#seccion-repositorio .repositorio-metricas {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+  margin-block: var(--espacio-6);
+}
+#seccion-repositorio .repositorio-metricas .indicador { padding: 0; }
+#seccion-repositorio .repositorio-metricas .indicador--principal {
+  padding-inline-end: var(--espacio-6);
+  border-inline-end: 1px solid var(--linea);
+}
+#seccion-repositorio .repositorio-metricas .indicador--principal .indicador__valor {
+  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
+}
+
+#seccion-repositorio .repositorio-destacado-bloque { margin-bottom: var(--espacio-6); }
+
+/* Pieza asimétrica, mismo lenguaje que `.destacada-principal` de Companies:
+   tesis a la izquierda, datos tabulares a la derecha. Nombre propio —no se
+   reutiliza `.destacada-principal`— porque esa clase vive scopeada a
+   `#seccion-companias` y aquí el contenido a la derecha es distinto (2 datos,
+   no 4). */
+#seccion-repositorio .repositorio-destacado {
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
+  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
+  cursor: pointer;
+}
+#seccion-repositorio .repositorio-destacado:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+#seccion-repositorio .repositorio-destacado__ticker {
+  display: block; font-family: var(--mono, monospace);
+  font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
+}
+#seccion-repositorio .repositorio-destacado__nombre {
+  font-family: var(--geo); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
+  margin-top: 6px; transition: color var(--transicion);
+}
+#seccion-repositorio .repositorio-destacado:hover .repositorio-destacado__nombre { color: var(--acento); }
+#seccion-repositorio .repositorio-destacado__resumen {
+  margin-top: 14px; max-width: 62ch; color: var(--tinta-secundaria); line-height: 1.6;
+}
+#seccion-repositorio .repositorio-destacado__enlace {
+  display: inline-block; margin-top: 14px; color: var(--acento); font-weight: 500;
+}
+#seccion-repositorio .repositorio-destacado__derecha {
+  display: flex; flex-direction: column; align-items: flex-start; gap: var(--espacio-4);
+  padding-inline-start: var(--espacio-6);
+  border-inline-start: 1px solid var(--linea);
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-repositorio .repositorio-destacado__nombre { transition: none; }
+}
+@media (max-width: 720px) {
+  #seccion-repositorio .repositorio-destacado { grid-template-columns: 1fr; }
+  #seccion-repositorio .repositorio-destacado__derecha {
+    flex-direction: row; flex-wrap: wrap; gap: var(--espacio-5);
+    border-inline-start: none; border-block-start: 1px solid var(--linea);
+    padding-inline-start: 0; padding-block-start: var(--espacio-4); margin-top: var(--espacio-4);
+  }
+}
+
 /* ─────────────────────────────── Filtros ──────────────────────────────── */
 
 /* Conserva `--superficie-alt` y NO pasa al idioma de tarjeta del resto. No es
@@ -651,6 +725,17 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .panel-filtros__etiquetas { margin-top: 20px; padding-top: 18px; border-top: 1px solid var(--linea); }
 .panel-filtros__etiquetas > div { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+
+/* Repositorio, y solo Repositorio: el mismo `.panel-filtros` de siempre —sin
+   tocar id, name, evento ni estructura— pero sin la caja tintada, ahora que
+   hay hero y métricas por encima que ya marcan dónde empieza la sección. Es
+   la misma decisión que ya se tomó en Noticias, con nombre propio para no
+   repetir la trampa que el comentario de arriba ya advierte: acotar sin decir
+   por qué. Noticias conserva su propia caja, sin cambios. */
+#seccion-repositorio .panel-filtros {
+  border: none; border-radius: 0; background: none; padding: 0;
+  padding-top: var(--espacio-5); border-top: 1px solid var(--linea);
+}
 
 .pastilla {
   padding: 4px 11px; font-size: 0.76rem;
