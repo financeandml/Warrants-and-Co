@@ -778,6 +778,9 @@ export default {
   // ════════════════════════════════ News ══════════════════════════════════
   'noticias.antetitulo': 'Latest',
   'noticias.titulo': 'Market news',
+  'noticias.hub.subtitulo': 'Market news syndicated from Investing.com and in-house coverage, with source and time on every piece.',
+  'noticias.hub.total': 'News',
+  'noticias.hub.categorias': 'Categories',
   'noticias.sincronizar': 'Refresh now',
   'noticias.publicar': 'Publish story',
   'noticias.busqueda': 'Search the news',

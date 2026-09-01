@@ -3037,7 +3037,7 @@ function pintarEstadoDatos(datos) {
 
 // ══════════════════════════════ noticias ═════════════════════════════════
 
-const CLASE_RELEVANCIA = { urgente: 'noticia--urgente', alta: '', normal: '' };
+const CLASE_RELEVANCIA = { urgente: 'fila-noticia--urgente', alta: '', normal: '' };
 
 /**
  * Denominación visible de un nivel de relevancia.
@@ -3156,11 +3156,40 @@ async function cargarNoticias() {
   }
 }
 
+/**
+ * Cabecera de cifras del hub: total cubierto y categorías activas.
+ *
+ * Las dos salen de fuentes ya cargadas —paginación de la propia respuesta,
+ * vocabulario cargado al arrancar la app— y no se piden aparte. No lleva la
+ * hora de sincronización: esa cifra ya vive en `#estado-sincronizacion` y
+ * repetirla aquí sería la misma cifra contada dos veces, justo lo que la
+ * regla 9 prohíbe.
+ */
+function pintarMetricasNoticias(paginacion) {
+  const caja = $('#noticias-metricas');
+  if (!caja) return;
+  caja.textContent = '';
+
+  const metrica = (etiqueta, valor, principal = false) => {
+    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    bloque.appendChild(elemento('strong', 'indicador__valor', valor));
+    caja.appendChild(bloque);
+  };
+
+  metrica(t('noticias.hub.total'), String(paginacion.total), true);
+
+  const categorias = estado.vocabulariosNoticias?.categorias?.length;
+  if (Number.isFinite(categorias)) {
+    metrica(t('noticias.hub.categorias'), String(categorias));
+  }
+}
+
 /** Pinta el listado de noticias a partir de una carga ya resuelta. */
 function pintarNoticias(datos) {
-  const rejilla = $('#rejilla-noticias');
-  if (!rejilla || !datos) return;
-  rejilla.textContent = '';
+  const listado = $('#rejilla-noticias');
+  if (!listado || !datos) return;
+  listado.textContent = '';
 
   if (!datos.noticias.length) {
     const vacio = elemento('div', 'vacio');
@@ -3170,14 +3199,16 @@ function pintarNoticias(datos) {
         ? 'noticias.vacio.filtrado'
         : 'noticias.vacio.inicial'
     )));
-    rejilla.appendChild(vacio);
-    rejilla.classList.remove('rejilla-noticias');
+    listado.appendChild(vacio);
+    listado.classList.remove('noticias-listado');
   } else {
-    rejilla.classList.add('rejilla-noticias');
-    for (const n of datos.noticias) rejilla.appendChild(construirTarjetaNoticia(n));
+    listado.classList.add('noticias-listado');
+    for (const n of datos.noticias) listado.appendChild(construirFilaNoticia(n));
   }
 
   const p = datos.paginacion;
+  pintarMetricasNoticias(p);
+
   // El plural lo elige `Intl.PluralRules` sobre las formas de cada idioma, no
   // un `noticia${n === 1 ? '' : 's'}` que impondría la morfología castellana.
   $('#resumen-noticias').textContent = p.total
@@ -3195,40 +3226,44 @@ function pintarNoticias(datos) {
   });
 }
 
-function construirTarjetaNoticia(n) {
-  const tarjeta = elemento('button', `noticia ${CLASE_RELEVANCIA[n.relevancia] ?? ''}`.trim());
-  tarjeta.type = 'button';
-  tarjeta.addEventListener('click', () => abrirDetalleNoticia(n.id));
-
-  const superior = elemento('div', 'noticia__superior');
-  superior.appendChild(elemento('span', null, etiquetaCategoria(n.categoria)));
-  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', etiquetaRelevancia('urgente')));
-  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRelevancia('alta')));
-  if (n.destacada) superior.appendChild(elemento('span', 'distintivo', t('noticias.destacada')));
-  tarjeta.appendChild(superior);
+/** Fila editorial de una noticia, con línea divisoria y sin lenguaje de tarjeta. */
+function construirFilaNoticia(n) {
+  const fila = elemento('button', `fila-noticia ${CLASE_RELEVANCIA[n.relevancia] ?? ''}`.trim());
+  fila.type = 'button';
+  fila.addEventListener('click', () => abrirDetalleNoticia(n.id));
 
   if (n.imagen) {
-    const contenedorImagen = elemento('div', 'noticia__imagen-contenedor');
+    const contenedorImagen = elemento('div', 'fila-noticia__imagen');
     const img = document.createElement('img');
     img.src = n.imagen;
     img.alt = n.titular;
     img.loading = 'lazy';
     contenedorImagen.appendChild(img);
-    tarjeta.appendChild(contenedorImagen);
+    fila.appendChild(contenedorImagen);
   }
 
-  tarjeta.appendChild(elemento('h3', 'noticia__titular', n.titular));
-  if (n.entradilla) tarjeta.appendChild(elemento('p', 'noticia__entradilla', n.entradilla));
+  const cuerpo = elemento('div', 'fila-noticia__cuerpo');
 
-  const pie = elemento('div', 'noticia__pie');
+  const superior = elemento('div', 'fila-noticia__superior');
+  superior.appendChild(elemento('span', null, etiquetaCategoria(n.categoria)));
+  if (n.relevancia === 'urgente') superior.appendChild(elemento('span', 'distintivo distintivo--solido', etiquetaRelevancia('urgente')));
+  else if (n.relevancia === 'alta') superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRelevancia('alta')));
+  if (n.destacada) superior.appendChild(elemento('span', 'distintivo', t('noticias.destacada')));
+  cuerpo.appendChild(superior);
+
+  cuerpo.appendChild(elemento('h3', 'fila-noticia__titular', n.titular));
+  if (n.entradilla) cuerpo.appendChild(elemento('p', 'fila-noticia__entradilla', n.entradilla));
+
+  const pie = elemento('div', 'fila-noticia__pie');
   pie.appendChild(elemento('span', null, formatearMomento(n)));
   const propia = n.origen === 'manual' || !n.origen;
   pie.appendChild(elemento('span', `origen${propia ? ' origen--propio' : ''}`,
     propia ? t('noticias.origen.propio') : n.fuente || n.origen));
   for (const tk of n.tickers ?? []) pie.appendChild(elemento('span', 'ficha__ticker', tk));
-  tarjeta.appendChild(pie);
+  cuerpo.appendChild(pie);
 
-  return tarjeta;
+  fila.appendChild(cuerpo);
+  return fila;
 }
 
 async function abrirDetalleNoticia(id) {

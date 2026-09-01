@@ -704,10 +704,16 @@
   <section class="seccion" id="seccion-noticias" data-seccion-panel="noticias" hidden>
     <div class="contenedor">
 
-      <div class="titulo-seccion">
-        <div>
+      <!-- Hero editorial, mismo patrón que Companies/Catalysts: eyebrow +
+           título + subtítulo. Las acciones de sincronización/publicación son
+           transaccionales, no decorativas, así que se quedan en el propio
+           hero en vez de moverse a una barra aparte. -->
+      <div class="noticias-hero">
+        <div class="noticias-hero__interior">
           <p class="etiqueta-superior" data-i18n="noticias.antetitulo">Actualidad</p>
           <h1 data-i18n="noticias.titulo">Noticias de mercado</h1>
+          <p class="noticias-hero__subtitulo" data-i18n="noticias.hub.subtitulo">
+            Actualidad sindicada de Investing.com y redacción propia, con fuente y hora en cada pieza.</p>
         </div>
         <div class="acciones-noticias">
           <span class="estado-sincronizacion" id="estado-sincronizacion"></span>
@@ -717,6 +723,13 @@
                   data-i18n="noticias.publicar">Publicar noticia</button>
         </div>
       </div>
+
+      <!-- Cabecera del hub: total cubierto y categorías activas, mismo patrón
+           que `#companias-metricas`/`#catalizadores-metricas`. Ambas cifras ya
+           existen —paginación y vocabulario cargado al arrancar— y no
+           duplican la línea de sincronización de arriba, que sigue siendo la
+           única fuente de "cuándo se actualizó". -->
+      <div class="noticias-metricas" id="noticias-metricas"></div>
 
       <form class="panel-filtros" id="form-filtros-noticias" role="search">
         <div class="panel-filtros__principal">

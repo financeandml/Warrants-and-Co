@@ -609,10 +609,10 @@ const AREAS_OCULTAS = false;
   comp('la categoría elegida sobrevive al repintado',
     await p.locator('#filtro-noticias-categoria').inputValue(), categoria);
 
-  // La tarjeta la construye `construirTarjetaNoticia()`: nada de `data-i18n`.
-  const tarjetas = await p.locator('.noticia').count();
-  if (tarjetas) {
-    comp('categoría de la tarjeta', await txt('.noticia .noticia__superior span'),
+  // La fila la construye `construirFilaNoticia()`: nada de `data-i18n`.
+  const filas = await p.locator('.fila-noticia').count();
+  if (filas) {
+    comp('categoría de la fila', await txt('.fila-noticia .fila-noticia__superior span'),
       (v) => v && !/Mercados|Compañía|Macroeconomía|Regulación/.test(v));
   }
 

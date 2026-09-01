@@ -807,6 +807,9 @@ export default {
   // ═══════════════════════════════ Noticias ════════════════════════════════
   'noticias.antetitulo': 'Actualidad',
   'noticias.titulo': 'Noticias de mercado',
+  'noticias.hub.subtitulo': 'Actualidad sindicada de Investing.com y redacción propia, con fuente y hora en cada pieza.',
+  'noticias.hub.total': 'Noticias',
+  'noticias.hub.categorias': 'Categorías',
   'noticias.sincronizar': 'Actualizar ahora',
   'noticias.publicar': 'Publicar noticia',
   'noticias.busqueda': 'Búsqueda de noticias',
