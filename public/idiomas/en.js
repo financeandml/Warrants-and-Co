@@ -84,6 +84,7 @@ export default {
   'pie.lema': 'Internal research and investment platform.',
   'pie.linkedin': 'Warrants & Co. profile on LinkedIn',
   'pie.nav.etiqueta': 'Warrants & Co. sections',
+  'pie.aviso': 'The information on this platform is provided for informational purposes only and does not constitute investment advice or an offer to buy or sell financial instruments. Past performance does not guarantee future returns. Quotes are supplied by market data providers on a best-effort, real-time basis and may be delayed.',
 
   // ── Formatting pieces ──
   // They only join data, but they live here all the same: the order and the

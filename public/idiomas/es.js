@@ -85,6 +85,7 @@ export default {
   'pie.lema': 'Plataforma interna de análisis e inversión.',
   'pie.linkedin': 'Perfil de Warrants & Co. en LinkedIn',
   'pie.nav.etiqueta': 'Secciones de Warrants & Co.',
+  'pie.aviso': 'La información contenida en esta plataforma tiene carácter informativo y no constituye asesoramiento en materia de inversión ni oferta de compra o venta de instrumentos financieros. Las rentabilidades pasadas no garantizan rendimientos futuros. Cotizaciones facilitadas por proveedores de mercado con la máxima actualidad disponible; pueden presentar retardo.',
 
   // ── Piezas de formato ──
   // Solo unen datos, pero viven aquí igualmente: el orden y el separador son
