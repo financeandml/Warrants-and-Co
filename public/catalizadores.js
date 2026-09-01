@@ -77,6 +77,18 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
   let eventos = horizonte === 'PAST' ? datos.pasados : datos.proximos;
   if (horizonte === 'UPCOMING' && ventana) eventos = filtrarPorVentana(eventos, ventana);
 
+  /* Los vencimientos de opciones de prioridad baja dejan de pintarse como
+     tarjeta completa —único cambio de qué se ve por defecto, no de qué
+     existe— SOLO en la vista sin filtrar (TODOS, sin ventana): es la única
+     donde el resumen por compañía se pinta a continuación como red de
+     seguridad. Con una ventana temporal activa o en Pasados, cada vencimiento
+     sigue siendo tarjeta, exactamente como antes: no hay resumen ahí que
+     recoja lo que se retirase. */
+  const conResumen = horizonte === 'UPCOMING' && !ventana;
+  const eventosTarjeta = conResumen
+    ? eventos.filter((e) => !(e.tipo === 'OPTIONS EXPIRY' && e.prioridad === 'LOW'))
+    : eventos;
+
   if (estado) {
     // Tres datos independientes unidos por el separador de lista, no una frase
     // partida que impondría a todos el orden del castellano.
@@ -102,9 +114,11 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
     return;
   }
 
-  // Agrupación por fecha: la lectura natural de una agenda.
+  // Agrupación por fecha: la lectura natural de una agenda. Usa
+  // `eventosTarjeta` —eventos ∖ vencimientos LOW cuando hay resumen— para que
+  // lo retirado de aquí sea exactamente lo que el bloque de resumen recoge.
   const porFecha = new Map();
-  for (const e of eventos) {
+  for (const e of eventosTarjeta) {
     if (!porFecha.has(e.fecha)) porFecha.set(e.fecha, []);
     porFecha.get(e.fecha).push(e);
   }
@@ -130,6 +144,183 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
 
     raiz.appendChild(grupo);
   }
+
+  // Vencimientos de opciones agrupados por compañía: la red de seguridad de
+  // lo que `eventosTarjeta` acaba de retirar arriba. `datos.resumenVencimientos`
+  // ya viene calculado del servidor —un hecho, una fuente—, así que aquí solo
+  // se pinta, nunca se recalcula.
+  if (conResumen && datos.resumenVencimientos?.length) {
+    raiz.appendChild(bloqueResumenVencimientos(datos.resumenVencimientos, alAbrirCompania));
+  }
+}
+
+/**
+ * "Vencimientos de opciones · Resumen": una fila por compañía, tabla densa en
+ * vez de tarjeta —es justo el caso que DESIGN.md reserva para tabla: datos
+ * homogéneos, muchas filas—. "Ver todos" despliega el conjunto COMPLETO de
+ * vencimientos próximos de esa compañía —HIGH y MEDIUM incluidos, no solo los
+ * LOW retirados de arriba—, porque `resumenVencimientos` en el servidor ya
+ * trae todos, nunca un subconjunto: así "Ver todos" siempre es trazable a
+ * los mismos datos que las tarjetas de arriba, sin una segunda cuenta que
+ * pueda discrepar.
+ */
+function bloqueResumenVencimientos(resumen, alAbrirCompania) {
+  const seccion = elemento('section', 'resumen-vencimientos');
+  seccion.setAttribute('aria-labelledby', 'titulo-resumen-vencimientos');
+
+  const cabecera = elemento('header', 'resumen-vencimientos__cabecera');
+  const titulo = elemento('h2', 'movimiento', t('catalizadores.resumenVencimientos.titulo'));
+  titulo.id = 'titulo-resumen-vencimientos';
+  cabecera.appendChild(titulo);
+  cabecera.appendChild(elemento('p', 'resumen-vencimientos__subtitulo',
+    t('catalizadores.resumenVencimientos.subtitulo')));
+  seccion.appendChild(cabecera);
+
+  const envoltorio = elemento('div', 'tabla-envoltorio');
+  const tabla = elemento('table', 'tabla-datos');
+
+  const caption = elemento('caption', 'visualmente-oculto',
+    t('catalizadores.resumenVencimientos.caption'));
+  tabla.appendChild(caption);
+
+  const thead = document.createElement('thead');
+  const filaCab = document.createElement('tr');
+  const th = (clave, clase = '') => {
+    const celda = document.createElement('th');
+    celda.scope = 'col';
+    if (clase) celda.className = clase;
+    celda.textContent = t(clave);
+    return celda;
+  };
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.compania'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.total', 'num'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.proximo'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.maximaConcentracion', 'num'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.fecha'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.col.detalle'));
+  thead.appendChild(filaCab);
+  tabla.appendChild(thead);
+
+  const cuerpo = document.createElement('tbody');
+  for (const r of resumen) {
+    const [fila, panel, boton] = filaResumenVencimiento(r, alAbrirCompania);
+    cuerpo.appendChild(fila);
+    cuerpo.appendChild(panel);
+    boton.addEventListener('click', () => {
+      const abierto = boton.getAttribute('aria-expanded') === 'true';
+      boton.setAttribute('aria-expanded', String(!abierto));
+      boton.querySelector('.resumen-vencimientos__glifo').textContent = abierto ? '+' : '–';
+      panel.hidden = abierto;
+    });
+  }
+  tabla.appendChild(cuerpo);
+
+  envoltorio.appendChild(tabla);
+  seccion.appendChild(envoltorio);
+  return seccion;
+}
+
+/** Fila de una compañía en el resumen, más su panel de detalle (oculto). */
+function filaResumenVencimiento(r, alAbrirCompania) {
+  const idDetalle = `detalle-vencimientos-${r.ticker}`;
+
+  const fila = document.createElement('tr');
+
+  const celdaCompania = elemento('td', 'celda-empresa');
+  const nombre = elemento('button', 'evento__compania',
+    [r.ticker, r.empresa].filter(Boolean).join(t('general.separadorLista')));
+  nombre.type = 'button';
+  nombre.addEventListener('click', () => alAbrirCompania(r.ticker ?? r.empresa));
+  celdaCompania.appendChild(nombre);
+  fila.appendChild(celdaCompania);
+
+  fila.appendChild(elemento('td', 'num', formatearNumero(r.total, 0)));
+  fila.appendChild(elemento('td', '', formatearFecha(r.proximaFecha)));
+  fila.appendChild(elemento('td', 'num',
+    Number.isFinite(r.maximaCuota?.valor) ? porcentaje(r.maximaCuota.valor, 1) : noDisponible()));
+  fila.appendChild(elemento('td', '',
+    r.maximaCuota?.fecha ? formatearFecha(r.maximaCuota.fecha) : noDisponible()));
+
+  const celdaAccion = elemento('td', 'celda-acciones');
+  const boton = document.createElement('button');
+  boton.type = 'button';
+  boton.className = 'resumen-vencimientos__despliegue';
+  boton.setAttribute('aria-expanded', 'false');
+  boton.setAttribute('aria-controls', idDetalle);
+  boton.setAttribute('aria-label',
+    t('catalizadores.resumenVencimientos.desplegar', { empresa: r.empresa }));
+  boton.appendChild(elemento('span', 'resumen-vencimientos__glifo', '+'));
+  boton.appendChild(document.createTextNode(t('catalizadores.resumenVencimientos.verTodos')));
+  celdaAccion.appendChild(boton);
+  fila.appendChild(celdaAccion);
+
+  const panel = filaDetalleVencimientos(r, idDetalle);
+
+  return [fila, panel, boton];
+}
+
+/**
+ * Panel expandible con TODOS los vencimientos próximos de una compañía —los
+ * mismos objetos que ya trae `r.vencimientos` desde el servidor, sin volver a
+ * calcular ninguna cifra—. Tabla, no tarjetas: es el mismo dato que ya se leía
+ * arriba en `.evento__datos`, aquí en formato denso para 10-14 filas.
+ */
+function filaDetalleVencimientos(r, idDetalle) {
+  const fila = document.createElement('tr');
+  fila.id = idDetalle;
+  fila.className = 'resumen-vencimientos__detalle';
+  fila.hidden = true;
+
+  const celda = document.createElement('td');
+  celda.colSpan = 6;
+
+  const envoltorio = elemento('div', 'tabla-envoltorio');
+  const tabla = elemento('table', 'tabla-datos');
+  const caption = elemento('caption', 'visualmente-oculto',
+    t('catalizadores.resumenVencimientos.detalle.caption', { empresa: r.empresa }));
+  tabla.appendChild(caption);
+
+  const thead = document.createElement('thead');
+  const filaCab = document.createElement('tr');
+  const th = (clave, clase = '') => {
+    const c = document.createElement('th');
+    c.scope = 'col';
+    if (clase) c.className = clase;
+    c.textContent = t(clave);
+    return c;
+  };
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.detalle.col.fecha'));
+  filaCab.appendChild(th('catalizadores.resumenVencimientos.detalle.col.dias', 'num'));
+  filaCab.appendChild(th('catalizadores.dato.interesAbierto', 'num'));
+  filaCab.appendChild(th('catalizadores.dato.volumen', 'num'));
+  filaCab.appendChild(th('catalizadores.dato.cuotaOI', 'num'));
+  filaCab.appendChild(th('catalizadores.dato.contratos', 'num'));
+  thead.appendChild(filaCab);
+  tabla.appendChild(thead);
+
+  const cuerpo = document.createElement('tbody');
+  // Mismo orden que ya trae el servidor (más cercano primero): no se reordena.
+  for (const v of r.vencimientos) {
+    const d = v.detalle ?? {};
+    const filaV = document.createElement('tr');
+    filaV.appendChild(elemento('td', '', formatearFecha(v.fecha)));
+    filaV.appendChild(elemento('td', 'num', formatearNumero(v.dias, 0)));
+    filaV.appendChild(elemento('td', 'num',
+      Number.isFinite(d.interesAbierto) ? formatearNumero(d.interesAbierto, 0) : noDisponible()));
+    filaV.appendChild(elemento('td', 'num',
+      Number.isFinite(d.volumen) ? formatearNumero(d.volumen, 0) : noDisponible()));
+    filaV.appendChild(elemento('td', 'num',
+      Number.isFinite(d.cuotaInteresAbierto) ? porcentaje(d.cuotaInteresAbierto, 1) : noDisponible()));
+    filaV.appendChild(elemento('td', 'num',
+      Number.isFinite(d.contratos) ? formatearNumero(d.contratos, 0) : noDisponible()));
+    cuerpo.appendChild(filaV);
+  }
+  tabla.appendChild(cuerpo);
+
+  envoltorio.appendChild(tabla);
+  celda.appendChild(envoltorio);
+  fila.appendChild(celda);
+  return fila;
 }
 
 /** Ventana temporal sobre `dias`: 0 = hoy, ≤7, ≤30. Agregación en cliente. */

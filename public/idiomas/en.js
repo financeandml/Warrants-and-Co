@@ -1150,6 +1150,24 @@ export default {
   'catalizadores.dato.objetivo': 'Target price',
   'catalizadores.dato.analista': 'Analyst',
 
+  // Expiration summary: low-priority ones aren't dropped, they're grouped by
+  // company. "See all" brings the complete set, HIGH/MEDIUM included.
+  'catalizadores.resumenVencimientos.titulo': 'Options expirations · Summary',
+  'catalizadores.resumenVencimientos.subtitulo':
+    'High- and medium-priority expirations stay above as full events. Here, the rest, grouped by company — none of them are left out of this table.',
+  'catalizadores.resumenVencimientos.caption': 'Options expirations grouped by company',
+  'catalizadores.resumenVencimientos.col.compania': 'Company',
+  'catalizadores.resumenVencimientos.col.total': 'Expirations',
+  'catalizadores.resumenVencimientos.col.proximo': 'Next',
+  'catalizadores.resumenVencimientos.col.maximaConcentracion': 'Peak concentration',
+  'catalizadores.resumenVencimientos.col.fecha': 'Date',
+  'catalizadores.resumenVencimientos.col.detalle': 'Detail',
+  'catalizadores.resumenVencimientos.verTodos': 'See all',
+  'catalizadores.resumenVencimientos.desplegar': 'See all expirations for {empresa}',
+  'catalizadores.resumenVencimientos.detalle.caption': 'All expirations for {empresa}',
+  'catalizadores.resumenVencimientos.detalle.col.fecha': 'Date',
+  'catalizadores.resumenVencimientos.detalle.col.dias': 'Days',
+
   // ════════════════════════════ Markets ════════════════════════════════════
   'mercado.etiqueta': 'Market',
   'mercado.titulo': 'Markets',

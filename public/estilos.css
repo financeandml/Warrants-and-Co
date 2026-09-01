@@ -3601,6 +3601,36 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   #seccion-catalizadores .evento:hover .evento__derecha { transform: none; }
 }
 
+/* ── Vencimientos de opciones · Resumen ──
+   Una fila por compañía, tabla densa —mismo `.tabla-datos` global que el
+   resto de la plataforma—, con los vencimientos que ya no se pintan como
+   tarjeta arriba. El despliegue reutiliza el mismo lenguaje que
+   `.fila-cartera__despliegue`/`__glifo` de Cartera —glifo +/– sin animación,
+   togglea `hidden`—, con nombre propio para no acoplar dos secciones a la
+   misma clase global. */
+#seccion-catalizadores .resumen-vencimientos { margin-top: var(--espacio-6); }
+#seccion-catalizadores .resumen-vencimientos__cabecera { margin-bottom: var(--espacio-4); }
+#seccion-catalizadores .resumen-vencimientos__subtitulo {
+  margin-top: 6px; max-width: 68ch; color: var(--tinta-secundaria);
+}
+#seccion-catalizadores .resumen-vencimientos__despliegue {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 0; border: none; background: none;
+  font: inherit; color: inherit; cursor: pointer;
+}
+#seccion-catalizadores .resumen-vencimientos__despliegue:focus-visible {
+  outline: 2px solid var(--foco); outline-offset: 3px;
+}
+#seccion-catalizadores .resumen-vencimientos__glifo {
+  font-family: var(--mono); color: var(--tinta-mate);
+}
+#seccion-catalizadores .resumen-vencimientos__detalle td {
+  padding-block: var(--espacio-3); background: var(--superficie-alt);
+}
+/* Sin transición que guardar tras `prefers-reduced-motion`: el despliegue
+   alterna `hidden` de golpe, igual que `.fila-cartera__detalle` en Cartera —
+   no hay animación que desactivar porque nunca la hubo. */
+
 /* ── Sin fuente conectada: nota discreta al pie, no bloque separado gigante ── */
 #seccion-catalizadores .catalizadores-carencias {
   margin-top: var(--espacio-6); padding-top: var(--espacio-5);

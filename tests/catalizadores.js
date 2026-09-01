@@ -36,8 +36,19 @@ require.cache[rutaMercado] = {
   },
 };
 
-// Una única fecha de vencimiento, con interés abierto concentrado, para QCOM.
-// ORCL no tiene cadena —vencimientosDe() debe seguir sin ella, no fallar.
+// Tres vencimientos distintos para QCOM —el primero conserva exactamente el
+// caso ya usado por las pruebas de más abajo (dos contratos, mismo 2026-12-18,
+// 800 de interés abierto acumulado)—, más dos fechas relativas a "hoy" para no
+// depender de cuándo se ejecute la prueba. ORCL sigue sin cadena —
+// vencimientosDe() debe seguir sin ella, no fallar—.
+const diasDesdeHoy = (n) => {
+  const d = new Date();
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+};
+const FECHA_CERCANA = diasDesdeHoy(5);
+const FECHA_LEJANA = diasDesdeHoy(120);
+
 const rutaOpciones = require.resolve('../src/opciones');
 require.cache[rutaOpciones] = {
   id: rutaOpciones, filename: rutaOpciones, loaded: true,
@@ -50,6 +61,8 @@ require.cache[rutaOpciones] = {
         contratos: [
           { vencimiento: '2026-12-18', interesAbierto: 500, volumen: 80 },
           { vencimiento: '2026-12-18', interesAbierto: 300, volumen: 40 },
+          { vencimiento: FECHA_CERCANA, interesAbierto: 200, volumen: 50 },
+          { vencimiento: FECHA_LEJANA, interesAbierto: 2000, volumen: 10 },
         ],
       };
     },
@@ -124,7 +137,10 @@ const carteraSimulada = {
     conCartera.disponible === true, `disponible: ${conCartera.disponible}`);
 
   // La prioridad/horizonte/detalle de OI siguen intactos: el cruce no los toca.
-  const vencQCOM = eventosQCOM.find((e) => e.tipo === catalizadores.TIPOS.VENCIMIENTO);
+  // Se localiza por fecha —ya no es el único vencimiento de QCOM— para seguir
+  // afirmando exactamente el mismo caso que antes.
+  const vencimientosQCOM = eventosQCOM.filter((e) => e.tipo === catalizadores.TIPOS.VENCIMIENTO);
+  const vencQCOM = vencimientosQCOM.find((e) => e.fecha === '2026-12-18');
   t('el vencimiento de QCOM conserva su interés abierto estructurado',
     vencQCOM?.detalle?.interesAbierto === 800, `${vencQCOM?.detalle?.interesAbierto}`);
   // 2026-12-18 cae fuera del horizonte de 45 días desde hoy: LOW es la
@@ -132,6 +148,58 @@ const carteraSimulada = {
   // no un valor arbitrario — se afirma el valor real, no uno deseado.
   t('el vencimiento de QCOM conserva su prioridad calculada (LOW, fuera de horizonte)',
     vencQCOM?.prioridad === catalizadores.PRIORIDAD.BAJA, `${vencQCOM?.prioridad}`);
+
+  // ── 4 · Resumen de vencimientos: agregado derivado, no un segundo cálculo ──
+  // (Fase 2 del Investment Catalyst Monitor)
+  //
+  // QCOM tiene ahora tres vencimientos próximos: 2026-12-18 (800 OI),
+  // FECHA_CERCANA (200 OI, la más próxima) y FECHA_LEJANA (2000 OI, la que
+  // concentra más interés abierto sobre el total de las tres: 2000/3000 =
+  // 66,7 %). Total de interés abierto = 500+300+200+2000 = 3000.
+  const resumenQCOM = conCartera.resumenVencimientos?.find((r) => r.ticker === 'QCOM');
+
+  t('resumenVencimientos existe y trae exactamente una fila (QCOM; ORCL sin cadena)',
+    Array.isArray(conCartera.resumenVencimientos) && conCartera.resumenVencimientos.length === 1,
+    JSON.stringify(conCartera.resumenVencimientos?.map((r) => r.ticker)));
+
+  t('resumen de QCOM · total coincide exactamente con sus vencimientos originales',
+    resumenQCOM?.total === vencimientosQCOM.length,
+    `resumen: ${resumenQCOM?.total} · originales: ${vencimientosQCOM.length}`);
+
+  t('resumen de QCOM · próximo vencimiento es el más cercano en días',
+    resumenQCOM?.proximaFecha === FECHA_CERCANA, `${resumenQCOM?.proximaFecha}`);
+
+  t('resumen de QCOM · máxima cuota es la de FECHA_LEJANA (66,7 %)',
+    resumenQCOM?.maximaCuota?.fecha === FECHA_LEJANA
+      && Math.abs((resumenQCOM?.maximaCuota?.valor ?? 0) - 66.7) < 0.05,
+    JSON.stringify(resumenQCOM?.maximaCuota));
+
+  // Trazabilidad exacta: cada vencimiento del resumen es EL MISMO objeto (o un
+  // objeto con los mismos campos) que ya vive en `proximos` — no una cifra
+  // recalculada que pudiera divergir del dato fuente.
+  const fechasOriginales = vencimientosQCOM.map((e) => e.fecha).sort();
+  const fechasResumen = (resumenQCOM?.vencimientos ?? []).map((e) => e.fecha).sort();
+  t('resumen de QCOM · exactamente las mismas fechas que los vencimientos originales',
+    JSON.stringify(fechasOriginales) === JSON.stringify(fechasResumen),
+    `originales: ${JSON.stringify(fechasOriginales)} · resumen: ${JSON.stringify(fechasResumen)}`);
+
+  const coincideEnTodo = vencimientosQCOM.every((original) => {
+    const enResumen = resumenQCOM?.vencimientos?.find((e) => e.fecha === original.fecha);
+    return enResumen
+      && enResumen.detalle?.interesAbierto === original.detalle?.interesAbierto
+      && enResumen.detalle?.volumen === original.detalle?.volumen
+      && enResumen.detalle?.contratos === original.detalle?.contratos
+      && enResumen.detalle?.cuotaInteresAbierto === original.detalle?.cuotaInteresAbierto
+      && enResumen.prioridad === original.prioridad;
+  });
+  t('resumen de QCOM · interés abierto, volumen, contratos, cuota y prioridad idénticos al original',
+    coincideEnTodo, 'alguna fila del resumen difiere del vencimiento original');
+
+  // ORCL no tiene cadena de opciones: no debe aparecer en el resumen, ni con
+  // una fila vacía ni con ceros que fingieran datos que no existen.
+  t('ORCL sin cadena · no aparece en resumenVencimientos (ni vacío, ni a cero)',
+    !conCartera.resumenVencimientos?.some((r) => r.ticker === 'ORCL'),
+    JSON.stringify(conCartera.resumenVencimientos?.map((r) => r.ticker)));
 
   for (const r of R) console.log(`  ${r.ok ? 'OK  ' : 'FALLO'} ${r.n}${r.ok ? '' : ' — ' + r.d}`);
   const mal = R.filter((r) => !r.ok).length;

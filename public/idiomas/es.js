@@ -1205,6 +1205,24 @@ export default {
   'catalizadores.dato.objetivo': 'Precio objetivo',
   'catalizadores.dato.analista': 'Analista',
 
+  // Resumen de vencimientos: los de prioridad baja no se retiran, se agrupan
+  // por compañía. "Ver todos" trae el conjunto completo, HIGH/MEDIUM incluidos.
+  'catalizadores.resumenVencimientos.titulo': 'Vencimientos de opciones · Resumen',
+  'catalizadores.resumenVencimientos.subtitulo':
+    'Los vencimientos de prioridad alta y media siguen arriba como eventos completos. Aquí, el resto, agrupado por compañía — ninguno queda fuera de esta tabla.',
+  'catalizadores.resumenVencimientos.caption': 'Vencimientos de opciones agrupados por compañía',
+  'catalizadores.resumenVencimientos.col.compania': 'Compañía',
+  'catalizadores.resumenVencimientos.col.total': 'Nº vencimientos',
+  'catalizadores.resumenVencimientos.col.proximo': 'Próximo',
+  'catalizadores.resumenVencimientos.col.maximaConcentracion': 'Máxima concentración',
+  'catalizadores.resumenVencimientos.col.fecha': 'Fecha',
+  'catalizadores.resumenVencimientos.col.detalle': 'Detalle',
+  'catalizadores.resumenVencimientos.verTodos': 'Ver todos',
+  'catalizadores.resumenVencimientos.desplegar': 'Ver todos los vencimientos de {empresa}',
+  'catalizadores.resumenVencimientos.detalle.caption': 'Todos los vencimientos de {empresa}',
+  'catalizadores.resumenVencimientos.detalle.col.fecha': 'Fecha',
+  'catalizadores.resumenVencimientos.detalle.col.dias': 'Días',
+
   // ═══════════════════════════ Mercado ═════════════════════════════════════
   'mercado.etiqueta': 'Mercado',
   'mercado.titulo': 'Mercados',

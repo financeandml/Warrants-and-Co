@@ -250,6 +250,63 @@ function prensaDe(compania, limite = 4) {
 }
 
 /**
+ * Resumen de vencimientos por compañía —Fase 2 del Investment Catalyst
+ * Monitor—, derivado de los propios eventos ya calculados por
+ * `vencimientosDe()`, nunca un segundo cálculo de interés abierto, volumen o
+ * cuota: cada objeto en `vencimientos` es EL MISMO que ya vive en `proximos`,
+ * de modo que no hay dos fuentes que puedan discrepar (regla 9).
+ *
+ * Existe porque un vencimiento semanal de opciones por cada compañía cubierta,
+ * durante todo el horizonte que publica la cadena, satura la agenda con
+ * decenas de tarjetas casi idénticas. La prioridad (`priorizar()`) ya distingue
+ * qué vencimiento importa; este resumen solo reorganiza los que NO fueron
+ * seleccionados como tarjeta completa, agrupados por compañía, sin perder
+ * ni uno: `total` cuenta exactamente los vencimientos próximos de la compañía,
+ * y `vencimientos` los trae todos, HIGH/MEDIUM incluidos, para que "Ver
+ * todos" sea siempre el conjunto completo, no un subconjunto.
+ *
+ * @param {object[]} proximos eventos ya filtrados a horizonte PROXIMO
+ */
+function resumenVencimientos(proximos) {
+  const porTicker = new Map();
+  for (const e of proximos) {
+    if (e.tipo !== TIPOS.VENCIMIENTO || !e.ticker) continue;
+    if (!porTicker.has(e.ticker)) porTicker.set(e.ticker, []);
+    porTicker.get(e.ticker).push(e);
+  }
+
+  const resumen = [];
+  for (const [ticker, lista] of porTicker) {
+    // `proximos` ya viene ordenado por `dias` ascendente (ver `agenda()`);
+    // filtrar por ticker conserva ese orden, así que `lista[0]` es el más
+    // cercano sin necesidad de volver a ordenar.
+    let maximaCuota = null;
+    for (const e of lista) {
+      const cuota = e.detalle?.cuotaInteresAbierto;
+      if (Number.isFinite(cuota) && (maximaCuota === null || cuota > maximaCuota.valor)) {
+        maximaCuota = { valor: cuota, fecha: e.fecha };
+      }
+    }
+    resumen.push({
+      ticker,
+      empresa: lista[0].compania,
+      total: lista.length,
+      // Se publican por si resultan útiles en el cliente, pero no sustituyen a
+      // la prioridad de cada evento individual, que sigue viajando intacta en
+      // `vencimientos`.
+      altos: lista.filter((e) => e.prioridad === PRIORIDAD.ALTA).length,
+      medios: lista.filter((e) => e.prioridad === PRIORIDAD.MEDIA).length,
+      proximaFecha: lista[0].fecha,
+      proximosDias: lista[0].dias,
+      maximaCuota,
+      // Mismas referencias que en `proximos`: trazable sin transformación.
+      vencimientos: lista,
+    });
+  }
+  return resumen;
+}
+
+/**
  * Agenda completa.
  *
  * @param {object} opciones { ticker, tipo, horizonte, cartera }
@@ -299,6 +356,9 @@ async function agenda({ ticker = null, tipo = null, horizonte = null, cartera = 
     proximos,
     pasados,
     sinFecha,
+    // Fase 2: agregado por compañía de los vencimientos de opciones próximos,
+    // derivado de `proximos` sin recalcular ningún campo — ver `resumenVencimientos()`.
+    resumenVencimientos: resumenVencimientos(proximos),
     total: eventos.length,
     disponible: eventos.length > 0,
     resumen: {
