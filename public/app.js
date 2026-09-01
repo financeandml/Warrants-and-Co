@@ -3238,6 +3238,14 @@ function construirFilaNoticia(n) {
     img.src = n.imagen;
     img.alt = n.titular;
     img.loading = 'lazy';
+    // Investing.com bloquea el hotlink de imagen desde el navegador (ver
+    // tests/repintado.js): sin este manejador, el icono roto deja el `alt`
+    // —el titular real, nunca traducido— desbordando la caja de 84px, que a
+    // simple vista se lee como si la fila entera se hubiera quedado en
+    // español. Retirar el contenedor entero es la misma disciplina que ya
+    // sigue el resto de la plataforma con un dato sin fuente: no se rellena
+    // con un icono de repuesto, se declara ausente quitándolo de en medio.
+    img.addEventListener('error', () => contenedorImagen.remove(), { once: true });
     contenedorImagen.appendChild(img);
     fila.appendChild(contenedorImagen);
   }
