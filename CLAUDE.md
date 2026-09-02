@@ -105,8 +105,16 @@ que la tabla nunca compita en tamaño con el titular. `--tipo-6` y `--tipo-7` so
 | `--tipo-6` | `clamp(1.75rem, 3.4vw, 2.55rem)` | h1 |
 | `--tipo-7` | `clamp(2.2rem, 5vw, 3.6rem)` | display del hero |
 
-**Regla verificable:** todo `font-size` en `estilos.css` referencia `var(--tipo-N)`; cero
-literales sueltos fuera de la lista de excepción que el propio fichero documenta.
+**Excepción documentada: `--tipo-indicador-principal`.** La cifra grande de
+`#resumen-portfolio` en Cartera —el único indicador principal de la sección— mide, medido
+en navegador antes de decidir, `clamp(2.6rem, 6vw, 4.2rem)`: 41,6–67,2px. No encaja en la
+escala de ocho pasos —su mínimo ya supera el máximo de `--tipo-6` y su techo rebasa el de
+`--tipo-7`—, y forzarla a cualquiera de los dos la recortaría o la estiraría sin motivo.
+Vive en su propio token, nombrado, en vez de como un `clamp()` suelto: mismo criterio que
+`--mov-sale-cinta` en la cláusula 8, una excepción con nombre y no un literal sin rastro.
+
+**Regla verificable:** todo `font-size` en `estilos.css` referencia `var(--tipo-N)` o una
+excepción nombrada de la lista de arriba; cero literales sueltos fuera de ella.
 `tests/paleta.js` recorre el CSS y lo afirma.
 
 **7 · Densidad: dos niveles, cuatro números cada uno.** Densidad no es un adjetivo de la

@@ -163,6 +163,13 @@
   --tipo-6: clamp(1.75rem, 3.4vw, 2.55rem);  /* h1 */
   --tipo-7: clamp(2.2rem, 5vw, 3.6rem);      /* display del hero */
 
+  /* Excepción documentada, no un clamp() suelto: medida en navegador antes de
+     decidir (41.6-67.2px), no encaja en ningún --tipo-N —su mínimo ya supera
+     el máximo de --tipo-6 y su techo rebasa el de --tipo-7—. Es la cifra
+     de mayor formato de la plataforma, con motivo: el único indicador
+     principal de Cartera. CLAUDE.md § Diseño 6, excepción. */
+  --tipo-indicador-principal: clamp(2.6rem, 6vw, 4.2rem);
+
   /* ── Escala de densidad (rediseño 2) ──
      Dos niveles, cuatro números cada uno. Se aplica con
      `data-densidad="compacta"` o `"comoda"` en la raíz de la sección o
@@ -1277,7 +1284,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 #seccion-cartera #resumen-portfolio .indicador--principal .indicador__valor {
   font-family: var(--geo);
-  font-size: clamp(2.6rem, 6vw, 4.2rem);
+  font-size: var(--tipo-indicador-principal);
   font-weight: 500;
 }
 
