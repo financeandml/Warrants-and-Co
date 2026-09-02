@@ -55,6 +55,22 @@ const SIMBOLOS_SIN_HISTORICO = ['^GSPC', '^VIX', '^NDX', '^TNX'];
 const esSerieTolerada = (url) => SIMBOLOS_SIN_HISTORICO.some((s) =>
   url.includes(`/api/mercado/serie/${encodeURIComponent(s)}`));
 
+/* ── La misma excepción de `tests/repintado.js`, aplicada donde faltaba ──
+   No es un hallazgo nuevo: `src/noticias/investing.js` ya documenta en su
+   cabecera que investing.com responde 403 a peticiones automatizadas —web y
+   `api.investing.com` incluidas—, y `repintado.js` ya declara pendiente,
+   nunca fallo, el mismo 403 al cargar la imagen de una noticia en directo
+   desde el navegador ("el mismo bloqueo anti-scraping que ese fichero ya
+   documenta en su cabecera"). Aquí llega con el host real de la respuesta
+   —`content-media.investing.com`, un subdominio de la misma casa— en vez del
+   texto genérico de consola que usa `repintado.js`, así que se afirma sobre
+   el host y no sobre un mensaje que no lleva esa información. */
+const esImagenInvestingBloqueada = (url, status) => {
+  if (status !== 403) return false;
+  try { return /(^|\.)investing\.com$/.test(new URL(url).hostname); }
+  catch { return false; }
+};
+
 (async () => {
   const b = await chromium.launch();
   let fallos = 0;
@@ -74,6 +90,7 @@ const esSerieTolerada = (url) => SIMBOLOS_SIN_HISTORICO.some((s) =>
     p.on('response', (r) => {
       if (r.status() < 400) return;
       if (esSerieTolerada(r.url())) return;
+      if (esImagenInvestingBloqueada(r.url(), r.status())) return;
       err.push(`${r.status()} ${r.url()}`);
     });
     await p.goto(`${B}/#/inicio`);
