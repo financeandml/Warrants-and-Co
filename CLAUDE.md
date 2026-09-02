@@ -133,8 +133,28 @@ de lectura: la densidad se decide por elemento, no por sección entera, cuando l
 mezcla ambos. Aplicado hoy: hero cómodo, cinta compacta, noticias con cuerpo cómodo y
 metadato compacto, cartera compacta.
 
+**Excepción documentada: `#tabla-serie` va cómoda.** Es una tabla de datos —por la
+cláusula 2 diría compacta—, pero se abre puntualmente con "Ver datos" y casi nadie la
+escanea a diario: el criterio de la cláusula 2 pesa la frecuencia de uso, no solo la
+naturaleza del dato, y aquí gana la frecuencia. No es una relajación sin motivo ni un
+hueco para colar otra tabla en cómoda por comodidad: quien la vea y la "corrija" a
+compacta sin leer esto estaría deshaciendo una decisión, no arreglando un olvido.
+
+**Excepción documentada: `.tabla-posiciones` mide ~42px de fila, no los ≤34px de
+compacta.** Los tokens de densidad SÍ están puestos —12px, interlineado 1.3, relleno
+5px— y se comprobó que se aplican. Lo que empuja la fila por encima del tope es la
+primera columna, que apila dos líneas: el nombre de la posición y, debajo, «ticker ·
+sector» (`.celda-empresa small`). Bajar de dos líneas exigiría quitar el sector de ahí
+o reducirlo a solo el ticker, y eso ya no es un ajuste de densidad —es tocar qué
+información se lee de un vistazo en la tabla más consultada de Cartera, cuando ese
+mismo par ticker+sector es justo lo que el resto de la plataforma ya muestra así—.
+Decisión tomada viéndola en el navegador: se queda con sus dos líneas y sus ~42px.
+Quien la vea y la "corrija" a 34px recortando el sector estaría cambiando qué cuenta
+esta tabla, no puliendo su estilo.
+
 **Regla verificable:** para todo elemento con `data-densidad="compacta"`, una fila real
-pintada mide `getBoundingClientRect().height` ≤ 34px; para `"comoda"`, ≥ 40px.
+pintada mide `getBoundingClientRect().height` ≤ 34px, **salvo las dos excepciones de
+arriba**; `"comoda"` mide ≥ 40px.
 `tests/repintado.js` lo afirma en el navegador, sobre al menos una tabla de cada
 densidad, esperando con `waitForFunction` sobre el `tbody` con filas.
 

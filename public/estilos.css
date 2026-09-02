@@ -1295,6 +1295,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #seccion-cartera .tabla-posiciones tbody tr:hover { background: var(--superficie-alt); }
 #seccion-cartera .tabla-posiciones tbody tr.cerrada { opacity: 0.6; }
 
+/* ── Densidad compacta (rediseño 2) ──
+   `[data-densidad="compacta"] td` (estilos.css, cerca de :root) empata en
+   especificidad con `.tabla-datos td` —el padding compartido de toda la
+   plataforma— y perdía el desempate por orden de aparición: el genérico va
+   declarado antes. Este prefijo de sección sube la especificidad sin tocar
+   la regla compartida, que sigue rigiendo cualquier otra tabla que no lleve
+   el atributo. La fila de detalle desplegada (`.fila-cartera__detalle`, más
+   abajo) no es parte de lo que se escanea —es lectura puntual, cláusula 7—
+   y conserva su propio respiro porque su regla viene después en el fichero.
+   CLAUDE.md § Diseño 7. */
+#seccion-cartera .tabla-posiciones[data-densidad="compacta"] th,
+#seccion-cartera .tabla-posiciones[data-densidad="compacta"] td {
+  padding-block: var(--densidad-compacta-relleno);
+}
+
 .fila-cartera__estado {
   font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase;
   color: var(--tinta-mate);
