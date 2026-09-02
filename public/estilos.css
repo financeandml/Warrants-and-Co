@@ -2208,7 +2208,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
   display: flex; align-items: flex-start; gap: var(--espacio-4);
   width: 100%; padding: var(--espacio-4) 0; text-align: start;
   border: none; border-bottom: 1px solid var(--linea-hairline); background: none;
-  cursor: pointer; transition: opacity var(--transicion);
+  cursor: pointer;
+  transition: opacity var(--transicion), transform 220ms var(--mov-entrada);
 }
 #seccion-noticias .fila-noticia:last-child { border-bottom: none; }
 #seccion-noticias .fila-noticia:hover { opacity: 0.72; }
@@ -2216,6 +2217,24 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (prefers-reduced-motion: reduce) {
   #seccion-noticias .fila-noticia { transition: none; }
 }
+
+/* ── Entrada al filtrar (rediseño 2) ──
+   `pintarNoticias()` vacía y reconstruye la lista entera en cada carga o
+   cambio de filtro (app.js): sin esto, las filas aparecían de golpe. Purpose:
+   evitar el salto brusco. Solo CSS —`@starting-style` cubre el montaje sin
+   tocar el JS de pintado—, y el bloque de `reduced-motion` de arriba ya la
+   neutraliza al quitar la `transition`. Escalonado en las primeras filas,
+   nunca en toda la página: es decoración de entrada, no debe retrasar la
+   lectura de una lista larga. CLAUDE.md § Diseño 8. */
+@starting-style {
+  #seccion-noticias .fila-noticia { opacity: 0; transform: scale(0.97); }
+}
+#seccion-noticias .fila-noticia:nth-child(1) { transition-delay: 0ms; }
+#seccion-noticias .fila-noticia:nth-child(2) { transition-delay: 30ms; }
+#seccion-noticias .fila-noticia:nth-child(3) { transition-delay: 60ms; }
+#seccion-noticias .fila-noticia:nth-child(4) { transition-delay: 90ms; }
+#seccion-noticias .fila-noticia:nth-child(5) { transition-delay: 120ms; }
+#seccion-noticias .fila-noticia:nth-child(6) { transition-delay: 150ms; }
 
 #seccion-noticias .fila-noticia__imagen {
   flex-shrink: 0; width: 84px; height: 84px; border-radius: var(--radio);
