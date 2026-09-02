@@ -703,42 +703,65 @@ const AREAS_OCULTAS = false;
   comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
 
   /* ── Portada · la fila de cifras del HERO, al conmutar ──
-     La pinta `pintarCifrasHero()`, y tampoco lleva un solo `data-i18n`: sin su
-     entrada en `PINTORES_INICIO` se quedaría en el idioma de partida. Recargar no
-     lo cazaría —al recargar se pinta ya con el diccionario nuevo—, así que se
-     comprueba aquí, donde el idioma se conmuta sin recargar.
+     La pinta `pintarMetricasHero()` sobre `#hero-metricas` (Fase D.12) —el
+     selector viejo, `#cifras-hero`, es de antes de esa fase y ya no existe—,
+     y tampoco lleva un solo `data-i18n`: sin su entrada en `PINTORES_INICIO`
+     se quedaría en el idioma de partida. Recargar no lo cazaría —al recargar
+     se pinta ya con el diccionario nuevo—, así que se comprueba aquí, donde
+     el idioma se conmuta sin recargar.
 
-     Se afirma en los dos idiomas y contra la fila de abajo: son las mismas tres
-     cifras, y decirlo es lo único que hace legítimo mostrarlas dos veces. */
-  const heroPintado = () => vistaPintada(p, 
-    () => document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
+     Dos de las tres —año y total— comparten fuente exacta con la fila de
+     abajo (`#cifras-portada-cuerpo`, Regla 9) y se comparan contra su gemela.
+     La tercera —el índice EN LO QUE VA DE AÑO— es una cifra propia de esta
+     fase (`e.rentabilidadIndiceAnio`, `src/cartera.js`) sin gemela abajo: esa
+     fila solo lleva el índice de periodo completo (`e.rentabilidadIndice`),
+     un número distinto. Comparar las dos como si fueran la misma no sería
+     una prueba de la Regla 9, sería una prueba mal escrita que fallaría por
+     una razón que no es la suya. */
+  const heroPintado = () => vistaPintada(p,
+    () => document.querySelectorAll('#hero-metricas .dato').length === 3,
     null, 'hero');
 
-  const celdasHero = () => p.$$eval('#cifras-hero .portada__cifras__celda', (cs) => cs.map((c) => ({
-    valor: c.querySelector('.portada__cifras__valor')?.textContent.trim() ?? null,
-    etiqueta: c.querySelector('.portada__cifras__etiqueta')?.textContent.trim() ?? null,
+  const celdasHero = () => p.$$eval('#hero-metricas .dato', (cs) => cs.map((c) => ({
+    valor: c.querySelector('.dato__valor')?.textContent.trim() ?? null,
+    etiqueta: c.querySelector('.dato__etiqueta')?.textContent.trim() ?? null,
   })));
 
   /* 1680×1050 es la ventana donde las cifras del hero caben con las líneas
      puestas; en las apaisadas ceden y no habría nada que confrontar. Se fija
      aquí y no se hereda del resto de la prueba, que corre a 1280×900. */
   await p.setViewportSize({ width: 1680, height: 1050 });
-  await heroPintado();
+
+  /* El guard que faltaba: `heroPintado()` declara «hero» pendiente y sigue
+     —nunca lanza—, pero nada comprobaba su resultado antes de indexar el
+     array que deja vacío. Un SIN DATO se leía entonces como excepción de
+     Node, con el mismo fallo listo para volver el día que este selector
+     también cambie. Ahora el bloque se salta —limpio, como pendiente— si el
+     hero no llegó a pintarse, en cualquiera de las dos comprobaciones. */
+  const heroListoEn = await heroPintado();
+  if (!heroListoEn) {
+    E.pendiente('[hero] resto de comprobaciones del hero',
+      'el hero no llegó a pintarse: no hay nada que leer en #hero-metricas');
+  } else {
 
   // Llega en inglés, que es donde acabó la tanda anterior.
   const heroEn = await celdasHero();
   comp('[hero, en] rótulo del año', heroEn[0].etiqueta, (v) => v && /^\d{4} return$/i.test(v));
-  comp('[hero, en] rótulo del índice compuesto con su periodo',
-    heroEn[1].etiqueta, (v) => v && /same period/i.test(v));
+  comp('[hero, en] rótulo del índice, con el año que acota "en lo que va de"',
+    heroEn[1].etiqueta, (v) => v && / · \d{4}$/.test(v));
   comp('[hero, en] rótulo del total', heroEn[2].etiqueta, 'Total return');
 
   await idioma('es');
-  await heroPintado();
+  const heroListoEs = await heroPintado();
+  if (!heroListoEs) {
+    E.pendiente('[hero, es] resto de comprobaciones del hero',
+      'el hero no volvió a pintarse tras conmutar a castellano');
+  } else {
   const heroEs = await celdasHero();
   comp('[hero, es] el rótulo del año sigue al idioma',
     heroEs[0].etiqueta, (v) => v && /^rentabilidad \d{4}$/i.test(v));
-  comp('[hero, es] el rótulo del índice sigue al idioma',
-    heroEs[1].etiqueta, (v) => v && /mismo periodo/i.test(v));
+  comp('[hero, es] el rótulo del índice, con el año que acota "en lo que va de"',
+    heroEs[1].etiqueta, (v) => v && / · \d{4}$/.test(v));
   comp('[hero, es] el rótulo del total sigue al idioma', heroEs[2].etiqueta, 'Rentabilidad total');
 
   /* El valor también se repinta: el porcentaje sigue la convención del idioma
@@ -751,16 +774,20 @@ const AREAS_OCULTAS = false;
     heroEs[0].valor, (v) => v && /,\d+\u00a0%$/.test(v));
   comp('[hero, en] el porcentaje seguía la suya', heroEn[0].valor, (v) => v && /\.\d+%$/.test(v));
 
-  // Y las tres dicen lo mismo que sus gemelas de abajo, en el idioma vigente.
+  // Año y total dicen lo mismo que sus gemelas de abajo, en el idioma
+  // vigente. El índice no tiene gemela —ver el porqué más arriba— y queda
+  // fuera de este recorrido a propósito, no por omisión.
   const abajoEs = await celdas();
   const gemela = (et) => abajoEs.find((c) => c.etiqueta === et || `${c.etiqueta} · ${c.nota}` === et);
-  for (const c of heroEs) {
+  for (const c of [heroEs[0], heroEs[2]]) {
     comp(`[hero, es] «${c.etiqueta}» dice lo mismo que su gemela de abajo`,
       gemela(c.etiqueta)?.valor ?? null, c.valor);
   }
 
   comp('ninguna cifra retenida por suelo de muestra llega al hero',
-    (await txt('#cifras-hero')) ?? '', (v) => !RETENIDAS.test(v));
+    (await txt('#hero-metricas')) ?? '', (v) => !RETENIDAS.test(v));
+  }
+  }
 
   if (errores.length) {
     const IMAGEN_INVESTING_403 = /Failed to load resource.*403/;
