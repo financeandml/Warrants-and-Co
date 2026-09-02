@@ -71,22 +71,31 @@
          oculto y la secuencia pasa directa de la declaración a la cinta. -->
     <div class="manifiesto">
       <div class="manifiesto__enunciado contenedor">
-        <span class="folio" aria-hidden="true">01</span>
-        <p class="etiqueta-superior">Warrants &amp; Co.</p>
-        <!-- El titular llega vacío a propósito: sus líneas las construye
-             `animarManifiesto()` a partir de la lista del diccionario, porque
-             el número de líneas y el punto de corte los decide cada idioma.
-             Escribirlas aquí congelaría los cortes de uno solo en todos. -->
-        <h1 class="manifiesto__titular" id="manifiesto-titular"></h1>
-        <p class="manifiesto__subtitulo" data-i18n="portada.hero.subtitulo">
-          Publicamos tesis de inversión con la misma disciplina con la que las medimos.
-        </p>
-        <div class="manifiesto__acciones">
-          <a class="boton boton--solido" href="#/companias" data-ruta
-             data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
-          <a class="boton boton--texto" href="#/repositorio" data-ruta
-             data-i18n="portada.acceso.research">Ver el análisis</a>
+        <div class="manifiesto__texto">
+          <span class="folio" aria-hidden="true">01</span>
+          <p class="etiqueta-superior">Warrants &amp; Co.</p>
+          <!-- El titular llega vacío a propósito: sus líneas las construye
+               `animarManifiesto()` a partir de la lista del diccionario, porque
+               el número de líneas y el punto de corte los decide cada idioma.
+               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
+          <h1 class="manifiesto__titular" id="manifiesto-titular"></h1>
+          <p class="manifiesto__subtitulo" data-i18n="portada.hero.subtitulo">
+            Publicamos tesis de inversión con la misma disciplina con la que las medimos.
+          </p>
+          <div class="manifiesto__acciones">
+            <a class="boton boton--solido" href="#/companias" data-ruta
+               data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
+            <a class="boton boton--texto" href="#/repositorio" data-ruta
+               data-i18n="portada.acceso.research">Ver el análisis</a>
+          </div>
         </div>
+        <!-- Fase D.12: el espacio vacío a la derecha del texto pasa a llevar
+             las tres cifras de rendimiento del fondo — la misma fuente que ya
+             pinta `#cifras-portada`/`#home-cartera`, nunca un cálculo aparte
+             (Regla 9). `hidden` hasta que `pintarMetricasHero()` tenga datos
+             reales que mostrar; sin datos, el hero vuelve a su composición
+             de solo texto en vez de enseñar una franja vacía. -->
+        <div class="manifiesto__metricas" id="hero-metricas" aria-live="polite" hidden></div>
       </div>
       <div class="manifiesto__visual" id="hero-visual" hidden>
         <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">

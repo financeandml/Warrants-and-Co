@@ -149,6 +149,12 @@ export default {
   'portada.cifras.total': 'Total return',
   'portada.cifras.total.nota': 'From capital invested',
   'portada.cifras.indice.nota': 'Same period',
+
+  // ── Hero · performance metrics (Phase D.12) ──
+  // The index label carries its real name ({indice}, from `rotuloIndice()`)
+  // and the dynamic year — never "S&P 500" written by hand or a fixed year.
+  'portada.hero.metrica.indiceAnio': '{indice} · {anio}',
+  'portada.hero.metrica.vacio': 'Not enough portfolio data yet',
   'portada.cifras.caida': 'Maximum drawdown',
   'portada.cifras.caida.nota': 'From previous peak',
   'portada.cifras.pie': 'Warrants & Co. portfolio · {desde} — {hasta} · {sesiones} · {tesis}, {vivas}.',

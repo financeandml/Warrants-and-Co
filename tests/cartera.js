@@ -507,8 +507,18 @@ async function caso7() {
     precio *= 1 + 0.002 + (siguiente() - 0.5) * 0.01;
     return Number(precio.toFixed(4));
   });
+  // El benchmark cruza el mismo tramo de fechas, con su propio recorrido de
+  // precio — para que «YTD S&P 500» tenga algo real que medir y no dependa
+  // de que casualidades numéricas lo hagan indistinguible de cero.
+  let semillaSpy = 71;
+  const siguienteSpy = () => (semillaSpy = (semillaSpy * 1103515245 + 12345) % 2147483648) / 2147483648;
+  let precioSpy = 400;
+  const cierresSpy = f.map(() => {
+    precioSpy *= 1 + 0.0009 + (siguienteSpy() - 0.5) * 0.006;
+    return Number(precioSpy.toFixed(4));
+  });
   escenario = {
-    barras: { K: barras(f, cierres) },
+    barras: { K: barras(f, cierres), SPY: barras(f, cierresSpy) },
     cotizaciones: { K: { precio: cierres[cierres.length - 1], divisa: 'USD', variacionPct: 0 } },
   };
   const cruzada = await calcularCartera([
@@ -537,6 +547,27 @@ async function caso7() {
   t('anio a caballo · y NO es la rentabilidad total',
     Math.abs(c.rentabilidadAnio - c.rentabilidadTotal) > 5,
     `anio ${c.rentabilidadAnio} · total ${c.rentabilidadTotal}`);
+
+  /*
+   * YTD del benchmark: tiene que arrancar en LA MISMA fecha que ya fija
+   * `anioDesde` para la cartera —el mismo `cierreAnterior.fecha`—, nunca en
+   * el primer dato de toda la serie del índice. Se recalcula a mano desde
+   * las barras de SPY que sembró esta prueba.
+   */
+  const filasSpy = barras(f, cierresSpy);
+  const spyBase = filasSpy.find((p) => p.fecha === cierreAnterior.fecha);
+  const spyFinal = filasSpy[filasSpy.length - 1];
+  const aManoIndice = (spyFinal.cierre / spyBase.cierre - 1) * 100;
+
+  t('anio a caballo · el YTD del índice arranca en la misma fecha que el de la cartera',
+    c.rentabilidadIndiceAnio !== null,
+    `rentabilidadIndiceAnio ${c.rentabilidadIndiceAnio}`);
+  t('anio a caballo · el YTD del índice es el recalculado a mano desde esa fecha',
+    casiIgual(c.rentabilidadIndiceAnio, aManoIndice, 0.05),
+    `publicado ${c.rentabilidadIndiceAnio} vs a mano ${aManoIndice.toFixed(4)}`);
+  t('anio a caballo · el YTD del índice y su total no son la misma cifra',
+    Math.abs(c.rentabilidadIndiceAnio - c.rentabilidadIndice) > 1,
+    `anio ${c.rentabilidadIndiceAnio} · total ${c.rentabilidadIndice}`);
 }
 
 /*

@@ -32,7 +32,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarCifras, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, pintarMetricasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -1591,6 +1591,9 @@ const irARutaInicio = (destino) => {
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
   cifras: () => pintarCifras(datosInicio.cartera),
+  // Fase D.12: las tres cifras del Hero — misma cartera que `cifras`, su
+  // propia entrada porque el repintado por idioma recorre esta lista.
+  metricasHero: () => pintarMetricasHero(datosInicio.cartera),
   // Bloque Bento: misma cartera, otro corte —`resumenPortfolio`— y su propia
   // entrada porque el repintado por idioma recorre esta lista, y sus rótulos
   // también se traducen.
@@ -1638,6 +1641,7 @@ async function cargarInicio() {
     // repintado por idioma recorre esta lista: un bloque que no figure en ella
     // se quedaría en el idioma anterior.
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
+    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'metricasHero'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de

@@ -559,6 +559,40 @@ export function pintarCifras(cartera) {
   revelar(pie);
 }
 
+/**
+ * Fase D.12: las tres cifras de rendimiento del fondo, en el hueco vacío del
+ * Hero. Misma fuente que `pintarCifras()` —`cartera.estadisticos`—, nunca un
+ * cálculo aparte (Regla 9): si el Hero calculase su propio YTD, esta cifra y
+ * la de `#home-cartera` podrían desincronizarse sin que se viera en pantalla.
+ * `dato()` es el mismo componente de "cifra con filete" que ya usan
+ * `research-panel__datos` y `cartera-home__detalle` — ninguna caja nueva.
+ */
+export function pintarMetricasHero(cartera) {
+  const raiz = $('#hero-metricas');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const e = cartera?.estadisticos;
+  if (!e) { raiz.hidden = true; return; }
+
+  raiz.appendChild(dato(
+    t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
+    formatearPorcentaje(e.rentabilidadAnio),
+    null, e.rentabilidadAnio,
+  ));
+  raiz.appendChild(dato(
+    t('portada.hero.metrica.indiceAnio', { indice: rotuloIndice(cartera), anio: String(e.anioEnCurso) }),
+    Number.isFinite(e.rentabilidadIndiceAnio) ? formatearPorcentaje(e.rentabilidadIndiceAnio) : noDisponible(),
+    null, e.rentabilidadIndiceAnio,
+  ));
+  raiz.appendChild(dato(
+    t('portada.cifras.total'),
+    formatearPorcentaje(e.rentabilidadTotal),
+    null, e.rentabilidadTotal,
+  ));
+  raiz.hidden = false;
+}
+
 // ═══════════════════════════ 3b · CARTERA (bento) ══════════════════════════
 
 /**

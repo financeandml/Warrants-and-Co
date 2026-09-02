@@ -1952,9 +1952,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: var(--superficie);
 }
 
+/* Fase D.12: `.manifiesto__enunciado` deja de ser solo el bloque de texto y
+   pasa a ser la fila entera —texto a la izquierda, métricas a la derecha—,
+   para llenar con dato real el hueco vacío que quedaba bajo el CTA. El
+   ancho de lectura que antes llevaba el propio `.manifiesto__enunciado`
+   (760px) pasa a `.manifiesto__texto`, su primer hijo. */
 .manifiesto__enunciado {
-  max-width: 760px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px clamp(40px, 6vw, 88px);
 }
+
+.manifiesto__texto { max-width: 680px; flex: 1 1 420px; min-width: 0; }
 
 .manifiesto__enunciado .etiqueta-superior { margin: 0 0 18px; }
 
@@ -1988,6 +1998,39 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .manifiesto__flecha { display: inline-block; transition: transform var(--transicion); }
 .manifiesto__acciones .boton--solido:hover .manifiesto__flecha { transform: translateX(3px); }
+
+/* ── Métricas del Hero (Fase D.12) ──
+   El mismo componente «cifra con filete» que ya usan `.research-panel__datos`
+   y `.cartera-home__detalle» —`dato()`, en `inicio.js`—, aquí a mayor escala
+   porque el Hero es donde la casa habla más alto: números grandes, tabulares,
+   sin caja. Flota junto al texto tras el filete vertical; no lleva fondo ni
+   sombra propios. */
+.manifiesto__metricas {
+  display: flex; flex-direction: column; gap: 22px;
+  flex: 0 0 auto;
+  padding-inline-start: clamp(28px, 3.4vw, 44px);
+  border-inline-start: 1px solid var(--linea);
+}
+.manifiesto__metricas .dato__valor {
+  font-family: var(--mono, monospace);
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-weight: 600;
+}
+.manifiesto__metricas .dato__etiqueta { letter-spacing: 0.09em; }
+
+@media (max-width: 1023px) {
+  .manifiesto__enunciado { flex-direction: column; }
+  .manifiesto__texto { max-width: none; flex-basis: auto; }
+  .manifiesto__metricas {
+    flex-direction: row; flex-wrap: wrap;
+    align-self: stretch;
+    gap: 18px clamp(28px, 5vw, 44px);
+    padding-inline-start: 0; padding-block-start: 22px;
+    border-inline-start: none; border-block-start: 1px solid var(--linea);
+    margin-block-start: 4px;
+  }
+  .manifiesto__metricas .dato__valor { font-size: 1.3rem; }
+}
 
 /* ── La fotografía: franja propia, a sangre completo en los dos bordes ──
    Ya no es una columna que comparte fila con el texto: es su propia franja,

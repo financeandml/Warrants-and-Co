@@ -326,6 +326,10 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
   }
   const baseAnio = cierreAnterior ? cierreAnterior.valor : baseCapital;
   const rentAnio = baseAnio > 0 ? valorFinal / baseAnio - 1 : null;
+  // Misma fecha de arranque que usará el benchmark más abajo: una sola cuenta,
+  // vista dos veces (Regla 9) — «desde cuándo mide el año» no puede tener una
+  // respuesta para la cartera y otra para el índice.
+  const anioDesde = cierreAnterior ? cierreAnterior.fecha : serie[0].fecha;
 
   const dias = (new Date(serie[serie.length - 1].fecha) - new Date(serie[0].fecha)) / 86400000;
   const anios = Math.max(dias / 365.25, 1 / 365.25);
@@ -375,9 +379,35 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
   let alfa = null;
   let correlacion = null;
   let rentBenchmark = null;
+  let rentBenchmarkAnio = null;
   let valorIndexadoBenchmark = null;
   if (serieIndice && serieIndice.length > 1) {
     const mapaBench = new Map(serieIndice.map((p) => [p.fecha, p.valor]));
+
+    /*
+     * Rentabilidad del benchmark en el año en curso, midiendo desde LA MISMA
+     * fecha que ya fija `anioDesde` para la cartera (cierre anterior al 1 de
+     * enero, o el arranque de la cartera si nace dentro del propio año). Sin
+     * esto, «YTD Portfolio» y «YTD S&P 500» medirían ventanas distintas —la
+     * comparación dejaría de ser una comparación—. `serieIndice` puede no
+     * tener sesión exactamente en `anioDesde` (festivo, fin de semana): se
+     * toma el último cierre disponible EN o ANTES de esa fecha, el mismo
+     * criterio que ya usa `cierreAnterior` para la propia cartera.
+     */
+    let baseBenchAnio = mapaBench.get(anioDesde);
+    if (baseBenchAnio === undefined) {
+      let candidato = null;
+      for (const p of serieIndice) {
+        if (p.fecha > anioDesde) break;
+        candidato = p;
+      }
+      baseBenchAnio = candidato ? candidato.valor : null;
+    }
+    const valorFinalBench = serieIndice[serieIndice.length - 1].valor;
+    rentBenchmarkAnio = (baseBenchAnio != null && baseBenchAnio > 0)
+      ? valorFinalBench / baseBenchAnio - 1
+      : null;
+
     const comunes = serie.filter((p) => mapaBench.has(p.fecha));
     if (comunes.length > 2) {
       const rc = rendimientos(comunes.map((p) => p.valor));
@@ -448,7 +478,7 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
      */
     rentabilidadAnio: rentAnio === null ? null : redondear(rentAnio * 100),
     anioEnCurso,
-    anioDesde: cierreAnterior ? cierreAnterior.fecha : serie[0].fecha,
+    anioDesde,
     anioDesdeCapital: cierreAnterior === null,
     // Valor indexado: el nivel del índice, en la misma base que el capital.
     // Se publica aparte para que nunca se presente como si fuera rentabilidad.
@@ -470,6 +500,11 @@ function calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, baseCapital =
     alfaJensen: alfa === null ? null : redondear(alfa * 100),
     correlacionIndice: correlacion === null ? null : redondear(correlacion, 2),
     rentabilidadIndice: rentBenchmark === null ? null : redondear(rentBenchmark * 100),
+    // Mismo `anioDesde` que `rentabilidadAnio`: las dos cifras del Hero miden
+    // desde la misma fecha, así que su comparación es la afirmación real de
+    // «cómo le va a la cartera frente al mercado este año», no dos ventanas
+    // distintas puestas una junto a otra.
+    rentabilidadIndiceAnio: rentBenchmarkAnio === null ? null : redondear(rentBenchmarkAnio * 100),
     valorIndexadoIndice: valorIndexadoBenchmark === null ? null : redondear(valorIndexadoBenchmark, 2),
     tasaLibreRiesgo,
   };
@@ -722,8 +757,19 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   if (serie.length) serie[serie.length - 1] = { fecha: ultimaSesion, valor: redondear(patrimonio, 4) };
   const base = patrimonio > 0 ? patrimonio : BASE_INDICE;
 
-  // Peso actual: cuanto pesa hoy la linea sobre el patrimonio, con la caja dentro.
-  for (const p of abiertas) p.pesoVigente = redondear(((p.valorTramo ?? 0) / base) * 100);
+  /* Peso actual: cuanto pesa hoy la linea sobre el patrimonio, con la caja
+     dentro. Sin `valorTramo` —ninguna cotizacion ni cierre cacheado todavia—
+     no hay con que calcularlo, y la ausencia no es un cero: es que la linea
+     no se ha podido valorar hoy. `?? 0` seguia siendo correcto para el
+     PATRIMONIO total dos lineas arriba (una suma necesita un numero), pero
+     aqui convertia esa misma ausencia en un peso real del 0%, que es
+     precisamente el hecho que el resto de la plataforma ya esperaba poder
+     no tener: `public/anillo.js` ya filtra por `Number.isFinite(pesoVigente)`
+     y `public/app.js` ya cae a `p.peso` cuando falta, los dos escritos para
+     un `pesoVigente` que aqui nunca llegaba a faltar. */
+  for (const p of abiertas) {
+    p.pesoVigente = p.valorTramo !== null ? redondear((p.valorTramo / base) * 100) : null;
+  }
 
   const estadisticos = calcularEstadisticos(serie, serieIndice, tasaLibreRiesgo, BASE_INDICE);
 

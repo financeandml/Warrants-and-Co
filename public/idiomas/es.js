@@ -157,6 +157,12 @@ export default {
   'portada.cifras.total': 'Rentabilidad total',
   'portada.cifras.total.nota': 'Desde el capital invertido',
   'portada.cifras.indice.nota': 'Mismo periodo',
+
+  // ── Hero · métricas de rendimiento (Fase D.12) ──
+  // El rótulo del índice lleva su nombre real ({indice}, de `rotuloIndice()`)
+  // y el año dinámico — nunca «S&P 500» escrito a mano ni un año fijo.
+  'portada.hero.metrica.indiceAnio': '{indice} · {anio}',
+  'portada.hero.metrica.vacio': 'Sin datos de cartera suficientes todavía',
   'portada.cifras.caida': 'Máxima caída',
   'portada.cifras.caida.nota': 'Desde máximo previo',
   'portada.cifras.pie': 'Cartera Warrants & Co. · {desde} — {hasta} · {sesiones} · {tesis}, {vivas}.',
