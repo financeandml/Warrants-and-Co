@@ -1493,6 +1493,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tabla-rendimiento-envoltorio { overflow-x: auto; margin-top: var(--espacio-4); }
 .tabla-rendimiento .num { font-family: var(--mono); }
 
+/* ── Densidad compacta (rediseño 2) ──
+   Mismo desempate de especificidad que `.tabla-posiciones`: sube sobre el
+   padding compartido de `.tabla-datos` sin tocarlo. Filas de una sola línea
+   —nombre y tres cifras—, sin el problema de columna apilada que fuerza la
+   excepción de `.tabla-posiciones`. CLAUDE.md § Diseño 7. */
+.tabla-rendimiento[data-densidad="compacta"] th,
+.tabla-rendimiento[data-densidad="compacta"] td {
+  padding-block: var(--densidad-compacta-relleno);
+}
+
 /* El outperformance: una sola línea bajo la tabla, con su signo explícito y su
    unidad en `pp` — puntos porcentuales, nunca `%`, porque es una diferencia de
    dos rentabilidades y no una rentabilidad. El color va solo en la cifra. */
