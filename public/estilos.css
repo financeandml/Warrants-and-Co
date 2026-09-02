@@ -1524,6 +1524,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tabla-serie { border-top: 1px solid var(--linea); padding: 20px 24px 24px; }
 .tabla-serie .tabla-envoltorio { max-height: 340px; overflow-y: auto; }
 
+/* ── Densidad cómoda, excepción deliberada (rediseño 2) ──
+   `#tabla-serie` es tabla de datos —por la cláusula 2 sería compacta—, pero
+   se abre puntualmente con "Ver datos" y casi nadie la escanea a diario: la
+   excepción está en CLAUDE.md § Diseño 7. El override de especificidad es
+   el mismo que en `.tabla-posiciones`/`.tabla-rendimiento`, aquí para que
+   `--densidad-comoda-relleno` (10px) gane sobre el padding compartido de
+   `.tabla-datos` en vez de quedar a merced del orden en el fichero.
+   CLAUDE.md § Diseño 7. */
+#tabla-serie[data-densidad="comoda"] th,
+#tabla-serie[data-densidad="comoda"] td {
+  padding-block: var(--densidad-comoda-relleno);
+}
+
 /* ─────────────────────── Posiciones y estadisticos ────────────────────── */
 
 .tabla-posiciones .celda-valor { min-width: 200px; }
