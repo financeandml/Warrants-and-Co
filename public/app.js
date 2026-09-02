@@ -7,7 +7,7 @@
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
 import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
-import { pintarCinta, seguirAlturaCabecera, seguirEncuadreBanner } from './portada.js';
+import { pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import { pintarAnillo } from './anillo.js';
 import { alinearContraMaestra, rebasarBase100 } from './benchmarks.js';
@@ -32,7 +32,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarCifras, pintarCifrasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarCifras, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -341,8 +341,15 @@ function seccionDesdeHash() {
 
 /**
  * Adopta los recursos de marca disponibles en `public/marca/`.
- * La ausencia de un recurso no degrada nada: el logotipo cae al SVG por defecto
- * y la portada conserva su fondo gráfico propio.
+ *
+ * La ausencia de un recurso no degrada nada: el logotipo cae al SVG por
+ * defecto y, sin banner depositado, `.manifiesto__visual` se queda oculto —el
+ * flex del hero le devuelve su ancho al texto solo (Fase D.6.1).
+ *
+ * El banner ya NO alimenta ninguna geometría de encuadre —eso se retiró en la
+ * Fase D.6 con la fotografía a sangre—: aquí es una imagen editorial más,
+ * como el sello o el logo, y se trata igual que ellos salvo por la
+ * precarga, que evita que se vea a medio pintar la primera vez que llega.
  */
 async function cargarMarca() {
   let marca;
@@ -362,24 +369,18 @@ async function cargarMarca() {
     if (logo) logo.src = `${marca.logo.url}?v=${marca.logo.version}`;
   }
 
-  const portada = $('#portada');
-  const banner = $('#portada-banner');
-  if (marca.banner?.url && portada && banner) {
-    // Se precarga antes de mostrarlo: así no aparece a medio pintar.
-    const imagen = new Image();
-    imagen.onload = () => {
-      banner.style.setProperty('--banner', `url("${marca.banner.url}?v=${marca.banner.version}")`);
-      banner.hidden = false;
-      portada.dataset.banner = 'true';
+  const visual = $('#hero-visual');
+  const imagen = $('#hero-imagen');
+  if (marca.banner?.url && visual && imagen) {
+    const precarga = new Image();
+    precarga.onload = () => {
+      imagen.src = `${marca.banner.url}?v=${marca.banner.version}`;
+      visual.hidden = false;
     };
-    imagen.onerror = () => {
-      banner.hidden = true;
-      delete portada.dataset.banner;
-    };
-    imagen.src = `${marca.banner.url}?v=${marca.banner.version}`;
-  } else if (portada) {
-    delete portada.dataset.banner;
-    if (banner) banner.hidden = true;
+    precarga.onerror = () => { visual.hidden = true; };
+    precarga.src = `${marca.banner.url}?v=${marca.banner.version}`;
+  } else if (visual) {
+    visual.hidden = true;
   }
 }
 
@@ -1590,14 +1591,10 @@ const irARutaInicio = (destino) => {
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
   cifras: () => pintarCifras(datosInicio.cartera),
-  // La fila del hero sale de la misma cartera. Entrada propia, como la de abajo,
-  // porque el repintado por idioma recorre esta lista: sin figurar se quedaría en
-  // el idioma anterior, y sus rótulos sí se traducen.
-  cifrasHero: () => pintarCifrasHero(datosInicio.cartera),
   // Bloque Bento: misma cartera, otro corte —`resumenPortfolio`— y su propia
-  // entrada por la misma razón que `cifrasHero`: el repintado por idioma
-  // recorre esta lista, y sus rótulos también se traducen.
-  cartera: () => pintarCarteraHome(datosInicio.cartera),
+  // entrada porque el repintado por idioma recorre esta lista, y sus rótulos
+  // también se traducen.
+  cartera: () => pintarCarteraHome(datosInicio.cartera, irARutaInicio),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
@@ -1641,7 +1638,6 @@ async function cargarInicio() {
     // repintado por idioma recorre esta lista: un bloque que no figure en ella
     // se quedaría en el idioma anterior.
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
-    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifrasHero'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de
@@ -4188,7 +4184,6 @@ async function iniciar() {
   enlazarEventos();
   actualizarIndicadorSesion();
   seguirAlturaCabecera();
-  seguirEncuadreBanner();
 
   await cargarMarca();
   await cargarVocabularios();

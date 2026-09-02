@@ -50,12 +50,6 @@ export const sinMovimiento = () =>
  * Franja muerta inferior del observador. Lo que asome dentro de estos píxeles
  * finales NO llega a revelarse: aparecería una caja vacía, que es peor que el
  * hueco.
- *
- * Vive aquí y no en `inicio.js` porque no es solo asunto del observador: el hero
- * la necesita para decidir si sus dos líneas caben —`seguirEncuadreBanner()`, en
- * `portada.js`—. Son la misma cifra, «cuánto tiene que asomar el manifiesto para
- * que se vea», y ahora los dos la leen del mismo sitio de verdad y no solo de
- * nombre.
  */
 export const MARGEN_REVELADO = 60;
 

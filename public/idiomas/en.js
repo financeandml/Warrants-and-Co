@@ -100,15 +100,17 @@ export default {
   'portada.acceso.cobertura': 'Explore coverage',
   'portada.acceso.research': 'View research',
 
-  // ── Cover · manifesto ──
+  // ── Cover · hero (Phase D.6) ──
   // ONE sentence broken into lines. Where it breaks, and how many lines it
   // takes, is typography and belongs to each language: English says it in three
   // lines, and nothing forces Spanish to use three as well.
   'portada.manifiesto.titular': [
-    'Market intelligence',
-    'for investors who',
-    'think in probabilities.',
+    'Independent investment research.',
   ],
+  // The hero's supporting line: what the firm does, in one sentence, without
+  // repeating the headline or pulling a figure that already lives in Portfolio.
+  'portada.hero.subtitulo':
+    'We publish investment theses with the same discipline we use to measure them.',
 
   // The four pillars from the reference mockup, replacing the previous three
   // (Research, Catalysts, Portfolio). They lose the link to their routes
@@ -166,6 +168,7 @@ export default {
 
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
+  'inicio.ticker.dateline': 'Market',
 
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',
@@ -190,6 +193,7 @@ export default {
   'inicio.cartera.capital': 'Capital deployed',
   'inicio.cartera.posiciones.abiertas': { one: '{n} open', other: '{n} open' },
   'inicio.cartera.posiciones.cerradas': { one: '{n} closed', other: '{n} closed' },
+  'inicio.cartera.posiciones.titulo': 'Top positions',
   'inicio.cartera.vacio.titulo': 'Portfolio not yet constituted',
   'inicio.cartera.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
 
@@ -212,6 +216,7 @@ export default {
   'inicio.research.enCartera': 'In portfolio',
   'inicio.research.sinResumen': 'Data unavailable — no report includes an executive summary.',
   'inicio.research.verFicha': 'View full profile',
+  'inicio.research.otras': 'Other research',
   'inicio.research.dato.precio': 'Price',
   'inicio.research.dato.recomendacion': 'Recommendation',
   'inicio.research.dato.objetivo': 'Target price',

@@ -106,17 +106,19 @@ export default {
   'portada.acceso.cobertura': 'Explorar la cobertura',
   'portada.acceso.research': 'Ver el análisis',
 
-  // ── Portada · manifiesto ──
+  // ── Portada · hero (Fase D.6) ──
   // El titular es UNA frase repartida en líneas, y el reparto es tipográfico:
   // cada idioma decide dónde corta y en cuántas líneas le cabe. Por eso es una
   // lista y no tres claves —tres claves impondrían a todos los idiomas los
   // cortes del inglés, y un idioma que necesitara cuatro líneas no tendría
   // dónde ponerlas— y por eso el documento ya no las trae escritas.
   'portada.manifiesto.titular': [
-    'Inteligencia de mercado',
-    'para quien invierte',
-    'pensando en probabilidades.',
+    'Análisis independiente de inversión.',
   ],
+  // La frase de apoyo del hero: qué hace la firma, en una frase, sin repetir
+  // el titular ni adelantar una cifra que vive más abajo en Portfolio.
+  'portada.hero.subtitulo':
+    'Publicamos tesis de inversión con la misma disciplina con la que las medimos.',
 
   // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres
   // anteriores (Análisis, Catalizadores, Cartera). Pierden el enlace a sus
@@ -174,6 +176,7 @@ export default {
 
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
+  'inicio.ticker.dateline': 'Mercado',
 
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',
@@ -198,6 +201,8 @@ export default {
   'inicio.cartera.capital': 'Capital desplegado',
   'inicio.cartera.posiciones.abiertas': { one: '{n} abierta', other: '{n} abiertas' },
   'inicio.cartera.posiciones.cerradas': { one: '{n} cerrada', other: '{n} cerradas' },
+  // Fase D.2: título de la lista de posiciones principales bajo la performance.
+  'inicio.cartera.posiciones.titulo': 'Principales posiciones',
   'inicio.cartera.vacio.titulo': 'Cartera sin constituir',
   'inicio.cartera.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
 
@@ -220,6 +225,8 @@ export default {
   'inicio.research.enCartera': 'En cartera',
   'inicio.research.sinResumen': 'Dato no disponible — ningún informe incluye resumen ejecutivo.',
   'inicio.research.verFicha': 'Ver ficha completa',
+  // Fase D.2: cabecera de la lista de referencias bajo la tesis protagonista.
+  'inicio.research.otras': 'Otras tesis',
   'inicio.research.dato.precio': 'Precio',
   'inicio.research.dato.recomendacion': 'Recomendación',
   'inicio.research.dato.objetivo': 'Precio objetivo',
