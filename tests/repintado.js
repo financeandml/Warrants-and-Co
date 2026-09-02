@@ -722,6 +722,21 @@ const AREAS_OCULTAS = false;
     () => document.querySelectorAll('#hero-metricas .dato').length === 3,
     null, 'hero');
 
+  /* Las tres cifras del hero arrancan en 0 % y cuentan hasta el valor real
+     —la excepción documentada de la cláusula 8 de CLAUDE.md—, así que el
+     nodo existe antes de que su texto sea el definitivo. Leerlo en cuanto
+     `heroPintado()` resuelve capturaba el número a medio contar: la prueba
+     comparaba una cifra en tránsito contra su gemela ya asentada, y fallaba
+     por una carrera, no por un dato incorrecto. `contarPorcentajeHasta()`
+     (`inicio.js`) marca `dataset.contado = 'true'` en cada `.dato__valor`
+     exactamente cuando su texto queda en su valor final —tanto al terminar
+     la animación como en las rutas sin ella (movimiento reducido, dato
+     ausente)—, así que esto espera sobre ESE dato, no sobre un plazo fijo. */
+  const heroContado = () => vistaPintada(p,
+    () => [...document.querySelectorAll('#hero-metricas .dato__valor')]
+      .every((v) => v.dataset.contado === 'true'),
+    null, 'hero, contador asentado');
+
   const celdasHero = () => p.$$eval('#hero-metricas .dato', (cs) => cs.map((c) => ({
     valor: c.querySelector('.dato__valor')?.textContent.trim() ?? null,
     etiqueta: c.querySelector('.dato__etiqueta')?.textContent.trim() ?? null,
@@ -738,7 +753,7 @@ const AREAS_OCULTAS = false;
      Node, con el mismo fallo listo para volver el día que este selector
      también cambie. Ahora el bloque se salta —limpio, como pendiente— si el
      hero no llegó a pintarse, en cualquiera de las dos comprobaciones. */
-  const heroListoEn = await heroPintado();
+  const heroListoEn = await heroPintado() && await heroContado();
   if (!heroListoEn) {
     E.pendiente('[hero] resto de comprobaciones del hero',
       'el hero no llegó a pintarse: no hay nada que leer en #hero-metricas');
@@ -752,7 +767,7 @@ const AREAS_OCULTAS = false;
   comp('[hero, en] rótulo del total', heroEn[2].etiqueta, 'Total return');
 
   await idioma('es');
-  const heroListoEs = await heroPintado();
+  const heroListoEs = await heroPintado() && await heroContado();
   if (!heroListoEs) {
     E.pendiente('[hero, es] resto de comprobaciones del hero',
       'el hero no volvió a pintarse tras conmutar a castellano');

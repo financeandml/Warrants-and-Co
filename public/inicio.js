@@ -78,6 +78,31 @@ function contarHasta(nodo, destino, { decimales = 0, duracion = 1100, sufijo = '
   requestAnimationFrame(paso);
 }
 
+/**
+ * Como `contarHasta()`, pero para un cambio con signo —una rentabilidad—,
+ * formateado con `formatearPorcentaje()`: mismo punto de verdad del formato
+ * que usa la cifra ya en reposo, para que el número donde el contador se
+ * detiene sea EXACTAMENTE el mismo texto que si no hubiera contado.
+ *
+ * Excepción documentada de la cláusula 8 de CLAUDE.md: solo para las tres
+ * métricas del Hero, que no tienen refresco periódico y cuentan una vez.
+ */
+function contarPorcentajeHasta(nodo, destino, duracion = 1100) {
+  delete nodo.dataset.contado;
+  if (!Number.isFinite(destino)) { nodo.textContent = noDisponible(); nodo.dataset.contado = 'true'; return; }
+  if (sinMovimiento()) { nodo.textContent = formatearPorcentaje(destino); nodo.dataset.contado = 'true'; return; }
+
+  const inicio = performance.now();
+  const paso = (ahora) => {
+    const avance = Math.min((ahora - inicio) / duracion, 1);
+    const suave = 1 - (1 - avance) ** 3;
+    nodo.textContent = formatearPorcentaje(destino * suave);
+    if (avance < 1) requestAnimationFrame(paso);
+    else { nodo.textContent = formatearPorcentaje(destino); nodo.dataset.contado = 'true'; }
+  };
+  requestAnimationFrame(paso);
+}
+
 // ═══════════════════════════════ 1 · TICKER ═══════════════════════════════
 
 /* Las líneas de la cinta, construidas UNA vez.
