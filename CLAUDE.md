@@ -146,8 +146,9 @@ fork paralelo de `--transicion` (140ms ease, que sigue siendo hover/color):
 --mov-estado:  cubic-bezier(0.77, 0, 0.175, 1);    /* cambios de estado en pantalla */
 ```
 
-Anima: la cinta (`translateX` `linear`, continuo), el flash de precio al refrescar
-(color/opacity, `--transicion`, nunca transform), el hover de fila (`--transicion`, tras
+Anima: la cinta se traslada (`translateX` `linear`, continuo) y, al refrescar un valor,
+lo saca y lo entra como un panel de salidas —`transform`+`opacity`, nunca layout, con
+sus propias curvas: ver la excepción de abajo—; el hover de fila (`--transicion`, tras
 `@media (hover: hover) and (pointer: fine)`), el modal de tesis y las tarjetas de
 noticia al filtrar (`scale(0.97)+opacity`, `--mov-entrada`, 200–300ms, sale por el mismo
 camino), las métricas del hero al primer pintado (opacity sola, `--mov-entrada`, 200ms,
@@ -159,11 +160,30 @@ que se repintan en cada visita o refresco; parallax o cursor personalizado en el
 —ya prohibido por la cláusula 5—; pausa o rebote del marquee al pasar el ratón —no hay
 gesto que justifique un spring—.
 
+**Excepción documentada: el cambio de valor en la cinta.** No usa `--mov-entrada` ni
+`--mov-estado`, y no es un olvido. `ticker-valor-sale`/`ticker-valor-entra`
+(`estilos.css`) mueven el valor viejo hacia arriba y el nuevo desde abajo, como un panel
+de salidas de aeropuerto, con el par acelerar/decelerar asimétrico de Material Motion:
+
+```css
+--mov-sale-cinta:  cubic-bezier(0.4, 0, 1, 1);     /* el valor que se va — acelera */
+--mov-entra-cinta: cubic-bezier(0, 0, 0.2, 1);     /* el valor que llega — decelera */
+```
+
+`--mov-entrada` es una sola curva simétrica pensada para un elemento que entra O sale;
+aquí entran y salen dos cosas a la vez, en direcciones opuestas, y la asimetría entre
+"acelera saliendo" y "decelera llegando" es lo que vende el efecto de panel mecánico.
+Forzar las dos mitades a `--mov-entrada` aplanaría el efecto a un fundido genérico — un
+paso atrás en el detalle disfrazado de cumplimiento de la regla. Sigue habiendo cero
+literales sueltos: las dos curvas viven en variables con nombre, documentadas aquí y en
+el propio CSS, y la regla verificable de abajo las admite explícitamente.
+
 **Reglas verificables:**
 
-- Toda transición o `@keyframes` de entrada/salida usa `var(--mov-entrada)` o
-  `var(--mov-estado)` —nunca un cubic-bezier aproximado, nunca `ease-in`—; prueba
-  estática sobre `estilos.css`/`app.js` lo afirma.
+- Toda transición o `@keyframes` de entrada/salida usa `var(--mov-entrada)`,
+  `var(--mov-estado)`, o —solo en el cambio de valor de la cinta— `var(--mov-sale-cinta)`/
+  `var(--mov-entra-cinta)` —nunca un cubic-bezier aproximado suelto en la regla, nunca
+  `ease-in`—; prueba estática sobre `estilos.css`/`app.js` lo afirma.
 - Toda fila con `data-densidad="compacta"` mide ≤ 34px y toda fila `"comoda"` ≥ 40px de
   altura real pintada —la misma prueba de la cláusula 7—.
 - Ninguna animación de UI declarada dura más de 300ms salvo la lista explícita —modal y

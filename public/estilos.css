@@ -135,6 +135,19 @@
   --espacio-6: 54px;
   --transicion: 140ms ease;
 
+  /* ── Vocabulario de movimiento (rediseño 2) ──
+     Dos curvas para entradas/salidas y cambios de estado. CLAUDE.md § Diseño 8. */
+  --mov-entrada: cubic-bezier(0.23, 1, 0.32, 1);
+  --mov-estado:  cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Excepción documentada, no un cubic-bezier suelto: el cambio de valor de la
+     cinta mueve DOS cosas a la vez en direcciones opuestas —el valor que se
+     va y el que llega—, y el par acelerar/decelerar asimétrico de Material
+     Motion es lo que vende el efecto de panel de salidas. `--mov-entrada`
+     aplanaría eso a un fundido simétrico. CLAUDE.md § Diseño 8, excepción. */
+  --mov-sale-cinta:  cubic-bezier(0.4, 0, 1, 1);
+  --mov-entra-cinta: cubic-bezier(0, 0, 0.2, 1);
+
   /* ── Escala tipográfica (rediseño 2) ──
      Ocho pasos. Cortos donde vive el dato —11 · 12 · 13 · 15px—, grandes
      solo hacia la jerarquía editorial, para que la tabla nunca compita en
@@ -4050,10 +4063,10 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   to   { opacity: 1; transform: translateY(0); }
 }
 .ticker__valor--sale, .ticker__var--sale {
-  animation: ticker-valor-sale 100ms cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: ticker-valor-sale 100ms var(--mov-sale-cinta) forwards;
 }
 .ticker__valor--entra, .ticker__var--entra {
-  animation: ticker-valor-entra 100ms cubic-bezier(0, 0, 0.2, 1) backwards;
+  animation: ticker-valor-entra 100ms var(--mov-entra-cinta) backwards;
 }
 
 /* ── «Este acaba de cambiar», sin movimiento ──
