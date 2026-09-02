@@ -88,6 +88,91 @@ personalizado, sin barrido en la carga, y todo en su **estado final, nunca ocult
 cursor personalizado existe solo bajo `@media (pointer: fine)` —en táctil no hay puntero
 que sustituir— y no sustituye nunca al foco de teclado.
 
+**6 · Escala tipográfica: ocho pasos, cero literales.** `--tipo-0` (0.6875rem) a
+`--tipo-7` (`clamp(2.2rem, 5vw, 3.6rem)`), pasos cortos donde vive el dato —11 · 12 · 13 ·
+15px— y saltos grandes solo hacia la jerarquía editorial (h2, h1, display del hero), para
+que la tabla nunca compita en tamaño con el titular. `--tipo-6` y `--tipo-7` son los
+`clamp()` de h1 y del display del hero que ya existían.
+
+| token | valor | uso |
+|---|---|---|
+| `--tipo-0` | 0.6875rem | cabeceras de tabla, timestamps, tickers |
+| `--tipo-1` | 0.75rem | cuerpo de tabla, cinta |
+| `--tipo-2` | 0.8125rem | cuerpo de UI por defecto |
+| `--tipo-3` | 0.9375rem | cuerpo de tarjeta, lead de noticia |
+| `--tipo-4` | 1.0625rem | título de tarjeta, h3 |
+| `--tipo-5` | 1.375rem | h2, cabecera de sección |
+| `--tipo-6` | `clamp(1.75rem, 3.4vw, 2.55rem)` | h1 |
+| `--tipo-7` | `clamp(2.2rem, 5vw, 3.6rem)` | display del hero |
+
+**Regla verificable:** todo `font-size` en `estilos.css` referencia `var(--tipo-N)`; cero
+literales sueltos fuera de la lista de excepción que el propio fichero documenta.
+`tests/paleta.js` recorre el CSS y lo afirma.
+
+**7 · Densidad: dos niveles, cuatro números cada uno.** Densidad no es un adjetivo de la
+fila, es una medida de la fila. Se aplica con `data-densidad="compacta"` o `"comoda"` en
+la raíz de la sección o tabla, nunca ad hoc por componente.
+
+| token | fila `min-height` | `padding-block` de celda | `font-size` | `line-height` |
+|---|---|---|---|---|
+| `--densidad-compacta` | 30px | 5px | `--tipo-1` | 1.3 |
+| `--densidad-comoda` | 44px | 10px | `--tipo-2` | 1.5 |
+
+**Criterio de densidad por sección, para aplicarlo tú mismo el día que llegue una
+sección nueva** —dos preguntas, en este orden:
+
+1. ¿Se escanea muchas veces al día para comparar valores entre sí, o se lee una vez de
+   principio a fin? Comparar → compacta. Leer → cómoda.
+2. ¿El contenido es el dato en sí —una cifra, un precio, un delta— o un envoltorio
+   narrativo alrededor del dato —un titular, una entradilla, un párrafo—? El dato en sí
+   → compacta. El envoltorio → cómoda.
+
+Cuando las dos preguntas empatan —una tabla que también lleva una frase explicativa por
+fila— la fila de dato va compacta y el texto que la acompaña conserva su propio `--tipo`
+de lectura: la densidad se decide por elemento, no por sección entera, cuando la sección
+mezcla ambos. Aplicado hoy: hero cómodo, cinta compacta, noticias con cuerpo cómodo y
+metadato compacto, cartera compacta.
+
+**Regla verificable:** para todo elemento con `data-densidad="compacta"`, una fila real
+pintada mide `getBoundingClientRect().height` ≤ 34px; para `"comoda"`, ≥ 40px.
+`tests/repintado.js` lo afirma en el navegador, sobre al menos una tabla de cada
+densidad, esperando con `waitForFunction` sobre el `tbody` con filas.
+
+**8 · Vocabulario de movimiento: tokens fijados, no inventados.** Dos curvas nuevas, sin
+fork paralelo de `--transicion` (140ms ease, que sigue siendo hover/color):
+
+```css
+--mov-entrada: cubic-bezier(0.23, 1, 0.32, 1);     /* entradas/salidas — ease-out fuerte */
+--mov-estado:  cubic-bezier(0.77, 0, 0.175, 1);    /* cambios de estado en pantalla */
+```
+
+Anima: la cinta (`translateX` `linear`, continuo), el flash de precio al refrescar
+(color/opacity, `--transicion`, nunca transform), el hover de fila (`--transicion`, tras
+`@media (hover: hover) and (pointer: fine)`), el modal de tesis y las tarjetas de
+noticia al filtrar (`scale(0.97)+opacity`, `--mov-entrada`, 200–300ms, sale por el mismo
+camino), las métricas del hero al primer pintado (opacity sola, `--mov-entrada`, 200ms,
+una vez por visita).
+
+No anima, explícitamente: reordenar o filtrar cartera o cotizaciones —se repinta al
+instante, es dato que el usuario lee para decidir—; ningún contador ascendente en cifras
+que se repintan en cada visita o refresco; parallax o cursor personalizado en el hero
+—ya prohibido por la cláusula 5—; pausa o rebote del marquee al pasar el ratón —no hay
+gesto que justifique un spring—.
+
+**Reglas verificables:**
+
+- Toda transición o `@keyframes` de entrada/salida usa `var(--mov-entrada)` o
+  `var(--mov-estado)` —nunca un cubic-bezier aproximado, nunca `ease-in`—; prueba
+  estática sobre `estilos.css`/`app.js` lo afirma.
+- Toda fila con `data-densidad="compacta"` mide ≤ 34px y toda fila `"comoda"` ≥ 40px de
+  altura real pintada —la misma prueba de la cláusula 7—.
+- Ninguna animación de UI declarada dura más de 300ms salvo la lista explícita —modal y
+  drawer hasta 500ms—; prueba estática recorre duraciones.
+- Con `prefers-reduced-motion: reduce` emulado, la cinta no se desplaza; `tests/repintado.js`
+  lo comprueba en navegador real.
+- Ningún contenedor de orden de `cartera` o `cotizaciones` lleva `transition`/`animation`
+  sobre `transform`; prueba estática afirma su ausencia.
+
 **Tipografía.** Geométrica para titulares, Inter para texto, **monospace del sistema**
 para el detalle técnico. `--mono` no lleva fichero propio: un tercer `.woff2` se paga en
 la ruta crítica del primer pintado del hero, y la pila del sistema ya es buena en las tres
