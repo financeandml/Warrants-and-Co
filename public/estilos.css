@@ -135,6 +135,35 @@
   --espacio-6: 54px;
   --transicion: 140ms ease;
 
+  /* ── Escala tipográfica (rediseño 2) ──
+     Ocho pasos. Cortos donde vive el dato —11 · 12 · 13 · 15px—, grandes
+     solo hacia la jerarquía editorial, para que la tabla nunca compita en
+     tamaño con el titular. `--tipo-6` y `--tipo-7` son los `clamp()` de h1
+     y del display del hero que ya existían: se nombran aquí, no se
+     redefinen. CLAUDE.md § Diseño 6. */
+  --tipo-0: 0.6875rem;                       /* 11px — cabeceras de tabla, timestamps, tickers */
+  --tipo-1: 0.75rem;                         /* 12px — cuerpo de tabla, cinta */
+  --tipo-2: 0.8125rem;                       /* 13px — cuerpo de UI por defecto */
+  --tipo-3: 0.9375rem;                       /* 15px — cuerpo de tarjeta, lead de noticia */
+  --tipo-4: 1.0625rem;                       /* 17px — título de tarjeta, h3 */
+  --tipo-5: 1.375rem;                        /* 22px — h2, cabecera de sección */
+  --tipo-6: clamp(1.75rem, 3.4vw, 2.55rem);  /* h1 */
+  --tipo-7: clamp(2.2rem, 5vw, 3.6rem);      /* display del hero */
+
+  /* ── Escala de densidad (rediseño 2) ──
+     Dos niveles, cuatro números cada uno. Se aplica con
+     `data-densidad="compacta"` o `"comoda"` en la raíz de la sección o
+     tabla, nunca ad hoc por componente. CLAUDE.md § Diseño 7. */
+  --densidad-compacta-fila:    30px;
+  --densidad-compacta-relleno: 5px;
+  --densidad-compacta-tipo:    var(--tipo-1);
+  --densidad-compacta-interlineado: 1.3;
+
+  --densidad-comoda-fila:    44px;
+  --densidad-comoda-relleno: 10px;
+  --densidad-comoda-tipo:    var(--tipo-2);
+  --densidad-comoda-interlineado: 1.5;
+
   /* ── Alias del Design System (Fase A) ──
      Nomenclatura nueva sobre los MISMOS valores de siempre — ningún número,
      color, peso ni medida cambia aquí. Cada alias es un `var()` sobre el
@@ -198,6 +227,34 @@
   --bp-mobile:  640px;
   --bp-tablet:  900px;
   --bp-desktop: 1200px;
+}
+
+/* ── Densidad (rediseño 2) ──
+   Inerte hasta que una sección o tabla lleve el atributo. `min-height` en
+   la fila y `padding-block` en su celda —ninguna sección lo usa todavía,
+   así que esta regla no cambia nada en pantalla por sí sola. */
+[data-densidad="compacta"] tr,
+[data-densidad="compacta"] .fila {
+  min-height: var(--densidad-compacta-fila);
+  font-size: var(--densidad-compacta-tipo);
+  line-height: var(--densidad-compacta-interlineado);
+}
+[data-densidad="compacta"] td,
+[data-densidad="compacta"] th,
+[data-densidad="compacta"] .celda {
+  padding-block: var(--densidad-compacta-relleno);
+}
+
+[data-densidad="comoda"] tr,
+[data-densidad="comoda"] .fila {
+  min-height: var(--densidad-comoda-fila);
+  font-size: var(--densidad-comoda-tipo);
+  line-height: var(--densidad-comoda-interlineado);
+}
+[data-densidad="comoda"] td,
+[data-densidad="comoda"] th,
+[data-densidad="comoda"] .celda {
+  padding-block: var(--densidad-comoda-relleno);
 }
 
 /* ── Tema oscuro ──────────────────────────────────────────────────────────
