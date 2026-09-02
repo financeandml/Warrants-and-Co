@@ -163,14 +163,21 @@ export function pintarAgenda(datos, { horizonte, alAbrirCompania, ventana = '' }
  * trae todos, nunca un subconjunto: así "Ver todos" siempre es trazable a
  * los mismos datos que las tarjetas de arriba, sin una segunda cuenta que
  * pueda discrepar.
+ *
+ * Exportada porque la ficha de una compañía (`companias.js`) reutiliza este
+ * mismo bloque para sus propios vencimientos, en vez de reimplementarlo. Los
+ * dos únicos IDs que genera (`idTitulo` y, dentro de cada fila, el prefijo del
+ * panel de detalle) llevan un parámetro con el valor de siempre por defecto,
+ * precisamente para que dos secciones —Catalysts y una ficha de Companies—
+ * puedan tener el bloque en el DOM a la vez sin id duplicado.
  */
-function bloqueResumenVencimientos(resumen, alAbrirCompania) {
+export function bloqueResumenVencimientos(resumen, alAbrirCompania, idTitulo = 'titulo-resumen-vencimientos') {
   const seccion = elemento('section', 'resumen-vencimientos');
-  seccion.setAttribute('aria-labelledby', 'titulo-resumen-vencimientos');
+  seccion.setAttribute('aria-labelledby', idTitulo);
 
   const cabecera = elemento('header', 'resumen-vencimientos__cabecera');
   const titulo = elemento('h2', 'movimiento', t('catalizadores.resumenVencimientos.titulo'));
-  titulo.id = 'titulo-resumen-vencimientos';
+  titulo.id = idTitulo;
   cabecera.appendChild(titulo);
   cabecera.appendChild(elemento('p', 'resumen-vencimientos__subtitulo',
     t('catalizadores.resumenVencimientos.subtitulo')));
@@ -203,7 +210,7 @@ function bloqueResumenVencimientos(resumen, alAbrirCompania) {
 
   const cuerpo = document.createElement('tbody');
   for (const r of resumen) {
-    const [fila, panel, boton] = filaResumenVencimiento(r, alAbrirCompania);
+    const [fila, panel, boton] = filaResumenVencimiento(r, alAbrirCompania, idTitulo);
     cuerpo.appendChild(fila);
     cuerpo.appendChild(panel);
     boton.addEventListener('click', () => {
@@ -221,8 +228,11 @@ function bloqueResumenVencimientos(resumen, alAbrirCompania) {
 }
 
 /** Fila de una compañía en el resumen, más su panel de detalle (oculto). */
-function filaResumenVencimiento(r, alAbrirCompania) {
-  const idDetalle = `detalle-vencimientos-${r.ticker}`;
+function filaResumenVencimiento(r, alAbrirCompania, idTitulo) {
+  // `idTitulo` distingue el bloque que llama —Catalysts o una ficha de
+  // Companies— para que el mismo ticker en las dos secciones no genere el
+  // mismo id de panel dos veces en el documento.
+  const idDetalle = `detalle-vencimientos-${idTitulo}-${r.ticker}`;
 
   const fila = document.createElement('tr');
 

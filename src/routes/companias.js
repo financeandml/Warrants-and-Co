@@ -27,8 +27,14 @@ router.get('/', async (req, res, next) => {
     // los viajes de ida y vuelta sin ganar nada.
     if (req.query.detalle === '1' || req.query.detalle === 'true') {
       const cartera = await carteraDeReferencia();
+      // El hub no pinta catalysts en ningún sitio del listado —solo la ficha
+      // individual lo hace, y esa pide su propio detalle por separado—, así
+      // que aquí se pide explícitamente sin ellos: ni el motor de opciones ni
+      // el de catalizadores se invocan por compañía para un dato que se
+      // descartaría sin usar.
       const fichas = await Promise.allSettled(
-        datos.companias.map((c) => companias.detalle(c.ticker ?? c.clave, { cartera, agendaDe: agendaDe(cartera) }))
+        datos.companias.map((c) => companias.detalle(c.ticker ?? c.clave,
+          { cartera, agendaDe: agendaDe(cartera), incluirCatalysts: false }))
       );
       datos.fichas = fichas
         .filter((f) => f.status === 'fulfilled' && f.value)

@@ -63,8 +63,12 @@ const PORdesRUTA = {
      permanente: se deja de mirar igual.
 
      Quien reabra el área: añádelas a esta lista en la misma tanda. Lo mismo vale
-     para el radar, el flujo y la señal. */
-  inicio: ['.portada__cifras__valor', '.cinta-metricas__valor', '.cinta-metricas__nota', '.dato__valor'],
+     para el radar, el flujo y la señal.
+
+     Fase D.6: `.portada__cifras__valor` salió de la lista con la fila de tres
+     cifras del hero, retirada junto con el hero fotográfico. Sigue vigilada en
+     `.cinta-metricas__valor`, ahora la única fuente. */
+  inicio: ['.cinta-metricas__valor', '.cinta-metricas__nota', '.dato__valor'],
   /* `.aportacion__valor` vive en realidad en `#seccion-radar`, no en cartera.
      Figura aquí porque esta lista es «por qué ruta pasar para encontrarla» y la
      consulta es global: se mide igual. Queda dicho para que nadie deduzca de

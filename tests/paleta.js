@@ -128,9 +128,19 @@ const RETIRADOS = ['--informativo', '--informativo-tenue'];
 
    No vale tampoco barrer todo nodo con un dígito: un rótulo con un año dentro lo
    cumple y no es una lectura. */
+/* Fase D.2: `.cronologia__dia` desapareció con la cronología de Catalizadores
+   en Portada —sustituida por `.upcoming` (4 líneas, sin hilo ni badge)—, y su
+   fecha vive ahora en `.upcoming__fecha`. Calibración, no relajación: sigue
+   siendo la misma comprobación —el acento no entra en la fecha del
+   catalizador—, solo que sobre la clase nueva.
+
+   Fase D.6: `.portada__cifras__valor` desapareció con la fila de tres cifras
+   del hero, retirada junto con el hero fotográfico que la presupuestaba. Las
+   mismas cifras siguen viviendo, y comprobándose, en `.cinta-metricas__valor`
+   —la única fuente ahora, dentro de Portfolio—. Misma calibración, no una
+   relajación: sigue sin poder entrar el acento en ninguna celda con cifra. */
 const VISTAS_CONVERTIDAS = {
-  inicio: ['.portada__cifras__valor', '.cinta-metricas__valor',
-           '.dato__valor', '.cronologia__dia'],
+  inicio: ['.cinta-metricas__valor', '.dato__valor', '.upcoming__fecha'],
   /* En cartera vive el anillo, y sus sectores NO están en esta lista a
      propósito: no son celdas de texto con cifra sino arcos de un SVG, y su
      régimen es la cláusula 1 —cada sector lleva su nombre escrito y la caja su

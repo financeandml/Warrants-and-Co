@@ -702,65 +702,46 @@ const AREAS_OCULTAS = false;
     await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
   comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
 
-  /* ── Portada · la fila de cifras del HERO, al conmutar ──
-     La pinta `pintarCifrasHero()`, y tampoco lleva un solo `data-i18n`: sin su
-     entrada en `PINTORES_INICIO` se quedaría en el idioma de partida. Recargar no
-     lo cazaría —al recargar se pinta ya con el diccionario nuevo—, así que se
-     comprueba aquí, donde el idioma se conmuta sin recargar.
-
-     Se afirma en los dos idiomas y contra la fila de abajo: son las mismas tres
-     cifras, y decirlo es lo único que hace legítimo mostrarlas dos veces. */
-  const heroPintado = () => vistaPintada(p, 
-    () => document.querySelectorAll('#cifras-hero .portada__cifras__celda').length === 3,
+  /* ── Portada · el hero, al conmutar (Fase D.6) ──
+     `animarManifiesto()` reconstruye el titular a mano —no lleva `data-i18n`,
+     porque sus líneas las decide el diccionario como lista—, así que hay que
+     comprobar que la reconstrucción ocurre de verdad al cambiar de idioma sin
+     recargar, y no solo al cargar. El subtítulo sí lleva `data-i18n` y lo
+     repinta el mecanismo genérico, pero se afirma en los dos idiomas por la
+     misma regla que el resto de esta batería: con un solo lado, un valor que
+     nunca se repinta puede coincidir por casualidad con el de partida. */
+  const heroPintado = () => vistaPintada(p,
+    () => (document.querySelector('#manifiesto-titular')?.textContent ?? '').trim().length > 0,
     null, 'hero');
 
-  const celdasHero = () => p.$$eval('#cifras-hero .portada__cifras__celda', (cs) => cs.map((c) => ({
-    valor: c.querySelector('.portada__cifras__valor')?.textContent.trim() ?? null,
-    etiqueta: c.querySelector('.portada__cifras__etiqueta')?.textContent.trim() ?? null,
-  })));
-
-  /* 1680×1050 es la ventana donde las cifras del hero caben con las líneas
-     puestas; en las apaisadas ceden y no habría nada que confrontar. Se fija
-     aquí y no se hereda del resto de la prueba, que corre a 1280×900. */
-  await p.setViewportSize({ width: 1680, height: 1050 });
   await heroPintado();
-
-  // Llega en inglés, que es donde acabó la tanda anterior.
-  const heroEn = await celdasHero();
-  comp('[hero, en] rótulo del año', heroEn[0].etiqueta, (v) => v && /^\d{4} return$/i.test(v));
-  comp('[hero, en] rótulo del índice compuesto con su periodo',
-    heroEn[1].etiqueta, (v) => v && /same period/i.test(v));
-  comp('[hero, en] rótulo del total', heroEn[2].etiqueta, 'Total return');
+  const heroEn = {
+    titular: (await txt('#manifiesto-titular')) ?? '',
+    subtitulo: (await txt('.manifiesto__subtitulo')) ?? '',
+  };
+  comp('[hero, en] el titular está en inglés',
+    heroEn.titular, (v) => /independent investment research/i.test(v));
+  comp('[hero, en] el subtítulo está en inglés',
+    heroEn.subtitulo, (v) => /same discipline/i.test(v));
 
   await idioma('es');
   await heroPintado();
-  const heroEs = await celdasHero();
-  comp('[hero, es] el rótulo del año sigue al idioma',
-    heroEs[0].etiqueta, (v) => v && /^rentabilidad \d{4}$/i.test(v));
-  comp('[hero, es] el rótulo del índice sigue al idioma',
-    heroEs[1].etiqueta, (v) => v && /mismo periodo/i.test(v));
-  comp('[hero, es] el rótulo del total sigue al idioma', heroEs[2].etiqueta, 'Rentabilidad total');
+  const heroEs = {
+    titular: (await txt('#manifiesto-titular')) ?? '',
+    subtitulo: (await txt('.manifiesto__subtitulo')) ?? '',
+  };
+  comp('[hero, es] el titular sigue al idioma',
+    heroEs.titular, (v) => /an[aá]lisis independiente de inversi[oó]n/i.test(v));
+  comp('[hero, es] el subtítulo sigue al idioma',
+    heroEs.subtitulo, (v) => /misma disciplina/i.test(v));
+  comp('[hero, es] el titular cambió de verdad respecto al inglés',
+    heroEs.titular !== heroEn.titular, true);
 
-  /* El valor también se repinta: el porcentaje sigue la convención del idioma
-     —«+67,00 %» frente a «+67.00%»—, así que un hero sin repintar se delata
-     también en la cifra y no solo en el rótulo. */
-  // El separador es un espacio DURO, que es lo que corresponde en castellano
-  // ante el signo de porcentaje. Un espacio normal aquí sería un fallo de
-  // composición, así que se exige el duro y no `\s`.
-  comp('[hero, es] el porcentaje sigue la convención del idioma',
-    heroEs[0].valor, (v) => v && /,\d+\u00a0%$/.test(v));
-  comp('[hero, en] el porcentaje seguía la suya', heroEn[0].valor, (v) => v && /\.\d+%$/.test(v));
+  comp('el hero lleva una sola acción primaria',
+    await p.locator('.manifiesto__acciones .boton--solido').count(), 1);
+  comp('el hero lleva una sola acción secundaria',
+    await p.locator('.manifiesto__acciones .boton--texto').count(), 1);
 
-  // Y las tres dicen lo mismo que sus gemelas de abajo, en el idioma vigente.
-  const abajoEs = await celdas();
-  const gemela = (et) => abajoEs.find((c) => c.etiqueta === et || `${c.etiqueta} · ${c.nota}` === et);
-  for (const c of heroEs) {
-    comp(`[hero, es] «${c.etiqueta}» dice lo mismo que su gemela de abajo`,
-      gemela(c.etiqueta)?.valor ?? null, c.valor);
-  }
-
-  comp('ninguna cifra retenida por suelo de muestra llega al hero',
-    (await txt('#cifras-hero')) ?? '', (v) => !RETENIDAS.test(v));
 
   if (errores.length) {
     const IMAGEN_INVESTING_403 = /Failed to load resource.*403/;

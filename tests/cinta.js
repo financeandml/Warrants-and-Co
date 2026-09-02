@@ -20,9 +20,9 @@
        dónde fuera pasando la cinta, y no habría error que lo delatara: las dos
        mitades no se ven nunca a la vez.
 
-   2 · QUE EL ALTO NO CAMBIA. El alto de la cinta lo mide `seguirEncuadreBanner()`
-       para encuadrar la fotografía y decidir dónde cae el árbol. Una sustitución
-       que moviera un píxel movería el árbol cada veinte segundos.
+   2 · QUE EL ALTO NO CAMBIA. Una sustitución que moviera un píxel desplazaría
+       el resto de la portada bajo ella cada veinte segundos — la cinta es una
+       franja fina y estable, no un elemento que deba respirar con su contenido.
 
    3 · QUE EL SPARKLINE ES UNIVERSAL, PERO NUNCA FABRICADO. Toda celda acaba con
        su trazo. `/api/mercado/serie/:simbolo` publica cierres diarios reales, y

@@ -209,8 +209,15 @@ function estadoPortfolio(ticker, cartera) {
  * @param {Function} [opciones.agendaDe]  `({ ticker }) => Promise<Array>` — inyectado
  *                                        para no acoplar este módulo a catalizadores
  *                                        salvo que de verdad se pidan catalysts.
+ * @param {boolean} [opciones.incluirCatalysts] Por defecto `true` —la ficha individual
+ *                                        siempre trae su agenda—. El listado del hub
+ *                                        (`GET /api/companias?detalle=1`) lo pone a
+ *                                        `false`: esas cifras no se pintan en ningún
+ *                                        sitio del hub, así que no tiene sentido pedirle
+ *                                        al motor de catalizadores que las calcule para
+ *                                        cada compañía y el cliente las descarte.
  */
-async function detalle(claveOTicker, { cartera = null, agendaDe = null } = {}) {
+async function detalle(claveOTicker, { cartera = null, agendaDe = null, incluirCatalysts = true } = {}) {
   const buscada = String(claveOTicker ?? '').trim().toUpperCase();
   const compania = agrupar().find(
     (c) => c.clave.toUpperCase() === buscada || (c.ticker ?? '').toUpperCase() === buscada
@@ -220,7 +227,9 @@ async function detalle(claveOTicker, { cartera = null, agendaDe = null } = {}) {
   const [cotizacion, noticias, catalysts] = await Promise.all([
     resolverCotizacion(compania.ticker),
     Promise.resolve(mencionesEnNoticias(compania)),
-    agendaDe && compania.ticker ? agendaDe({ ticker: compania.ticker }).catch(() => []) : Promise.resolve([]),
+    incluirCatalysts && agendaDe && compania.ticker
+      ? agendaDe({ ticker: compania.ticker }).catch(() => [])
+      : Promise.resolve([]),
   ]);
 
   return {

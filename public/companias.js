@@ -11,6 +11,11 @@ import {
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
 import { etiquetaSello, claseSello, etiquetaTipoEvento } from './vocabulario.js';
+// Mismo bloque "Vencimientos de opciones · Resumen" que ya usa la agenda de
+// Catalysts (Fase 2): se reutiliza tal cual, sin reimplementarlo, para que un
+// vencimiento LOW se agrupe con el mismo criterio en los dos sitios donde
+// aparece.
+import { bloqueResumenVencimientos } from './catalizadores.js';
 
 /* El rótulo de ausencia es una función y no una constante: se resuelve al
    pintar, que es cuando se sabe el idioma. Escrito a mano —«N/A»— quedaba fuera
@@ -581,19 +586,38 @@ function bloqueCatalizadores(c) {
     bloque.appendChild(elemento('p', 'bloque-ficha__vacio',
       c.catalysts ? t('companias.catalizadores.vacio') : t('companias.catalizadores.sinComprobar')));
   } else {
-    const lista = elemento('ul', 'lista-catalizadores');
-    for (const ev of proximos) {
-      const fila = elemento('li', 'fila-catalizador');
-      // El tipo se traduce con el mismo vocabulario que ya usa la Agenda de
-      // catalizadores; el título del evento («Vencimiento de opciones ·
-      // fecha») ya repite la fecha, así que aquí solo va el tipo, sin duplicar
-      // el mismo hecho en dos formatos —regla 9—.
-      fila.appendChild(elemento('strong', '',
-        ev.tipo ? etiquetaTipoEvento(ev.tipo) : t('companias.catalizadores.tipoReserva')));
-      fila.appendChild(elemento('span', 'fila-catalizador__meta', formatearFecha(ev.fecha)));
-      lista.appendChild(fila);
+    // Mismo criterio que la agenda de Catalysts (Fase 2): un vencimiento de
+    // opciones de prioridad baja deja de listarse uno a uno —13-14 filas
+    // idénticas por compañía— y se agrupa en el bloque de resumen de abajo.
+    // HIGH y MEDIUM siguen aquí, completos, exactamente como antes.
+    const completos = proximos.filter((ev) => !(ev.tipo === 'OPTIONS EXPIRY' && ev.prioridad === 'LOW'));
+    if (completos.length) {
+      const lista = elemento('ul', 'lista-catalizadores');
+      for (const ev of completos) {
+        const fila = elemento('li', 'fila-catalizador');
+        // El tipo se traduce con el mismo vocabulario que ya usa la Agenda de
+        // catalizadores; el título del evento («Vencimiento de opciones ·
+        // fecha») ya repite la fecha, así que aquí solo va el tipo, sin duplicar
+        // el mismo hecho en dos formatos —regla 9—.
+        fila.appendChild(elemento('strong', '',
+          ev.tipo ? etiquetaTipoEvento(ev.tipo) : t('companias.catalizadores.tipoReserva')));
+        fila.appendChild(elemento('span', 'fila-catalizador__meta', formatearFecha(ev.fecha)));
+        lista.appendChild(fila);
+      }
+      bloque.appendChild(lista);
     }
-    bloque.appendChild(lista);
+
+    // Vencimientos recurrentes: el mismo bloque "Resumen" de Catalysts,
+    // reutilizado sin cambios —`resumenVencimientos` ya viene calculado del
+    // servidor con el conjunto COMPLETO de esta compañía (HIGH/MEDIUM
+    // incluidos), así que "Ver todos" es siempre trazable a los vencimientos
+    // originales, sin un segundo cálculo que pudiera discrepar. El id se
+    // distingue del de Catalysts para que las dos secciones puedan convivir
+    // en el documento sin id duplicado.
+    if (c.catalysts.resumenVencimientos?.length) {
+      bloque.appendChild(bloqueResumenVencimientos(
+        c.catalysts.resumenVencimientos, () => {}, 'titulo-resumen-vencimientos-ficha'));
+    }
   }
 
   // Un resumen con pasados/sin-fuente informativos no debe quedar oculto:
