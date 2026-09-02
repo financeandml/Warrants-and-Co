@@ -774,6 +774,53 @@ const AREAS_OCULTAS = false;
     for (const e of errores.slice(0, 5)) console.log(`    ${e}`);
   }
 
+  /* ── Movimiento reducido en noticias: sin @starting-style, sin fundido ──
+     `pintarNoticias()` reconstruye la lista entera al cambiar de filtro, y
+     desde el rediseño 2 las filas nuevas entran con `@starting-style`
+     (opacity 0 → 1, scale 0.97 → 1, ver `estilos.css`). Con movimiento
+     reducido eso no debe verse: las filas han de aparecer YA en su estado
+     final, sin transición que interpolar. Contexto aparte con
+     `reducedMotion: 'reduce'` —el resto de la batería comparte una sola
+     página sin esa emulación—, así que no comparte `p` con el resto del
+     fichero. CLAUDE.md § Diseño 8. */
+  {
+    const ctxRM = await navegador.newContext({
+      viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce',
+    });
+    const pRM = await ctxRM.newPage();
+    await pRM.goto(`${B}/#/noticias`, { waitUntil: 'domcontentloaded' });
+
+    const NOMBRE = 'movimiento reducido en noticias: las filas aparecen sin animación';
+
+    const hayFilas = await E.esperarDatos(pRM,
+      () => document.querySelectorAll('#seccion-noticias .fila-noticia').length > 0, null,
+      { nombre: NOMBRE, motivo: 'la base no trae noticias: no hay filas que filtrar' });
+
+    if (hayFilas) {
+      const resumenAntes = await pRM.locator('#resumen-noticias').innerText().catch(() => null);
+      await pRM.selectOption('#filtro-noticias-categoria', { index: 1 });
+
+      const cambio = await E.esperarDatos(pRM,
+        (antes) => document.querySelector('#resumen-noticias')?.textContent !== antes,
+        resumenAntes,
+        { nombre: NOMBRE, motivo: 'el filtro no cambió el recuento: solo hay una categoría en la base' });
+
+      if (cambio) {
+        const est = await pRM.evaluate(() => {
+          const fila = document.querySelector('#seccion-noticias .fila-noticia');
+          if (!fila) return null;
+          const cs = getComputedStyle(fila);
+          return { opacidad: cs.opacity, transform: cs.transform, transicion: cs.transitionProperty };
+        });
+        const bien = est !== null && est.opacidad === '1' && est.transform === 'none'
+          && est.transicion === 'none';
+        if (bien) E.acierto(NOMBRE);
+        else E.fallo(NOMBRE, JSON.stringify(est));
+      }
+    }
+    await ctxRM.close();
+  }
+
   await navegador.close();
 
   /* Tres salidas y no dos, por la misma razón que `dependencias.js` reserva el 2

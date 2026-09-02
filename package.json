@@ -28,7 +28,8 @@
     "test:cartera-interfaz": "node tests/cartera-interfaz.js",
     "test:tipografia": "node tests/tipografia.js",
     "test:cinta": "node tests/cinta.js",
-    "test:paleta": "node tests/paleta.js"
+    "test:paleta": "node tests/paleta.js",
+    "test:movimiento": "node tests/movimiento.js"
   },
   "type": "commonjs",
   "dependencies": {
