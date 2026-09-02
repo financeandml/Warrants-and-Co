@@ -50,131 +50,64 @@
 
 <main id="principal">
 
-  <!-- ═══════════════════════════════ PORTADA ══════════════════════════════ -->
+  <!-- ═══════════════════════════════ PORTADA ══════════════════════════════
+       Fase D.6: reset de dirección de arte. El hero fotográfico y el wordmark
+       gigante se retiraron — la marca ya vive en la cabecera —; el hero es
+       ahora una declaración editorial y nada más. El orden de lectura es
+       Research (el producto) antes que Portfolio (la prueba de convicción). -->
   <section class="seccion seccion--portada" id="seccion-inicio" data-seccion-panel="inicio">
-    <div class="portada" id="portada">
-      <div class="portada__banner" id="portada-banner" hidden aria-hidden="true"></div>
-      <div class="portada__trama" aria-hidden="true"></div>
 
-      <div class="contenedor portada__interior">
-        <h1 class="portada__marca-principal" id="portada-titulo">
-          <span class="portada__marca-principal__linea">Warrants &amp; Co.</span>
-        </h1>
-
-        <!-- ── Fila de cifras del hero ──
-             Las mismas tres cifras que la fila de abajo, en su forma corta. NO
-             lleva ninguna escrita: las pinta `pintarCifrasHero()` desde
-             `/api/mercado/cartera`, que es la misma llamada que alimenta a su
-             gemela tras los pilares. Una cifra escrita aquí sería una segunda
-             fuente del mismo hecho, y `tests/portada.js` afirma que las tres
-             coinciden con las de abajo precisamente porque salen de una sola. -->
-        <div class="portada__cifras" id="cifras-hero"></div>
-
-        <nav class="portada__accesos" data-i18n-attr="aria-label:portada.accesos.etiqueta"
-             aria-label="Accesos principales">
-          <a class="boton boton--solido" href="#/companias" data-ruta
-             data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="portada__accion__flecha" aria-hidden="true">→</span></a>
-          <a class="boton boton--contorno" href="#/repositorio" data-ruta
-             data-i18n="portada.acceso.research">Ver el análisis</a>
-          <a class="boton boton--contorno" href="https://www.linkedin.com/company/warrants-co/"
-             target="_blank" rel="noopener noreferrer">
-            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-              <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.02-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.35V9h3.41v1.56h.05a3.74 3.74 0 0 1 3.37-1.85c3.6 0 4.27 2.37 4.27 5.46v6.28zM5.34 7.43a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13zm1.78 13.02H3.55V9h3.57v11.45zM22.22 0H1.77C.79 0 0 .77 0 1.72v20.56C0 23.23.79 24 1.77 24h20.45c.98 0 1.78-.77 1.78-1.72V1.72C24 .77 23.2 0 22.22 0z"/>
-            </svg>
-            LinkedIn
-          </a>
-        </nav>
-      </div>
-
-      <!-- ── Cinta de mercado: índices y posiciones, con datos reales ──
-           Va DENTRO del hero y anclada a su borde inferior. No es adorno: es la
-           única señal de que la página continúa. Un dato vivo cortado por el
-           pliegue invita a bajar mejor que cualquier flecha, y de paso ocupa el
-           cielo que sobraba bajo los accesos. -->
-      <div class="ticker" id="ticker-mercado" hidden
-           data-i18n-attr="aria-label:inicio.ticker.etiqueta" aria-label="Cotizaciones de mercado">
-        <div class="ticker__pista" id="ticker-pista"></div>
-      </div>
-    </div>
-
-    <!-- ── Manifiesto: qué es Warrants & Co. y por dónde se entra ──
-         Va DESPUÉS del hero y no comparte con él ninguna regla de estilo: el
-         banner y su composición quedan intactos. -->
+    <!-- ── Hero: secuencia editorial vertical, no panel de dos columnas ──
+         Fase D.9: el hero deja de ser "texto | foto" en columnas —esa
+         composición es, en sí misma, la de una landing SaaS, por bien medida
+         que estuviera (ver D.7 arriba, que ya lo intentó dentro del propio
+         concepto de columnas y no bastó)—. Ahora es una secuencia de tres
+         franjas apiladas, como una portada de publicación: declaración →
+         fotografía a sangre completo → línea de mercado. Cada franja ocupa
+         el ancho entero de la ventana; el texto se alinea al margen de
+         `.contenedor` y la fotografía sangra a los dos bordes reales, no solo
+         al derecho. Es la misma foto de `public/marca/` desde D.6.1; si no
+         hay banner depositado, `cargarMarca()` deja `.manifiesto__visual`
+         oculto y la secuencia pasa directa de la declaración a la cinta. -->
     <div class="manifiesto">
-      <div class="contenedor">
-
-        <div class="manifiesto__enunciado">
-          <p class="etiqueta-superior">Warrants &amp; Co.</p>
-          <!-- El titular llega vacío a propósito: sus líneas las construye
-               `animarManifiesto()` a partir de la lista del diccionario, porque
-               el número de líneas y el punto de corte los decide cada idioma.
-               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
-          <h2 class="manifiesto__titular" id="manifiesto-titular"></h2>
+      <div class="manifiesto__enunciado contenedor">
+        <span class="folio" aria-hidden="true">01</span>
+        <p class="etiqueta-superior">Warrants &amp; Co.</p>
+        <!-- El titular llega vacío a propósito: sus líneas las construye
+             `animarManifiesto()` a partir de la lista del diccionario, porque
+             el número de líneas y el punto de corte los decide cada idioma.
+             Escribirlas aquí congelaría los cortes de uno solo en todos. -->
+        <h1 class="manifiesto__titular" id="manifiesto-titular"></h1>
+        <p class="manifiesto__subtitulo" data-i18n="portada.hero.subtitulo">
+          Publicamos tesis de inversión con la misma disciplina con la que las medimos.
+        </p>
+        <div class="manifiesto__acciones">
+          <a class="boton boton--solido" href="#/companias" data-ruta
+             data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
+          <a class="boton boton--texto" href="#/repositorio" data-ruta
+             data-i18n="portada.acceso.research">Ver el análisis</a>
         </div>
-
-        <div class="pilares">
-          <article class="pilar">
-            <span class="pilar__numero" aria-hidden="true">01</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.investigacion.titulo">Investigación rigurosa</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.investigacion.texto">
-              Análisis fundamental propio, sin ruido ni atajos, sobre las
-              compañías y catalizadores que de verdad mueven la tesis.
-            </p>
-          </article>
-
-          <article class="pilar">
-            <span class="pilar__numero" aria-hidden="true">02</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.cobertura.titulo">Cobertura selectiva</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.cobertura.texto">
-              Un universo reducido de compañías, seguidas con la profundidad
-              que la calidad exige antes que la cantidad.
-            </p>
-          </article>
-
-          <article class="pilar">
-            <span class="pilar__numero" aria-hidden="true">03</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.riesgo.titulo">Gestión del riesgo</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.riesgo.texto">
-              Cada posición entra con su tamaño, su horizonte y su salida
-              definidos, no como una apuesta suelta.
-            </p>
-          </article>
-
-          <article class="pilar">
-            <span class="pilar__numero" aria-hidden="true">04</span>
-            <h3 class="pilar__titulo" data-i18n="portada.pilar.independencia.titulo">Independencia</h3>
-            <p class="pilar__texto" data-i18n="portada.pilar.independencia.texto">
-              Sin conflictos de interés ni banca de inversión detrás: el
-              análisis solo responde a quien lo lee.
-            </p>
-          </article>
-        </div>
-
+      </div>
+      <div class="manifiesto__visual" id="hero-visual" hidden>
+        <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">
       </div>
     </div>
 
-    <!-- ── Fila de cifras: lo que ha hecho la cartera ──
-         Va DESPUÉS de los pilares. Dentro del hero rompería la desigualdad de
-         las cuatro alturas: lo que asoma bajo el pliegue es la etiqueta del
-         manifiesto y su primera línea, y está medido.
-
-         Llega vacía a propósito. Las cuatro casillas y el pie los pinta
-         `pintarCifras()` desde `/api/mercado/cartera`, que es la misma llamada
-         que alimenta la cinta y el cuadro de mando. Una cifra escrita aquí
-         sería una segunda fuente del mismo hecho, y no habría prueba capaz de
-         confrontarla con la primera.
-
-         Esta fila es para lo que la cartera ha HECHO. La liquidez y el recuento
-         de posiciones no van en ella —son cómo está montada, no rendimiento—:
-         viven en el cuadro de mando, a un clic del pie. -->
-    <div class="cifras" id="cifras-portada" hidden>
-      <div class="contenedor" id="cifras-portada-cuerpo"></div>
+    <!-- ── Cinta de mercado: la línea que cierra la secuencia del hero ──
+         Fase D.9: gana un rótulo fijo —"MERCADO"/"MARKET"— a la izquierda,
+         tratado como el pie de una fotografía de prensa: la cinta deja de
+         leerse como un widget insertado y pasa a leerse como la última línea
+         de la composición, con su propia etiqueta. Sigue siendo la misma
+         cinta de siempre —índices y posiciones reales, `/api/mercado/cartera`. -->
+    <div class="ticker" id="ticker-mercado" hidden
+         data-i18n-attr="aria-label:inicio.ticker.etiqueta" aria-label="Cotizaciones de mercado">
+      <span class="ticker__dateline" data-i18n="inicio.ticker.dateline" aria-hidden="true">Mercado</span>
+      <div class="ticker__pista" id="ticker-pista"></div>
     </div>
 
-    <!-- ── Bento de portada: panorama, radar y señal en rejilla ──
-         Wrapping puramente de maquetación: las tres secciones siguen siendo las
-         mismas, con los mismos id y data-i18n que pinta el JS existente. Solo
-         cambia dónde caen en la rejilla — ver `.bento-home` en estilos.css. -->
+    <!-- ── Bento reservado: panorama, radar y señal ──
+         Las tres áreas siguen sin construirse —`hidden` en el documento— y
+         conservan su rejilla propia para cuando se reabran. -->
     <div class="bento-home">
 
     <!-- ═══════════════════════════ MARKET PULSE ═══════════════════════════ -->
@@ -240,63 +173,91 @@
       </div>
     </section>
 
-    <!-- ═══════════════════════════ CARTERA (home) ═══════════════════════════
-         Resumen de `resumenPortfolio` — el mismo objeto que ya calcula
-         `calcularCartera()` para la sección `#/cartera`. No pide nada nuevo:
-         llega dentro de la misma respuesta de `/api/mercado/cartera` que ya
-         alimenta la cinta y la fila de cifras (`datosInicio.cartera`). -->
-    <section class="bloque-home" id="home-cartera" aria-labelledby="titulo-home-cartera">
-      <div class="contenedor">
-        <header class="bloque-home__cabecera">
-          <div>
-            <p class="etiqueta-superior" data-i18n="inicio.cartera.etiqueta">Gestión de cartera</p>
-            <h2 id="titulo-home-cartera" class="bloque-home__titulo"
-                data-i18n="inicio.cartera.titulo">Cartera</h2>
-          </div>
-          <a class="enlace-avance" href="#/cartera" data-ruta>
-            <span data-i18n="inicio.cartera.enlace">Ver cartera completa</span>
-            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
-          </a>
-        </header>
-        <div id="home-cartera-cuerpo" aria-live="polite"></div>
-      </div>
-    </section>
-
     </div>
 
-    <!-- ════════════════════════════ RESEARCH ══════════════════════════════ -->
-    <section class="bloque-home" id="home-research" aria-labelledby="titulo-home-research">
-      <div class="contenedor">
-        <header class="bloque-home__cabecera">
-          <div>
-            <p class="etiqueta-superior" data-i18n="inicio.research.etiqueta">Análisis</p>
-            <h2 id="titulo-home-research" class="bloque-home__titulo"
-                data-i18n="inicio.research.titulo">Cobertura destacada</h2>
-          </div>
-          <a class="enlace-avance" href="#/companias" data-ruta>
-            <span data-i18n="inicio.research.enlace">Todas las compañías</span>
-            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
-          </a>
-        </header>
-        <div id="home-research-cuerpo" aria-live="polite"></div>
-      </div>
-    </section>
+    <!-- ════════════════════════════ RESEARCH ══════════════════════════════
+         Fase D.6: Research pasa a abrir la narrativa — es el producto — y
+         Portfolio (abajo) queda como la prueba de convicción, no al revés. -->
+    <!-- ══════════════════════════ REJILLA DE PORTADA ══════════════════════════
+         Fase D.11: Research, Portfolio y Catalysts dejan de ser tres bandas
+         apiladas de ancho completo y pasan a una sola rejilla asimétrica —una
+         "portada editorial", no un panel de SaaS comprimido—. Research ocupa
+         la columna ancha (1.7fr) y las dos filas; Portfolio y Catalysts se
+         apilan en la columna estrecha (1fr), separadas de Research por un
+         filete vertical de 1px y entre sí por uno horizontal — nunca un
+         `gap` en blanco, la misma regla de "el filete separa, no el hueco"
+         de D.7/D.9/D.10. Sin caja, sin sombra, sin radio: `.rejilla-bento`
+         no es `.bento-home` (esa clase sigue viva para Panorama/Radar/Signal,
+         que sí llevan caja — otro lenguaje, no lo comparten).
 
-    <!-- ════════════════════════════ CATALYSTS ═════════════════════════════ -->
-    <section class="bloque-home" id="home-catalizadores" aria-labelledby="titulo-home-catalizadores">
+         El raíl vertical continuo de D.10 no encaja en dos columnas —lo dijo
+         quien encargó esta fase—, así que se retira aquí; la numeración de
+         folio (02·03·04) sobrevive integrada en el eyebrow de cada bloque
+         («02 · Análisis»), fuera del texto traducible para que el repintado
+         de idioma no la borre. -->
+    <section class="bloque-bento" id="home-bento" aria-label="Cobertura, cartera y calendario">
       <div class="contenedor">
-        <header class="bloque-home__cabecera">
-          <div>
-            <p class="etiqueta-superior" data-i18n="inicio.catalizadores.etiqueta">Análisis</p>
-            <h2 id="titulo-home-catalizadores" class="bloque-home__titulo"
-                data-i18n="inicio.catalizadores.titulo">Próximos catalizadores</h2>
-          </div>
-          <a class="enlace-avance" href="#/catalizadores" data-ruta>
-            <span data-i18n="inicio.catalizadores.enlace">Agenda completa</span>
-            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
-          </a>
-        </header>
-        <div id="home-catalizadores-cuerpo" aria-live="polite"></div>
+        <div class="rejilla-bento">
+
+          <article class="rejilla-bento__research" id="home-research" aria-labelledby="titulo-home-research">
+            <header class="bloque-home__cabecera">
+              <div>
+                <p class="etiqueta-superior">
+                  <span class="bento-folio" aria-hidden="true">02</span><span data-i18n="inicio.research.etiqueta">Análisis</span>
+                </p>
+                <h2 id="titulo-home-research" class="bloque-home__titulo"
+                    data-i18n="inicio.research.titulo">Cobertura destacada</h2>
+              </div>
+              <a class="enlace-avance" href="#/companias" data-ruta>
+                <span data-i18n="inicio.research.enlace">Todas las compañías</span>
+                <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+              </a>
+            </header>
+            <div id="home-research-cuerpo" aria-live="polite"></div>
+          </article>
+
+          <!-- Resumen de `resumenPortfolio` — el mismo objeto que ya calcula
+               `calcularCartera()` para `#/cartera`. Nada nuevo: llega dentro
+               de la misma respuesta de `/api/mercado/cartera` que alimenta
+               la cinta (`datosInicio.cartera`). -->
+          <article class="rejilla-bento__cartera" id="home-cartera" aria-labelledby="titulo-home-cartera">
+            <header class="bloque-home__cabecera">
+              <div>
+                <p class="etiqueta-superior">
+                  <span class="bento-folio" aria-hidden="true">03</span><span data-i18n="inicio.cartera.etiqueta">Gestión de cartera</span>
+                </p>
+                <h2 id="titulo-home-cartera" class="bloque-home__titulo"
+                    data-i18n="inicio.cartera.titulo">Cartera</h2>
+              </div>
+              <a class="enlace-avance" href="#/cartera" data-ruta>
+                <span data-i18n="inicio.cartera.enlace">Ver cartera completa</span>
+                <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+              </a>
+            </header>
+            <div class="cifras" id="cifras-portada" hidden>
+              <div id="cifras-portada-cuerpo"></div>
+            </div>
+            <div id="home-cartera-cuerpo" aria-live="polite"></div>
+          </article>
+
+          <article class="rejilla-bento__catalizadores" id="home-catalizadores" aria-labelledby="titulo-home-catalizadores">
+            <header class="bloque-home__cabecera">
+              <div>
+                <p class="etiqueta-superior">
+                  <span class="bento-folio" aria-hidden="true">04</span><span data-i18n="inicio.catalizadores.etiqueta">Análisis</span>
+                </p>
+                <h2 id="titulo-home-catalizadores" class="bloque-home__titulo"
+                    data-i18n="inicio.catalizadores.titulo">Próximos catalizadores</h2>
+              </div>
+              <a class="enlace-avance" href="#/catalizadores" data-ruta>
+                <span data-i18n="inicio.catalizadores.enlace">Agenda completa</span>
+                <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+              </a>
+            </header>
+            <div id="home-catalizadores-cuerpo" aria-live="polite"></div>
+          </article>
+
+        </div>
       </div>
     </section>
 

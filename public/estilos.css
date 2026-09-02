@@ -134,6 +134,70 @@
   --espacio-5: 34px;
   --espacio-6: 54px;
   --transicion: 140ms ease;
+
+  /* ── Alias del Design System (Fase A) ──
+     Nomenclatura nueva sobre los MISMOS valores de siempre — ningún número,
+     color, peso ni medida cambia aquí. Cada alias es un `var()` sobre el
+     token histórico, así que sigue el tema oscuro exactamente igual que su
+     original (`:root[data-tema="oscuro"]` solo redefine los nombres de
+     abajo; el alias los hereda porque se resuelve en el momento en que se
+     usa, no en el momento en que se declara).
+
+     El motivo de un alias y no un renombrado: `tests/paleta.js` y
+     `tests/tipografia.js` verifican los nombres antiguos, y 4.900 líneas de
+     este fichero ya los usan. Migrar de golpe sería el "big bang" que este
+     proyecto ha evitado en cada fase anterior. Los dos nombres conviven
+     hasta que cada sección adopte el nuevo uno a uno; entonces, y solo
+     entonces, el antiguo se retira aquí. */
+  --color-surface:         var(--superficie);
+  --color-surface-alt:     var(--superficie-alt);
+  --color-surface-sunken:  var(--superficie-hundida);
+
+  --color-text:            var(--tinta);
+  --color-text-secondary:  var(--tinta-secundaria);
+  --color-text-muted:      var(--tinta-mate);
+
+  --color-border:          var(--linea);
+  --color-border-strong:   var(--linea-fuerte);
+  --color-border-hairline: var(--linea-hairline);
+
+  --color-positive:        var(--alcista);
+  --color-negative:        var(--bajista);
+  --color-warning:         var(--aviso);
+
+  --color-accent:          var(--acento);
+  --color-accent-solid:    var(--acento-pleno);
+  --color-accent-subtle:   var(--acento-tenue);
+  --color-focus:           var(--foco);
+
+  --font-body:    var(--sans);
+  --font-display: var(--geo);
+  --font-mono:    var(--mono);
+
+  --space-1: var(--espacio-1);
+  --space-2: var(--espacio-2);
+  --space-3: var(--espacio-3);
+  --space-4: var(--espacio-4);
+  --space-5: var(--espacio-5);
+  --space-6: var(--espacio-6);
+
+  --radius-xs: var(--radio);
+  --radius-sm: var(--radio-s);
+  --radius-md: var(--radio-m);
+  --radius-lg: var(--radio-l);
+
+  --shadow-elevated: var(--sombra-emergente);
+  --shadow-alert:    var(--sombra-aviso);
+
+  --container-max: var(--ancho-maximo);
+
+  /* Sin equivalente previo: hoy cada `@media` lleva su número suelto (12
+     valores distintos de `max-width` en todo el fichero). Se declaran como
+     referencia para uso futuro — nadie los invoca todavía, así que no hay
+     cambio de comportamiento posible. */
+  --bp-mobile:  640px;
+  --bp-tablet:  900px;
+  --bp-desktop: 1200px;
 }
 
 /* ── Tema oscuro ──────────────────────────────────────────────────────────
@@ -307,6 +371,63 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding-inline: 28px;
 }
 
+/* Fase D.3: a 1920px y más, el cuerpo de Portada —Cartera, Cobertura
+   destacada, Próximos catalizadores— se quedaba en la columna de 1240px de
+   siempre, con el resto de la pantalla vacío a los dos lados: "contenido de
+   1440px en medio de una pantalla enorme", justo lo que esta fase pidió no
+   dejar así. Se ensancha SOLO la columna de Portada —el resto de la
+   plataforma sigue midiendo 1240px, que es la anchura editorial que ya
+   tienen validada Companies/Catalizadores/Repositorio— para que la
+   composición aproveche el ancho real sin tocar ningún otro contenedor.
+
+   Fase D.8: `--ancho-portada` sustituye al `1600px` que había aquí suelto,
+   para que el hero y el resto de la portada lean la MISMA cifra — antes eran
+   dos números iguales escritos en dos sitios, y un 1600 que cambiara aquí sin
+   cambiar allí habría desalineado el hero del resto de la portada sin que
+   ninguna prueba lo dijera.
+
+   Fase D.9: el hero deja de calcular su propio margen izquierdo aparte —ya
+   no es una franja con inset a mano, `.manifiesto__enunciado` lleva la clase
+   `.contenedor` directamente— así que entra en esta misma lista en vez de
+   llevar su propia regla. */
+#seccion-inicio { --ancho-portada: var(--ancho-maximo); }
+@media (min-width: 1920px) {
+  #seccion-inicio { --ancho-portada: 1600px; }
+  #seccion-inicio .manifiesto__enunciado.contenedor,
+  #seccion-inicio .bento-home .contenedor,
+  #seccion-inicio #home-bento .contenedor {
+    max-width: var(--ancho-portada);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fase D.10 → D.11 — el folio, recortado a lo que sigue teniendo sentido.
+
+   D.10 hiló las cuatro secciones con un filete vertical continuo y una
+   numeración corrida. D.11 sustituye Research/Portfolio/Catalysts por una
+   rejilla de dos columnas —a petición explícita de quien encargó la fase:
+   "el raíl vertical continuo... nos va a generar problemas de alineación y
+   encajonamiento en dos columnas"—, así que ese filete ya no tiene destino:
+   solo le quedaría el hero, y una línea que empieza y no llega a ningún
+   sitio es peor que no tenerla. Se retira el filete; el número de folio del
+   hero (01) se queda, sin línea, como eco de la idea. La numeración de
+   Research/Portfolio/Catalysts (02·03·04) vive ahora dentro de cada eyebrow
+   de la rejilla (ver `.bento-folio` junto a `.rejilla-bento`). */
+#seccion-inicio { position: relative; }
+#seccion-inicio .manifiesto__enunciado.contenedor { position: relative; }
+#seccion-inicio .folio {
+  position: absolute;
+  left: -30px; top: 2px;
+  font-family: var(--mono, monospace);
+  font-size: 0.68rem;
+  color: var(--tinta-mate);
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 900px) {
+  #seccion-inicio .folio { display: none; }
+}
+
 .visualmente-oculto {
   position: absolute; width: 1px; height: 1px;
   padding: 0; margin: -1px; overflow: hidden;
@@ -453,17 +574,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ───────────────────────────────── Portada ────────────────────────────── */
 
-.portada {
-  border-bottom: 1px solid var(--linea);
-  background:
-    linear-gradient(180deg, var(--superficie-alt) 0%, var(--superficie) 100%);
-}
-
-/* 1024 px es la medida de la composición de referencia. No cuesta alto: lo que
-   ensancha es la caja, y las piezas que la llenan siguen midiendo lo que medían.
-   A cambio, los rótulos `nowrap` de la fila de cifras ganan 164 px de holgura. */
-.portada__interior { padding-block: clamp(56px, 8vw, 96px); max-width: 1024px; }
-
 /* `.portada__entradilla` no es residuo del hero: `app.js` la usa para la
    entradilla de las noticias. No retirar. */
 .portada__entradilla {
@@ -609,42 +719,42 @@ button, input, select, textarea { font: inherit; color: inherit; }
    pieza destacada. Todo selector prefijado por `#seccion-repositorio`: nada
    de esto toca `.panel-filtros`/`.tabla-datos`, compartidas con Noticias y
    con el resto de tablas de la plataforma. */
-#seccion-repositorio .repositorio-hero {
+/* `.wc-hero` (Fase B): Repositorio y Noticias comparten esta regla byte a
+   byte —son el mismo componente, no una coincidencia—, así que aquí sí hay
+   una única fuente real que extraer. Companies y Catalysts NO se han
+   fusionado aquí: su hero diverge a propósito (Companies no usa flex, lleva
+   la traza SVG posicionada; Catalysts usa otra alineación, otro gap y otro
+   `clamp()` por su indicador EN VIVO) — forzarlos a esta misma regla habría
+   sido la abstracción artificial que esta fase evita. Quedan documentados
+   como variantes propias, candidatas a un `.wc-hero--*` cuando la Portada
+   (Fase C) demuestre qué variantes hacen falta de verdad. */
+#seccion-repositorio .repositorio-hero,
+#seccion-noticias .noticias-hero,
+.wc-hero {
   display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
   gap: var(--espacio-5) var(--espacio-6);
   padding-block: clamp(40px, 7vw, 76px) var(--espacio-6);
   border-block-end: 1px solid var(--linea);
 }
-#seccion-repositorio .repositorio-hero__interior { max-width: 58ch; }
-#seccion-repositorio .repositorio-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
+#seccion-repositorio .repositorio-hero__interior,
+#seccion-noticias .noticias-hero__interior,
+.wc-hero__interior { max-width: 58ch; }
+#seccion-repositorio .repositorio-hero__subtitulo,
+#seccion-noticias .noticias-hero__subtitulo,
+.wc-hero__subtitle { margin-top: 10px; color: var(--tinta-secundaria); }
 
-#seccion-repositorio .repositorio-metricas {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
-  margin-block: var(--espacio-6);
-}
-#seccion-repositorio .repositorio-metricas .indicador { padding: 0; }
-#seccion-repositorio .repositorio-metricas .indicador--principal {
-  padding-inline-end: var(--espacio-6);
-  border-inline-end: 1px solid var(--linea);
-}
-#seccion-repositorio .repositorio-metricas .indicador--principal .indicador__valor {
-  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
-}
+/* La fila en sí y el tratamiento de su indicador principal viven en
+   `.wc-metrics`/`.wc-metric` (sección Filtros, más arriba); aquí solo lo
+   propio de Repositorio: la separación con el hero. */
+#seccion-repositorio .repositorio-metricas { margin-block: var(--espacio-6); }
 
 #seccion-repositorio .repositorio-destacado-bloque { margin-bottom: var(--espacio-6); }
 
-/* Pieza asimétrica, mismo lenguaje que `.destacada-principal` de Companies:
-   tesis a la izquierda, datos tabulares a la derecha. Nombre propio —no se
-   reutiliza `.destacada-principal`— porque esa clase vive scopeada a
-   `#seccion-companias` y aquí el contenido a la derecha es distinto (2 datos,
-   no 4). */
-#seccion-repositorio .repositorio-destacado {
-  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
-  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
-  cursor: pointer;
-}
-#seccion-repositorio .repositorio-destacado:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+/* Pieza asimétrica: la base (grid, filete, foco, colapso a 1 columna en
+   móvil) vive ahora en `.wc-featured` (sección Filtros, más arriba) —era
+   idéntica a `.destacada-principal` de Companies y a `.siguiente-catalizador`
+   de Catalysts—. Aquí solo el contenido propio: tesis a la izquierda, 2 datos
+   a la derecha (Companies usa 4, Catalysts una cuenta atrás). */
 #seccion-repositorio .repositorio-destacado__ticker {
   display: block; font-family: var(--mono, monospace);
   font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
@@ -669,7 +779,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   #seccion-repositorio .repositorio-destacado__nombre { transition: none; }
 }
 @media (max-width: 720px) {
-  #seccion-repositorio .repositorio-destacado { grid-template-columns: 1fr; }
+  /* El colapso a 1 columna ya lo cubre `.wc-featured`, más arriba. */
   #seccion-repositorio .repositorio-destacado__derecha {
     flex-direction: row; flex-wrap: wrap; gap: var(--espacio-5);
     border-inline-start: none; border-block-start: 1px solid var(--linea);
@@ -688,7 +798,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
    comparten repositorio y noticias y la segunda iba sin convertir. Convertida
    noticias, la acotación sobraba y se ha retirado: un selector acotado sin el
    motivo delante es una trampa para quien lo toque después. */
-.panel-filtros {
+/* `.wc-filter-bar` (Fase B): alias de `.panel-filtros`, ya compartido entre
+   Repositorio y Noticias como única fuente. La estructura interna
+   (`__principal`, `__campos`) sigue con su nombre de siempre: quien adopte
+   `.wc-filter-bar` reproduce ese mismo marcado, no uno nuevo. */
+.panel-filtros,
+.wc-filter-bar {
   border: 1px solid var(--linea); border-radius: var(--radio-l);
   padding: var(--espacio-4); margin-bottom: var(--espacio-4);
   background: var(--superficie-alt);
@@ -758,16 +873,21 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ──────────────────────────────── Tablas ──────────────────────────────── */
 
-/* Vive en repositorio y en cartera, las dos ya convertidas: cambia global. */
-.tabla-envoltorio {
+/* Vive en repositorio y en cartera, las dos ya convertidas: cambia global.
+   `.wc-table-wrapper`/`.wc-table` (Fase B) son alias de `.tabla-envoltorio`/
+   `.tabla-datos` — la base tabular ya única de la plataforma. El resto de
+   reglas específicas (hover de fila pulsable, pie de tabla) se quedan con su
+   nombre de sección hasta que un consumidor nuevo las necesite. */
+.tabla-envoltorio,
+.wc-table-wrapper {
   overflow-x: auto;
   border: 1px solid var(--linea); border-radius: var(--radio-l);
   background: var(--superficie);
 }
 
-.tabla-informes, .tabla-datos { font-size: 0.85rem; min-width: 760px; }
+.tabla-informes, .tabla-datos, .wc-table { font-size: 0.85rem; min-width: 760px; }
 
-.tabla-informes th, .tabla-datos th {
+.tabla-informes th, .tabla-datos th, .wc-table th {
   position: sticky; top: 0; z-index: 1;
   padding: 13px 16px; text-align: start; white-space: nowrap;
   font-size: 0.66rem; font-weight: 600; letter-spacing: 0.1em;
@@ -776,7 +896,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-bottom: 1px solid var(--linea-fuerte);
 }
 
-.tabla-informes td, .tabla-datos td {
+.tabla-informes td, .tabla-datos td, .wc-table td {
   padding: 14px 16px;
   border-bottom: 1px solid var(--linea-hairline);
   vertical-align: middle;
@@ -787,7 +907,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .tabla-informes tbody tr { cursor: pointer; transition: background var(--transicion); }
 .tabla-informes tbody tr:hover { background: var(--acento-tenue); }
 .tabla-informes tbody tr:last-child td,
-.tabla-datos tbody tr:last-child td { border-bottom: none; }
+.tabla-datos tbody tr:last-child td,
+.wc-table tbody tr:last-child td { border-bottom: none; }
 
 .num { text-align: end; font-variant-numeric: tabular-nums; }
 
@@ -821,11 +942,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .paginacion button:disabled { opacity: 0.4; cursor: not-allowed; }
 
-.vacio {
+/* `.wc-empty` (Fase B): alias de `.vacio`, ya global y única fuente en toda
+   la plataforma. Sin segunda declaración. */
+.vacio,
+.wc-empty {
   padding: 56px 24px; text-align: center; color: var(--tinta-mate);
   border: 1px dashed var(--linea-fuerte); border-radius: var(--radio);
 }
-.vacio strong { display: block; margin-bottom: 6px; color: var(--tinta); font-size: 1rem; }
+.vacio strong,
+.wc-empty strong { display: block; margin-bottom: 6px; color: var(--tinta); font-size: 1rem; }
 
 /* ─────────────────────────────── Cartera ──────────────────────────────── */
 
@@ -923,22 +1048,106 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .contribucion-fila__barra--baja { background: var(--bajista); right: 50%; }
 .contribucion-fila__valor { text-align: end; font-variant-numeric: tabular-nums; font-size: 0.82rem; }
 
-.indicador {
+/* ── `.wc-metric` (Fase B) ──
+   `.indicador` es el componente de métrica global ya en uso —directo en
+   Cartera (`#resumen-portfolio`), reescalado por sección en Companies/
+   Catalysts/Noticias/Repositorio—. `.wc-metric` se añade como alias de
+   selector, no como una segunda declaración: la única fuente de verdad
+   sigue siendo esta regla. Ninguna sección existente cambia de clase todavía;
+   `.wc-metric` queda listo para que la Portada (Fase C) lo consuma directo. */
+.indicador,
+.wc-metric {
   padding: 20px 22px; background: var(--superficie);
   box-shadow: 1px 0 0 var(--linea), 0 1px 0 var(--linea);
 }
 
 /* Seis celdas de igual anchura: el recuento encaja en 6, 3 o 2 columnas sin
    dejar huecos. La cifra principal destaca por tamaño, no por ocupar dos celdas. */
-.indicador--principal .indicador__valor { font-size: 2.05rem; }
+.indicador--principal .indicador__valor,
+.wc-metric--principal .wc-metric__value { font-size: 2.05rem; }
 
-.indicador__etiqueta {
+.indicador__etiqueta,
+.wc-metric__label {
   font-size: 0.66rem; letter-spacing: 0.12em; text-transform: uppercase;
   color: var(--tinta-mate); display: block; margin-bottom: 7px;
 }
-.indicador__valor { font-size: 1.62rem; font-weight: 600; line-height: 1.08; letter-spacing: -0.02em; }
-.indicador--principal .indicador__valor { font-size: 2.6rem; }
-.indicador__nota { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--tinta-mate); }
+.indicador__valor,
+.wc-metric__value { font-size: 1.62rem; font-weight: 600; line-height: 1.08; letter-spacing: -0.02em; }
+.indicador--principal .indicador__valor,
+.wc-metric--principal .wc-metric__value { font-size: 2.6rem; }
+.indicador__nota,
+.wc-metric__note { display: block; margin-top: 6px; font-size: 0.75rem; color: var(--tinta-mate); }
+
+/* `.wc-metrics` (Fase B): la fila que agrupa varios `.wc-metric`. Companies,
+   Catalysts, Noticias y Repositorio declaraban esta misma combinación de
+   cuatro propiedades cada una por separado —confirmado idéntica en las
+   cuatro—; se consolida aquí y cada sección conserva solo lo que de verdad le
+   es propio (dónde se separa del bloque de al lado), ya no la fila en sí. */
+#seccion-companias .companias-metricas,
+#seccion-catalizadores .catalizadores-metricas,
+#seccion-noticias .noticias-metricas,
+#seccion-repositorio .repositorio-metricas,
+.wc-metrics {
+  display: flex; flex-wrap: wrap; align-items: baseline;
+  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+}
+/* El indicador dentro de una fila no lleva su relleno/filete de tarjeta
+   suelta —eso es para cuando vive solo, como en `#resumen-portfolio`—, y la
+   cifra principal se separa del resto con un filete vertical: mismas cuatro
+   reglas, confirmadas idénticas en las cuatro secciones. */
+#seccion-companias .companias-metricas .indicador,
+#seccion-catalizadores .catalizadores-metricas .indicador,
+#seccion-noticias .noticias-metricas .indicador,
+#seccion-repositorio .repositorio-metricas .indicador,
+.wc-metrics .wc-metric { padding: 0; }
+#seccion-companias .companias-metricas .indicador--principal,
+#seccion-catalizadores .catalizadores-metricas .indicador--principal,
+#seccion-noticias .noticias-metricas .indicador--principal,
+#seccion-repositorio .repositorio-metricas .indicador--principal,
+.wc-metrics .wc-metric--principal {
+  padding-inline-end: var(--espacio-6);
+  border-inline-end: 1px solid var(--linea);
+}
+/* La tipografía grande de la cifra principal, en cambio, NO es 4 de 4: hoy
+   Catalysts no lleva este tratamiento (su `.indicador--principal` usa el
+   tamaño por defecto de `.indicador__valor`, 2,6rem, sin `--geo`). Es una
+   inconsistencia real entre secciones, no una elección deliberada documentada
+   en ningún sitio — se deja constatada aquí y sin tocar: decidir si Catalysts
+   adopta este tamaño es una decisión visual para la Fase C, no de esta fase
+   de extracción. */
+#seccion-companias .companias-metricas .indicador--principal .indicador__valor,
+#seccion-noticias .noticias-metricas .indicador--principal .indicador__valor,
+#seccion-repositorio .repositorio-metricas .indicador--principal .indicador__valor,
+.wc-metrics .wc-metric--principal .wc-metric__value {
+  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
+}
+
+/* `.wc-featured` (Fase B): pieza destacada asimétrica de dos columnas.
+   Companies (`.destacada-principal`), Repositorio (`.repositorio-destacado`)
+   y Catalysts (`.siguiente-catalizador`) comparten esta base —grid, gap,
+   filete inferior, cursor— y su `:focus-visible` y su colapso a una columna
+   en móvil, byte a byte idénticos en los tres. Lo que cada uno pinta DENTRO
+   (`__ticker`, `__nombre`/`__cuenta`, `__resumen`, `__derecha`) sigue siendo
+   propio de cada sección: son piezas de contenido distinto —una compañía, un
+   informe, una cuenta atrás—, no la misma cosa con otro nombre. */
+#seccion-companias .destacada-principal,
+#seccion-repositorio .repositorio-destacado,
+#seccion-catalizadores .siguiente-catalizador,
+.wc-featured {
+  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
+  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
+  cursor: pointer;
+}
+#seccion-companias .destacada-principal:focus-visible,
+#seccion-repositorio .repositorio-destacado:focus-visible,
+#seccion-catalizadores .siguiente-catalizador:focus-visible,
+.wc-featured:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+@media (max-width: 720px) {
+  #seccion-companias .destacada-principal,
+  #seccion-repositorio .repositorio-destacado,
+  #seccion-catalizadores .siguiente-catalizador,
+  .wc-featured { grid-template-columns: 1fr; }
+}
 
 /* El fondo se queda en `--superficie` y NO pasa a `--superficie-alt`, y hay una
    medida detrás: dentro de una de estas tarjetas vive el anillo de composición.
@@ -1703,432 +1912,160 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .cotiza--cerrada .cotiza__ticker { opacity: 0.55; }
 
 
-/* ══════════════════════════ PORTADA · LANDING ═══════════════════════════ */
+/* ══════════════════════════ PORTADA · HERO ══════════════════════════════
+   Fase D.6: reset de dirección de arte. Se retiró el hero fotográfico —y con
+   él toda la geometría que lo encuadraba: `seguirEncuadreBanner()`, `BANNER`,
+   la histéresis de asomo del manifiesto—. Ese mecanismo entero existía para
+   una fotografía; sin ella no describía nada. Lo que queda es una declaración
+   editorial: marca en eyebrow, titular, una frase de apoyo, una acción
+   primaria y una secundaria silenciosa. Ni cifras ni foto compiten con ella. */
 
 .seccion--portada { padding: 0; }
 
-/* ── La altura del hero deja ver que la página sigue ──
-   Antes ocupaba `100vh - 69px`: terminaba EXACTAMENTE en el pliegue, la
-   fotografía llegaba al borde inferior de la ventana y no quedaba ni un píxel
-   de lo que viene después, de modo que la portada se leía como final de página.
-   Ahora el hero acaba al 75,5 % de la ventana y cede ese margen. Y lo que cede
-   no es hueco: es la altura justa para que asomen la etiqueta del manifiesto y
-   su primera línea de titular, ya reveladas. Esa cifra NO es de gusto, sale de
-   una condición del observador que revela el manifiesto —`threshold: 0.18` y
-   `rootMargin` inferior de −60 px, en `inicio.js`—: el texto que asoma dentro
-   de esos 60 px finales no llega a pintarse, así que asomaría una caja vacía.
-   Para que la primera línea se revele de verdad hace falta
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fase D.9 — el hero como secuencia editorial vertical, no como panel de
+   columnas.
 
-       hero + padding + 44 px  ≤  ventana − 60 − 0,18 × alto-de-línea
+   D.7 ya intentó resolver "esto parece una landing SaaS" dentro del propio
+   concepto de columnas —sangrado asimétrico, filete en vez de hueco, CTA como
+   nota a pie— y no bastó: el problema no era la ejecución de TEXTO | FOTO,
+   era el concepto mismo. Dos cajas de peso comparable una junto a otra sigue
+   siendo esa composición aunque una de las dos sangre hasta el borde.
 
-   y con el hero al 88 % la desigualdad pedía padding negativo. Al 75,5 % se
-   cumple con holgura de 700 px de alto en adelante. Subir esta cifra sin bajar
-   el padding del manifiesto devuelve el rectángulo vacío.
+   D.9 cambia la estructura, no los ajustes: el hero pasa de un `flex-row` de
+   dos hijos a una SECUENCIA de tres franjas apiladas —declaración, fotografía,
+   línea de mercado—, cada una a todo el ancho de la ventana. Es la misma
+   lógica con la que se abre un número de una publicación impresa: un titular,
+   una fotografía a sangre completo que ocupa su propio espacio sin compartirlo
+   con texto, y un pie con el dato del momento. La fotografía dejar de ser "la
+   mitad derecha de algo" y pasa a ser una franja propia, más alta y más ancha
+   de lo que cualquier columna lateral podía darle.
 
-   El 69 px de aquel `calc` era una constante equivocada. La cabecera es
-   `position: sticky`, ocupa sitio en el flujo y NO mide siempre lo mismo: son
-   69 px en escritorio y 164 px a 390 px de ancho, donde se reparte en tres
-   filas. Con la constante, en móvil el hero se pasaba de largo y empujaba la
-   cinta fuera de la pantalla. `--alto-cabecera` la mide de verdad
-   —`seguirAlturaCabecera()`, en `portada.js`— y aquí solo se descuenta.
+   Esto además resuelve el escritorio y el móvil con la MISMA lógica: al ya
+   ser una secuencia vertical, no hace falta una regla de "columnas a
+   `flex-direction: column`" aparte para pantallas estrechas — el hero se
+   apila igual en los dos, con más aire abajo del texto por Regla 5 (nada de
+   composiciones específicas de ancho para simular apilado). */
 
-   La unidad es `svh`, no `vh`: en un móvil `vh` es la ventana con la barra del
-   navegador ya retraída, de modo que al entrar —con la barra a la vista— el
-   hero mediría de más y volvería a comerse la cinta. `svh` es la ventana
-   pequeña, la del peor caso, y garantiza el corte en cualquier momento.
-
-   Dos filas: el contenido arriba y la cinta al filo inferior. La cinta ocupa
-   fila propia —no va en posición absoluta— para que en pantallas estrechas
-   empuje en lugar de superponerse al bloque de accesos. */
-.seccion--portada .portada {
-  min-height: calc(75.5svh - var(--alto-cabecera));
-  /* Pivote de diseño: la composición vuelve a ser centrada, no de izquierda.
-     `place-items: center` centra `.portada__interior` en los dos ejes como
-     caja de grid. La sesión anterior había pasado esto a `justify-items:
-     start` para un hero de izquierda que ya no es el diseño vigente. */
-  display: grid; grid-template-rows: 1fr auto; place-items: center;
-  border-bottom: none;
-  overflow: hidden;
+.manifiesto {
+  padding-block: clamp(20px, 3vh, 36px) 0;
+  background: var(--superficie);
 }
 
-/* La cinta se estira a todo lo ancho y se pega al fondo de su fila. Sin
-   transform: seguirEncuadreBanner() calcula el presupuesto de píxeles del
-   hero asumiendo que la cinta está en su posición natural de flujo, y un
-   desplazamiento aquí sin enseñárselo allí deja a los dos describiendo una
-   pantalla distinta. */
-.seccion--portada .portada > .ticker {
-  grid-row: 2; align-self: end; justify-self: stretch;
-  /* Antes `width: 100%` la llevaba borde a borde con la sección —`.seccion--
-     portada` va a `padding: 0` y `.portada` no añade ninguno propio—. La
-     píldora pide margen lateral, así que se sustituye por `margin-inline`: el
-     ticker sigue "prácticamente todo el ancho disponible" sin tocar el 0 y
-     0 de la sección. */
-  margin-inline: clamp(20px, 4vw, 56px);
+.manifiesto__enunciado {
+  max-width: 760px;
 }
 
-.seccion--portada .portada__interior {
-  /* Referencia para las líneas cuando salen del flujo. */
-  position: relative;
-  display: flex; flex-direction: column; align-items: center;
-  gap: clamp(44px, 7vh, 76px);
-  padding-block: clamp(60px, 12vh, 140px);
-  text-align: center;
-  /* Sin tope de ancho: la composición centrada no necesita reservarle la
-     mitad derecha de la ventana al árbol —el `margin-inline: auto` que trae
-     `.contenedor` es justo lo que la centra dentro del grid, y no hay que
-     anularlo como sí hacía falta en el hero de izquierda. */
-}
+.manifiesto__enunciado .etiqueta-superior { margin: 0 0 18px; }
 
-/* ── Composición sobre la fotografía ──
-   La foto tiene una banda superior de cielo completamente vacía —el 30 % de su
-   altura, a todo lo ancho— y concentra el árbol, la valla y la línea del
-   horizonte entre el 30 % y el 60 %. Medida la imagen, la desviación de
-   luminancia de esa banda superior no pasa de 1,3 sobre 255 y su píxel más
-   oscuro es 216: es el mayor espacio negativo disponible con diferencia.
-
-   De modo que el título no se centra: se ancla arriba, y el encuadre se sube al
-   borde superior de la imagen para que esa banda quede justo detrás del texto.
-   El árbol queda entero por debajo del bloque de accesos. Ninguna sombra
-   resuelve nada aquí; lo resuelve la posición. */
-.seccion--portada .portada[data-banner="true"] {
-  /* Vertical arriba —la banda de cielo vacía de la foto está pegada al borde
-     superior, no en el centro—, horizontal centrado: la composición vigente
-     es de marca centrada, no de izquierda. */
-  place-items: start center;
-
-  /* ── Cuando el encuadre no da más de sí, crece el hero ──
-     Hay ventanas —muy apaisadas y bajas— en las que el bloque de marca, el
-     cielo hasta la copa, la banda del árbol, su holgura y la cinta no caben a
-     la vez en `75,5 svh`. Ahí no se recorta el árbol ni se le sienta la cinta
-     encima: el hero toma el alto que la foto exige, que lo publica
-     `seguirEncuadreBanner()` y depende solo del ANCHO. Se pierde asomo del
-     manifiesto, que es lo reversible; a 1920×700 el hero pasa de 460 a 523 px y
-     siguen asomando 108. Sin JavaScript el término vale 0 y no interviene. */
-  /* El alto que concede la ventana se nombra aquí, y aquí solamente. Está
-     registrado con `@property` para que `getComputedStyle` lo devuelva ya
-     resuelto en píxeles: `seguirEncuadreBanner()` necesita saberlo para decidir
-     si la fila de cifras cabe, y volver a escribir la fórmula en JavaScript sería
-     una segunda fuente del mismo hecho —la que un día deja de coincidir sin que
-     se vea en pantalla—. */
-  --alto-por-ventana: calc(75.5svh - var(--alto-cabecera));
-  min-height: max(var(--alto-por-ventana), var(--alto-minimo-banner, 0px));
-}
-
-.portada[data-banner="true"] .portada__interior {
-  /* El bloque se mantiene compacto para caber íntegro en la banda limpia: no es
-     estética, es presupuesto. Ceñirlo no depende de si la fila de cifras está
-     puesta —eso haría que el coste de ponerla dependiera de si está puesta, y
-     la decisión dejaría de ser estable—. */
-  gap: clamp(6px, 1.2vh, 12px);
-  padding-block: clamp(18px, 3.6vh, 40px) 0;
-}
-
-/* ── La fila de tres cifras del hero ──
-   Apilada al mínimo legible: cifra sobre rótulo, sin la nota que sí lleva la
-   fila completa de abajo. El tamaño no es gusto, es presupuesto — se midió
-   contra el asomo del manifiesto en las seis ventanas de `tests/portada.js`:
-   esta variante cuesta 57-66 px de hero y entra en cuatro; la siguiente talla
-   arriba dejaba 1440×700 a 9 px del umbral de revelado.
-
-   `nowrap` en el rótulo es deliberado: envolviendo, la fila pasa de 36 a 60 px
-   de alto y el presupuesto medido deja de describirla. El rótulo más largo
-   —«Índice (S&P 500) · Mismo periodo»— mide 555 px de los 860 disponibles, de
-   modo que hay holgura de sobra en los dos idiomas. */
-.portada__cifras {
-  display: flex; justify-content: center; flex-wrap: nowrap;
-  gap: clamp(26px, 4vw, 64px);
-  padding-block-start: 12px;
-}
-
-/* En pantalla estrecha las tres casillas no caben en fila y el flex las estruja.
-   Antes que estrujar, se envuelven: aquí el presupuesto del hero no está
-   corriendo —`publicar()` se va de vacío porque el encuadre no es `cover`—, de
-   modo que crecer de alto no le cuesta el pliegue a nadie. */
-@media (max-width: 640px) {
-  .portada__cifras { flex-wrap: wrap; gap: 18px clamp(20px, 6vw, 32px); }
-}
-
-.portada__cifras__celda {
-  display: flex; flex-direction: column; gap: 1px;
-  text-align: center;
-}
-
-/* ── La entrada de las tres cifras ──
-   Se descubren de arriba abajo, escalonadas, UNA SOLA VEZ al pintarse. No
-   cuentan: la cifra está completa y es la definitiva desde el primer fotograma,
-   y lo único que se mueve es el borde que la descubre.
-
-   Que no cuente es la decisión, y el motivo no es estético. Un conteo de 0 a
-   +67,94 % dedica unos cuarenta fotogramas a mostrar rentabilidades que nunca
-   fueron ciertas —pasa por «+0,00 %», que se lee como plano, y por cifras que
-   serían un historial mediocre—. En un contador de unidades eso es inocuo; en el
-   historial de una cartera, no.
-
-   Tampoco se repite. Estos números salen de cierres de sesión y no cambian
-   durante el día: animarlos en bucle anunciaría dato vivo donde no lo hay. El
-   pase único lo guarda `data-entrada` sobre la fila, que sobrevive a los
-   repintados porque `pintarCifrasHero()` vacía la fila pero no la sustituye.
-
-   `clip-path` y `opacity` NO tocan la maquetación: el alto de la fila es el
-   mismo en todo momento, de modo que `seguirEncuadreBanner()` mide lo mismo
-   esté la entrada corriendo o terminada, y el presupuesto del hero no se entera.
-
-   `backwards` importa: sin él la casilla se vería un fotograma en su estado
-   final antes de empezar. Y con él, una casilla a la que nunca se le añada la
-   clase queda visible y correcta —el estado de reposo es «a la vista», no
-   «oculta»—, que es la única forma segura de escribir esto: si el guion muriese
-   entre pintar y animar, las cifras seguirían leyéndose. */
-@keyframes portada-cifra-entra {
-  from { clip-path: inset(0 0 100% 0); opacity: 0; }
-  to   { clip-path: inset(0 0 0 0);    opacity: 1; }
-}
-
-.portada__cifras__celda--entra {
-  animation: portada-cifra-entra 520ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
-  animation-delay: calc(var(--i, 0) * 80ms);
-}
-
-/* ── Separadores entre casillas ──
-   Un filete vertical entre casilla y casilla, como el de la composición
-   centrada de referencia. Cuesta CERO alto: se dibuja en el borde de la
-   casilla, dentro del hueco que la rejilla ya reservaba, y no añade nodo ni
-   caja al flujo —de modo que `costeCifras` mide lo mismo con ellos que sin
-   ellos y el presupuesto del hero no se entera—. Van en el borde de entrada
-   de la segunda y la tercera, no en el de salida de la primera, para que no
-   cuelgue ninguno al final.
-
-   El `padding` aparta el texto del filete y el margen negativo devuelve
-   exactamente lo que el `padding` ocupó. Lo que NO devuelve es el borde: la
-   fila acaba 2 px más ancha, uno por filete. En alto sigue costando cero, que
-   es lo único que paga el pliegue, y 2 px sobre 1024 no aprietan a nadie. */
-.portada__cifras__celda + .portada__cifras__celda {
-  border-inline-start: 1px solid var(--linea-portada, var(--linea));
-  padding-inline-start: clamp(12px, 2.25vw, 28px);
-  margin-inline-start: calc(-1 * clamp(12px, 2.25vw, 28px));
-}
-
-/* Envolviendo, un filete vertical entre renglones no separa nada: señala un
-   límite que ya no existe. Con la fila envuelta se retira. */
-@media (max-width: 640px) {
-  .portada__cifras__celda + .portada__cifras__celda {
-    border-inline-start: none;
-    padding-inline-start: 0; margin-inline-start: 0;
-  }
-}
-
-.portada__cifras__valor {
-  font-size: 1.3rem; font-weight: 600; line-height: 1.05;
-  letter-spacing: -0.02em;
-  /* La cifra no se parte NUNCA. Sin esto, en pantalla estrecha el flex estrujaba
-     la casilla y «▲ +67,00 %» caía en dos renglones, partiendo el número por la
-     mitad. Cuenta el glifo, que va en un `::before` y ensancha lo que hay que
-     medir. */
-  white-space: nowrap;
-}
-
-.portada__cifras__etiqueta {
-  font-size: 0.67rem; line-height: 1.25;
-  text-transform: uppercase; letter-spacing: 0.07em;
-  white-space: nowrap;
-  color: var(--tinta-mate);
-}
-
-/* Oculta: fuera del flujo pero SIGUE maquetada, por la misma razón que las dos
-   líneas. Su alto es el dato con el que se decide si vuelve a caber; con
-   `display: none` mediría cero, el coste parecería nulo y oscilaría. */
-.portada[data-cifras="false"] .portada__cifras {
-  position: absolute; inset-inline: 0; top: 0;
-  margin-inline: auto;
-  visibility: hidden; pointer-events: none;
-}
-
-.portada__marca-principal {
-  display: flex; flex-direction: column; align-items: center; gap: clamp(4px, 1vw, 8px);
+.manifiesto__titular {
   margin: 0;
   font-family: var(--geo);
-  font-weight: 600; letter-spacing: -0.045em; line-height: 0.98;
+  font-size: clamp(2.3rem, 5vw, 3.6rem);
+  font-weight: 500; letter-spacing: -0.02em; line-height: 1.1;
+  text-wrap: balance;
 }
 
-.portada__marca-principal__linea {
+.manifiesto__subtitulo {
+  margin: 18px 0 0;
+  font-size: 1.05rem; line-height: 1.6; color: var(--tinta-secundaria);
+  max-width: 58ch;
+}
+
+/* El filete horizontal es la MISMA pieza que separa `.bloque-home__cabecera`
+   de su cuerpo en el resto de la home —border de 1px, sin sombra, sin caja—,
+   aplicada aquí para que la acción se lea como el cierre de un párrafo, no
+   como un cartel debajo de él. */
+.manifiesto__acciones {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 26px;
+  margin-block-start: 24px;
+  padding-block-start: 18px;
+  border-block-start: 1px solid var(--linea);
+}
+.manifiesto__acciones .boton--solido {
+  padding: 11px 20px;
+  font-size: 0.86rem; font-weight: 600; letter-spacing: 0.01em;
+}
+.manifiesto__flecha { display: inline-block; transition: transform var(--transicion); }
+.manifiesto__acciones .boton--solido:hover .manifiesto__flecha { transform: translateX(3px); }
+
+/* ── La fotografía: franja propia, a sangre completo en los dos bordes ──
+   Ya no es una columna que comparte fila con el texto: es su propia franja,
+   hermana de `.manifiesto__enunciado` y no hija suya, así que no hereda su
+   `.contenedor` — al 100% del ancho de `.manifiesto`, que no tiene relleno
+   horizontal propio, llega sola hasta el borde real de la ventana a ambos
+   lados. Sin radio, sin sombra, sin velo ni degradado. `hidden` por defecto:
+   `cargarMarca()` la revela solo tras precargar el fichero real de
+   `public/marca/`.
+
+   Fase D.10: pierde el filete inferior y baja de altura (620px → 460px de
+   techo) a propósito de dos cosas a la vez — la fotografía y la cinta dejan
+   de tener un final y un principio separados por una línea; la cinta se
+   solapa 44px sobre el pie de la imagen (ver más abajo) y ES su cierre. Y
+   Research deja de esperar a una franja de foto tan alta: la sección 6 de
+   esta fase pide research visible en el primer scroll, no un hero enorme por
+   parecer "premium". */
+.manifiesto__visual {
+  margin-block-start: clamp(20px, 3vh, 36px);
+  height: clamp(260px, 42vh, 460px);
+  overflow: hidden;
+  border-block-start: 1px solid var(--linea);
+}
+/* El árbol vive en la banda 37,3–54,3% del alto del fichero (medido en Fase
+   C) y algo a la derecha del centro. `object-position` mantiene esa banda
+   centrada en el recorte en vez de dejarla a merced de la proporción de cada
+   ventana, ahora mucho más ancha que alta en la franja a sangre completo. */
+.manifiesto__imagen {
   display: block;
-  font-size: clamp(2.3rem, 5.4vw, 4.6rem);
-  color: var(--tinta);
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 38%;
 }
 
-.portada__accesos {
-  display: flex; flex-wrap: wrap; justify-content: center; align-items: center;
-  gap: var(--espacio-2);
+@media (max-width: 1023px) {
+  .manifiesto__visual { height: clamp(210px, 34vh, 340px); }
 }
 
-/* El sistema de botones compartido (`.boton`, `.boton--solido`,
-   `.boton--contorno`) sustituye a `.acceso`: el CTA principal es cromo de
-   identidad —regla 2 de CLAUDE.md, `--acento` sólido— y los otros dos son
-   contorno, sin inventar una tercera familia de controles para el hero. El
-   tamaño base de `.boton` es el de cabecera/formularios; aquí se agranda un
-   punto para pesar lo que pedía la composición. El radio no se toca: sigue
-   siendo `var(--radio)`, el mismo de `.boton` en toda la plataforma. */
-.portada__accesos .boton {
-  padding: 13px 24px;
-  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+/* ── Cinta de mercado: se solapa con el pie de la fotografía, no la sucede ──
+   Fase D.9 la trató como la línea que CIERRA la secuencia, después de la
+   foto. Fase D.10 va más lejos: la cinta sube 44px y se superpone al borde
+   inferior de la fotografía —un solape real, no un filete entre las dos—,
+   con su propio fondo opaco cubriendo el tramo donde pisa la imagen. Es la
+   fotografía "conectando" con el contenido que pide la fase, sin escribir
+   nunca texto sobre los píxeles de la imagen: donde se tocan, la cinta gana,
+   opaca, con su propio filete superior como frontera. */
+.seccion--portada > .ticker {
+  display: flex; align-items: stretch;
+  border-radius: 0; border-inline: none;
+  border-block: 1px solid var(--linea);
+  background: var(--superficie);
+  position: relative;
 }
-.portada__accesos .boton--contorno {
-  background: rgba(255, 255, 255, 0.46);
-  backdrop-filter: saturate(120%) blur(6px);
+/* El solape solo tiene sentido si hay fotografía que pisar: sin banner
+   depositado, `.manifiesto__visual` sigue `hidden` y la cinta debe seguir
+   siendo la línea que sucede al texto, no una que trepa sobre él. */
+.manifiesto:has(.manifiesto__visual:not([hidden])) + .ticker {
+  margin-block-start: -44px;
 }
-/* ── Excepción deliberada a la Regla 2 de CLAUDE.md, solo aquí ──
-   El botón primario de la plataforma es siempre `--acento`: es cromo de
-   identidad y esta regla no se toca en ningún otro sitio. El CTA del hero es
-   la única excepción, pedida y confirmada explícitamente por el dueño del
-   repo por encima de la regla, no un descuido: usa `--tinta-portada` —el
-   mismo negro que ya fija la tinta del hero con banner activo, no un literal
-   nuevo— en vez de `--acento`. Si el hero deja de tener banner algún día,
-   cae a `--tinta` como respaldo. */
-.portada__accesos .boton--solido {
-  background: var(--tinta-portada, var(--tinta));
-  border-color: var(--tinta-portada, var(--tinta));
-  color: var(--tinta-inversa);
+.seccion--portada > .ticker .ticker__dateline {
+  flex-shrink: 0;
+  display: flex; align-items: center;
+  padding-inline: 22px;
+  font-family: var(--mono, monospace);
+  font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--tinta-mate);
+  border-inline-end: 1px solid var(--linea);
 }
-.portada__accesos .boton--solido:hover:not(:disabled) { opacity: 0.86; }
-.portada__accesos svg { width: 15px; height: 15px; fill: currentColor; flex-shrink: 0; }
-
-.portada__accion__flecha { display: inline-block; transition: transform var(--transicion); }
-.portada__accesos .boton--solido:hover .portada__accion__flecha { transform: translateX(3px); }
-
-/* ── El bloque de portada con banner es independiente del tema ──
-   La fotografía se conserva idéntica en claro y en oscuro, de modo que el texto
-   que va encima tampoco puede seguir al tema: en modo oscuro la tinta es clara y
-   quedaría ilegible sobre la nieve. Con banner presente, la portada fija su propia
-   paleta —tinta oscura sobre fondo claro— en ambos temas. */
-.portada[data-banner="true"] {
-  --tinta-portada: #101011;
-  --linea-portada: rgba(16, 16, 17, 0.28);
-  --velo-portada: rgba(255, 255, 255, 0.82);
-  --velo-portada-activo: rgba(255, 255, 255, 0.96);
-  color-scheme: light;
-
-  /* Los tonos semánticos también quedan fijados a su versión clara, por la
-     misma razón que la tinta: dentro de la portada el fondo es blanco en ambos
-     temas. Con los valores del tema oscuro —pensados para fondo oscuro— las
-     variaciones de la cinta caían a 2,3:1 el verde y 3,3:1 el rojo sobre el
-     velo. Con los claros suben a 5,3:1 y 6,4:1, por encima del 4,5:1 de la AA.
-     El glifo (▲ ▼) y el signo siguen estando: el color nunca carga solo. */
-  --alcista: #0f7a3d;
-  --bajista: #b02a26;
-  --tinta-mate: #76767a;
+.seccion--portada > .ticker .ticker__item {
+  padding: 10px 22px;
+  font-size: 0.72rem;
+  color: var(--tinta-secundaria);
 }
+.seccion--portada > .ticker .cotiza__ticker { font-size: 0.76rem; }
 
-.portada[data-banner="true"] .portada__marca-principal {
-  color: var(--tinta-portada);
-  text-shadow: 0 1px 30px rgba(255, 255, 255, 0.6);
+@media (max-width: 640px) {
+  .seccion--portada > .ticker .ticker__dateline { padding-inline: 16px; font-size: 0.64rem; }
 }
-
-/* Solo el contorno sigue la paleta fija de la portada: el sólido es cromo de
-   identidad —regla 2— y su `--acento` no depende de estar sobre la foto. */
-.portada[data-banner="true"] .portada__accesos .boton--contorno {
-  color: var(--tinta-portada);
-  border-color: var(--linea-portada);
-  background: var(--velo-portada);
-}
-.portada[data-banner="true"] .portada__accesos .boton--contorno:hover {
-  border-color: var(--tinta-portada);
-  background: var(--velo-portada-activo);
-}
-
-/* La cinta sigue la misma regla que los accesos: sobre la fotografía manda la
-   paleta de la portada, no la del tema. Con `--superficie` heredada, en tema
-   oscuro habría quedado una banda negra opaca cruzando una foto nevada. */
-.portada[data-banner="true"] .ticker {
-  color: var(--tinta-portada);
-  background: var(--velo-portada);
-  border-color: var(--linea-portada);
-  backdrop-filter: saturate(120%) blur(6px);
-}
-.portada[data-banner="true"] .ticker__item {
-  color: var(--tinta-portada);
-  border-inline-end-color: var(--linea-portada);
-}
-.portada[data-banner="true"] .ticker__item:hover {
-  background: var(--velo-portada-activo);
-}
-
-@property --alto-por-ventana {
-  syntax: "<length>";
-  inherits: false;
-  initial-value: 0px;
-}
-
-/* ══════════════════════════ Portada ═════════════════════════════════════ */
-
-/* Banner corporativo. Solo se muestra si el fichero existe; en su ausencia la
-   portada conserva su fondo gráfico propio. */
-.portada__banner {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background-image: var(--banner);
-  background-size: cover;
-  /* ── El recorte vertical lo decide la foto, no la ventana ──
-     `--encuadre-banner` lo publica `seguirEncuadreBanner()` (`portada.js`) a
-     partir del hero medido, de la cinta medida y de dónde vive el árbol en el
-     fichero, de modo que la base del árbol siempre quede por encima de la cinta.
-
-     El 0 % de reserva es la composición anterior —anclada al borde superior—,
-     que es la correcta cuando sobra alto y la única posible sin JavaScript.
-     Antes era un `0%` fijo, y con él la fracción visible de la foto quedaba a
-     merced de la relación de aspecto: a 1920×880 se veía el 46,5 % y la cinta
-     le cortaba la copa al árbol. */
-  /* Componente horizontal: 50 %, centrado. Pivote de vuelta a la composición
-     centrada de referencia —esta misma sesión probó 70 % y 100 % para un
-     hero de izquierda que ya no es el diseño vigente—. La componente VERTICAL
-     sigue intacta: la gestiona `seguirEncuadreBanner()`, un eje que este
-     cambio no toca —el tronco y la copa siguen entre el 30 % y el 60 % de
-     ALTO de la foto (ver nota de `.seccion--portada .portada[data-banner=
-     "true"]`). */
-  background-position: 50% var(--encuadre-banner, 0%);
-  background-repeat: no-repeat;
-  /* La imagen se sirve a resolución nativa y el navegador solo la reduce, nunca
-     la amplía: en pantallas de alta densidad conserva el detalle original. */
-  image-rendering: auto;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  opacity: 1;
-}
-
-/* El banner es un elemento visual independiente del tema.
-   Antes se invertía y atenuaba en modo oscuro, lo que destruía la fotografía:
-   una imagen clara pasaba a verse negra. Se conserva idéntica en ambos temas y
-   ninguna variable de tema interviene en su presentación. */
-.portada__banner {
-  filter: none;
-  mix-blend-mode: normal;
-  color-scheme: light;
-}
-:root[data-tema="oscuro"] .portada__banner,
-:root[data-tema="claro"] .portada__banner { filter: none; opacity: 1; }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-tema="claro"]) .portada__banner { filter: none; opacity: 1; }
-}
-
-/* Con banner presente, la retícula sobra: la foto ya da profundidad. */
-.portada[data-banner="true"] .portada__trama { display: none; }
-
-
-.portada { position: relative; overflow: hidden; }
-
-/* Retícula de fondo: profundidad discreta, sin competir con el texto. */
-.portada__trama {
-  position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  background-image:
-    radial-gradient(ellipse at 18% 15%, var(--acento-tenue), transparent 34%),
-    linear-gradient(var(--linea-hairline) 1px, transparent 1px),
-    linear-gradient(90deg, var(--linea-hairline) 1px, transparent 1px);
-  background-size: auto, 68px 68px, 68px 68px;
-  /* paleta-ok: en una mascara el negro es opacidad, no color. */
-  mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
-  /* paleta-ok: idem. */
-  -webkit-mask-image: radial-gradient(ellipse 78% 65% at 72% 42%, #000 0%, transparent 72%);
-  opacity: 0.92;
-}
-
-.portada__interior { position: relative; z-index: 1; }
 
 /* ══════════════════════════ Noticias ════════════════════════════════════ */
 
@@ -2137,30 +2074,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
    con la diferencia de que aquí las acciones (sincronizar/publicar) son
    transaccionales y se quedan dentro del propio hero, no en un bloque aparte.
    Todo selector va prefijado por `#seccion-noticias`: nada de esto toca
-   `.noticia`/`.rejilla-noticias`, que Radar sigue usando oculto y sin convertir. */
-#seccion-noticias .noticias-hero {
-  display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
-  gap: var(--espacio-5) var(--espacio-6);
-  padding-block: clamp(40px, 7vw, 76px) var(--espacio-6);
-  border-block-end: 1px solid var(--linea);
-}
-#seccion-noticias .noticias-hero__interior { max-width: 58ch; }
-#seccion-noticias .noticias-hero__subtitulo { margin-top: 10px; color: var(--tinta-secundaria); }
+   `.noticia`/`.rejilla-noticias`, que Radar sigue usando oculto y sin convertir.
+
+   La regla en sí —`.noticias-hero`/`__interior`/`__subtitulo`— vive ahora
+   junto a `.repositorio-hero`/`.wc-hero` (sección Filtros, más arriba): es
+   byte a byte la misma declaración, así que tener las dos por separado era
+   la misma regla contada dos veces, justo lo que la Fase B de tokens vino a
+   evitar. */
 
 /* Cabecera de cifras del hub: mismo patrón que `#companias-metricas`. */
-#seccion-noticias .noticias-metricas {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
-  margin-block: var(--espacio-6);
-}
-#seccion-noticias .noticias-metricas .indicador { padding: 0; }
-#seccion-noticias .noticias-metricas .indicador--principal {
-  padding-inline-end: var(--espacio-6);
-  border-inline-end: 1px solid var(--linea);
-}
-#seccion-noticias .noticias-metricas .indicador--principal .indicador__valor {
-  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
-}
+/* La fila en sí y el indicador principal viven en `.wc-metrics`/`.wc-metric`
+   (sección Filtros, más arriba); aquí solo lo propio de Noticias. */
+#seccion-noticias .noticias-metricas { margin-block: var(--espacio-6); }
 
 /* Listado editorial: fila con línea divisoria, sin tarjeta — mismo lenguaje
    que `#seccion-companias .tarjeta-compania` y que `.titular` de portada, aquí
@@ -2432,7 +2357,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
    `.tabla-opciones td` sobraba por ancho y por redundante: las celdas numéricas
    de esa tabla llevan clase `.num`, que ya compone tabular desde antes, y el
    selector alcanzaba además el símbolo y la insignia de lado. */
-.portada__cifras__valor,
 .cinta-metricas__valor,
 .cinta-metricas__nota,
 .dato__valor,
@@ -2443,7 +2367,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ficha-cotizacion__precio,
 .ficha-cotizacion__var,
 .grupo-agenda__fecha,
-.cronologia__fecha,
+.upcoming__fecha,
 .emergente__fecha,
 .grafico-linea__fecha,
 .mapa-oi__strike,
@@ -2932,8 +2856,8 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .cuadro-mando { grid-template-columns: repeat(2, 1fr); }
   .cuadro-mando--7 { grid-template-columns: repeat(2, 1fr); }
   .snapshot { grid-template-columns: 1fr; }
-  .portada__accesos { flex-direction: column; width: 100%; max-width: 300px; }
-  .portada__accesos .boton { width: 100%; }
+  .manifiesto__acciones { flex-direction: column; align-items: flex-start; width: 100%; max-width: 300px; gap: 16px; }
+  .manifiesto__acciones .boton { width: 100%; }
   .rejilla-radar, .rejilla-research { grid-template-columns: 1fr; }
   .rejilla-destacadas { grid-template-columns: 1fr; }
   .pestanas { overflow-x: auto; }
@@ -2953,7 +2877,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 @media print {
   .cabecera, .pie, .avisos, .controles-grafico, .panel-filtros,
   .cabecera__acciones, .cinta-cotizaciones, .ticker,
-  .portada__trama, .acciones-noticias,
+  .acciones-noticias,
   .celda-acciones, .pie__social { display: none !important; }
   body { font-size: 11pt; }
   /* paleta-ok: la impresion no tiene tema; el gris es del papel, no de la paleta. */
@@ -2976,11 +2900,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
      Esa linea de datos partida por el borde es la que invita a bajar, y no
      depende del movimiento para hacerlo. */
   .ticker__pista { animation: none !important; }
-  /* Sin recorrido, pero enteras: una casilla a medio descubrir sería una cifra
-     cortada, que es peor que una cifra sin entrada. */
-  .portada__cifras__celda--entra {
-    animation: none !important; clip-path: none !important; opacity: 1 !important;
-  }
   /* El valor cambia de golpe, sin deslizamiento. Lo que NO se pierde es saber
      cuál cambió: eso lo dice `[data-cambiado]`, que es un filete y no un
      movimiento, y sigue puesto un ciclo entero. Movimiento reducido no es
@@ -3129,19 +3048,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 #seccion-companias .companias-cabecera__subtitulo {
   max-width: 52ch; color: var(--tinta-secundaria); margin-top: 6px;
 }
-#seccion-companias .companias-metricas {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
-  margin-top: var(--espacio-5);
-}
-#seccion-companias .companias-metricas .indicador { padding: 0; }
-#seccion-companias .companias-metricas .indicador--principal {
-  padding-inline-end: var(--espacio-6);
-  border-inline-end: 1px solid var(--linea);
-}
-#seccion-companias .companias-metricas .indicador--principal .indicador__valor {
-  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
-}
+/* La fila en sí —flex/gap— vive en `.wc-metrics` (más arriba, junto a
+   `.wc-metric`); aquí solo lo propio de Companies: la separación con el hero. */
+#seccion-companias .companias-metricas { margin-top: var(--espacio-5); }
 
 /* ── Secciones del hub: títulos editoriales ya cubiertos por `.movimiento`;
    aquí solo el espaciado entre bloques. */
@@ -3198,15 +3107,10 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   #seccion-companias .companias-hero__traza { transition: none; }
 }
 
-/* ── Featured Research: pieza principal asimétrica, dos columnas. La tesis y
-   la identidad mandan a la izquierda; las cifras, tabulares, a la derecha —el
+/* ── Featured Research: la base (grid, filete, foco, colapso móvil) vive en
+   `.wc-featured` (sección Filtros, más arriba). Aquí solo el contenido: la
+   tesis y la identidad a la izquierda; las cifras, tabulares, a la derecha —el
    mismo lenguaje de `.dato` que el resto de la plataforma, no uno nuevo. */
-#seccion-companias .destacada-principal {
-  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
-  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
-  cursor: pointer;
-}
-#seccion-companias .destacada-principal:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 #seccion-companias .destacada-principal__ticker {
   display: block; font-family: var(--mono, monospace);
   font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
@@ -3231,7 +3135,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   display: flex; flex-direction: column;
 }
 @media (max-width: 720px) {
-  #seccion-companias .destacada-principal { grid-template-columns: 1fr; }
+  /* El colapso a 1 columna ya lo cubre `.wc-featured`, más arriba. */
   #seccion-companias .destacada-principal__derecha {
     border-inline-start: none; border-block-start: 1px solid var(--linea);
     padding-inline-start: 0; padding-block-start: var(--espacio-4);
@@ -3463,27 +3367,20 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   #seccion-catalizadores .indicador-vivo__punto { animation: none; opacity: 1; box-shadow: none; }
 }
 
-/* ── Top metrics: mismo patrón que #companias-metricas ── */
+/* La fila en sí y el indicador viven en `.wc-metrics`/`.wc-metric` (sección
+   Filtros, más arriba); aquí solo lo propio de Catalysts. Nota: a diferencia
+   de Companies/Noticias/Repositorio, Catalysts no lleva el tratamiento
+   tipográfico grande (`--geo`) en su indicador principal — inconsistencia
+   real, documentada junto a `.wc-metric--principal`, sin tocar en esta fase. */
 #seccion-catalizadores .catalizadores-metricas {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
   padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
-}
-#seccion-catalizadores .catalizadores-metricas .indicador { padding: 0; }
-#seccion-catalizadores .catalizadores-metricas .indicador--principal {
-  padding-inline-end: var(--espacio-6);
-  border-inline-end: 1px solid var(--linea);
 }
 
 #seccion-catalizadores .catalizadores-bloque { margin-block: var(--espacio-6); }
 
-/* ── Next Catalyst: pieza de dos columnas, mismo patrón que Featured Research ── */
-#seccion-catalizadores .siguiente-catalizador {
-  display: grid; grid-template-columns: 1.6fr 1fr; gap: var(--espacio-6);
-  padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
-  cursor: pointer;
-}
-#seccion-catalizadores .siguiente-catalizador:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+/* ── Next Catalyst: la base vive en `.wc-featured` (sección Filtros, más
+   arriba), mismo patrón que Featured Research de Companies. Aquí solo el
+   contenido: una cuenta atrás en vez de una tesis o un resumen. ── */
 #seccion-catalizadores .siguiente-catalizador__ticker {
   display: block; font-family: var(--mono, monospace);
   font-size: 0.76rem; letter-spacing: 0.12em; color: var(--tinta-mate);
@@ -3504,7 +3401,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   border-block-end: 1px solid var(--linea);
 }
 @media (max-width: 720px) {
-  #seccion-catalizadores .siguiente-catalizador { grid-template-columns: 1fr; }
+  /* El colapso a 1 columna ya lo cubre `.wc-featured`, más arriba. */
   #seccion-catalizadores .siguiente-catalizador__derecha {
     border-inline-start: none; border-block-start: 1px solid var(--linea);
     padding-inline-start: 0; padding-block-start: var(--espacio-4);
@@ -3692,24 +3589,36 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    tarjeta arriba. El despliegue reutiliza el mismo lenguaje que
    `.fila-cartera__despliegue`/`__glifo` de Cartera —glifo +/– sin animación,
    togglea `hidden`—, con nombre propio para no acoplar dos secciones a la
-   misma clase global. */
-#seccion-catalizadores .resumen-vencimientos { margin-top: var(--espacio-6); }
-#seccion-catalizadores .resumen-vencimientos__cabecera { margin-bottom: var(--espacio-4); }
-#seccion-catalizadores .resumen-vencimientos__subtitulo {
+   misma clase global.
+
+   `#seccion-companias` se suma a estos selectores porque la ficha de una
+   compañía reutiliza literalmente `bloqueResumenVencimientos()` de
+   `catalizadores.js` (ver companias.js) en vez de reimplementarlo — mismas
+   reglas, no una segunda declaración que pudiera desincronizarse. */
+#seccion-catalizadores .resumen-vencimientos,
+#seccion-companias .resumen-vencimientos { margin-top: var(--espacio-6); }
+#seccion-catalizadores .resumen-vencimientos__cabecera,
+#seccion-companias .resumen-vencimientos__cabecera { margin-bottom: var(--espacio-4); }
+#seccion-catalizadores .resumen-vencimientos__subtitulo,
+#seccion-companias .resumen-vencimientos__subtitulo {
   margin-top: 6px; max-width: 68ch; color: var(--tinta-secundaria);
 }
-#seccion-catalizadores .resumen-vencimientos__despliegue {
+#seccion-catalizadores .resumen-vencimientos__despliegue,
+#seccion-companias .resumen-vencimientos__despliegue {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 0; border: none; background: none;
   font: inherit; color: inherit; cursor: pointer;
 }
-#seccion-catalizadores .resumen-vencimientos__despliegue:focus-visible {
+#seccion-catalizadores .resumen-vencimientos__despliegue:focus-visible,
+#seccion-companias .resumen-vencimientos__despliegue:focus-visible {
   outline: 2px solid var(--foco); outline-offset: 3px;
 }
-#seccion-catalizadores .resumen-vencimientos__glifo {
+#seccion-catalizadores .resumen-vencimientos__glifo,
+#seccion-companias .resumen-vencimientos__glifo {
   font-family: var(--mono); color: var(--tinta-mate);
 }
-#seccion-catalizadores .resumen-vencimientos__detalle td {
+#seccion-catalizadores .resumen-vencimientos__detalle td,
+#seccion-companias .resumen-vencimientos__detalle td {
   padding-block: var(--espacio-3); background: var(--superficie-alt);
 }
 /* Sin transición que guardar tras `prefers-reduced-motion`: el despliegue
@@ -3846,153 +3755,48 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .curva-tipos { padding: 18px 14px; }
   .curva-tipos__barras { gap: 5px; min-height: 120px; }
   .curva-tipos__valor { font-size: 0.64rem; }
-
-  /* ── Encuadre del banner en columna estrecha ──
-     Medida la fotografía, TODO lo oscuro —valla y árbol— vive entre el 37,3 % y
-     el 54,5 % de su altura; por encima y por debajo no hay nada. En columna
-     estrecha el recorte es horizontal y la altura completa entra en pantalla, de
-     modo que esa franja sube y alcanza los accesos apilados.
-
-     Se resuelve por composición y no por posición horizontal: ningún desplazamiento
-     lateral evita a la vez la valla (33,3–37,5 %) y el árbol (58,2–66,3 %), porque
-     el ancho visible es mayor que cualquier hueco limpio entre ambos. Se amplía el
-     encuadre un 20 % —lo que empuja la franja hacia abajo— y se compacta el bloque
-     de texto. El árbol sigue en cuadro, entero y por debajo de los botones. */
-  .portada__banner {
-    background-size: auto 120%;
-    background-position: 50% 0%;
-  }
-
-  .portada[data-banner="true"] .portada__interior {
-    gap: 20px;
-    padding-block: 24px 0;
-  }
-  .portada[data-banner="true"] .portada__marca-principal { font-size: 2rem; }
-  .portada[data-banner="true"] .portada__accesos { gap: 10px; }
-  .portada[data-banner="true"] .portada__accesos .boton { padding: 11px 22px; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   MANIFIESTO — la sección editorial que sigue al hero.
+   CIFRAS — historial de rentabilidad dentro de Portfolio.
 
-   Ninguna regla de este bloque alcanza al banner: se aplica exclusivamente a
-   `.manifiesto` y sus descendientes, que viven fuera de `.portada`.
-
-   La composición es de página impresa y no de cuadro de mando: un enunciado con
-   aire alrededor y tres columnas separadas por filete, sin tarjetas, sin cajas y
-   sin más color que la tinta de la casa.
+   Fase D.6: ya no flota suelta entre el hero y el bento — vive dentro de
+   `#home-cartera`, como el soporte del track record que declara la sección:
+   comparación con el índice y caída máxima, no solo la cifra de portada.
    ═══════════════════════════════════════════════════════════════════════════ */
-
-/* ── El aire de arriba y el de abajo NO son iguales, y es deliberado ──
-   Arriba entra menos porque arriba no precede un bloque de texto, sino una
-   fotografía a sangre: el corte de la imagen ya hace de separación y un aire
-   simétrico sumaría respiro sobre respiro. Abajo se conserva el de siempre,
-   que sí separa de los pilares.
-
-   Hay además una condición dura. La etiqueta y la primera línea del titular
-   tienen que asomar por encima del pliegue Y estar reveladas por el observador
-   de `inicio.js`, que exige `threshold: 0.18` dentro de una raíz recortada
-   60 px por abajo. Con el `padding-block: clamp(88px, 13vh, 156px)` simétrico
-   que había aquí, no asomaba ni la etiqueta: caía 26 px por debajo del pliegue.
-
-   Por eso escala con `vh` y no es un número fijo: la condición depende del alto
-   de la ventana. Un `88px` constante se cumple a 900 de alto y falla a 700
-   —la línea deja de revelarse y asoma una caja vacía—. Con `4vh` se cumple en
-   las seis ventanas de `tests/portada.js`, incluidas 1920×700 y 2560×800 —el
-   déficit que dejó la cinta en dos líneas—: `7vh` daba 49 px a 700 de alto y
-   41 de asomo con la cinta nueva, 19 por debajo de los 60 que exige el
-   observador; `4vh` da 28 y deja 62. Quien suba esta cifra debe volver a medir
-   las seis alturas de esa batería. */
-.manifiesto {
-  padding-top: clamp(20px, 4vh, 104px);
-  padding-bottom: clamp(88px, 13vh, 156px);
-  background: var(--superficie);
-  border-block-start: 1px solid var(--linea);
+.cifras {
+  padding-block: 0 clamp(40px, 6vh, 64px);
 }
 
-/* El enunciado no ocupa todo el ancho: leer una línea larga cansa. */
-.manifiesto__enunciado { max-width: 62ch; }
-
-.manifiesto__titular {
-  font-family: var(--geo);
+/* Fase D.8: dentro de Portfolio, el grid de cuatro celdas con borde y sombra
+   era exactamente el "KPI grid" que esta fase pide evitar — cuatro cajas
+   iguales compitiendo por atención, el lenguaje de un dashboard. Pasa a ser
+   una línea de evidencia: rentabilidad, comparación con el índice y caída
+   máxima como metadatos en fila, separados por un filete vertical y no por
+   una caja cada uno — la misma nota al pie de una cifra de research, no
+   cuatro tarjetas de producto. Se escopa a `#home-cartera`: `.cinta-metricas`
+   sigue siendo la caja con borde en cualquier otro sitio que la use. */
+/* Fase D.11: dentro de la rejilla, `#home-cartera` ya no tiene el ancho
+   completo del `.contenedor` para poner las cuatro cifras en una sola fila
+   —una columna de ~1fr de 2.7fr no da para eso sin apretar cada rótulo a
+   morir—. Pasa a una rejilla de 2×2, mismo filete vertical y horizontal, la
+   misma "línea de evidencia" de D.8 pero en dos filas en vez de en una. */
+#home-cartera .cinta-metricas {
+  display: flex; flex-wrap: wrap;
+  border: none; border-radius: 0; background: none;
   margin-block: 26px 0;
-  font-size: clamp(1.85rem, 4.2vw, 3.15rem);
-  font-weight: 600; letter-spacing: -0.02em; line-height: 1.14;
-  text-wrap: balance;
+  row-gap: 16px;
 }
-
-/* ── Los cuatro pilares ──
-   Bento: tarjetas propias en rejilla, no columnas separadas por filete.
-   El hueco entre celdas es lo que las separa; una línea aquí diría dos veces
-   lo mismo. */
-.pilares {
-  /* Cuatro pilares, no tres —Investigación rigurosa, Cobertura selectiva,
-     Gestión del riesgo, Independencia—, según la maqueta de referencia. */
-  display: grid; grid-template-columns: repeat(4, 1fr);
-  gap: var(--espacio-3);
-  margin-block-start: clamp(64px, 9vh, 104px);
+#home-cartera .cinta-metricas__celda {
+  box-shadow: none;
+  flex: 1 1 45%;
+  padding: 0 20px 0 0;
+  border-inline-end: 1px solid var(--linea);
 }
-
-/* Eran tres columnas separadas por filetes; ahora son tres cajas. El filete
-   superior y las medianeras desaparecen: en bento el hueco separa, y sumarle
-   una línea sería decir dos veces lo mismo. */
-.pilar {
-  display: flex; flex-direction: column; align-items: flex-start;
-  padding: var(--espacio-4);
-  background: var(--superficie);
-  border: 1px solid var(--linea);
-  border-radius: var(--radio-l);
-  transition: border-color var(--transicion), background var(--transicion);
-}
-/* El tinte es del ESTADO, no de la caja. Una tarjeta en reposo se define por su
-   borde, que es como se definían ya `.tarjeta`, `.cuadro-mando` y
-   `.grafico-linea` desde antes de esta reforma. */
-.pilar:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
-
-.pilar__titulo {
-  font-size: 0.78rem; font-weight: 600;
-  letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--tinta);
-}
-
-.pilar__texto {
-  margin-block-start: 16px;
-  max-width: 46ch;
-  font-size: 0.88rem; line-height: 1.72;
-  color: var(--tinta-secundaria);
-}
-
-.pilar__enlace {
-  display: inline-flex; align-items: center; gap: 9px;
-  margin-block-start: auto; padding-block-start: 26px;
-  font-size: 0.7rem; font-weight: 600;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  color: var(--tinta); text-decoration: none;
-  transition: color var(--transicion);
-}
-.pilar__enlace:hover { color: var(--acento); }
-.pilar__enlace:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
-
-/* La flecha avanza un paso al pasar el cursor. Nada más. */
-.pilar__flecha {
-  display: inline-block;
-  transition: transform var(--transicion);
-}
-.pilar__enlace:hover .pilar__flecha { transform: translateX(4px); }
-
-/* Aquí vivía el escalonado por `--i`. Era la mitad perdedora de un empate: con
-   dos clases vencía a `.revelado` en `transition-delay` y dejaba sin efecto los
-   retardos que calculaba el JS. El escalonado se declara ahora en la llamada a
-   `revelar()`, y en un solo sitio. */
-
-/* ── Fila de cifras ──
-   Va entre los pilares y Market Pulse, que ya trae su propio filete superior:
-   este bloque no lleva el suyo o quedarian dos lineas a un respiro una de otra.
-
-   La retícula es la de `.cinta-metricas`, sin sus margenes: aqui el aire lo pone
-   el bloque, que es quien conoce a sus vecinos. */
-.cifras { padding-block: clamp(56px, 8vh, 92px); }
-.cifras .cinta-metricas { margin-block: 0; }
+#home-cartera .cinta-metricas__celda:nth-child(2n) { border-inline-end: none; padding-inline-end: 0; }
+#home-cartera .cinta-metricas__celda:nth-child(n+3) { padding-block-start: 14px; border-block-start: 1px solid var(--linea); }
+#home-cartera .cinta-metricas__celda:nth-child(even) { padding-inline-start: 20px; }
+#home-cartera .cinta-metricas__valor { font-family: var(--mono, monospace); font-size: 1.2rem; }
 
 /* El pie dice de que muestra hablan las cuatro cifras. Cuelga de la retícula sin
    despegarse de ella: un respiro corto arriba y ninguno abajo. */
@@ -4011,23 +3815,8 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .cifras__flecha { display: inline-block; transition: transform var(--transicion); }
 .cifras__enlace:hover .cifras__flecha { transform: translateX(4px); }
 
-@media (max-width: 900px) {
-  /* En tableta, dos columnas: con cuatro pilares caen 2×2 sin resto, así que
-     no hace falta la caja ancha que sí exigía un tercero sobrante. */
-  .pilares { grid-template-columns: repeat(2, 1fr); }
-}
-
-@media (max-width: 620px) {
-  /* En móvil se apilan. El hueco de la rejilla ya las separa. */
-  .pilares { grid-template-columns: 1fr; }
-  .pilar__enlace { padding-block-start: 20px; }
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    HOME — la narrativa que sigue al hero.
-
-   Ninguna regla de este bloque alcanza a `.portada` ni a `.portada__banner`:
-   el hero queda exactamente como estaba.
 
    El movimiento es de entrada y ocurre una sola vez. Lo único que se mueve de
    forma continua es la cinta, porque una cinta que no se mueve no es una cinta.
@@ -4177,9 +3966,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__item[data-cambiado="true"] {
   box-shadow: inset 0 -2px 0 0 var(--linea-fuerte);
 }
-.portada[data-banner="true"] .ticker__item[data-cambiado="true"] {
-  box-shadow: inset 0 -2px 0 0 var(--linea-portada);
-}
 
 @keyframes cinta-avance {
   from { transform: translate3d(0, 0, 0); }
@@ -4193,17 +3979,31 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 /* ────────────────────── Estructura común de las secciones ────────────────── */
 
-.bloque-home { padding-block: clamp(78px, 11vh, 132px); border-block-start: 1px solid var(--linea); }
+/* Fase D.8: `.bloque-home` sigue siendo la base FUNCIONAL de Research,
+   Portfolio y Upcoming —mismo margen editorial, mismo filete superior, mismo
+   patrón de cabecera—, pero deja de dictar su peso visual. El ritmo vertical
+   ahora lo decide cada sección por su función editorial y no la clase
+   compartida: Research (el producto) > Portfolio (la evidencia) > Upcoming
+   (el cierre). Ver los tres overrides de `padding-block` más abajo, junto a
+   cada sección. */
+.bloque-home { padding-block: clamp(56px, 8vh, 96px); border-block-start: 1px solid var(--linea); }
 
 .bloque-home__cabecera {
   display: flex; flex-wrap: wrap; gap: 18px 28px;
   align-items: flex-end; justify-content: space-between;
   margin-block-end: clamp(34px, 5vh, 54px);
 }
+/* Fase C: cabecera de sección con la misma tipografía display del manifiesto
+   —`--geo`—, para que Research/Cartera/Catalysts lean como piezas de una
+   publicación y no como paneles de un dashboard. El tamaño BASE es el de
+   Portfolio —la evidencia, capítulo intermedio—; Research y Upcoming lo
+   escalan hacia arriba y hacia abajo con sus propios overrides, para que la
+   escala del titular cuente la misma jerarquía que el espacio ocupado. */
 .bloque-home__titulo {
   margin-block-start: 10px;
-  font-size: clamp(1.5rem, 3vw, 2.35rem);
-  font-weight: 600; letter-spacing: -0.025em; line-height: 1.12;
+  font-family: var(--geo);
+  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
 }
 
 .enlace-avance {
@@ -4222,9 +4022,73 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 .vacio--home { padding: 46px 34px; }
 
-/* ── Bento de portada: panorama, radar y señal ──
-   Mismo lenguaje visual que `.pilar` —borde, fondo, radio, sin divisores— y no
-   columnas apiladas con filete. Panorama es la celda ancha porque lleva un
+/* ═══════════════════════════════════════════════════════════════════════════
+   Fase D.11 — la rejilla de portada: Research, Portfolio y Catalysts en una
+   sola composición asimétrica, no en tres bandas apiladas.
+
+   No es `.bento-home` (la caja de abajo, para Panorama/Radar/Signal, que sí
+   lleva borde+fondo+radio: otro lenguaje, para paneles que hoy están
+   `hidden`). `.rejilla-bento` no lleva caja en ningún hijo: la separación es
+   el mismo filete de 1px de siempre, vertical entre columnas y horizontal
+   entre Portfolio y Catalysts en la columna estrecha — nunca un hueco en
+   blanco haciendo de límite. Research ocupa 1.7fr y las dos filas; Portfolio
+   y Catalysts se apilan en 1fr. Por debajo de 1024px, una sola columna en el
+   mismo orden de lectura (Research → Portfolio → Catalysts). */
+.bloque-bento { padding-block: clamp(64px, 8.5vh, 104px); border-block-start: 1px solid var(--linea); }
+
+.rejilla-bento {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 0;
+}
+
+.rejilla-bento__research {
+  grid-column: 1; grid-row: 1 / 3;
+  padding-inline-end: clamp(32px, 4vw, 56px);
+}
+.rejilla-bento__cartera {
+  grid-column: 2; grid-row: 1;
+  padding-inline-start: clamp(32px, 4vw, 56px);
+  border-inline-start: 1px solid var(--linea);
+}
+.rejilla-bento__catalizadores {
+  grid-column: 2; grid-row: 2;
+  padding-inline-start: clamp(32px, 4vw, 56px);
+  padding-block-start: clamp(32px, 4.5vh, 48px);
+  margin-block-start: clamp(32px, 4.5vh, 48px);
+  border-inline-start: 1px solid var(--linea);
+  border-block-start: 1px solid var(--linea);
+}
+
+/* El número de folio vive dentro del eyebrow —«02 · Análisis»—, fuera del
+   `data-i18n` para que el repintado de idioma no lo borre (ver `inicio.js`,
+   que solo toca `textContent` del nodo con `data-i18n`, no de sus hermanos). */
+.bento-folio {
+  font-family: var(--mono, monospace);
+  color: var(--tinta-mate);
+}
+.bento-folio::after { content: ' · '; }
+
+@media (max-width: 1023px) {
+  .rejilla-bento {
+    grid-template-columns: 1fr;
+    row-gap: clamp(48px, 7vh, 72px);
+  }
+  .rejilla-bento__research,
+  .rejilla-bento__cartera,
+  .rejilla-bento__catalizadores {
+    grid-column: 1; grid-row: auto;
+    padding-inline: 0;
+    border-inline-start: none;
+  }
+  .rejilla-bento__cartera { border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
+  .rejilla-bento__catalizadores { margin-block-start: 0; border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
+}
+
+/* ── Bento reservado: panorama, radar y señal ──
+   Caja con borde, fondo y radio, sin columnas apiladas con filete. Panorama
+   es la celda ancha porque lleva un
    gráfico; radar y señal caen debajo, a la mitad cada una. Por debajo de
    960 px, donde el gráfico ya no gana nada de una fila propia, se apila a una
    columna igual que el resto de `.bloque-home`. */
@@ -4245,19 +4109,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .bento-home > .bloque-home:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
 .bento-home > #home-pulse { grid-column: 1 / -1; }
-/* Cartera se cuenta en cifras, no en curva, pero es tan ancha como el pulso:
-   una casilla a mitad de rejilla dejaría su vecina vacía —radar y señal ya
-   llenan esa fila entera— y una franja completa es lo que pide un titular
-   grande más el par de cifras secundarias que la acompañan. */
-.bento-home > #home-cartera { grid-column: 1 / -1; }
-/* Cartera destruye el lenguaje "card" del resto del Bento: sin fondo, sin
-   borde cerrado, solo un filete superior de 1px que ya separa cada
-   `.bloque-home` del anterior — cláusula de espacio negativo aplicada aquí. */
-.bento-home > #home-cartera,
-.bento-home > #home-cartera:hover {
-  background: none; border: none; border-block-start: 1px solid var(--linea);
-  padding-block: var(--espacio-4);
-}
+
+/* Fase D.6: Cartera salió del Bento — nunca compartió su lenguaje de tarjeta,
+   y ahora vive como sección propia, igual que Research y Upcoming. */
 
 @media (max-width: 960px) {
   .bento-home { grid-template-columns: 1fr; }
@@ -4311,17 +4165,78 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    analítica, y aquí la línea roja del dueño la deja fuera. */
 .cartera-home {
   display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: 10px clamp(20px, 4vw, 40px);
+  gap: 18px clamp(24px, 4vw, 44px);
 }
 .cartera-home__valor {
-  font-size: clamp(2rem, 5vw, 2.75rem); font-weight: 600;
-  letter-spacing: -0.03em; font-variant-numeric: tabular-nums;
+  font-family: var(--mono, monospace);
+  font-size: clamp(2.1rem, 5.2vw, 2.9rem); font-weight: 600;
+  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
 }
+/* El filete repite el lenguaje de la fila de cifras del hero —cifra grande a
+   un lado, apoyo al otro, separados por línea y no por caja—: la misma
+   composición contada dos veces en la misma página es continuidad, no
+   repetición (regla 9). */
 .cartera-home__detalle {
   display: flex; flex-direction: column; gap: 4px;
+  padding-inline-start: clamp(20px, 3.2vw, 36px);
+  border-inline-start: 1px solid var(--linea);
   font-size: 0.82rem; color: var(--tinta-secundaria);
 }
-.cartera-home__detalle strong { color: var(--tinta); font-weight: 600; }
+.cartera-home__detalle strong { color: var(--tinta); font-weight: 600; font-variant-numeric: tabular-nums; }
+
+/* ── Principales posiciones (Fase D.2) ──
+   La performance domina tipográficamente arriba; las posiciones son
+   silenciosas debajo, fila editorial con hairline, sin caja ni tarjeta —el
+   mismo criterio que ya usan Companies y Repositorio para lo mismo. */
+.cartera-home__posiciones { margin-block-start: clamp(26px, 3.5vh, 40px); }
+
+/* Fase D.4 puso aquí una rejilla de dos columnas (performance | posiciones en
+   fila) para el `.contenedor` de ancho completo que tenía entonces Portfolio.
+   Fase D.11: Portfolio deja de tener el ancho completo del `.contenedor`
+   para pasar a la columna estrecha de `.rejilla-bento` (~1fr de 2.7fr) — la
+   rejilla de dos columnas que traía D.4 (performance | posiciones en fila)
+   ya no cabe con dignidad ahí, así que se retira: performance y posiciones
+   vuelven a apilarse, que es exactamente el "resumen ultra-minimalista" que
+   pide esta fase. El padding-block de la sección lo fija ahora `.rejilla-bento`
+   como conjunto, no cada artículo por separado. */
+#home-cartera-cuerpo { display: block; }
+.cartera-home__posiciones-titulo {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--tinta-mate);
+  margin-block-end: 10px;
+}
+.cartera-home__filas { display: flex; flex-direction: column; }
+/* Fase D.4: la fila es ahora un botón — mismo acceso a la ficha que "Otras
+   tesis" — así que hereda su reset y su única microinteracción: el ticker
+   se acentúa al pasar el cursor, nada más se mueve. */
+.cartera-home__fila {
+  display: flex; align-items: baseline; gap: 16px; width: 100%;
+  padding-block: 11px;
+  border-block-end: 1px solid var(--linea-hairline);
+  font: inherit; color: inherit; background: none; border-inline: none; border-block-start: none;
+  cursor: pointer; text-align: start;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--transicion);
+}
+.cartera-home__fila:last-child { border-block-end: none; }
+.cartera-home__fila:hover { border-block-end-color: var(--linea-fuerte); }
+.cartera-home__fila:hover .cartera-home__ticker { color: var(--acento); }
+.cartera-home__fila:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.cartera-home__ticker {
+  flex: 1; min-width: 0;
+  font-family: var(--mono, monospace);
+  transition: color var(--transicion);
+  font-size: 0.86rem; font-weight: 600; letter-spacing: 0.03em;
+}
+.cartera-home__peso {
+  font-family: var(--mono, monospace);
+  font-size: 0.82rem; color: var(--tinta-secundaria);
+}
+.cartera-home__contribucion {
+  font-family: var(--mono, monospace);
+  font-size: 0.82rem; font-weight: 600;
+  min-width: 5.5ch; text-align: end;
+}
 
 /* ── El gráfico ── */
 .grafico-linea {
@@ -4435,11 +4350,31 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .research-selector__pestana:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
+/* Fase D.11: Research sigue siendo el capítulo con más peso —columna ancha
+   de `.rejilla-bento`, titular mayor que Portfolio/Upcoming—, pero ya no fija
+   su propio `padding-block`: la rejilla entera respira como un conjunto (ver
+   `.bloque-bento`), no sección por sección como en D.8/D.9. */
+.rejilla-bento__research .bloque-home__titulo { font-size: clamp(1.9rem, 2.6vw, 2.6rem); }
+
 .research-panel {
   display: grid; gap: 40px;
-  grid-template-columns: minmax(0, 1.55fr) minmax(240px, 1fr);
+  grid-template-columns: minmax(0, 1.6fr) minmax(190px, 0.85fr);
   align-items: start;
   transition: opacity 220ms ease;
+}
+/* La columna de Research en la rejilla (1.7fr) es más estrecha que el
+   `.contenedor` completo que tenía antes de D.11: por debajo de 1280px de
+   ventana ya no hay sitio para tesis y datos en fila sin apretar los datos
+   contra su suelo de 190px. Se apilan, y los datos pasan a fila envolvente
+   —la misma cifra-con-filete de siempre, en horizontal en vez de en columna,
+   el mismo tratamiento que ya usa `.cinta-metricas` para lo mismo. */
+@media (max-width: 1279px) {
+  .rejilla-bento__research .research-panel { grid-template-columns: 1fr; gap: 26px; }
+  .rejilla-bento__research .research-panel__datos {
+    flex-direction: row; flex-wrap: wrap;
+    gap: 14px 30px;
+    padding-inline-start: 0; border-inline-start: none;
+  }
 }
 .research-panel[data-cambiando="true"] { opacity: 0; }
 
@@ -4450,97 +4385,119 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .research-panel__empresa {
   margin-block-start: 8px;
-  font-size: clamp(1.3rem, 2.6vw, 1.9rem); font-weight: 600; letter-spacing: -0.022em;
+  font-family: var(--geo);
+  font-size: clamp(1.65rem, 3.4vw, 2.6rem); font-weight: 500; letter-spacing: -0.02em;
 }
 .research-panel__sector { margin-block-start: 6px; font-size: 0.82rem; color: var(--tinta-mate); }
+/* Fase C, segunda pasada: el resumen lleva su propio filete, como una cita al
+   margen de una nota de research impresa — separa la tesis en prosa del resto
+   del bloque de identidad sin caja ni fondo. */
 .research-panel__resumen {
-  margin-block: 20px 24px;
-  font-size: 0.92rem; line-height: 1.75; color: var(--tinta-secundaria);
-  max-width: 62ch;
+  margin-block: 22px 26px;
+  padding-inline-start: 18px;
+  border-inline-start: 2px solid var(--linea-fuerte);
+  font-size: 0.94rem; line-height: 1.75; color: var(--tinta-secundaria);
+  max-width: 60ch;
 }
 .research-panel__vacio {
   margin-block: 20px 24px;
   font-size: 0.86rem; font-style: italic; color: var(--tinta-mate);
 }
 
-/* La columna de cifras era un filete con sangría; ahora es una caja. El acento
-   NO entra aquí dentro: `.dato__valor` es una cifra y lleva su propia lectura.
-   La caja se distingue por superficie y borde, que es lo que la cláusula 2
-   permite. */
+/* Fase D.8: la caja de valoración —fondo, borde, radio— era exactamente la
+   "card cerrada" que esta fase pide evitar en la tesis protagonista. Pasa a
+   ser un filete lateral con los datos apilados detrás, la misma gramática que
+   ya usa `.cartera-home__detalle` en Portfolio para lo mismo: una cifra con
+   su rótulo, separada del resto por una línea y no por una caja. Es la
+   "gramática compartida" de esta fase, no una coincidencia. */
 .research-panel__datos {
-  display: grid; gap: var(--espacio-4);
-  padding: var(--espacio-4);
-  background: var(--superficie);
-  border: 1px solid var(--linea);
-  border-radius: var(--radio-l);
+  display: flex; flex-direction: column; gap: 18px;
+  padding-inline-start: clamp(22px, 2.6vw, 34px);
+  border-inline-start: 1px solid var(--linea);
 }
+/* Las cifras pasan a monospace: dato financiero, no texto — escopado a este
+   panel para no tocar `.dato__valor` en el resto de la plataforma. */
+.research-panel__datos .dato__valor {
+  font-family: var(--mono, monospace);
+  font-size: 1.05rem;
+}
+.research-panel__datos .dato__etiqueta { letter-spacing: 0.09em; }
 .dato__secundario { font-size: 0.74rem; font-variant-numeric: tabular-nums; }
 
-/* ─────────────────────────── 5 · CATALIZADORES ─────────────────────────── */
-
-.cronologia { list-style: none; position: relative; padding-inline-start: 0; }
-/* El hilo vertical se dibuja una vez, al entrar la primera parada. */
-.cronologia::before {
-  content: ''; position: absolute;
-  inset-block: 10px 10px;
-  inset-inline-start: clamp(84px, 9vw, 116px);
-  width: 1px; background: var(--linea);
-}
-
-.cronologia__hito {
-  display: grid; align-items: start;
-  grid-template-columns: clamp(84px, 9vw, 116px) 24px minmax(0, 1fr);
-  padding-block: 20px;
-}
-
-.cronologia__fecha { display: flex; flex-direction: column; gap: 3px; padding-inline-end: 18px; }
-.cronologia__dia {
-  font-size: 0.76rem; font-weight: 600; letter-spacing: 0.09em;
-  font-variant-numeric: tabular-nums;
-}
-.cronologia__cuando {
-  font-size: 0.68rem; color: var(--tinta-mate);
-}
-/* «hoy», «dentro de 3 días» y «tomorrow» los redacta `Intl.RelativeTimeFormat`
-   en minúscula. La mayúscula inicial se pone aquí porque es tipografía: con
-   `capitalize` sobre el elemento saldría «Dentro De 3 Días». */
-.cronologia__cuando::first-letter { text-transform: uppercase; }
-
-.cronologia__punto {
-  /* Posicionado para que quede POR ENCIMA del hilo: el hilo es un ::before
-     absoluto y, sin esto, se pintaba a través del punto. */
-  position: relative; z-index: 1;
-  width: 9px; height: 9px; margin-block-start: 4px; margin-inline-start: -4px;
-  border-radius: 50%;
-  background: var(--superficie);
-  border: 2px solid var(--tinta);
-  justify-self: center;
-}
-/* Un evento inmediato se marca con relleno, no con parpadeo. */
-.cronologia__hito:first-child .cronologia__punto { background: var(--tinta); }
-
-.cronologia__cuerpo { min-width: 0; padding-inline-start: 8px; }
-.cronologia__superior { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.cronologia__tipo {
-  font-size: 0.62rem; font-weight: 600; letter-spacing: 0.11em;
+/* ── Otras tesis (Fase D.2) ──
+   La tesis protagonista ya no gira en carrusel: las demás compañías con
+   informe publicado quedan como referencias silenciosas debajo, una fila
+   editorial por compañía —sin pestaña, sin caja—. El cambio de protagonista
+   es un clic a "Ver ficha completa" en cada fila, no un temporizador. */
+.research-otras { margin-block-start: clamp(28px, 4vh, 40px); }
+.research-otras__titulo {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.13em;
   text-transform: uppercase; color: var(--tinta-mate);
+  margin-block-end: 10px;
 }
-.cronologia__prioridad {
-  font-size: 0.6rem; font-weight: 700; letter-spacing: 0.1em;
-  padding: 2px 7px; border: 1px solid var(--linea-fuerte); border-radius: 2px;
+.research-otras__fila {
+  display: flex; align-items: baseline; gap: 16px; width: 100%;
+  padding-block: 11px;
+  border-block-end: 1px solid var(--linea-hairline);
+  font: inherit; color: inherit; background: none; border-inline: none; border-block-start: none;
+  cursor: pointer; text-align: start;
+}
+.research-otras__fila:last-child { border-block-end: none; }
+.research-otras__ticker {
+  flex-shrink: 0; width: 5ch;
+  font-family: var(--mono, monospace);
+  font-size: 0.8rem; font-weight: 600; color: var(--tinta-mate);
+}
+.research-otras__empresa { flex: 1; min-width: 0; font-size: 0.88rem; font-weight: 500; }
+.research-otras__recomendacion { flex-shrink: 0; font-size: 0.78rem; font-weight: 600; }
+.research-otras__fila:hover .research-otras__empresa { color: var(--acento); }
+.research-otras__fila:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+/* ─────────────────────────── 5 · UPCOMING (catalizadores) ─────────────────────────── */
+
+/* Fase D.2: de una cronología de hilo/punto/badge a cuatro líneas — fecha,
+   compañía, tipo, separadas por hairline. La prioridad HIGH ya no lleva chip
+   propio: usa `.lectura--aviso` (ver `inicio.js`), el mismo vocabulario de
+   color+peso que el resto de la plataforma reserva para lo mismo. */
+.upcoming { list-style: none; padding-inline-start: 0; }
+
+/* Fase D.11: Upcoming ya vive en la columna estrecha de `.rejilla-bento` —no
+   necesita un `max-width` propio para no competir con Research, la propia
+   rejilla se lo da—. Sigue siendo deliberadamente el más pequeño de los tres:
+   menos aire vertical y un titular más pequeño que Research/Portfolio, la
+   misma jerarquía de D.8 contada ahora en una columna en vez de en una banda. */
+.rejilla-bento__catalizadores .bloque-home__titulo { font-size: clamp(1.3rem, 1.7vw, 1.6rem); }
+.upcoming__fila {
+  display: flex; align-items: baseline; gap: 18px;
+  padding-block: 14px;
+  border-block-end: 1px solid var(--linea-hairline);
+}
+.upcoming__fila:last-child { border-block-end: none; }
+
+.upcoming__fecha {
+  flex-shrink: 0; width: 7ch; white-space: nowrap;
+  font-family: var(--mono, monospace);
+  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
   color: var(--tinta-mate);
 }
-.cronologia__prioridad.prioridad--high { color: var(--tinta); border-color: var(--tinta); }
 
-.cronologia__empresa {
-  display: block; margin-block-start: 7px; padding: 0;
-  font-family: inherit; font-size: 0.96rem; font-weight: 600;
+.upcoming__empresa {
+  flex: 1; min-width: 0;
+  padding: 0; margin: 0;
+  font-family: inherit; font-size: 0.9rem; font-weight: 600;
   color: var(--tinta); background: none; border: none; cursor: pointer;
+  text-align: start;
   border-block-end: 1px solid transparent;
   transition: border-color var(--transicion);
 }
-.cronologia__empresa:hover { border-block-end-color: var(--tinta); }
-.cronologia__detalle { margin-block-start: 4px; font-size: 0.8rem; color: var(--tinta-mate); }
+.upcoming__empresa:hover { border-block-end-color: var(--tinta); }
+.upcoming__empresa:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+.upcoming__tipo {
+  flex-shrink: 0;
+  font-size: 0.72rem; color: var(--tinta-mate);
+  white-space: nowrap;
+}
 
 /* ─────────────────────────── 6 · OPTIONS FLOW ─────────────────────────── */
 
@@ -4687,15 +4644,10 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .radar-home { grid-template-columns: 1fr; gap: 26px; }
   .research-panel__datos { grid-template-columns: 1fr; }
 
-  /* La cronología pasa a una sola columna: la fecha encabeza cada parada. */
-  .cronologia::before { inset-inline-start: 4px; }
-  .cronologia__hito { grid-template-columns: 18px minmax(0, 1fr); gap: 4px 10px; }
-  .cronologia__fecha {
-    grid-column: 2; flex-direction: row; align-items: baseline; gap: 10px;
-    padding-inline-end: 0;
-  }
-  .cronologia__punto { grid-column: 1; grid-row: 1; margin-inline-start: 0; justify-self: start; }
-  .cronologia__cuerpo { grid-column: 2; padding-inline-start: 0; }
+  /* `.upcoming__fila` ya es una sola fila flex a cualquier ancho; en móvil el
+     tipo de evento se retira para no competir con el nombre de la compañía
+     en un espacio estrecho —la fecha y la compañía bastan para identificarlo—. */
+  .upcoming__tipo { display: none; }
 
   .ticker__item { padding: 13px 18px; }
 }
@@ -4709,7 +4661,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .ticker__pista { animation: none !important; }
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
   .research-panel { transition: none !important; }
-  .enlace-avance__flecha, .pilar__flecha, .cifras__flecha { transition: none !important; }
+  .enlace-avance__flecha, .cifras__flecha { transition: none !important; }
 
   /* ── Micro-interacciones ──
      El HUNDIMIENTO SE CONSERVA, y es deliberado. Se neutralizó primero, y visto
