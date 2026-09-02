@@ -3035,6 +3035,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .snapshot { grid-template-columns: 1fr; }
   .manifiesto__acciones { flex-direction: column; align-items: flex-start; width: 100%; max-width: 300px; gap: 16px; }
   .manifiesto__acciones .boton { width: 100%; }
+  /* El CTA de texto medía 43px de alto real aquí, 1px bajo el objetivo
+     táctil de 44px que impeccable audit comprobó. El sólido ya lo pasa
+     (46px, tiene su propio padding en `.manifiesto__acciones .boton--solido`);
+     este ajuste es solo para el de texto, solo en esta ventana. */
+  .manifiesto__acciones .boton--texto { padding-block: 10.5px; }
   .rejilla-radar, .rejilla-research { grid-template-columns: 1fr; }
   .rejilla-destacadas { grid-template-columns: 1fr; }
   .pestanas { overflow-x: auto; }
