@@ -31,6 +31,30 @@ const RUTAS = [
   ['cartera', '#seccion-cartera'],
   ['noticias', '#seccion-noticias'],
 ];
+
+/* ── Hallazgo conocido, no fallo intermitente ──
+   Los cuatro índices de la cinta —S&P 500, Nasdaq 100, VIX, el bono a 10
+   años— no tienen histórico en el proveedor conectado hoy: `inicio.js`
+   documenta junto a `obtenerSerieSparkline()` que fallan con «crumb
+   inválido». Cada carga de la portada pide su serie y recibe un 404, sin que
+   eso sea intermitente ni corregible desde aquí.
+
+   No es un error sin manejar: `serieSimple()` cae al respaldo —una recta de
+   dos puntos con el precio y la variación reales, nunca una curva
+   inventada— y `tests/cinta.js` ya prueba que ese respaldo funciona ("los
+   índices caen al respaldo: recta de dos puntos, nunca una curva
+   inventada"). Visto en el navegador: la celda muestra precio, variación con
+   su signo y color, y el trazo — nada vacío, nada roto en pantalla.
+
+   Solo estos cuatro símbolos, y solo esta ruta exacta: cualquier OTRO 404 —de
+   estos símbolos en otro endpoint, o de cualquier símbolo que no esté en esta
+   lista— sigue contando como fallo real. Ampliar la lista sin repetir la
+   comprobación en `tests/cinta.js` sería la misma trampa que este comentario
+   existe para evitar. */
+const SIMBOLOS_SIN_HISTORICO = ['^GSPC', '^VIX', '^NDX', '^TNX'];
+const esSerieTolerada = (url) => SIMBOLOS_SIN_HISTORICO.some((s) =>
+  url.includes(`/api/mercado/serie/${encodeURIComponent(s)}`));
+
 (async () => {
   const b = await chromium.launch();
   let fallos = 0;
@@ -39,7 +63,19 @@ const RUTAS = [
     const p = await ctx.newPage();
     const err = [];
     p.on('pageerror', e => err.push(e.message));
-    p.on('console', m => { if (m.type() === 'error') err.push(m.text()); });
+    /* Un 404/4xx/5xx llega DOS veces: como respuesta de red y como el mensaje
+       genérico de consola «Failed to load resource: ...», que no lleva la URL
+       y por tanto no se puede confrontar con la lista tolerada. Se afirma
+       sobre la respuesta —que sí la lleva— y se ignora aquí ese eco genérico
+       para no contar el mismo fallo dos veces ni perder la que sí importa. */
+    p.on('console', m => {
+      if (m.type() === 'error' && !/^Failed to load resource:/.test(m.text())) err.push(m.text());
+    });
+    p.on('response', (r) => {
+      if (r.status() < 400) return;
+      if (esSerieTolerada(r.url())) return;
+      err.push(`${r.status()} ${r.url()}`);
+    });
     await p.goto(`${B}/#/inicio`);
     await p.waitForTimeout(2500);
     await p.evaluate((i) => localStorage.setItem('warrants.idioma', i), idioma);
@@ -66,7 +102,7 @@ const RUTAS = [
         (claves.length ? ' claves sin traducir: ' + claves.join(',') : ''));
     }
     if (err.length) { console.log('    errores: ' + err.slice(0, 2).join(' | ')); fallos++; }
-    else console.log('    sin errores de consola');
+    else console.log('    sin errores de consola ni respuestas fallidas sin tolerar');
     await ctx.close();
   }
   await b.close();
