@@ -2114,38 +2114,41 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transform: translateX(-50%);
   display: flex; flex-direction: row; gap: clamp(22px, 2.6vw, 36px);
 }
-/* Fase D.16: en escritorio las tres cifras se centran verticalmente en el
-   espacio real que hay libre por encima del árbol —desde el borde superior
-   de `.manifiesto__visual` hasta donde empieza la copa—, en vez de anclarse
-   a un punto fijo que deja aire muerto arriba. `object-fit: cover` con
-   `object-position: 50% 38%` deja la copa arrancando siempre al 37,3% del
-   alto de `.manifiesto__visual`, medido con Playwright contra la imagen
-   real en las cuatro ventanas de prueba (390 a 1920px): a esa relación de
-   aspecto el recorte vertical es proporcional al contenedor, no al ancho de
-   la ventana. `height: 37.3%` convierte esa banda en el propio contenedor
-   flex de las cifras, y `align-items: center` centra el contenido real
-   dentro —contra el alto real del bloque en cada ventana, no una cifra en
-   px calculada a mano que se desactualizaría si cambiara el texto—.
-   Horizontalmente se reubican a la izquierda porque bajarlas a esa altura
-   las metía de lleno en la copa —texto verde sobre follaje oscuro,
-   ilegible, contra la cláusula 1—: la copa arranca, medida igual, siempre
-   entre el 59,2% y el 66,6% del ancho del contenedor en las tres ventanas
-   ≥641px, y el bloque de cifras cabe de sobra a su izquierda. Por debajo de
-   641px la fila pasa a columna (regla ya existente, más abajo) y esta
-   misma altura invadía los botones de acción: el móvil conserva la
-   posición centrada de siempre, sin la excepción. */
+/* Fase D.17: en escritorio las tres cifras bajan a la franja entre la base
+   del árbol y los botones, centradas en horizontal —ya no en la banda sobre
+   la copa (Fase D.16), que dejaba el bloque pegado a la izquierda para no
+   caer sobre el follaje—. El árbol termina, medido igual que su arranque,
+   al 54,5% del alto de `.manifiesto__visual`; `inset-block-start: 54.5%`
+   abre la franja justo ahí. `inset-block-end` repite la misma fórmula que
+   ya fija el suelo de `.manifiesto__acciones` (el solape de 44px de la
+   cinta + su margen que escala con la ventana): las dos cierran la franja
+   por el mismo borde, así que el hueco entre las cifras y los botones nunca
+   se abre ni se cierra por su cuenta. `align-items` e `inset-inline` + `
+   justify-content: center` centran el contenido real dentro de esa franja,
+   igual que `height: 37.3%` centraba en la de arriba —contra el alto real
+   del bloque, no una cifra en px calculada a mano—. Medido en las seis
+   ventanas de 641 a 1920px: la franja disponible (187,6–328,0px) más que
+   dobla el alto del bloque de cifras en la más estrecha. Por debajo de
+   641px la fila pasa a columna (regla ya existente, más abajo) y conserva
+   la posición centrada de siempre, sin esta excepción. */
 @media (min-width: 641px) {
   .manifiesto__metricas {
-    inset-inline-start: clamp(24px, 4vw, 64px);
-    inset-block-start: 0;
-    height: 37.3%;
+    inset-inline: 0;
+    inset-block-start: 54.5%;
+    inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
+    height: auto;
     align-items: center;
+    justify-content: center;
     transform: none;
   }
 }
 .manifiesto__metricas .dato__valor {
   font-family: var(--mono, monospace);
-  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  /* Reducido desde clamp(1.5rem, 2.4vw, 2rem) al bajar las cifras a la
+     franja inferior (Fase D.17): con más aire disponible que en la banda de
+     arriba, un número algo menor deja el bloque menos dominante sobre los
+     botones sin dejar de leerse — medido, no a ojo, contra la franja real. */
+  font-size: clamp(1.25rem, 2vw, 1.625rem);
   font-weight: 600;
 }
 .manifiesto__metricas .dato__etiqueta { letter-spacing: 0.09em; }
@@ -2172,7 +2175,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
    línea horizontal del sparkline se veía en vertical. `.ticker__grafico`
    nunca tuvo este problema porque ya usaba medidas fijas. */
 .hero-metrica__grafico {
-  display: block; width: 120px; height: 28px; flex-shrink: 0;
+  display: block; width: 100px; height: 22px; flex-shrink: 0;
   margin-block-start: 6px; overflow: visible;
 }
 .hero-metrica__grafico__linea {
