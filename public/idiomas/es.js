@@ -29,7 +29,6 @@ export default {
   'documento.descripcion': 'Plataforma de análisis e inversión de Warrants & Co. Repositorio de tesis de inversión, cobertura de valores y seguimiento de cartera.',
 
   // ── Cabecera ──
-  'cabecera.marca.lema': 'Análisis e Inversión',
   'cabecera.nav.etiqueta': 'Navegación principal',
 
   // ── Navegación · áreas ──
@@ -106,19 +105,9 @@ export default {
   'portada.acceso.cobertura': 'Explorar la cobertura',
   'portada.acceso.research': 'Ver el análisis',
 
-  // ── Portada · hero (Fase D.6) ──
-  // El titular es UNA frase repartida en líneas, y el reparto es tipográfico:
-  // cada idioma decide dónde corta y en cuántas líneas le cabe. Por eso es una
-  // lista y no tres claves —tres claves impondrían a todos los idiomas los
-  // cortes del inglés, y un idioma que necesitara cuatro líneas no tendría
-  // dónde ponerlas— y por eso el documento ya no las trae escritas.
-  'portada.manifiesto.titular': [
-    'Análisis independiente de inversión.',
-  ],
-  // La frase de apoyo del hero: qué hace la firma, en una frase, sin repetir
-  // el titular ni adelantar una cifra que vive más abajo en Portfolio.
-  'portada.hero.subtitulo':
-    'Publicamos tesis de inversión con la misma disciplina con la que las medimos.',
+  // portada.manifiesto.titular y portada.hero.subtitulo (Fase D.6) se
+  // retiraron en Fase D.13: la declaración editorial del hero desaparece, la
+  // foto pasa a ser el hero entero.
 
   // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres
   // anteriores (Análisis, Catalizadores, Cartera). Pierden el enlace a sus
@@ -182,7 +171,6 @@ export default {
 
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
-  'inicio.ticker.dateline': 'Mercado',
 
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',

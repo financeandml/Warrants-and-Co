@@ -28,7 +28,6 @@ export default {
   'documento.descripcion': 'Warrants & Co. research and investment platform. Investment thesis repository, company coverage and portfolio tracking.',
 
   // ── Header ──
-  'cabecera.marca.lema': 'Research & Investment',
   'cabecera.nav.etiqueta': 'Main navigation',
 
   // ── Navigation · areas ──
@@ -100,17 +99,9 @@ export default {
   'portada.acceso.cobertura': 'Explore coverage',
   'portada.acceso.research': 'View research',
 
-  // ── Cover · hero (Phase D.6) ──
-  // ONE sentence broken into lines. Where it breaks, and how many lines it
-  // takes, is typography and belongs to each language: English says it in three
-  // lines, and nothing forces Spanish to use three as well.
-  'portada.manifiesto.titular': [
-    'Independent investment research.',
-  ],
-  // The hero's supporting line: what the firm does, in one sentence, without
-  // repeating the headline or pulling a figure that already lives in Portfolio.
-  'portada.hero.subtitulo':
-    'We publish investment theses with the same discipline we use to measure them.',
+  // portada.manifiesto.titular and portada.hero.subtitulo (Phase D.6) were
+  // retired in Phase D.13: the hero's editorial copy is gone, the photo is
+  // now the whole hero.
 
   // The four pillars from the reference mockup, replacing the previous three
   // (Research, Catalysts, Portfolio). They lose the link to their routes
@@ -174,7 +165,6 @@ export default {
 
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
-  'inicio.ticker.dateline': 'Market',
 
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',

@@ -179,14 +179,16 @@ lo saca y lo entra como un panel de salidas —`transform`+`opacity`, nunca layo
 sus propias curvas: ver la excepción de abajo—; el hover de fila (`--transicion`, tras
 `@media (hover: hover) and (pointer: fine)`), el modal de tesis y las tarjetas de
 noticia al filtrar (`scale(0.97)+opacity`, `--mov-entrada`, 200–300ms, sale por el mismo
-camino), las métricas del hero al primer pintado (opacity sola, `--mov-entrada`, 200ms,
-una vez por visita).
+camino), las métricas del hero al entrar en el viewport —contador ascendente disparado por
+`observarEntrada()`, `--mov-entrada`, 200ms, una vez por visita: ver la excepción de
+abajo—.
 
 No anima, explícitamente: reordenar o filtrar cartera o cotizaciones —se repinta al
 instante, es dato que el usuario lee para decidir—; ningún contador ascendente en cifras
-que se repintan en cada visita o refresco; parallax o cursor personalizado en el hero
-—ya prohibido por la cláusula 5—; pausa o rebote del marquee al pasar el ratón —no hay
-gesto que justifique un spring—.
+que se repintan en cada visita o refresco —**salvo la excepción documentada de las tres
+métricas del Hero, más abajo**—; parallax o cursor personalizado en el hero —ya prohibido
+por la cláusula 5—; pausa o rebote del marquee al pasar el ratón —no hay gesto que
+justifique un spring—.
 
 **Excepción documentada: el cambio de valor en la cinta.** No usa `--mov-entrada` ni
 `--mov-estado`, y no es un olvido. `ticker-valor-sale`/`ticker-valor-entra`
@@ -205,6 +207,24 @@ Forzar las dos mitades a `--mov-entrada` aplanaría el efecto a un fundido gené
 paso atrás en el detalle disfrazado de cumplimiento de la regla. Sigue habiendo cero
 literales sueltos: las dos curvas viven en variables con nombre, documentadas aquí y en
 el propio CSS, y la regla verificable de abajo las admite explícitamente.
+
+**Excepción documentada: el contador de las tres métricas del Hero.** Rentabilidad 2026,
+S&P 500 · SPY y Rentabilidad total sí llevan `contarHasta()` —el mismo contador ascendente
+que ya usa la puntuación de W&C Signal en su modal (`inicio.js`)— pese a que la cifra que
+cuentan se repinta en cada visita, que es justo el caso que la prohibición general excluye
+por nombre. No es la misma situación que esa prohibición cubre: la prohibición existe
+contra un contador que sugiera movimiento en vivo sobre un dato que no se mueve en vivo
+—una cifra que se repinta con cada refresco periódico, animada como si acabara de cambiar
+cuando en realidad solo se ha vuelto a pedir—. Las tres del Hero no tienen refresco
+periódico —`pintarMetricasHero()` se llama una sola vez, al montar la portada, y el sondeo
+de 20s de la cinta las excluye explícitamente (`app.js`, comentario junto a
+`programarRefrescoCinta()`)—, así que el contador no puede disparar dos veces ni sugerir un
+cambio que no ocurrió: cuenta una vez, al entrar en el viewport (`observarEntrada()`),
+exactamente como el de W&C Signal. Son además las tres cifras que la portada presenta con
+más peso editorial —la casa hablando más alto, ya lo dice la cláusula 6—, y ese es el
+mismo criterio que ya sostiene al contador existente. Quien active este contador en un
+futuro refresco periódico de estas cifras —si algún día lo hubiera— estaría reintroduciendo
+el caso que la prohibición general prohíbe, no extendiendo esta excepción.
 
 **Reglas verificables:**
 

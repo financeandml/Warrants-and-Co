@@ -21,7 +21,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, localeFormato, relativo,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
-import { t, tLista } from './i18n.js';
+import { t } from './i18n.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
    después y una constante habría quedado congelada en el de arranque. */
@@ -234,7 +234,7 @@ let idGradienteSiguiente = 0;
  * única forma de leer la dirección: la regla 1 de CLAUDE.md lo exige. El
  * relleno es la misma redundancia con más superficie, no un dato aparte.
  */
-function construirSparkline(valores) {
+function construirSparkline(valores, clasePrefijo = 'ticker__grafico') {
   const minimo = Math.min(...valores);
   const maximo = Math.max(...valores);
   const rango = maximo - minimo || 1;
@@ -247,7 +247,7 @@ function construirSparkline(valores) {
   const puntos = coordenadas.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(' ');
 
   const svg = document.createElementNS(NS_SVG, 'svg');
-  svg.setAttribute('class', 'ticker__grafico');
+  svg.setAttribute('class', clasePrefijo);
   svg.setAttribute('viewBox', `0 0 ${ANCHO} ${ALTO}`);
   svg.setAttribute('preserveAspectRatio', 'none');
   svg.setAttribute('aria-hidden', 'true');
@@ -257,7 +257,7 @@ function construirSparkline(valores) {
   const modificador = cambio > 0 ? 'alza' : cambio < 0 ? 'baja' : 'plana';
 
   // El degradado: del color del trazo, tenue arriba, transparente abajo.
-  const idGradiente = `ticker-grafico-degradado-${idGradienteSiguiente++}`;
+  const idGradiente = `sparkline-degradado-${idGradienteSiguiente++}`;
   const defs = document.createElementNS(NS_SVG, 'defs');
   const gradiente = document.createElementNS(NS_SVG, 'linearGradient');
   gradiente.setAttribute('id', idGradiente);
@@ -267,11 +267,11 @@ function construirSparkline(valores) {
   const paradaArriba = document.createElementNS(NS_SVG, 'stop');
   paradaArriba.setAttribute('offset', '0%');
   paradaArriba.setAttribute('stop-opacity', '0.32');
-  paradaArriba.setAttribute('class', `ticker__grafico__parada ticker__grafico__parada--${modificador}`);
+  paradaArriba.setAttribute('class', `${clasePrefijo}__parada ${clasePrefijo}__parada--${modificador}`);
   const paradaAbajo = document.createElementNS(NS_SVG, 'stop');
   paradaAbajo.setAttribute('offset', '100%');
   paradaAbajo.setAttribute('stop-opacity', '0');
-  paradaAbajo.setAttribute('class', `ticker__grafico__parada ticker__grafico__parada--${modificador}`);
+  paradaAbajo.setAttribute('class', `${clasePrefijo}__parada ${clasePrefijo}__parada--${modificador}`);
   gradiente.appendChild(paradaArriba);
   gradiente.appendChild(paradaAbajo);
   defs.appendChild(gradiente);
@@ -283,12 +283,12 @@ function construirSparkline(valores) {
   const area = document.createElementNS(NS_SVG, 'polygon');
   area.setAttribute('points', areaPuntos);
   area.setAttribute('fill', `url(#${idGradiente})`);
-  area.setAttribute('class', 'ticker__grafico__area');
+  area.setAttribute('class', `${clasePrefijo}__area`);
   svg.appendChild(area);
 
   const linea = document.createElementNS(NS_SVG, 'polyline');
   linea.setAttribute('points', puntos);
-  linea.setAttribute('class', `ticker__grafico__linea ticker__grafico__linea--${modificador}`);
+  linea.setAttribute('class', `${clasePrefijo}__linea ${clasePrefijo}__linea--${modificador}`);
   svg.appendChild(linea);
   return svg;
 }
@@ -441,34 +441,15 @@ export function pintarTicker(indices, cartera) {
 // ═══════════════════════════════ 2 · HERO ══════════════════════════════════
 
 /**
- * Compone el titular del hero y revela sus piezas en orden: marca, titular
- * línea a línea, subtítulo y acciones.
+ * Revela las acciones del hero al entrar.
  *
- * Las líneas del titular se construyen aquí porque el diccionario las declara
- * como lista: cuántas son y por dónde cortan es decisión tipográfica de cada
- * idioma, y el documento no puede traerlas escritas sin imponer a todos el
- * reparto de uno.
+ * Fase D.13 retira el titular y el subtítulo del hero —la foto pasa a ser el
+ * hero entero— y con ellos la construcción línea a línea que vivía aquí:
+ * `tLista('portada.manifiesto.titular')` no tiene ya ningún nodo que rellenar.
+ * Las acciones son lo único de la vieja declaración editorial que sigue en
+ * pie, ahora superpuestas a la foto.
  */
 export function animarManifiesto() {
-  const titular = $('#manifiesto-titular');
-  if (titular) {
-    titular.textContent = '';
-    for (const [i, texto] of tLista('portada.manifiesto.titular').entries()) {
-      // Dos capas: la exterior recorta y la interior asciende desde detrás.
-      const linea = elemento('span', 'linea-revelada');
-      linea.style.setProperty('--i', String(i));
-      linea.appendChild(elemento('span', null, texto));
-      titular.appendChild(linea);
-    }
-  }
-
-  for (const linea of document.querySelectorAll('.manifiesto .linea-revelada')) {
-    observarEntrada(linea);
-  }
-  document.querySelectorAll('.manifiesto .etiqueta-superior').forEach((e) => revelar(e));
-
-  const subtitulo = $('.manifiesto__subtitulo');
-  if (subtitulo) revelar(subtitulo, 90);
   const acciones = $('.manifiesto__acciones');
   if (acciones) revelar(acciones, 160);
 }
@@ -584,6 +565,43 @@ export function pintarCifras(cartera) {
   revelar(pie);
 }
 
+/* Sesiones que muestra el sparkline de cada métrica del Hero. Ajustado
+   mirándolo en el navegador, no una cifra redonda sin más. */
+const SESIONES_CHISPA_HERO = 30;
+
+/**
+ * El sparkline de una métrica del Hero, de la MISMA serie que ya trae
+ * `cartera` —`serie` para las dos cifras del fondo, `serieIndice` para la del
+ * benchmark—, nunca un cálculo aparte (Regla 9): son las series que ya
+ * alimentan el gráfico de Cartera, aquí solo recortadas a las últimas
+ * sesiones. Sin serie o con menos de dos puntos, no hay trazo —nunca una
+ * curva inventada para no dejar el hueco vacío—.
+ */
+function chispaHero(serie) {
+  if (!Array.isArray(serie) || serie.length < 2) return null;
+  const valores = serie.slice(-SESIONES_CHISPA_HERO).map((p) => p.valor);
+  if (valores.length < 2) return null;
+  return construirSparkline(valores, 'hero-metrica__grafico');
+}
+
+/**
+ * Una métrica del Hero: `dato()` con el valor arrancando en cero y contando
+ * hasta el real al entrar en el viewport —la excepción documentada de la
+ * cláusula 8—, más su sparkline si hay serie. Sin dato, sin contador: el
+ * `noDisponible()` no cuenta desde cero hacia un valor que no existe.
+ */
+function datoHero(etiqueta, destino, serie) {
+  const valorInicial = Number.isFinite(destino) ? formatearPorcentaje(0) : noDisponible();
+  const caja = dato(etiqueta, valorInicial, null, destino);
+  if (Number.isFinite(destino)) {
+    const nodoValor = caja.querySelector('.dato__valor');
+    observarEntrada(caja, () => contarPorcentajeHasta(nodoValor, destino));
+  }
+  const chispa = chispaHero(serie);
+  if (chispa) caja.appendChild(chispa);
+  return caja;
+}
+
 /**
  * Fase D.12: las tres cifras de rendimiento del fondo, en el hueco vacío del
  * Hero. Misma fuente que `pintarCifras()` —`cartera.estadisticos`—, nunca un
@@ -600,21 +618,19 @@ export function pintarMetricasHero(cartera) {
   const e = cartera?.estadisticos;
   if (!e) { raiz.hidden = true; return; }
 
-  raiz.appendChild(dato(
+  raiz.appendChild(datoHero(
     t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
-    formatearPorcentaje(e.rentabilidadAnio),
-    null, e.rentabilidadAnio,
+    e.rentabilidadAnio, cartera?.serie,
   ));
-  raiz.appendChild(dato(
+  raiz.appendChild(datoHero(
     t('portada.hero.metrica.indiceAnio', { indice: rotuloIndice(cartera), anio: String(e.anioEnCurso) }),
-    Number.isFinite(e.rentabilidadIndiceAnio) ? formatearPorcentaje(e.rentabilidadIndiceAnio) : noDisponible(),
-    null, e.rentabilidadIndiceAnio,
+    e.rentabilidadIndiceAnio, cartera?.serieIndice,
   ));
-  raiz.appendChild(dato(
+  raiz.appendChild(datoHero(
     t('portada.cifras.total'),
-    formatearPorcentaje(e.rentabilidadTotal),
-    null, e.rentabilidadTotal,
+    e.rentabilidadTotal, cartera?.serie,
   ));
+
   raiz.hidden = false;
 }
 

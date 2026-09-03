@@ -30,7 +30,6 @@
       <img class="marca__sello" id="marca-sello" src="/marca/logo-marca.svg" alt="" aria-hidden="true" role="presentation" width="40" height="40">
       <span class="marca__texto">
         <strong>Warrants &amp; Co.</strong>
-        <span data-i18n="cabecera.marca.lema">Análisis e Inversión</span>
       </span>
     </a>
 
@@ -57,60 +56,45 @@
        Research (el producto) antes que Portfolio (la prueba de convicción). -->
   <section class="seccion seccion--portada" id="seccion-inicio" data-seccion-panel="inicio">
 
-    <!-- ── Hero: secuencia editorial vertical, no panel de dos columnas ──
-         Fase D.9: el hero deja de ser "texto | foto" en columnas —esa
-         composición es, en sí misma, la de una landing SaaS, por bien medida
-         que estuviera (ver D.7 arriba, que ya lo intentó dentro del propio
-         concepto de columnas y no bastó)—. Ahora es una secuencia de tres
-         franjas apiladas, como una portada de publicación: declaración →
-         fotografía a sangre completo → línea de mercado. Cada franja ocupa
-         el ancho entero de la ventana; el texto se alinea al margen de
-         `.contenedor` y la fotografía sangra a los dos bordes reales, no solo
-         al derecho. Es la misma foto de `public/marca/` desde D.6.1; si no
+    <!-- ── Hero: foto a pantalla completa, sin bloque de texto ──
+         Fase D.13: se retira la declaración editorial (titular + subtítulo)
+         que llevaba el hero desde D.9 — decisión de producto, no recorte de
+         paso. La foto pasa a ser el hero entero: `.manifiesto__visual` mide
+         `calc(100vh - var(--alto-cabecera))`, y las cifras y las acciones se
+         superponen sobre ella en vez de compartir fila con un texto que ya
+         no existe. Es la misma foto de `public/marca/` desde D.6.1; si no
          hay banner depositado, `cargarMarca()` deja `.manifiesto__visual`
-         oculto y la secuencia pasa directa de la declaración a la cinta. -->
+         oculto y la secuencia pasa directa de la cabecera a la cinta —hoy
+         sin nada de texto que la sustituya, a diferencia de D.9. -->
     <div class="manifiesto">
-      <div class="manifiesto__enunciado contenedor">
-        <div class="manifiesto__texto">
-          <span class="folio" aria-hidden="true">01</span>
-          <p class="etiqueta-superior">Warrants &amp; Co.</p>
-          <!-- El titular llega vacío a propósito: sus líneas las construye
-               `animarManifiesto()` a partir de la lista del diccionario, porque
-               el número de líneas y el punto de corte los decide cada idioma.
-               Escribirlas aquí congelaría los cortes de uno solo en todos. -->
-          <h1 class="manifiesto__titular" id="manifiesto-titular"></h1>
-          <p class="manifiesto__subtitulo" data-i18n="portada.hero.subtitulo">
-            Publicamos tesis de inversión con la misma disciplina con la que las medimos.
-          </p>
-          <div class="manifiesto__acciones">
-            <a class="boton boton--solido" href="#/companias" data-ruta
-               data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
-            <a class="boton boton--texto" href="#/repositorio" data-ruta
-               data-i18n="portada.acceso.research">Ver el análisis</a>
-          </div>
-        </div>
-        <!-- Fase D.12: el espacio vacío a la derecha del texto pasa a llevar
-             las tres cifras de rendimiento del fondo — la misma fuente que ya
-             pinta `#cifras-portada`/`#home-cartera`, nunca un cálculo aparte
-             (Regla 9). `hidden` hasta que `pintarMetricasHero()` tenga datos
-             reales que mostrar; sin datos, el hero vuelve a su composición
-             de solo texto en vez de enseñar una franja vacía. -->
-        <div class="manifiesto__metricas" id="hero-metricas" aria-live="polite" hidden></div>
-      </div>
       <div class="manifiesto__visual" id="hero-visual" hidden>
         <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">
+        <!-- Fase D.12: las tres cifras de rendimiento del fondo — la misma
+             fuente que ya pinta `#cifras-portada`/`#home-cartera`, nunca un
+             cálculo aparte (Regla 9). `hidden` hasta que `pintarMetricasHero()`
+             tenga datos reales que mostrar.
+             Posición SIN TERMINAR a propósito: este commit solo remide el
+             alto de la foto y de la cinta contra las seis ventanas; el
+             anclaje en la zona de cielo sobre la copa del árbol es la
+             siguiente pieza, medida aparte antes de fijarla. -->
+        <div class="manifiesto__metricas" id="hero-metricas" aria-live="polite" hidden></div>
+        <div class="manifiesto__acciones">
+          <a class="boton boton--solido" href="#/companias" data-ruta
+             data-i18n="portada.acceso.cobertura">Explorar la cobertura<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
+          <a class="boton boton--texto" href="#/repositorio" data-ruta
+             data-i18n="portada.acceso.research">Ver el análisis</a>
+        </div>
       </div>
     </div>
 
     <!-- ── Cinta de mercado: la línea que cierra la secuencia del hero ──
-         Fase D.9: gana un rótulo fijo —"MERCADO"/"MARKET"— a la izquierda,
-         tratado como el pie de una fotografía de prensa: la cinta deja de
-         leerse como un widget insertado y pasa a leerse como la última línea
-         de la composición, con su propia etiqueta. Sigue siendo la misma
+         Fase D.14 retira el rótulo "MERCADO"/"MARKET" de la Fase D.9: con el
+         hero a foto completa, el rótulo caía justo donde ahora se posan los
+         botones fantasma y competía con ellos. Era decorativo (aria-hidden,
+         sin enlace), así que se retira sin sustituto. Sigue siendo la misma
          cinta de siempre —índices y posiciones reales, `/api/mercado/cartera`. -->
     <div class="ticker" id="ticker-mercado" hidden
          data-i18n-attr="aria-label:inicio.ticker.etiqueta" aria-label="Cotizaciones de mercado">
-      <span class="ticker__dateline" data-i18n="inicio.ticker.dateline" aria-hidden="true">Mercado</span>
       <div class="ticker__pista" id="ticker-pista"></div>
     </div>
 
