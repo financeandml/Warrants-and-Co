@@ -2,11 +2,13 @@
    Invalidación de las vistas derivadas de los informes.
 
    Publica una tesis con ticker nuevo desde la interfaz y comprueba que, SIN
-   recargar la página, aparece en cartera, compañías, portada y catalizadores.
-   Después la retira y comprueba lo contrario.
+   recargar la página, aparece en cartera y portada. Después la retira y
+   comprueba lo contrario.
 
-   El radar salió de esta lista al ocultarse el área de Mercado. Vuelve cuando
-   vuelva ella: la invalidación en sí nunca dejó de cubrirlo.
+   El radar salió de esta lista al ocultarse el área de Mercado; compañías y
+   catalizadores salieron después, al ocultarse el área research-companias
+   (navegacion.js). Los tres vuelven cuando vuelva su área: la invalidación
+   en sí nunca dejó de cubrirlos.
 
    ESCRIBE EN LA BASE: apúntelo siempre a una instancia de pruebas.
 
@@ -195,9 +197,7 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
   };
 
   await visita('cartera', '#seccion-cartera', 'CARTERA');
-  await visita('companias', '#seccion-companias', 'COMPAÑÍAS');
   await visita('inicio', '#seccion-inicio', 'PORTADA');
-  await visita('catalizadores', '#seccion-catalizadores', 'CATALIZADORES');
 
   t('Sin errores de consola', err.length === 0, err.slice(0, 2).join(' | '));
   t('La credencial de analista es válida', credenciales === 0,

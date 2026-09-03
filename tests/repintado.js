@@ -47,6 +47,13 @@ const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
    `true` a la vez que se quita `oculta` en `navegacion.js`. */
 const AREAS_OCULTAS = false;
 
+/* Compañías y Catalizadores (área `research-companias`, navegacion.js) se
+   ocultaron aparte, en otro momento, y pueden reabrirse aparte —no comparten
+   el interruptor de arriba, o reabrir Mercado sin querer despertaría estas
+   dos también. Mismo patrón —`false` mientras el área siga oculta—,
+   constante propia. */
+const RESEARCH_COMPANIAS_OCULTA = false;
+
 (async () => {
   const navegador = await chromium.launch();
   const ctx = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
@@ -343,114 +350,120 @@ const AREAS_OCULTAS = false;
     }
   }
 
-  // ── Compañías ──
-  // Listado y ficha comparten sección. Se comprueban las dos, y en los dos
-  // idiomas: lo pintado en JavaScript puede coincidir por casualidad con el
-  // idioma de partida si solo se mira un lado.
-  await p.goto(`${B}/#/companias`);
-  // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados:
-  // el armazón de la sección ya la hace no vacía antes de que llegue nada.
-  const companiasPintadas = () => vistaPintada(p, 
-    () => document.querySelectorAll('#rejilla-companias .tarjeta-compania').length > 0,
-    null, 'compañías');
-  await companiasPintadas();
-  await idioma('es');
-  await companiasPintadas();
-
-  seccion('\n  ── compañías · castellano de partida ──');
-  comp('titular', await txt('#seccion-companias h1'), 'Compañías');
-  comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Análisis');
-  comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'Todos los sectores');
-  comp('recuento con plural', await txt('#estado-companias'),
-    (v) => v && /^\d+ compañías? bajo cobertura$/.test(v));
-  comp('rótulo de dato en la tarjeta',
-    await txt('#rejilla-companias .tarjeta-compania .dato__etiqueta'), 'Recomendación');
-
-  // ── Ficha ──
-  await p.locator('#rejilla-companias .tarjeta-compania').first().click();
-  const fichaPintada = () => vistaPintada(p, 
-    () => document.querySelectorAll('#ficha-compania .bloque-ficha').length > 0,
-    null, 'ficha de compañía');
-  await fichaPintada();
-
+  // Las listas de sellos y `esSello()` las usa también el bloque de Mercado
+  // (dormido más abajo, interruptor propio): se declaran aquí, fuera de los
+  // dos bloques dormidos, para que ninguno dependa de que el otro despierte
+  // primero.
   const SELLOS_ES = ['Tiempo real', 'Con retraso', 'Histórico', 'Calculado', 'Inferido', 'No disponible'];
   const SELLOS_EN = ['Real time', 'Delayed', 'Historical', 'Calculated', 'Inferred', 'Unavailable'];
   const esSello = (lista) => (v) =>
     Boolean(v) && lista.some((s) => s.toLocaleLowerCase() === String(v).trim().toLocaleLowerCase());
 
-  comp('bloque de tesis', await txt('#ficha-compania .bloque-ficha__titulo'), 'Tesis vigente');
-  // El sello venía crudo del servidor —«UNAVAILABLE» en mitad del castellano—;
-  // ahora sale de `vocabulario.js`.
-  if (await p.locator('#ficha-compania .sello').count()) {
-    comp('sello de calidad traducido', await txt('#ficha-compania .sello'), esSello(SELLOS_ES));
+  if (RESEARCH_COMPANIAS_OCULTA) {  // área research-companias (Compañías + Catalizadores) — dormida, no borrada
+    // ── Compañías ──
+    // Listado y ficha comparten sección. Se comprueban las dos, y en los dos
+    // idiomas: lo pintado en JavaScript puede coincidir por casualidad con el
+    // idioma de partida si solo se mira un lado.
+    await p.goto(`${B}/#/companias`);
+    // «Cargado» se mide sobre las tarjetas, que solo existen con datos pintados:
+    // el armazón de la sección ya la hace no vacía antes de que llegue nada.
+    const companiasPintadas = () => vistaPintada(p,
+      () => document.querySelectorAll('#rejilla-companias .tarjeta-compania').length > 0,
+      null, 'compañías');
+    await companiasPintadas();
+    await idioma('es');
+    await companiasPintadas();
+
+    seccion('\n  ── compañías · castellano de partida ──');
+    comp('titular', await txt('#seccion-companias h1'), 'Compañías');
+    comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Análisis');
+    comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'Todos los sectores');
+    comp('recuento con plural', await txt('#estado-companias'),
+      (v) => v && /^\d+ compañías? bajo cobertura$/.test(v));
+    comp('rótulo de dato en la tarjeta',
+      await txt('#rejilla-companias .tarjeta-compania .dato__etiqueta'), 'Recomendación');
+
+    // ── Ficha ──
+    await p.locator('#rejilla-companias .tarjeta-compania').first().click();
+    const fichaPintada = () => vistaPintada(p,
+      () => document.querySelectorAll('#ficha-compania .bloque-ficha').length > 0,
+      null, 'ficha de compañía');
+    await fichaPintada();
+
+    comp('bloque de tesis', await txt('#ficha-compania .bloque-ficha__titulo'), 'Tesis vigente');
+    // El sello venía crudo del servidor —«UNAVAILABLE» en mitad del castellano—;
+    // ahora sale de `vocabulario.js`.
+    if (await p.locator('#ficha-compania .sello').count()) {
+      comp('sello de calidad traducido', await txt('#ficha-compania .sello'), esSello(SELLOS_ES));
+    }
+
+    await idioma('en');
+    seccion('\n  ── compañías · repintadas al conmutar, sin recargar ──');
+    comp('bloque de tesis', await txt('#ficha-compania .bloque-ficha__titulo'), 'Current thesis');
+    if (await p.locator('#ficha-compania .sello').count()) {
+      comp('sello de calidad traducido', await txt('#ficha-compania .sello'), esSello(SELLOS_EN));
+    }
+
+    // La lista está oculta tras la ficha: se repinta igual, y al volver ha de
+    // aparecer ya en el idioma nuevo sin pedir nada.
+    await p.locator('#btn-volver-companias').click();
+    await companiasPintadas();
+    seccion('\n  ── compañías · la lista oculta también se repintó ──');
+    comp('titular', await txt('#seccion-companias h1'), 'Companies');
+    comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Research');
+    comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'All sectors');
+    comp('recuento con plural', await txt('#estado-companias'),
+      (v) => v && /^\d+ companies? under coverage$/.test(v));
+    comp('rótulo de dato en la tarjeta',
+      await txt('#rejilla-companias .tarjeta-compania .dato__etiqueta'), 'Recommendation');
+
+    // ── Catalizadores ──
+    // La agenda pinta vocabulario del servidor —tipos y prioridades— que antes
+    // salía crudo en inglés. Todo se construye en JavaScript salvo las cabeceras.
+    await p.goto(`${B}/#/catalizadores`);
+    // «Cargado» se mide sobre los grupos de la agenda, que solo existen con datos.
+    const agendaPintada = () => vistaPintada(p,
+      () => document.querySelectorAll('#agenda-completa .grupo-agenda, #agenda-completa .vacio').length > 0,
+      null, 'agenda de catalizadores');
+    await agendaPintada();
+    await idioma('es');
+    await agendaPintada();
+
+    seccion('\n  ── catalizadores · castellano de partida ──');
+    comp('titular', await txt('#seccion-catalizadores h1'), 'Catalizadores');
+    comp('conmutador de horizonte',
+      await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Próximos');
+    comp('opción vacía de compañías',
+      await opcion('#filtro-compania-catalizador', 0), 'Todas las compañías');
+    comp('recuento con plural', await txt('#estado-catalizadores'),
+      (v) => v && /^\d+ próximos? · \d+ pasados?/.test(v));
+
+    const TIPOS_CRUDOS = /OPTIONS EXPIRY|EARNINGS|GUIDANCE|INVESTOR DAY|PRODUCT|REGULATORY|PRESS/;
+    const PRIORIDADES_CRUDAS = /^(HIGH|MEDIUM|LOW|UNKNOWN)$/;
+    if (await p.locator('#agenda-completa .evento__tipo').count()) {
+      // Antes salía «OPTIONS EXPIRY» en mitad del castellano.
+      comp('tipo de evento traducido', await txt('#agenda-completa .evento__tipo'),
+        (v) => Boolean(v) && !TIPOS_CRUDOS.test(v));
+      comp('prioridad traducida', await txt('#agenda-completa .evento__prioridad-texto'),
+        (v) => Boolean(v) && !PRIORIDADES_CRUDAS.test(String(v).trim()));
+    }
+
+    await idioma('en');
+    seccion('\n  ── catalizadores · repintados al conmutar, sin recargar ──');
+    comp('titular', await txt('#seccion-catalizadores h1'), 'Catalysts');
+    comp('conmutador de horizonte',
+      await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Upcoming');
+    comp('opción vacía de compañías',
+      await opcion('#filtro-compania-catalizador', 0), 'All companies');
+    comp('recuento con plural', await txt('#estado-catalizadores'),
+      (v) => v && /^\d+ upcoming · \d+ past/.test(v));
+    comp('cabecera de carencias', await txt('#titulo-sin-calendario'), 'No connected source');
+    // El tipo y la prioridad NO se afirman en inglés, y no es un olvido: la hoja de
+    // estilo los pone en mayúsculas de bloque, de modo que «Options expiry» ya
+    // traducido y el código crudo «OPTIONS EXPIRY» son el mismo texto y la
+    // comprobación no distinguiría nada. La prueba de que se traducen la da el lado
+    // castellano, donde «PRENSA» y «PRESS» sí se separan.
   }
-
-  await idioma('en');
-  seccion('\n  ── compañías · repintadas al conmutar, sin recargar ──');
-  comp('bloque de tesis', await txt('#ficha-compania .bloque-ficha__titulo'), 'Current thesis');
-  if (await p.locator('#ficha-compania .sello').count()) {
-    comp('sello de calidad traducido', await txt('#ficha-compania .sello'), esSello(SELLOS_EN));
-  }
-
-  // La lista está oculta tras la ficha: se repinta igual, y al volver ha de
-  // aparecer ya en el idioma nuevo sin pedir nada.
-  await p.locator('#btn-volver-companias').click();
-  await companiasPintadas();
-  seccion('\n  ── compañías · la lista oculta también se repintó ──');
-  comp('titular', await txt('#seccion-companias h1'), 'Companies');
-  comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Research');
-  comp('opción vacía de sectores', await opcion('#filtro-sector-compania', 0), 'All sectors');
-  comp('recuento con plural', await txt('#estado-companias'),
-    (v) => v && /^\d+ companies? under coverage$/.test(v));
-  comp('rótulo de dato en la tarjeta',
-    await txt('#rejilla-companias .tarjeta-compania .dato__etiqueta'), 'Recommendation');
-
-  // ── Catalizadores ──
-  // La agenda pinta vocabulario del servidor —tipos y prioridades— que antes
-  // salía crudo en inglés. Todo se construye en JavaScript salvo las cabeceras.
-  await p.goto(`${B}/#/catalizadores`);
-  // «Cargado» se mide sobre los grupos de la agenda, que solo existen con datos.
-  const agendaPintada = () => vistaPintada(p, 
-    () => document.querySelectorAll('#agenda-completa .grupo-agenda, #agenda-completa .vacio').length > 0,
-    null, 'agenda de catalizadores');
-  await agendaPintada();
-  await idioma('es');
-  await agendaPintada();
-
-  seccion('\n  ── catalizadores · castellano de partida ──');
-  comp('titular', await txt('#seccion-catalizadores h1'), 'Catalizadores');
-  comp('conmutador de horizonte',
-    await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Próximos');
-  comp('opción vacía de compañías',
-    await opcion('#filtro-compania-catalizador', 0), 'Todas las compañías');
-  comp('recuento con plural', await txt('#estado-catalizadores'),
-    (v) => v && /^\d+ próximos? · \d+ pasados?/.test(v));
-
-  const TIPOS_CRUDOS = /OPTIONS EXPIRY|EARNINGS|GUIDANCE|INVESTOR DAY|PRODUCT|REGULATORY|PRESS/;
-  const PRIORIDADES_CRUDAS = /^(HIGH|MEDIUM|LOW|UNKNOWN)$/;
-  if (await p.locator('#agenda-completa .evento__tipo').count()) {
-    // Antes salía «OPTIONS EXPIRY» en mitad del castellano.
-    comp('tipo de evento traducido', await txt('#agenda-completa .evento__tipo'),
-      (v) => Boolean(v) && !TIPOS_CRUDOS.test(v));
-    comp('prioridad traducida', await txt('#agenda-completa .evento__prioridad-texto'),
-      (v) => Boolean(v) && !PRIORIDADES_CRUDAS.test(String(v).trim()));
-  }
-
-  await idioma('en');
-  seccion('\n  ── catalizadores · repintados al conmutar, sin recargar ──');
-  comp('titular', await txt('#seccion-catalizadores h1'), 'Catalysts');
-  comp('conmutador de horizonte',
-    await txt('#conmutador-horizonte [data-horizonte="UPCOMING"]'), 'Upcoming');
-  comp('opción vacía de compañías',
-    await opcion('#filtro-compania-catalizador', 0), 'All companies');
-  comp('recuento con plural', await txt('#estado-catalizadores'),
-    (v) => v && /^\d+ upcoming · \d+ past/.test(v));
-  comp('cabecera de carencias', await txt('#titulo-sin-calendario'), 'No connected source');
-  // El tipo y la prioridad NO se afirman en inglés, y no es un olvido: la hoja de
-  // estilo los pone en mayúsculas de bloque, de modo que «Options expiry» ya
-  // traducido y el código crudo «OPTIONS EXPIRY» son el mismo texto y la
-  // comprobación no distinguiría nada. La prueba de que se traducen la da el lado
-  // castellano, donde «PRENSA» y «PRESS» sí se separan.
 
   if (AREAS_OCULTAS) {  // área Mercado — dormida, no borrada
     // ── Mercado ──

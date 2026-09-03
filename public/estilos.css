@@ -3913,6 +3913,11 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   transition: background var(--transicion);
 }
 .ticker__item:hover { background: var(--superficie-alt); }
+/* Sin destino —Compañías oculta hoy—, la celda es un `span`: ni cursor de
+   mano ni realce al pasar el ratón, para no simular una interacción que no
+   lleva a ningún sitio. */
+.ticker__item--estatico { cursor: default; }
+.ticker__item--estatico:hover { background: none; }
 .ticker__texto { display: flex; flex-direction: column; gap: 6px; }
 .ticker__etiqueta {
   font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;

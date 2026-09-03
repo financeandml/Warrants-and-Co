@@ -107,7 +107,7 @@ export default {
   // `portada.acceso.radar` queda sin uso mientras el área de Mercado esté
   // oculta. No se borra: vuelve con ella.
   'portada.acceso.radar': 'Explorar el radar',
-  'portada.acceso.cobertura': 'Explorar la cobertura',
+  'portada.acceso.cartera': 'Ver la cartera',
   'portada.acceso.research': 'Ver el análisis',
 
   // portada.manifiesto.titular y portada.hero.subtitulo (Fase D.6) se

@@ -70,7 +70,9 @@ const PORdesRUTA = {
      consulta es global: se mide igual. Queda dicho para que nadie deduzca de
      esta línea dónde está el nodo. */
   cartera: ['.indicador__valor', '.aportacion__valor', '.estadistico__nota'],
-  catalizadores: ['.par-dato__valor', '.grupo-agenda__fecha'],
+  /* `catalizadores` NO figura: su área está oculta (`navegacion.js`,
+     research-companias), la ruta cae en portada y `#seccion-catalizadores`
+     no llega a pintarse. Vuelve cuando vuelva el área. */
 };
 
 const RUTAS = Object.keys(PORdesRUTA);

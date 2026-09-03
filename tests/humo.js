@@ -20,14 +20,14 @@ const { exigirPlaywright } = require('./dependencias');
 
 const { chromium } = exigirPlaywright('comprobación de humo');
 const B = process.env.BASE_PRUEBA ?? 'http://127.0.0.1:4173';
-/* Rutas navegables. Las de las áreas ocultas —radar, mercado y opciones— no
-   figuran: su sección sigue en el documento, pero el enrutador ya no las admite
-   y `irA()` cae en la portada, de modo que afirmar que se ven sería afirmar lo
+/* Rutas navegables. Las de las áreas ocultas —radar, mercado, opciones y
+   ahora research-companias (Compañías, Catalizadores)— no figuran: su
+   sección sigue en el documento, pero el enrutador ya no las admite y
+   `irA()` cae en la portada, de modo que afirmar que se ven sería afirmar lo
    contrario de lo que ahora debe pasar. `tests/areas.js` cubre ese lado. */
 const RUTAS = [
   ['inicio', '#seccion-inicio'],
-  ['repositorio', '#seccion-repositorio'], ['companias', '#seccion-companias'],
-  ['catalizadores', '#seccion-catalizadores'],
+  ['repositorio', '#seccion-repositorio'],
   ['cartera', '#seccion-cartera'],
   ['noticias', '#seccion-noticias'],
 ];

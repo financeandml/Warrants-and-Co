@@ -39,13 +39,23 @@ export const AREAS = [
     ],
   },
   {
+    // Antes un solo área junto con Compañías y Catalizadores. Se parte en dos
+    // el día que esas dos se ocultan: `oculta` se aplica al área entera, y
+    // Repositorio/Noticias no se iban a ocultar con ellas.
     clave: 'research',
     titulo: 'nav.research',
     entradas: [
-      { titulo: 'nav.research.companias', ruta: 'companias', descripcion: 'nav.research.companias.desc' },
       { titulo: 'nav.research.tesis', ruta: 'repositorio', descripcion: 'nav.research.tesis.desc' },
-      { titulo: 'nav.research.catalizadores', ruta: 'catalizadores', descripcion: 'nav.research.catalizadores.desc' },
       { titulo: 'nav.research.noticias', ruta: 'noticias', descripcion: 'nav.research.noticias.desc' },
+    ],
+  },
+  {
+    clave: 'research-companias',
+    titulo: 'nav.research',
+    oculta: true,
+    entradas: [
+      { titulo: 'nav.research.companias', ruta: 'companias', descripcion: 'nav.research.companias.desc' },
+      { titulo: 'nav.research.catalizadores', ruta: 'catalizadores', descripcion: 'nav.research.catalizadores.desc' },
     ],
   },
   {

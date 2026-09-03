@@ -96,7 +96,7 @@ export default {
   // `portada.acceso.radar` is unused while the Market area is hidden.
   // Not deleted: it comes back with it.
   'portada.acceso.radar': 'Explore radar',
-  'portada.acceso.cobertura': 'Explore coverage',
+  'portada.acceso.cartera': 'View portfolio',
   'portada.acceso.research': 'View research',
 
   // portada.manifiesto.titular and portada.hero.subtitulo (Phase D.6) were

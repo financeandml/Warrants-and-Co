@@ -144,9 +144,12 @@ const VISTAS_CONVERTIDAS = {
   /* Descubiertas mirando la vista pintada, no deducidas del CSS: se barrieron
      los nodos hoja con un dígito dentro de cada sección. Es la misma cautela que
      evitó meter `.aportacion__valor` en cartera. `.estado-datos` queda fuera a
-     propósito: lleva un recuento, no una lectura. */
-  companias: ['.dato__valor'],
-  catalizadores: ['.par-dato__valor', '.grupo-agenda__fecha'],
+     propósito: lleva un recuento, no una lectura.
+
+     `companias` y `catalizadores` NO figuran, mismo criterio que radar/mercado/
+     opciones: su área está oculta (`navegacion.js`, `research-companias`), la
+     ruta cae en portada y no hay `#seccion-companias`/`#seccion-catalizadores`
+     que pintar. Vuelven cuando vuelva el área. */
   repositorio: ['.num'],
 
   /* `noticias` está convertida y NO figura aquí, y no es un olvido: es la única

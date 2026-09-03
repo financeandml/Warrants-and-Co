@@ -122,9 +122,9 @@ function lineasDeTicker(indices, cartera) {
       // Un tipo de interés se enuncia en por ciento; un nivel de índice, no.
       esTipo: i.formato === 'tipo',
       variacion: i.disponible ? i.variacionPct : null,
-      // Un índice no tiene ficha propia, de modo que el enlace lleva al listado
-      // de cobertura, no a `?t=`: buscar un ticker que nadie cubre no daría nada.
-      destino: '#/companias',
+      // Compañías está oculta hoy: sin destino, la celda no es clicable. Ver
+      // AREAS en navegacion.js — reabrir el área es devolver aquí el destino.
+      destino: null,
       clave: `i:${i.clave ?? i.simbolo ?? i.nombre}`,
       // El sparkline pide el ticker que reconoce el endpoint de históricos
       // —con su circunflejo de índice—, no el de cotización en vivo: son el
@@ -140,8 +140,9 @@ function lineasDeTicker(indices, cartera) {
       decimales: 2,
       esTipo: false,
       variacion: Number.isFinite(p.variacionDiaPct) ? p.variacionDiaPct : null,
-      // Cada valor en cartera tiene ficha propia: la cinta lleva a ella.
-      destino: `#/companias?t=${encodeURIComponent(p.ticker)}`,
+      // Cada valor tenía ficha propia en Compañías, hoy oculta: sin destino,
+      // la celda no es clicable. Ver el comentario del índice, arriba.
+      destino: null,
       clave: `p:${p.ticker}`,
       simbolo: p.ticker,
     });
@@ -365,11 +366,17 @@ export function refrescarTicker(indices, cartera) {
   return cambios;
 }
 
-/** Construye una celda de la cinta, sin su gráfico: eso llega aparte y tarde. */
+/**
+ * Construye una celda de la cinta, sin su gráfico: eso llega aparte y tarde.
+ * Sin `l.destino` —Compañías está oculta hoy— la celda es un `span`, no un
+ * `a`: texto sin destino clicable, nunca un enlace roto que caiga a portada.
+ */
 function construirItemTicker(l) {
-  const item = elemento('a', 'ticker__item');
-  item.href = l.destino;
-  item.dataset.ruta = '';
+  const item = elemento(l.destino ? 'a' : 'span', `ticker__item${l.destino ? '' : ' ticker__item--estatico'}`);
+  if (l.destino) {
+    item.href = l.destino;
+    item.dataset.ruta = '';
+  }
   // La clave enlaza este item con su línea al refrescar.
   item.dataset.clave = l.clave;
 
