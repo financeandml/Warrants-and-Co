@@ -2262,8 +2262,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
    `#seccion-catalizadores .catalizadores-hero` — eyebrow + título + subtítulo—,
    con la diferencia de que aquí las acciones (sincronizar/publicar) son
    transaccionales y se quedan dentro del propio hero, no en un bloque aparte.
-   Todo selector va prefijado por `#seccion-noticias`: nada de esto toca
-   `.noticia`/`.rejilla-noticias`, que Radar sigue usando oculto y sin convertir.
+   Todo selector va prefijado por `#seccion-noticias`.
 
    La regla en sí —`.noticias-hero`/`__interior`/`__subtitulo`— vive ahora
    junto a `.repositorio-hero`/`.wc-hero` (sección Filtros, más arriba): es
@@ -2341,53 +2340,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   #seccion-noticias .noticias-hero { align-items: flex-start; }
   #seccion-noticias .fila-noticia__imagen { width: 64px; height: 64px; }
 }
-
-.rejilla-noticias { display: grid; gap: var(--espacio-4); grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
-
-/* `.noticia` vive también en radar, que sigue cerrada y sin convertir. Se cambia
-   global de todos modos: acotar algo que no se pinta es ceremonia, y una tarjeta
-   con la esquina nueva dentro de una vista vieja no desentona. */
-.noticia {
-  display: flex; flex-direction: column; gap: 11px;
-  padding: var(--espacio-4); width: 100%;
-  border: 1px solid var(--linea); border-radius: var(--radio-l);
-  background: var(--superficie); text-align: start; cursor: pointer;
-  transition: border-color var(--transicion), transform var(--transicion);
-  overflow: hidden;
-}
-/* La tarjeta entera es pulsable: su realce es cromo. */
-@media (hover: hover) and (pointer: fine) {
-  .noticia:hover { border-color: var(--acento); transform: translateY(-2px); }
-}
-
-.noticia__imagen-contenedor {
-  position: relative; width: calc(100% + 2 * var(--espacio-4));
-  margin: calc(-1 * var(--espacio-4)) calc(-1 * var(--espacio-4)) 0;
-  overflow: hidden; border-radius: var(--radio-l) var(--radio-l) 0 0;
-  height: 180px; background: var(--superficie-hundida);
-}
-.noticia__imagen-contenedor img {
-  width: 100%; height: 100%; object-fit: cover;
-}
-
-.noticia__superior {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
-  font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--tinta-mate);
-}
-.noticia__titular { font-size: 1.04rem; font-weight: 600; line-height: 1.36; }
-.noticia__entradilla {
-  font-size: 0.86rem; line-height: 1.62; color: var(--tinta-secundaria);
-  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
-}
-.noticia__pie {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px;
-  margin-top: auto; padding-top: 12px;
-  border-top: 1px solid var(--linea-hairline);
-  font-size: 0.74rem; color: var(--tinta-mate);
-}
-
-.noticia--urgente { border-inline-start: 3px solid var(--tinta); }
 
 /* Titulares en lista compacta para la portada. */
 .titulares { display: flex; flex-direction: column; }
@@ -3049,7 +3001,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .cuadro-mando { grid-template-columns: repeat(3, 1fr); }
   .cuadro-mando--7 { grid-template-columns: repeat(4, 1fr); }
   .tarjeta__cabecera { flex-direction: column; align-items: flex-start; }
-  .rejilla-noticias { grid-template-columns: 1fr; }
   /* El panel se repliega por bloques: dos columnas en tableta, una en móvil. */
   .snapshot { grid-template-columns: repeat(2, 1fr); }
   /* Aquí vivía un `min-height: calc(100vh - 120px)`: una segunda constante de
@@ -4956,7 +4907,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    esto solo la confirma bajo el dedo. */
 .boton:not(:disabled):active,
 .tarjeta-compania:active,
-.noticia:active,
 .fila-noticia:active,
 a.senal:active, button.senal:active,
 .research:active,
