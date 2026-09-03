@@ -1409,11 +1409,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
   border-top: 1px solid var(--linea-hairline);
 }
 .grafico-columna {
+  min-width: 0;
   padding-inline-end: clamp(20px, 3vw, 32px);
   border-inline-end: 1px solid var(--linea-hairline);
 }
 .grafico-columna .grafico { padding-inline-start: 0; }
+/* `min-width: 0`: sin esto, la tabla de abajo —cuyas celdas no envuelven—
+   impone su `scrollWidth` como mínimo del ítem de grid (comportamiento por
+   defecto, `min-width: auto`), y ese mínimo gana sobre `1fr`, invirtiendo
+   la proporción 1.7fr/1fr y aplastando el gráfico. Confirmado midiendo
+   `grid-template-columns` computado antes y después del arreglo. */
 .grafico-desglose {
+  min-width: 0;
   padding: 20px 0 20px clamp(20px, 3vw, 32px);
 }
 .grafico-desglose h3 {
