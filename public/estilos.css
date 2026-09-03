@@ -993,34 +993,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
    solo cambia el número de columnas. */
 .cuadro-mando--7 { grid-template-columns: repeat(7, 1fr); }
 
-/* ── Realizada / no realizada, comparadas ──
-   Dos cifras y una barra fina, sin rejilla propia: vive dentro de la misma
-   tarjeta que `#resumen-portfolio`, debajo del cuadro. La barra reparte el
-   ancho por magnitud absoluta —cuánto pesa cada lado en el total de lo que hay
-   que repartir—, no por signo: el signo ya lo dice la cifra, con su glifo. */
-.realizado-comparativa {
-  display: flex; flex-direction: column; gap: 16px;
-  margin-top: var(--espacio-4); padding-top: var(--espacio-4);
-  border-top: 1px solid var(--linea);
-}
-.realizado-comparativa__cifras { display: flex; flex-wrap: wrap; gap: clamp(24px, 5vw, 56px); }
-.realizado-comparativa__celda { display: flex; flex-direction: column; gap: 4px; }
-.realizado-comparativa__valor {
-  font-size: clamp(1.5rem, 3vw, 1.9rem); font-weight: 600;
-  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-}
-.realizado-comparativa__etiqueta {
-  font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--tinta-mate);
-}
-.realizado-comparativa__barra {
-  display: flex; height: 6px; border-radius: 3px;
-  background: var(--superficie-alt); overflow: hidden;
-}
-.realizado-comparativa__tramo { height: 100%; }
-.realizado-comparativa__tramo--alza { background: var(--alcista); }
-.realizado-comparativa__tramo--baja { background: var(--bajista); }
-.realizado-comparativa__tramo--nula { background: var(--linea-fuerte); }
 
 /* ── Análisis de contribución: barras horizontales ──
    Diverge desde un eje central: a la derecha del eje, contribución positiva;
@@ -1248,8 +1220,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* ── Desglose anidado: realizada / no realizada bajo el retorno total ──
    Mismas dos cifras que antes vivían como celdas propias de esta fila;
    aquí son su desglose, no una cifra hermana (Regla 9: un hecho, un
-   sitio). La barra de magnitud de `#realizado-comparativa`, más abajo,
-   sigue aparte — mismo hecho, otra lectura. */
+   sitio). La barra de magnitud que las repetía debajo, `#realizado-
+   comparativa`, se retiró entera: con el desglose ya aquí era la misma
+   cifra pintada dos veces sin autoridad clara. */
 #seccion-cartera #resumen-portfolio .indicador__desglose {
   display: flex; gap: 20px; margin-top: 14px; padding-top: 12px;
   border-top: 1px solid var(--linea-hairline);
