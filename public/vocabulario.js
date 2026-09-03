@@ -109,3 +109,26 @@ const CLAVES_CLASIFICACION = {
 /** Rótulo de un código de clasificación de operación. */
 export const etiquetaClasificacion = rotular(CLAVES_CLASIFICACION);
 
+/* Motivo de cierre de una posición (`cartera.js`, `MOTIVOS_CIERRE`). Dos
+   códigos enumerables — el motivo llegaba en castellano crudo y se pintaba
+   tal cual, en las dos vistas donde una tesis se lee de idioma inglés. */
+const CLAVES_MOTIVO_CIERRE = {
+  TAKE_PROFIT_ALCANZADO: 'cartera.motivoCierre.takeProfit',
+  STOP_LOSS_ALCANZADO: 'cartera.motivoCierre.stopLoss',
+};
+
+/** Rótulo del motivo de cierre de una posición. */
+export const etiquetaMotivoCierre = rotular(CLAVES_MOTIVO_CIERRE);
+
+/* Motivo de cotización no disponible (`companias/index.js`). Solo cubre el
+   caso enumerable —sin proveedor que resuelva el instrumento—; el texto de
+   un proveedor caído sigue viajando aparte, sin código, misma doctrina que
+   `detalle` en `PROVEEDOR_NO_RESPONDE` (`src/errores.js`): es diagnóstico
+   ajeno, no un mensaje de la plataforma. */
+const CLAVES_MOTIVO_COTIZACION = {
+  SIN_COTIZACION_DISPONIBLE: 'companias.motivoCotizacion.sinCotizacion',
+};
+
+/** Rótulo del motivo por el que no hay cotización — solo para el caso con código. */
+export const etiquetaMotivoCotizacion = rotular(CLAVES_MOTIVO_COTIZACION);
+

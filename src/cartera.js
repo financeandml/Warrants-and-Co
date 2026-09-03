@@ -34,6 +34,15 @@ const mercado = require('./market');
 const SESIONES_ANIO = 252;
 const BASE_INDICE = 100;
 
+/* Motivo de cierre de una posicion: dos causas, ambas automaticas. Codigo,
+   no frase — la traduccion vive en el cliente (`vocabulario.js`,
+   `etiquetaMotivoCierre`), que antes no tenia nada que traducir porque el
+   motivo llegaba ya redactado en castellano. */
+const MOTIVOS_CIERRE = {
+  TAKE_PROFIT_ALCANZADO: 'Take profit alcanzado',
+  STOP_LOSS_ALCANZADO: 'Stop loss alcanzado',
+};
+
 /*
  * Dos suelos de muestra, y por motivos distintos.
  *
@@ -224,7 +233,7 @@ function construirIndice(posiciones, fechas, series) {
       if (datos.maximo >= p.takeProfit) {
         liquidez += unidades.get(p.ticker) * p.takeProfit;
         unidades.delete(p.ticker);
-        cerradas.set(p.ticker, { fecha, precio: p.takeProfit, motivo: 'Take profit alcanzado' });
+        cerradas.set(p.ticker, { fecha, precio: p.takeProfit, motivo: 'TAKE_PROFIT_ALCANZADO' });
       }
     }
 
@@ -239,7 +248,7 @@ function construirIndice(posiciones, fechas, series) {
       if (datos.minimo <= p.stopLoss) {
         liquidez += unidades.get(p.ticker) * datos.cierre;
         unidades.delete(p.ticker);
-        cerradas.set(p.ticker, { fecha, precio: datos.cierre, motivo: 'Stop loss alcanzado' });
+        cerradas.set(p.ticker, { fecha, precio: datos.cierre, motivo: 'STOP_LOSS_ALCANZADO' });
       }
     }
 
@@ -858,4 +867,7 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
   };
 }
 
-module.exports = { calcularCartera, calcularEstadisticos, desviacionTipica, maximaCaida, rendimientos, construirIndice, alinear };
+module.exports = {
+  calcularCartera, calcularEstadisticos, desviacionTipica, maximaCaida, rendimientos,
+  construirIndice, alinear, MOTIVOS_CIERRE,
+};

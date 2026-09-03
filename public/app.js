@@ -14,6 +14,7 @@ import { alinearContraMaestra, rebasarBase100 } from './benchmarks.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
+import { etiquetaMotivoCierre } from './vocabulario.js';
 import {
   pintarSnapshot, pintarRadar, pintarSignal, pintarPanelCartera,
   pintarResearch, pintarCatalizadores, pintarUltimasNoticias,
@@ -2711,7 +2712,8 @@ function filaDetalle(p, idDetalle) {
 
   if (p.cerrada) {
     par(t('cartera.fila.detalle.cierre'), formatearFecha(p.fechaCierre));
-    par(t('cartera.cerradas.col.motivo'), p.motivoCierre ?? t('cartera.cerradas.motivo'));
+    par(t('cartera.cerradas.col.motivo'),
+      p.motivoCierre ? etiquetaMotivoCierre(p.motivoCierre) : t('cartera.cerradas.motivo'));
   } else {
     par(t('cartera.col.takeProfit'), formatearMoneda(p.takeProfit, p.divisa));
     par(t('cartera.col.recorrido'), celdaRecorrido(p).firstChild ?? document.createTextNode('—'));

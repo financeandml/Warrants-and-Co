@@ -10,7 +10,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, claseVariacion,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
-import { etiquetaSello, claseSello, etiquetaTipoEvento } from './vocabulario.js';
+import { etiquetaSello, claseSello, etiquetaTipoEvento, etiquetaMotivoCotizacion } from './vocabulario.js';
 
 /* El rótulo de ausencia es una función y no una constante: se resuelve al
    pintar, que es cuando se sabe el idioma. Escrito a mano —«N/A»— quedaba fuera
@@ -482,8 +482,11 @@ function bloqueCotizacion(c) {
 
   if (!q?.disponible) {
     caja.appendChild(elemento('span', 'ficha-cotizacion__precio ficha-cotizacion__precio--ausente', noDisponible()));
-    // El motivo lo redacta el servidor; solo se traduce la reserva.
-    caja.appendChild(elemento('p', 'ficha-cotizacion__nota', q?.motivo ?? t('companias.cotizacion.sinDato')));
+    // El motivo lo redacta el servidor cuando es texto de un proveedor caído
+    // —diagnóstico ajeno, sin traducir, misma doctrina que `detalle` en
+    // PROVEEDOR_NO_RESPONDE—; el caso enumerable llega con código y se traduce.
+    caja.appendChild(elemento('p', 'ficha-cotizacion__nota',
+      q?.codigo ? etiquetaMotivoCotizacion(q.codigo) : (q?.motivo ?? t('companias.cotizacion.sinDato'))));
     caja.appendChild(sello('UNAVAILABLE'));
     return caja;
   }

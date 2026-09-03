@@ -25,6 +25,15 @@ const CALIDAD = {
   NO_DISPONIBLE: 'UNAVAILABLE',
 };
 
+/* Motivo por el que no hay cotización, caso enumerable —sin proveedor que
+   resuelva el instrumento—. El texto de un proveedor caído (`err.message`)
+   no entra aquí: viaja aparte, sin código, misma doctrina que `detalle` en
+   `PROVEEDOR_NO_RESPONDE` (`src/errores.js`) — es diagnóstico ajeno, no un
+   mensaje de la plataforma. */
+const MOTIVOS_COTIZACION = {
+  SIN_COTIZACION_DISPONIBLE: 'Sin cotización disponible',
+};
+
 const leerEtiquetas = (crudo) => {
   try {
     const v = JSON.parse(crudo ?? '[]');
@@ -257,7 +266,13 @@ async function resolverCotizacion(ticker) {
       fundamentales: q.fundamentales ?? null,
     };
   } catch (err) {
-    return { disponible: false, calidad: CALIDAD.NO_DISPONIBLE, motivo: err?.message ?? 'Sin cotización disponible' };
+    if (err?.message) {
+      return { disponible: false, calidad: CALIDAD.NO_DISPONIBLE, motivo: err.message };
+    }
+    return {
+      disponible: false, calidad: CALIDAD.NO_DISPONIBLE,
+      motivo: MOTIVOS_COTIZACION.SIN_COTIZACION_DISPONIBLE, codigo: 'SIN_COTIZACION_DISPONIBLE',
+    };
   }
 }
 
@@ -328,4 +343,4 @@ function universo() {
     .filter(Boolean);
 }
 
-module.exports = { listar, detalle, universo, agrupar, estadoPortfolio, CALIDAD };
+module.exports = { listar, detalle, universo, agrupar, estadoPortfolio, CALIDAD, MOTIVOS_COTIZACION };

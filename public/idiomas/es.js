@@ -672,6 +672,8 @@ export default {
   'cartera.cerradas.col.resultado': 'Resultado',
   'cartera.cerradas.col.motivo': 'Motivo',
   'cartera.cerradas.motivo': 'Cerrada',
+  'cartera.motivoCierre.takeProfit': 'Take profit alcanzado',
+  'cartera.motivoCierre.stopLoss': 'Stop loss alcanzado',
 
   // ═════════════════════ Cartera · suelo de muestra ═════════════════════
   'cartera.muestra.faltan': {
@@ -1104,6 +1106,7 @@ export default {
 
   // ── Ficha ──
   'companias.cotizacion.sinDato': 'Sin cotización disponible',
+  'companias.motivoCotizacion.sinCotizacion': 'Sin cotización disponible',
   'companias.cotizacion.selloNota': 'Dato consolidado con retraso; la plataforma no dispone de tiempo real.',
   'companias.tesis.titulo': 'Tesis vigente',
   'companias.tesis.sinResumen': 'Dato no disponible — ningún informe incluye resumen ejecutivo.',

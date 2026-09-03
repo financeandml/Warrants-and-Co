@@ -657,6 +657,8 @@ export default {
   'cartera.cerradas.col.resultado': 'Result',
   'cartera.cerradas.col.motivo': 'Reason',
   'cartera.cerradas.motivo': 'Closed',
+  'cartera.motivoCierre.takeProfit': 'Take profit reached',
+  'cartera.motivoCierre.stopLoss': 'Stop loss reached',
 
   // ═════════════════════ Portfolio · sample floor ═════════════════════
   'cartera.muestra.faltan': {
@@ -1056,6 +1058,7 @@ export default {
 
   // ── Profile ──
   'companias.cotizacion.sinDato': 'No quote available',
+  'companias.motivoCotizacion.sinCotizacion': 'No quote available',
   'companias.cotizacion.selloNota': 'Consolidated with a delay; the platform carries no real-time feed.',
   'companias.tesis.titulo': 'Current thesis',
   'companias.tesis.sinResumen': 'Data unavailable — no report includes an executive summary.',
