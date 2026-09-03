@@ -2422,8 +2422,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 /* ═════════════════ Posiciones liquidadas y niveles ══════════════════════ */
 
-.tabla-posiciones tbody tr.cerrada { opacity: 0.72; }
-
 .medidor-nivel {
   display: flex; align-items: center; gap: 8px;
   font-variant-numeric: tabular-nums; white-space: nowrap;
