@@ -242,6 +242,10 @@ export default {
   'inicio.porque.p3.texto': 'El rendimiento no lo redacta nadie: sale de un motor que recalcula cada posición contra su precio de mercado real, sesión a sesión.',
   'inicio.porque.p3.enlace': 'Ver la cartera',
 
+  // ── Inicio · Jorge Díaz (firma) ──
+  'inicio.firma.rol': 'Análisis firmado por una persona real',
+  'inicio.firma.texto': 'Jorge Díaz, graduado en Comercio por la Universidad Complutense de Madrid, inicia en noviembre de 2026 el Máster en Mercados Financieros y Gestión de Activos en el IEB. Fundó Warrants & Co. para publicar tesis de inversión verificables: compañías sólidas y rentables que cotizan por debajo de su valor real, con cada precio, fecha y resultado a la vista.',
+
   // ── Inicio · W&C Radar ──
   'inicio.radar.etiqueta': 'Inteligencia de mercado',
   'inicio.radar.enlace': 'Ver el radar completo',

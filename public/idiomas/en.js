@@ -230,6 +230,10 @@ export default {
   'inicio.porque.p3.texto': 'No one writes the performance figure: it comes from an engine that recalculates every position against its real market price, session by session.',
   'inicio.porque.p3.enlace': 'View the portfolio',
 
+  // ── Home · Jorge Díaz (signed by) ──
+  'inicio.firma.rol': 'Research signed by a real person',
+  'inicio.firma.texto': 'Jorge Díaz, a Business graduate from Universidad Complutense de Madrid, begins the Master’s in Financial Markets and Asset Management at IEB in November 2026. He founded Warrants & Co. to publish verifiable investment theses: solid, profitable companies trading below their real value, with every price, date and result on the record.',
+
   // ── Home · W&C Radar ──
   'inicio.radar.etiqueta': 'Market intelligence',
   'inicio.radar.enlace': 'View full radar',

@@ -486,7 +486,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
 @media (min-width: 1920px) {
   #seccion-inicio { --ancho-portada: 1600px; }
   #seccion-inicio #home-bento .contenedor,
-  #seccion-inicio #home-proceso .contenedor {
+  #seccion-inicio #home-proceso .contenedor,
+  #seccion-inicio #home-porque .contenedor,
+  #seccion-inicio #home-firma .contenedor {
     max-width: var(--ancho-portada);
   }
 }
@@ -4309,6 +4311,25 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .por-que-wc__lista { grid-template-columns: 1fr; }
   .por-que-wc__punto { border-inline-end: none; border-block-start: 1px solid var(--linea); padding-block-start: 20px; }
   .por-que-wc__punto:first-child { border-block-start: none; }
+}
+
+/* ══════════════════════════════ JORGE DÍAZ ════════════════════════════════
+   Análisis firmado por una persona real: nombre, foto y cita, sin caja ni
+   sombra —mismo lenguaje plano del resto de Home—. La foto es redonda y
+   pequeña (96px): una firma, no un retrato editorial; el peso de la sección
+   lo lleva el texto. */
+.firma { background: var(--superficie-alt); border-block-start: 1px solid var(--linea); padding-block: clamp(56px, 8vh, 96px); }
+.firma__grid { display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 3vw, 40px); align-items: start; max-width: 74ch; }
+.firma__foto { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid var(--linea); }
+.firma__nombre { font-family: var(--geo); font-size: var(--tipo-5); font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
+.firma__rol { font-size: var(--tipo-1); color: var(--tinta-mate); margin: 0 0 14px; }
+.firma__cita {
+  font-size: var(--tipo-3); line-height: 1.65; color: var(--tinta-secundaria);
+  border-inline-start: 2px solid var(--linea-fuerte); padding-inline-start: 16px;
+}
+@media (max-width: 560px) {
+  .firma__grid { grid-template-columns: 1fr; }
+  .firma__foto { width: 64px; height: 64px; }
 }
 
 /* ──────────────────────────── 2 · MARKET PULSE ──────────────────────────── */
