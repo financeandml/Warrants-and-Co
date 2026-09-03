@@ -182,58 +182,6 @@ export default {
     other: 'Curve: {curva}. No connected provider carries a historical series for {indice}; the ETF that replicates it is not the index and is labelled as such. {n} sessions · historical data.',
   },
 
-  // ── Home · Portfolio (bento) ──
-  'inicio.cartera.etiqueta': 'Portfolio management',
-  'inicio.cartera.titulo': 'Portfolio',
-  'inicio.cartera.enlace': 'View full portfolio',
-  'inicio.cartera.capital': 'Capital deployed',
-  'inicio.cartera.posiciones.abiertas': { one: '{n} open', other: '{n} open' },
-  'inicio.cartera.posiciones.cerradas': { one: '{n} closed', other: '{n} closed' },
-  'inicio.cartera.posiciones.titulo': 'Top positions',
-  'inicio.cartera.vacio.titulo': 'Portfolio not yet constituted',
-  'inicio.cartera.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
-
-  // ── Home · Risk (bento) ──
-  'inicio.riesgo.etiqueta': 'Portfolio management',
-  'inicio.riesgo.titulo': 'Risk',
-  'inicio.riesgo.enlace': 'View full statistics',
-  'inicio.riesgo.vacio.titulo': 'No risk figures',
-  'inicio.riesgo.vacio.motivo': 'Risk metrics are calculated from the same portfolio; with no portfolio constituted there is nothing to retain or publish.',
-  // Plain language, written for someone who has never heard of a sample
-  // floor: no "floor", no statistical jargon — just why the wait.
-  'inicio.riesgo.pie': 'These six figures need three years of history to be reliable — with less, the margin of error would make them nearly meaningless. Each one publishes the moment the portfolio reaches that minimum, never sooner and never half-measured.',
-
-  // ── Home · How we invest ──
-  'inicio.proceso.etiqueta': 'Methodology',
-  'inicio.proceso.titulo': 'Our methodology',
-  'inicio.proceso.intro': '"High conviction" here doesn’t mean what it means at a fund: there’s no outside capital to defend, no investment committee to convince. It means every thesis passes the same discipline before publication — verifiable, consistent, and with no fee on the outcome.',
-  'inicio.proceso.paso1.titulo': 'Coverage selection',
-  'inicio.proceso.paso1.texto': 'We choose which companies to cover, then commission or write primary research on each.',
-  'inicio.proceso.paso2.titulo': 'Primary research',
-  'inicio.proceso.paso2.texto': 'Every thesis is grounded in a source document. Figures are extracted with a page reference; anything ambiguous is flagged, never guessed.',
-  'inicio.proceso.paso3.titulo': 'Publication',
-  'inicio.proceso.paso3.texto': 'The thesis, recommendation, target price and stated risks are published as a report — before any position is opened.',
-  'inicio.proceso.paso4.titulo': 'Position & tracking',
-  'inicio.proceso.paso4.texto': 'Where a thesis is acted on, the position enters the public portfolio and is tracked against its benchmark from day one — gains and losses alike.',
-  'inicio.proceso.paso5.titulo': 'Disclosure',
-  'inicio.proceso.paso5.texto': 'Performance and risk metrics are published once they are statistically meaningful — never earlier, never estimated.',
-
-  // ── Home · Why Warrants & Co. ──
-  'inicio.porque.etiqueta': 'Position',
-  'inicio.porque.titulo': 'Why Warrants & Co.',
-  'inicio.porque.p1.titulo': 'Verifiable transparency',
-  'inicio.porque.p1.texto': 'Every thesis is published with a price and a date. Nothing retroactive, nothing that can be rewritten after the market proves it right or wrong.',
-  'inicio.porque.p1.enlace': 'View the repository',
-  'inicio.porque.p2.titulo': 'Consistent methodology',
-  'inicio.porque.p2.texto': 'The same extraction, verification and publication discipline for every company covered — no exceptions for whichever thesis is most convenient.',
-  'inicio.porque.p3.titulo': 'A calculated portfolio, not a declared one',
-  'inicio.porque.p3.texto': 'No one writes the performance figure: it comes from an engine that recalculates every position against its real market price, session by session.',
-  'inicio.porque.p3.enlace': 'View the portfolio',
-
-  // ── Home · Jorge Díaz (signed by) ──
-  'inicio.firma.rol': 'Research signed by a real person',
-  'inicio.firma.texto': 'Jorge Díaz, a Business graduate from Universidad Complutense de Madrid, begins the Master’s in Financial Markets and Asset Management at IEB in November 2026. He founded Warrants & Co. to publish verifiable investment theses: solid, profitable companies trading below their real value, with every price, date and result on the record.',
-
   // ── Home · W&C Radar ──
   'inicio.radar.etiqueta': 'Market intelligence',
   'inicio.radar.enlace': 'View full radar',
@@ -243,29 +191,6 @@ export default {
   'inicio.radar.lectura.medida': '{valor} {unidad}',
   'inicio.radar.lectura.cualitativa': 'Qualitative reading, no numeric measurement',
   'inicio.radar.lectura.cualitativaFuente': 'Qualitative reading, no numeric measurement · {fuente}',
-
-  // ── Home · featured coverage ──
-  'inicio.research.etiqueta': 'Research',
-  'inicio.research.titulo': 'Featured coverage',
-  'inicio.research.enlace': 'All companies',
-  'inicio.research.vacio.titulo': 'No published coverage',
-  'inicio.research.vacio.motivo': 'Coverage is built from published reports.',
-  'inicio.research.enCartera': 'In portfolio',
-  'inicio.research.sinResumen': 'Data unavailable — no report includes an executive summary.',
-  'inicio.research.verFicha': 'View full profile',
-  'inicio.research.otras': 'Other research',
-  'inicio.research.dato.precio': 'Price',
-  'inicio.research.dato.recomendacion': 'Recommendation',
-  'inicio.research.dato.objetivo': 'Target price',
-  'inicio.research.dato.recorrido': 'Upside to target',
-
-  // ── Home · catalysts ──
-  'inicio.catalizadores.etiqueta': 'Research · Catalysts',
-  'inicio.catalizadores.titulo': 'Upcoming catalysts',
-  'inicio.catalizadores.enlace': 'Full calendar',
-  'inicio.catalizadores.vacio.titulo': 'No upcoming events',
-  'inicio.catalizadores.vacio.motivo': 'The calendar only carries events with a verifiable date from a connected source.',
-  'inicio.catalizadores.nota': 'HIGH priority: an event 14 days out or less on a company held in the portfolio. Earnings, guidance and corporate events require a calendar that no connected provider publishes.',
 
   // ── Home · options flow ──
   'inicio.flujo.etiqueta': 'Options',

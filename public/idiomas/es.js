@@ -193,59 +193,6 @@ export default {
     other: 'Curva: {curva}. El índice {indice} no tiene serie histórica en ningún proveedor conectado; el ETF que lo replica no es el índice y se rotula como tal. {n} sesiones · dato histórico.',
   },
 
-  // ── Inicio · Cartera (bento) ──
-  'inicio.cartera.etiqueta': 'Gestión de cartera',
-  'inicio.cartera.titulo': 'Cartera',
-  'inicio.cartera.enlace': 'Ver cartera completa',
-  'inicio.cartera.capital': 'Capital desplegado',
-  'inicio.cartera.posiciones.abiertas': { one: '{n} abierta', other: '{n} abiertas' },
-  'inicio.cartera.posiciones.cerradas': { one: '{n} cerrada', other: '{n} cerradas' },
-  // Fase D.2: título de la lista de posiciones principales bajo la performance.
-  'inicio.cartera.posiciones.titulo': 'Principales posiciones',
-  'inicio.cartera.vacio.titulo': 'Cartera sin constituir',
-  'inicio.cartera.vacio.motivo': 'La cartera se constituye a partir de las tesis publicadas con ticker asignado. Sin ellas no hay rentabilidad que publicar.',
-
-  // ── Inicio · Riesgo (bento) ──
-  'inicio.riesgo.etiqueta': 'Gestión de cartera',
-  'inicio.riesgo.titulo': 'Riesgo',
-  'inicio.riesgo.enlace': 'Ver estadísticos completos',
-  'inicio.riesgo.vacio.titulo': 'Sin cifras de riesgo',
-  'inicio.riesgo.vacio.motivo': 'Las métricas de riesgo se calculan a partir de la misma cartera; sin cartera constituida no hay nada que retener ni que publicar.',
-  // Texto llano, pensado para quien no sabe qué es un suelo de muestra: sin
-  // «suelo», sin «floor», sin jerga estadística — solo por qué se espera.
-  'inicio.riesgo.pie': 'Estas seis cifras exigen tres años de historial para ser fiables — con menos, el margen de error las haría casi inútiles. Cada una se publica en cuanto la cartera alcanza ese mínimo, nunca antes ni a medias.',
-
-  // ── Inicio · Cómo invertimos ──
-  'inicio.proceso.etiqueta': 'Metodología',
-  'inicio.proceso.titulo': 'Nuestra metodología',
-  'inicio.proceso.intro': '«Alta convicción» aquí no significa lo que significa en un fondo: no hay capital de terceros que defender ni comité de inversión que convencer. Significa que cada tesis pasa la misma disciplina antes de publicarse — verificable, consistente, y sin comisión sobre el resultado.',
-  'inicio.proceso.paso1.titulo': 'Selección de cobertura',
-  'inicio.proceso.paso1.texto': 'Elegimos qué compañías cubrir y encargamos o redactamos research primario sobre cada una.',
-  'inicio.proceso.paso2.titulo': 'Research primario',
-  'inicio.proceso.paso2.texto': 'Toda tesis parte de un documento fuente. Las cifras se extraen con referencia a su página; lo ambiguo se señala, nunca se adivina.',
-  'inicio.proceso.paso3.titulo': 'Publicación',
-  'inicio.proceso.paso3.texto': 'La tesis, la recomendación, el precio objetivo y los riesgos declarados se publican como informe — antes de abrir ninguna posición.',
-  'inicio.proceso.paso4.titulo': 'Posición y seguimiento',
-  'inicio.proceso.paso4.texto': 'Cuando se actúa sobre una tesis, la posición entra en la cartera pública y se sigue contra su índice de referencia desde el primer día — ganancias y pérdidas por igual.',
-  'inicio.proceso.paso5.titulo': 'Divulgación',
-  'inicio.proceso.paso5.texto': 'El rendimiento y las métricas de riesgo se publican en cuanto son estadísticamente significativas — nunca antes, nunca estimadas.',
-
-  // ── Inicio · Por qué Warrants & Co. ──
-  'inicio.porque.etiqueta': 'Posición',
-  'inicio.porque.titulo': 'Por qué Warrants & Co.',
-  'inicio.porque.p1.titulo': 'Transparencia verificable',
-  'inicio.porque.p1.texto': 'Cada tesis se publica con precio y fecha. Nada retroactivo, nada que se pueda reescribir después de que el mercado dé la razón o la quite.',
-  'inicio.porque.p1.enlace': 'Ver el repositorio',
-  'inicio.porque.p2.titulo': 'Metodología consistente',
-  'inicio.porque.p2.texto': 'La misma disciplina de extracción, verificación y publicación para cada compañía cubierta — sin excepciones para la tesis que conviene más.',
-  'inicio.porque.p3.titulo': 'Cartera calculada, no declarada',
-  'inicio.porque.p3.texto': 'El rendimiento no lo redacta nadie: sale de un motor que recalcula cada posición contra su precio de mercado real, sesión a sesión.',
-  'inicio.porque.p3.enlace': 'Ver la cartera',
-
-  // ── Inicio · Jorge Díaz (firma) ──
-  'inicio.firma.rol': 'Análisis firmado por una persona real',
-  'inicio.firma.texto': 'Jorge Díaz, graduado en Comercio por la Universidad Complutense de Madrid, inicia en noviembre de 2026 el Máster en Mercados Financieros y Gestión de Activos en el IEB. Fundó Warrants & Co. para publicar tesis de inversión verificables: compañías sólidas y rentables que cotizan por debajo de su valor real, con cada precio, fecha y resultado a la vista.',
-
   // ── Inicio · W&C Radar ──
   'inicio.radar.etiqueta': 'Inteligencia de mercado',
   'inicio.radar.enlace': 'Ver el radar completo',
@@ -255,30 +202,6 @@ export default {
   'inicio.radar.lectura.medida': '{valor} {unidad}',
   'inicio.radar.lectura.cualitativa': 'Lectura cualitativa, sin medición numérica',
   'inicio.radar.lectura.cualitativaFuente': 'Lectura cualitativa, sin medición numérica · {fuente}',
-
-  // ── Inicio · cobertura destacada ──
-  'inicio.research.etiqueta': 'Análisis',
-  'inicio.research.titulo': 'Cobertura destacada',
-  'inicio.research.enlace': 'Todas las compañías',
-  'inicio.research.vacio.titulo': 'Sin cobertura publicada',
-  'inicio.research.vacio.motivo': 'La cobertura se construye a partir de los informes publicados.',
-  'inicio.research.enCartera': 'En cartera',
-  'inicio.research.sinResumen': 'Dato no disponible — ningún informe incluye resumen ejecutivo.',
-  'inicio.research.verFicha': 'Ver ficha completa',
-  // Fase D.2: cabecera de la lista de referencias bajo la tesis protagonista.
-  'inicio.research.otras': 'Otras tesis',
-  'inicio.research.dato.precio': 'Precio',
-  'inicio.research.dato.recomendacion': 'Recomendación',
-  'inicio.research.dato.objetivo': 'Precio objetivo',
-  'inicio.research.dato.recorrido': 'Recorrido al objetivo',
-
-  // ── Inicio · catalizadores ──
-  'inicio.catalizadores.etiqueta': 'Análisis · Catalizadores',
-  'inicio.catalizadores.titulo': 'Próximos catalizadores',
-  'inicio.catalizadores.enlace': 'Agenda completa',
-  'inicio.catalizadores.vacio.titulo': 'Sin eventos próximos',
-  'inicio.catalizadores.vacio.motivo': 'La agenda solo recoge eventos con fecha verificable de una fuente conectada.',
-  'inicio.catalizadores.nota': 'Prioridad HIGH: evento a 14 días o menos sobre una compañía en cartera. Resultados, guidance y eventos corporativos requieren un calendario que ningún proveedor conectado publica.',
 
   // ── Inicio · flujo de opciones ──
   'inicio.flujo.etiqueta': 'Opciones',

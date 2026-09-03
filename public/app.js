@@ -33,8 +33,8 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarMetricasHero, pintarCarteraHome, pintarRiesgoHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
-  pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
+  pintarTicker, pintarMetricasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
 
@@ -1581,12 +1581,6 @@ function olvidarDatosInicio() {
   pintadosInicio.clear();
 }
 
-const irARutaInicio = (destino) => {
-  const [seccion, consulta] = String(destino).replace('#/', '').split('?');
-  if (consulta) location.hash = `#/${seccion}?${consulta}`;
-  else irA(seccion);
-};
-
 /* Cómo se pinta cada bloque a partir de lo guardado. Los pintores viven aquí
    —y no dentro de la carga— porque el repintado por idioma usa exactamente los
    mismos: si un bloque cambiara de argumentos, cambiaría en un único sitio.
@@ -1600,16 +1594,6 @@ const PINTORES_INICIO = {
   // Fase D.12: las tres cifras del Hero — misma cartera que `cartera`, su
   // propia entrada porque el repintado por idioma recorre esta lista.
   metricasHero: () => pintarMetricasHero(datosInicio.cartera),
-  // Bloque Bento: misma cartera, otro corte —`resumenPortfolio` y, como apoyo
-  // degradado, `estadisticos`— y su propia entrada porque el repintado por
-  // idioma recorre esta lista, y sus rótulos también se traducen.
-  cartera: () => pintarCarteraHome(datosInicio.cartera, irARutaInicio),
-  // Riesgo: misma cartera, mismo estadisticos.muestra que ya usa el apoyo
-  // degradado de arriba — su propia entrada por la misma razón de siempre,
-  // el repintado por idioma recorre esta lista.
-  riesgo: () => pintarRiesgoHome(datosInicio.cartera),
-  catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
-  research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
 
 /**
@@ -1647,14 +1631,6 @@ async function cargarInicio() {
       datosInicio.cartera = par?.[1] ?? null;
     }, 'ticker'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'metricasHero'),
-    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
-    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'riesgo'),
-    alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
-    // La cobertura destacada no trae cotización ni resumen en el listado, de
-    // modo que se pide con ficha. Una sola llamada trae la cobertura entera:
-    // pedirla compañía a compañía multiplicaba los viajes sin ganar nada.
-    alLlegar(api('/api/companias?detalle=1'),
-      (d) => { datosInicio.research = d?.fichas ?? []; }, 'research'),
   ]);
 
   /* La cinta queda viva a partir de aquí. Se arranca DESPUÉS del `allSettled`

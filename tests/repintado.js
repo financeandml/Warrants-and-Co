@@ -639,110 +639,13 @@ const AREAS_OCULTAS = false;
   }
 
 
-  // ── Portada · apoyo degradado de Cartera (antes «fila de cifras») ──
-  /* El bloque lo pinta `pintarCarteraHome()` entera —fusionada con la antigua
-     `pintarCifras()`—: ni una de sus cifras ni uno de sus rótulos lleva
-     `data-i18n`, de modo que sin entrada en `PINTORES_INICIO` se quedaría en
-     el idioma de partida sin que nada más se notara. */
+  // ── Portada ──
+  /* Todo lo que había debajo de la cinta —Research, Cartera, Riesgo,
+     Catalizadores, Metodología, Por qué W&Co, Jorge Díaz— se retiró entero:
+     la composición no funcionaba. Home termina hoy justo después de la
+     cinta, y lo único que sigue pintando sin `data-i18n` —y por tanto lo
+     único que hace falta comprobar aquí— son las tres métricas del Hero. */
   await p.goto(`${B}/#/inicio`);
-  // La espera es por condición y sobre un nodo que solo existe pintado: el
-  // armazón de la portada —hero, manifiesto, pilares— ya está en el documento
-  // mucho antes de que la cartera conteste, y «la sección tiene contenido» daría
-  // por buena una fila vacía.
-  const filaPintada = () => vistaPintada(p,
-    () => document.querySelectorAll('#home-cartera-cuerpo .cartera-home__apoyo .dato').length === 4,
-    null, 'apoyo degradado de cartera en portada');
-  await filaPintada();
-
-  const celdas = () => p.$$eval('#home-cartera-cuerpo .cartera-home__apoyo .dato', (cs) => cs.map((c) => ({
-    valor: c.querySelector('.dato__valor')?.textContent.trim() ?? null,
-    etiqueta: c.querySelector('.dato__etiqueta')?.textContent.trim() ?? null,
-    nota: c.querySelector('.dato__nota')?.textContent.trim() ?? null,
-  })));
-
-  /*
-   * Regla 9 en pantalla. Las dos primeras casillas dicen hoy el mismo número, y
-   * es correcto que lo digan: la cartera nace dentro del año y ambas miden desde
-   * el mismo capital. Lo que se afirma no es la coincidencia —eso caducaría el
-   * 1 de enero— sino la EQUIVALENCIA: coinciden si y solo si la casilla del año
-   * declara que mide desde el capital. Las dos mitades salen de la propia
-   * pantalla, que es lo que ninguna de las tres veces anteriores se comprobó.
-   *
-   * Que las cifras se calculen por separado lo vigila `tests/cartera.js` (caso 7);
-   * aquí se vigila que la pantalla no las contradiga.
-   */
-  const equivalencia = (cs, desdeCapital) => {
-    const mide = desdeCapital.test(cs[0].nota ?? '');
-    const iguales = cs[0].valor === cs[1].valor;
-    return mide === iguales;
-  };
-
-  /* Antes de la Sección 2/Riesgo, ninguna de estas seis palabras aparecía
-     jamás en portada: si aparecía, era una fuga de cifra retenida. Ahora
-     `anualizada` (CAGR, dentro de Cartera) y las cinco de Riesgo son
-     contenido deliberado — se comprueban por separado más abajo, cada una
-     exigiendo su frase de retención, no solo su ausencia. */
-  const RETENIDAS_RIESGO = /sharpe|sortino|calmar|jensen|beta|correlaci[oó]n/i;
-  const FRASE_RETENCION_ES = /faltan/i;
-  const FRASE_RETENCION_EN = /short|published from/i;
-
-  await idioma('es');
-  await filaPintada();
-  seccion('\n  ── portada · apoyo degradado de cartera en castellano ──');
-  let cs = await celdas();
-  comp('rótulo del año', cs[0].etiqueta, 'Rentabilidad 2026');
-  // El año no es una cantidad: como número, `t()` lo agruparía por millares. En
-  // castellano pasaría inadvertido —«2026»—; solo el inglés lo delata.
-  comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
-  comp('rótulo del total', cs[1].etiqueta, 'Rentabilidad total');
-  /* El rótulo del índice es «nombre · símbolo», y las dos piezas las manda el
-     servidor. Se afirma la FORMA y no el nombre concreto: escribir «S&P 500»
-     aquí sería una copia más del catálogo, que es justo lo que se acaba de
-     retirar del cliente. Que el nombre sea el del benchmark elegido lo afirma
-     `tests/cartera-interfaz.js`, que es donde vive esa pregunta. */
-  comp('rótulo del índice, con nombre y símbolo',
-    cs[2].etiqueta, (v) => v && /^.+ · [A-Z]{1,6}$/.test(v));
-  comp('rótulo de la caída', cs[3].etiqueta, 'Máxima caída');
-  comp('las dos casillas coinciden si y solo si el año mide desde el capital',
-    cs, (v) => equivalencia(v, /desde el capital/i));
-  comp('ninguna cifra de riesgo se cuela en la celda de Cartera',
-    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS_RIESGO.test(v));
-  comp('el CAGR se declara retenido, nunca una cifra suelta',
-    await txt('.cagr-home__valor'), (v) => v && FRASE_RETENCION_ES.test(v));
-  comp('el pie declara el tamaño de la muestra',
-    await txt('.cifras__pie'), (v) => v && /\d+ sesiones/.test(v) && /\d+ tesis/.test(v));
-  comp('el pie lleva a la cartera',
-    await p.locator('.cifras__enlace').first().getAttribute('href'), '#/cartera');
-  comp('Riesgo pinta sus seis filas',
-    await p.locator('#home-riesgo-cuerpo .riesgo-home__fila').count(), 6);
-  comp('las seis cifras de riesgo se declaran retenidas, no huecos ni ceros',
-    await txt('#home-riesgo-cuerpo'), (v) => v && FRASE_RETENCION_ES.test(v));
-
-  await idioma('en');
-  await filaPintada();
-  seccion('\n  ── portada · fila repintada al conmutar, sin recargar ──');
-  cs = await celdas();
-  comp('rótulo del año', cs[0].etiqueta, '2026 return');
-  comp('el año no se agrupa por millares', cs[0].etiqueta, (v) => v && !/2[.,]026/.test(v));
-  comp('rótulo del total', cs[1].etiqueta, 'Total return');
-  // Los nombres de índice son nombres propios: la forma es la misma en inglés.
-  comp('rótulo del índice, con nombre y símbolo',
-    cs[2].etiqueta, (v) => v && /^.+ · [A-Z]{1,6}$/.test(v));
-  comp('rótulo de la caída', cs[3].etiqueta, 'Maximum drawdown');
-  comp('la nota del año sigue al idioma', cs[0].nota, (v) => v && /^From capital/.test(v));
-  comp('las dos casillas coinciden si y solo si el año mide desde el capital',
-    cs, (v) => equivalencia(v, /from capital/i));
-  comp('ninguna cifra de riesgo se cuela en la celda de Cartera',
-    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS_RIESGO.test(v));
-  comp('el CAGR se declara retenido, nunca una cifra suelta',
-    await txt('.cagr-home__valor'), (v) => v && FRASE_RETENCION_EN.test(v));
-  comp('el pie declara el tamaño de la muestra',
-    await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
-  comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
-  comp('Riesgo pinta sus seis filas',
-    await p.locator('#home-riesgo-cuerpo .riesgo-home__fila').count(), 6);
-  comp('las seis cifras de riesgo se declaran retenidas, no huecos ni ceros',
-    await txt('#home-riesgo-cuerpo'), (v) => v && FRASE_RETENCION_EN.test(v));
 
   /* ── Portada · la fila de cifras del HERO, al conmutar ──
      La pinta `pintarMetricasHero()` sobre `#hero-metricas` (Fase D.12) —el
@@ -752,15 +655,8 @@ const AREAS_OCULTAS = false;
      se pinta ya con el diccionario nuevo—, así que se comprueba aquí, donde
      el idioma se conmuta sin recargar.
 
-     Dos de las tres —año y total— comparten fuente exacta con el apoyo
-     degradado de abajo (`#home-cartera-cuerpo .cartera-home__apoyo`, Regla 9)
-     y se comparan contra su gemela.
-     La tercera —el índice EN LO QUE VA DE AÑO— es una cifra propia de esta
-     fase (`e.rentabilidadIndiceAnio`, `src/cartera.js`) sin gemela abajo: esa
-     fila solo lleva el índice de periodo completo (`e.rentabilidadIndice`),
-     un número distinto. Comparar las dos como si fueran la misma no sería
-     una prueba de la Regla 9, sería una prueba mal escrita que fallaría por
-     una razón que no es la suya. */
+     Las tres salen de `cartera.estadisticos` (`src/cartera.js`), la misma
+     respuesta que ya usa la cinta — ningún cálculo aparte (Regla 9). */
   const heroPintado = () => vistaPintada(p,
     () => document.querySelectorAll('#hero-metricas .dato').length === 3,
     null, 'hero');
@@ -831,16 +727,6 @@ const AREAS_OCULTAS = false;
   comp('[hero, es] el porcentaje sigue la convención del idioma',
     heroEs[0].valor, (v) => v && /,\d+\u00a0%$/.test(v));
   comp('[hero, en] el porcentaje seguía la suya', heroEn[0].valor, (v) => v && /\.\d+%$/.test(v));
-
-  // Año y total dicen lo mismo que sus gemelas de abajo, en el idioma
-  // vigente. El índice no tiene gemela —ver el porqué más arriba— y queda
-  // fuera de este recorrido a propósito, no por omisión.
-  const abajoEs = await celdas();
-  const gemela = (et) => abajoEs.find((c) => c.etiqueta === et || `${c.etiqueta} · ${c.nota}` === et);
-  for (const c of [heroEs[0], heroEs[2]]) {
-    comp(`[hero, es] «${c.etiqueta}» dice lo mismo que su gemela de abajo`,
-      gemela(c.etiqueta)?.valor ?? null, c.valor);
-  }
 
   // El hero nunca muestra CAGR ni riesgo, ni siquiera como cuenta atrás: sus
   // tres cifras son año/índice/total, punto — a diferencia de Cartera y

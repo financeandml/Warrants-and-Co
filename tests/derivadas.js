@@ -123,12 +123,12 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
 
   /* La portada está montada: es la que cachea, y sin ella no hay nada que mirar.
 
-     Los centinelas han de ser bloques que la portada SIGA pintando. Los de radar
-     y signal se fueron con el área de Mercado: su HTML sigue en el documento,
-     pero ya nadie lo llena, así que esperarlos no fallaba —se agotaba el plazo,
-     que tarda mucho más en decir lo mismo y lo dice peor—. */
-  const portadaMontada = () => esperar(() => ['#ticker-pista',
-    '#home-research-cuerpo', '#home-catalizadores-cuerpo']
+     Los centinelas han de ser bloques que la portada SIGA pintando. Todo lo
+     que había debajo de la cinta —Research, Cartera, Riesgo, Catalizadores,
+     Metodología, Por qué W&Co, Jorge Díaz— se retiró entero; hoy Home termina
+     justo después de la cinta, y lo único que sigue pintando con datos reales
+     es la propia cinta y las métricas del Hero. */
+  const portadaMontada = () => esperar(() => ['#ticker-pista', '#hero-metricas']
     .every((s) => (document.querySelector(s)?.innerText ?? '').trim().length > 0));
 
   await p.goto(`${B}/#/inicio`);
@@ -231,7 +231,7 @@ const t = (n, ok, d = '') => { R.push({ n, ok: Boolean(ok), d }); };
       carteraTrasBaja.slice(0, 90).replace(/\n/g, ' '));
 
     await p.evaluate(() => { location.hash = '#/inicio'; });
-    await sinTicker('#seccion-inicio', '#home-research-cuerpo');
+    await sinTicker('#seccion-inicio', '#hero-metricas');
     const portadaTrasBaja = await p.locator('#seccion-inicio').innerText();
     t('La baja lo retira de la portada sin recargar', !portadaTrasBaja.includes(TICKER),
       portadaTrasBaja.slice(0, 90).replace(/\n/g, ' '));

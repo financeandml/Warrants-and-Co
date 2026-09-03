@@ -1,13 +1,12 @@
 /* ============================================================================
    Home — la narrativa de Warrants & Co.
 
-   Piezas encadenadas: cinta de mercado, declaración editorial, research,
-   cartera —con su historial de rentabilidad como apoyo degradado, no como
-   bloque propio—, riesgo —seis cifras ajustadas por riesgo, retenidas hasta
-   756 sesiones y declaradas como cuenta atrás, nunca como número inventado—,
-   catalizadores y el proceso de inversión. Cada una se alimenta de un
-   endpoint real y ninguna fabrica un número: lo que no existe se declara, con
-   su motivo, y nunca se sustituye por un cero.
+   Todo lo que iba debajo de la cinta —research, cartera con retorno
+   dominante, riesgo, catalizadores, metodología, "por qué W&Co", firma y
+   footer nuevo— se retiró entero: la composición de ocho piezas no
+   funcionaba (ver commit de esta eliminación). Home termina hoy justo
+   después de la cinta. Lo que queda aquí es el hero: cinta de mercado y
+   las tres métricas destacadas.
 
    `pintarFlujoHome()` sigue aquí, exportada y sin usar: options flow se fue
    con el área de Opciones, pero su HTML sigue en el documento con `hidden`
@@ -15,11 +14,11 @@
    `PINTORES_INICIO`. `pintarPulso()`, `pintarRadarHome()` y `pintarSignalHome()`
    ya NO tienen ese respaldo: su HTML (`#home-pulse`, `#home-radar`,
    `#home-signal`, agrupados antes en `.bento-home`) se retiró del documento
-   al redirigir Home hacia "hedge fund" —pagaba espacio reservado sin ningún
-   hijo visible—. Siguen exportadas porque no se pidió borrarlas, pero hoy son
-   no-op puro: sus `$(...)` no encuentran nodo y devuelven de inmediato.
-   Reabrir cualquiera de las tres exige devolver su HTML antes de reactivar
-   su entrada en `PINTORES_INICIO`, no solo lo segundo.
+   antes de esta fase —pagaba espacio reservado sin ningún hijo visible—.
+   Siguen exportadas porque no se pidió borrarlas, pero hoy son no-op puro:
+   sus `$(...)` no encuentran nodo y devuelven de inmediato. Reabrir
+   cualquiera de las tres exige devolver su HTML antes de reactivar su
+   entrada en `PINTORES_INICIO`, no solo lo segundo.
 
    El movimiento está al servicio de la lectura, no al revés. Todo entra una vez
    al aparecer en pantalla y se queda quieto; nada parpadea de forma continua
@@ -28,30 +27,20 @@
    ========================================================================= */
 
 import {
-  $, elemento, formatearNumero, formatearFecha, localeFormato, relativo,
+  $, elemento, formatearNumero, formatearFecha, relativo,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
 import { t } from './i18n.js';
-// Mismo mecanismo que ya usa el panel de #/radar para declarar una cifra
-// retenida por suelo de muestra: no se reinventa un segundo vocabulario.
-import { notaMuestra, retenidaPorMuestra } from './home.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
    después y una constante habría quedado congelada en el de arranque. */
 const noDisponible = () => t('general.noDisponible');
 const sinDatos = () => t('general.sinDatos');
 
-
-
-const cifra = (v, dec = 2) => (Number.isFinite(v) ? formatearNumero(v, dec) : noDisponible());
 /* Cambio con signo en unidades del propio dato. Un cambio en por ciento no pasa
    por aquí: lo redacta `formatearPorcentaje()`, que sabe dónde va el espacio. */
 const conSigno = (v, dec = 2) =>
   Number.isFinite(v) ? `${v > 0 ? '+' : v < 0 ? '−' : ''}${formatearNumero(Math.abs(v), dec)}` : noDisponible();
-
-/** Cifra con su divisa. Sin divisa no hay dos piezas que ordenar: va sola. */
-const importe = (v, divisa) =>
-  divisa ? t('general.importeDivisa', { importe: cifra(v), divisa }) : cifra(v);
 
 /**
  * Rótulo del índice de referencia: su nombre y el ETF con el que se mide.
@@ -506,11 +495,10 @@ function datoHero(etiqueta, destino, serie) {
 
 /**
  * Fase D.12: las tres cifras de rendimiento del fondo, en el hueco vacío del
- * Hero. Misma fuente que el apoyo de `pintarCarteraHome()` —`cartera.estadisticos`—, nunca un
- * cálculo aparte (Regla 9): si el Hero calculase su propio YTD, esta cifra y
- * la de `#home-cartera` podrían desincronizarse sin que se viera en pantalla.
- * `dato()` es el mismo componente de "cifra con filete" que ya usan
- * `research-panel__datos` y `cartera-home__detalle` — ninguna caja nueva.
+ * Hero. Salen de `cartera.estadisticos`, la misma respuesta que ya usan la
+ * cinta y `#/cartera` — no se calcula nada aparte (Regla 9).
+ * `dato()` es el mismo componente de "cifra con filete" que usa la ficha
+ * de compañía — ninguna caja nueva.
  */
 export function pintarMetricasHero(cartera) {
   const raiz = $('#hero-metricas');
@@ -534,231 +522,6 @@ export function pintarMetricasHero(cartera) {
   ));
 
   raiz.hidden = false;
-}
-
-// ═══════════════════════════ 3b · CARTERA (bento) ══════════════════════════
-
-/**
- * Bloque Bento de portada para la cartera.
- *
- * Sale de `resumenPortfolio` y `estadisticos`, dentro de la misma respuesta de
- * `/api/mercado/cartera` que ya alimenta la cinta y el hero — no se pide nada
- * aparte (Regla 9). `resumenPortfolio.retornoPct` es la única cifra que manda
- * en la celda: el desglose realizado/no realizado y el ROIC son de la vista
- * analítica en `#/cartera`; aquí, junto al titular, dirían más de lo que un
- * bloque de portada tiene que decir.
- *
- * Sin ROIC: decisión explícita. Esa cifra solo se lee bien junto al capital
- * desplegado que la explica, y ese desglose vive en la cabecera de `#/cartera`.
- *
- * Debajo del retorno, `estadisticos` aporta año/total/índice/caída como apoyo
- * degradado —filete lateral, dato pequeño, el mismo tratamiento que ya usa
- * `.research-panel__datos`—, nunca como una segunda cifra grande: existían
- * antes como bloque propio (`pintarCifras()`, retirada) con su propia caja de
- * mono a 1,2rem, compitiendo por atención con el retorno de aquí abajo — tres
- * tratamientos tipográficos para el mismo hecho en una sola pantalla, entre
- * ellos y el contador del Hero. Fusionarlas aquí no es solo composición: es
- * declarar una sola autoridad tipográfica por cifra.
- */
-/**
- * Fase D.2: de "una cifra y dos líneas de apoyo" a pieza de evidencia —
- * performance arriba, posiciones principales debajo. `posiciones` ya viaja en
- * la misma respuesta que `resumenPortfolio` (`calcularCartera()`, ordenada
- * por `pesoVigente` descendente): no es un dato nuevo, es uno que la Home no
- * enseñaba todavía. Se listan como fila editorial —ticker, peso vigente,
- * contribución—, nunca como tarjeta.
- */
-export function pintarCarteraHome(cartera, alNavegar) {
-  const raiz = $('#home-cartera-cuerpo');
-  if (!raiz) return;
-  raiz.textContent = '';
-
-  const r = cartera?.resumenPortfolio;
-  if (!r || r.retornoPct === null || r.retornoPct === undefined) {
-    raiz.appendChild(bloqueSinDatos(t('inicio.cartera.vacio.titulo'),
-      cartera?.mensaje ?? t('inicio.cartera.vacio.motivo')));
-    return;
-  }
-
-  const bloque = elemento('div', 'cartera-home');
-
-  const principal = elemento('div');
-  principal.appendChild(elemento('strong',
-    `cartera-home__valor ${claseDireccion(r.retornoPct)}`, formatearPorcentaje(r.retornoPct)));
-  bloque.appendChild(principal);
-
-  // ── Apoyo degradado: las cuatro cifras que antes vivían en su propio
-  // bloque (`pintarCifras()`, retirada) — mismo filete lateral que ya usa
-  // `.research-panel__datos`, nunca la caja con borde de `.cinta-metricas`.
-  // El retorno de arriba es la única cifra que manda; esto es su contexto.
-  const e = cartera?.estadisticos;
-  if (e) {
-    const apoyo = elemento('div', 'cartera-home__apoyo');
-    const casillas = [
-      {
-        // El año viaja como texto: `t()` formatea los números con el locale, y
-        // un año no es una cantidad. Como número salía «Rentabilidad 2026» en
-        // español —que no agrupa cuatro dígitos— y «2,026 return» en inglés.
-        etiqueta: t('portada.cifras.anio', { anio: String(e.anioEnCurso) }),
-        valor: formatearPorcentaje(e.rentabilidadAnio),
-        lectura: e.rentabilidadAnio,
-        nota: t(e.anioDesdeCapital ? 'portada.cifras.anio.desdeCapital' : 'portada.cifras.anio.desdeCierre',
-          { fecha: formatearFecha(e.anioDesde) }),
-      },
-      {
-        etiqueta: t('portada.cifras.total'),
-        valor: formatearPorcentaje(e.rentabilidadTotal),
-        lectura: e.rentabilidadTotal,
-        nota: t('portada.cifras.total.nota'),
-      },
-      {
-        etiqueta: rotuloIndice(cartera),
-        valor: formatearPorcentaje(e.rentabilidadIndice),
-        lectura: e.rentabilidadIndice,
-        nota: t('portada.cifras.indice.nota'),
-      },
-      {
-        etiqueta: t('portada.cifras.caida'),
-        valor: formatearPorcentaje(e.maximaCaida),
-        lectura: e.maximaCaida,
-        nota: t('portada.cifras.caida.nota'),
-      },
-    ];
-    for (const [i, c] of casillas.entries()) {
-      const dato = elemento('div', 'dato');
-      dato.appendChild(elemento('span', 'dato__etiqueta', c.etiqueta));
-      dato.appendChild(elemento('strong', `dato__valor ${claseDireccion(c.lectura)}`, c.valor));
-      dato.appendChild(elemento('span', 'dato__nota', c.nota));
-      apoyo.appendChild(revelar(dato, i * 80));
-    }
-    bloque.appendChild(apoyo);
-
-    /* ── CAGR: suelo propio (252 sesiones, un año), distinto del de Riesgo
-     * (756, tres años) — nunca la misma cuenta atrás para las dos cosas,
-     * aunque hoy con ~150 sesiones las dos estén retenidas a la vez. Mismo
-     * mecanismo que #/radar: retenidaPorMuestra()/notaMuestra(). */
-    const cagrRetenida = retenidaPorMuestra(e.muestra, 'rentabilidadAnualizada');
-    const cagr = elemento('div', 'cagr-home');
-    const cagrFila = elemento('div', 'cagr-home__fila');
-    cagrFila.appendChild(elemento('span', 'cagr-home__etiqueta', t('cartera.metrica.rentabilidadAnualizada')));
-    cagrFila.appendChild(elemento('span',
-      `cagr-home__valor ${cagrRetenida ? '' : claseDireccion(e.rentabilidadAnualizada)}`,
-      cagrRetenida ? notaMuestra(cagrRetenida) : formatearPorcentaje(e.rentabilidadAnualizada)));
-    cagr.appendChild(cagrFila);
-    bloque.appendChild(cagr);
-
-    // ── El pie: de qué muestra hablan las cuatro cifras, y dónde se desglosa ──
-    const vivas = cartera.posiciones?.length ?? 0;
-    const tesis = vivas + (cartera.cerradas?.length ?? 0);
-    const pie = elemento('p', 'cifras__pie');
-    pie.appendChild(elemento('span', '', t('portada.cifras.pie', {
-      desde: formatearFecha(e.inicio),
-      hasta: formatearFecha(e.fin),
-      sesiones: t('portada.cifras.pie.sesiones', { n: e.sesiones }),
-      tesis: t('portada.cifras.pie.tesis', { n: tesis }),
-      vivas: t('portada.cifras.pie.vivas', { n: vivas }),
-    })));
-
-    const enlace = document.createElement('a');
-    enlace.className = 'cifras__enlace';
-    enlace.href = '#/cartera';
-    enlace.dataset.ruta = '';
-    enlace.appendChild(elemento('span', '', t('portada.cifras.pie.enlace')));
-    enlace.appendChild(elemento('span', 'cifras__flecha', '→'));
-    pie.appendChild(enlace);
-
-    bloque.appendChild(revelar(pie));
-  }
-
-  const detalle = elemento('div', 'cartera-home__detalle');
-  const capital = document.createElement('span');
-  capital.appendChild(document.createTextNode(`${t('inicio.cartera.capital')} `));
-  capital.appendChild(elemento('strong', '', porcentaje(r.capitalDesplegadoPct)));
-  detalle.appendChild(capital);
-
-  detalle.appendChild(elemento('span', '', [
-    t('inicio.cartera.posiciones.abiertas', { n: r.posicionesAbiertas }),
-    t('inicio.cartera.posiciones.cerradas', { n: r.posicionesCerradas }),
-  ].join(' · ')));
-
-  bloque.appendChild(detalle);
-  raiz.appendChild(bloque);
-
-  const principales = (cartera?.posiciones ?? []).slice(0, 4);
-  if (principales.length) {
-    const lista = elemento('div', 'cartera-home__posiciones');
-    lista.appendChild(elemento('p', 'cartera-home__posiciones-titulo', t('inicio.cartera.posiciones.titulo')));
-    const filas = elemento('div', 'cartera-home__filas');
-    for (const p of principales) {
-      // Fase D.4: la fila deja de ser un `div` inerte y pasa a ser el mismo
-      // acceso a la ficha que ya usan las filas de "Otras tesis" — la misma
-      // interacción contada una vez, no una decoración de hover sin destino.
-      const fila = elemento('button', 'cartera-home__fila');
-      fila.type = 'button';
-      fila.appendChild(elemento('span', 'cartera-home__ticker', p.ticker));
-      fila.appendChild(elemento('span', 'cartera-home__peso',
-        Number.isFinite(p.pesoVigente) ? porcentaje(p.pesoVigente) : noDisponible()));
-      fila.appendChild(elemento('span', `cartera-home__contribucion ${claseDireccion(p.contribucionPct)}`,
-        Number.isFinite(p.contribucionPct) ? formatearPorcentaje(p.contribucionPct) : noDisponible()));
-      if (p.ticker && alNavegar) {
-        fila.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(p.ticker)}`));
-      }
-      filas.appendChild(fila);
-    }
-    lista.appendChild(filas);
-    raiz.appendChild(lista);
-  }
-}
-
-// ═══════════════════════════ 3c · RIESGO (bento) ═══════════════════════════
-
-/**
- * Seis cifras ajustadas por riesgo, dirección "hedge fund / fondo de
- * inversión": Sharpe, Sortino, Calmar, alfa de Jensen, beta y correlación.
- *
- * Las seis comparten el mismo suelo de muestra —756 sesiones, tres años,
- * `SUELO_POR_CIFRA` en `src/cartera.js`— y con ~150 sesiones hoy las seis
- * están retenidas: cada fila publica un número real (`cartera.estadisticos`)
- * o, si el motor la retiene, la cuenta atrás exacta que ya usa `#/radar`
- * (`retenidaPorMuestra()`/`notaMuestra()`, `home.js`) — nunca un guion vacío
- * ni una cifra a medias. Bare number, sin barra de progreso: el suelo de
- * muestra no es una promesa de "ya casi", es una condición estadística que
- * se cumple o no se cumple.
- */
-export function pintarRiesgoHome(cartera) {
-  const raiz = $('#home-riesgo-cuerpo');
-  if (!raiz) return;
-  raiz.textContent = '';
-
-  const e = cartera?.estadisticos;
-  if (!e) {
-    raiz.appendChild(bloqueSinDatos(t('inicio.riesgo.vacio.titulo'),
-      cartera?.mensaje ?? t('inicio.riesgo.vacio.motivo')));
-    return;
-  }
-
-  // [clave en SUELO_POR_CIFRA, sufijo de la etiqueta i18n, valor, formateador]
-  const metricas = [
-    ['ratioSharpe', 'sharpe', e.ratioSharpe, (v) => formatearNumero(v, 2)],
-    ['ratioSortino', 'sortino', e.ratioSortino, (v) => formatearNumero(v, 2)],
-    ['ratioCalmar', 'calmar', e.ratioCalmar, (v) => formatearNumero(v, 2)],
-    ['alfaJensen', 'alfa', e.alfaJensen, (v) => formatearPorcentaje(v)],
-    ['beta', 'beta', e.beta, (v) => formatearNumero(v, 2)],
-    ['correlacionIndice', 'correlacion', e.correlacionIndice, (v) => formatearNumero(v, 2)],
-  ];
-
-  const lista = elemento('div', 'riesgo-home__lista');
-  for (const [i, [claveSuelo, etiqueta, valor, formatear]] of metricas.entries()) {
-    const retenida = retenidaPorMuestra(e.muestra, claveSuelo);
-    const fila = elemento('div', 'riesgo-home__fila');
-    fila.appendChild(elemento('span', 'riesgo-home__nombre', t(`cartera.metrica.${etiqueta}`)));
-    fila.appendChild(elemento('span', 'riesgo-home__cuenta',
-      retenida ? notaMuestra(retenida) : (Number.isFinite(valor) ? formatear(valor) : noDisponible())));
-    lista.appendChild(revelar(fila, i * 50));
-  }
-  raiz.appendChild(lista);
-
-  raiz.appendChild(elemento('p', 'riesgo-home__pie', t('inicio.riesgo.pie')));
 }
 
 // ════════════════════════════ 4 · MARKET PULSE ════════════════════════════
@@ -1123,99 +886,8 @@ function filaLectura(l, maximo, familia, alNavegar) {
   return fila;
 }
 
-// ═══════════════════════════════ 6 · RESEARCH ═══════════════════════════════
-
 /**
- * Fase D.2: de cuatro pestañas equivalentes girando en carrusel a UNA tesis
- * protagonista —la de informe más reciente, primera de la lista que ya trae
- * `companias` ordenada así— con las demás como referencias silenciosas
- * debajo. Nada gira solo: el cambio de protagonista es un clic, no un
- * temporizador. No se acompaña de fotografía: el proyecto no dispone de
- * imágenes de las compañías cubiertas, y una imagen de banco genérica no
- * aportaría nada.
- */
-export function pintarResearchHome(companias, alNavegar) {
-  const raiz = $('#home-research-cuerpo');
-  if (!raiz) return;
-  raiz.textContent = '';
-
-  const lista = (companias ?? []).filter((c) => c.ticker);
-  if (!lista.length) {
-    raiz.appendChild(bloqueSinDatos(t('inicio.research.vacio.titulo'),
-      t('inicio.research.vacio.motivo')));
-    return;
-  }
-
-  const panel = elemento('div', 'research-panel');
-  raiz.appendChild(panel);
-  pintarTesisProtagonista(panel, lista[0], alNavegar);
-
-  const resto = lista.slice(1, 4);
-  if (resto.length) {
-    const otras = elemento('div', 'research-otras');
-    otras.appendChild(elemento('p', 'research-otras__titulo', t('inicio.research.otras')));
-    for (const c of resto) {
-      const fila = elemento('button', 'research-otras__fila');
-      fila.type = 'button';
-      fila.appendChild(elemento('span', 'research-otras__ticker', c.ticker));
-      fila.appendChild(elemento('span', 'research-otras__empresa', c.empresa));
-      fila.appendChild(elemento('span',
-        `research-otras__recomendacion ${claseDireccion(c.recorridoObjetivo?.porcentaje)}`,
-        c.recomendacion ?? noDisponible()));
-      fila.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(c.ticker)}`));
-      otras.appendChild(fila);
-    }
-    raiz.appendChild(otras);
-  }
-}
-
-/** Pinta la tesis protagonista dentro del panel ya insertado en el documento. */
-function pintarTesisProtagonista(panel, c, alNavegar) {
-  panel.textContent = '';
-
-  const izquierda = elemento('div', 'research-panel__tesis');
-  const identidad = elemento('div', 'research-panel__identidad');
-  identidad.appendChild(elemento('span', 'research-panel__ticker', c.ticker));
-  if (c.enCartera) {
-    identidad.appendChild(elemento('span', 'chip chip--cartera', t('inicio.research.enCartera')));
-  }
-  izquierda.appendChild(identidad);
-  izquierda.appendChild(elemento('h3', 'research-panel__empresa', c.empresa));
-  izquierda.appendChild(elemento('p', 'research-panel__sector',
-    [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible()));
-
-  const resumen = c.informes?.find((i) => i.resumen)?.resumen ?? c.resumen ?? null;
-  izquierda.appendChild(resumen
-    ? elemento('p', 'research-panel__resumen', recortar(resumen, 200))
-    : elemento('p', 'research-panel__vacio', t('inicio.research.sinResumen')));
-
-  const enlace = elemento('button', 'enlace-avance');
-  enlace.type = 'button';
-  enlace.appendChild(elemento('span', null, t('inicio.research.verFicha')));
-  enlace.appendChild(elemento('span', 'enlace-avance__flecha', '→'));
-  enlace.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(c.ticker)}`));
-  izquierda.appendChild(enlace);
-
-  const derecha = elemento('div', 'research-panel__datos');
-  // El precio es un nivel: no lleva signo ni dirección. La variación, que sí
-  // es un cambio, va debajo y es la única que se marca al alza o a la baja.
-  derecha.appendChild(dato(t('inicio.research.dato.precio'), c.cotizacion?.disponible
-    ? importe(c.cotizacion.precio, c.cotizacion.divisa) : noDisponible(),
-    c.cotizacion?.disponible ? formatearPorcentaje(c.cotizacion.variacionPct) : null,
-    null, c.cotizacion?.variacionPct));
-  derecha.appendChild(dato(t('inicio.research.dato.recomendacion'), c.recomendacion ?? noDisponible()));
-  derecha.appendChild(dato(t('inicio.research.dato.objetivo'),
-    Number.isFinite(c.precioObjetivo) ? importe(c.precioObjetivo, c.divisa) : noDisponible()));
-  derecha.appendChild(dato(t('inicio.research.dato.recorrido'),
-    c.recorridoObjetivo?.disponible ? formatearPorcentaje(c.recorridoObjetivo.porcentaje) : noDisponible(),
-    null, c.recorridoObjetivo?.porcentaje));
-
-  panel.appendChild(izquierda);
-  panel.appendChild(derecha);
-}
-
-/**
- * Un dato de la ficha.
+ * Un dato de la ficha —también usada por las métricas del Hero (`datoHero()`).
  * @param direccion           marca el propio valor al alza o a la baja; solo
  *                            para magnitudes que son un cambio, nunca un nivel.
  * @param direccionSecundaria marca la línea de apoyo.
@@ -1232,75 +904,6 @@ function dato(etiqueta, valor, secundario = null, direccion = null, direccionSec
     b.appendChild(elemento('span', `dato__secundario ${claseDireccion(d)}`, secundario));
   }
   return b;
-}
-
-const recortar = (t, n) => (t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ', n))}…`);
-
-// ═════════════════════════════ 7 · CATALIZADORES ═════════════════════════════
-
-/**
- * Fase D.2: de una cronología de 6 paradas con hilo/punto/badge a una agenda
- * de 4 líneas —fecha, compañía, tipo—. La prioridad HIGH ya no es un chip
- * propio: se apoya en `.lectura--aviso`, el mismo vocabulario de color+peso
- * que usa el resto de la plataforma para lo mismo (hallazgo de la auditoría
- * de Fase D: dos sistemas visuales para un solo concepto). Sin badge nuevo.
- *
- * Redirección "hedge fund": de 4 líneas a 3 — Catalysts baja de peso editorial
- * frente a Portfolio/Riesgo, deja de competir por rango con ellas. El
- * calendario completo sigue intacto en `#/catalizadores`; aquí solo entra lo
- * que alguien necesita ver en los primeros cinco segundos: que hay un
- * calendario y que está vigilado, no desplegarlo entero.
- */
-export function pintarCatalizadoresHome(agenda, alNavegar) {
-  const raiz = $('#home-catalizadores-cuerpo');
-  if (!raiz) return;
-  raiz.textContent = '';
-
-  const proximos = (agenda?.proximos ?? []).slice(0, 3);
-  if (!proximos.length) {
-    raiz.appendChild(bloqueSinDatos(t('inicio.catalizadores.vacio.titulo'),
-      t('inicio.catalizadores.vacio.motivo')));
-    return;
-  }
-
-  const lista = elemento('ol', 'upcoming');
-  for (const [i, e] of proximos.entries()) {
-    const fila = elemento('li', 'upcoming__fila');
-    const altaPrioridad = e.prioridad === 'HIGH';
-
-    fila.appendChild(elemento('span', 'upcoming__fecha', diaCorto(e.fecha)));
-
-    const empresa = elemento('button', `upcoming__empresa${altaPrioridad ? ' lectura--aviso' : ''}`);
-    empresa.type = 'button';
-    // Se unen los datos que hay, en vez de armar la pareja y recortarla después:
-    // aquel recorte iba con expresión regular contra el separador y se rompía en
-    // cuanto el separador cambiaba de idioma.
-    empresa.textContent = [e.ticker, e.compania].filter(Boolean)
-      .join(t('general.separadorLista'));
-    if (e.ticker) empresa.addEventListener('click', () => alNavegar(`companias?t=${encodeURIComponent(e.ticker)}`));
-    fila.appendChild(empresa);
-
-    fila.appendChild(elemento('span', 'upcoming__tipo', e.tipo));
-
-    lista.appendChild(revelar(fila, i * 90));
-  }
-  raiz.appendChild(lista);
-}
-
-/**
- * Día y mes abreviados.
- *
- * El orden lo decide el idioma —«17 AGO» en español, «AUG 17» en inglés—, de
- * modo que no hay tabla de meses que mantener ni un orden fijo que imponer. Se
- * lee en UTC: la fecha del catalizador es un día de calendario, no un instante,
- * y desplazarla a la zona del navegador la movería un día en media Europa.
- */
-function diaCorto(iso) {
-  const d = new Date(`${String(iso).slice(0, 10)}T00:00:00Z`);
-  if (Number.isNaN(d.getTime())) return noDisponible();
-  return d.toLocaleDateString(localeFormato(), {
-    day: 'numeric', month: 'short', timeZone: 'UTC',
-  }).toUpperCase();
 }
 
 // ═══════════════════════════════ 8 · OPTIONS FLOW ═══════════════════════════

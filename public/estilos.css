@@ -170,19 +170,6 @@
      principal de Cartera. CLAUDE.md § Diseño 6, excepción. */
   --tipo-indicador-principal: clamp(2.6rem, 6vw, 4.2rem);
 
-  /* Excepción documentada, mismo criterio que --tipo-indicador-principal: no
-     es un clamp() suelto sin nombre. Research, Cartera y Catalizadores —las
-     tres cabeceras de `.rejilla-bento`— llevan tamaños distintos A PROPÓSITO
-     para que la escala del titular cuente la misma jerarquía que el espacio
-     ocupado (Research > Cartera > Catalizadores, Fase D.11). Cartera usa
-     directamente --tipo-6 y Catalizadores --tipo-5; solo Research necesita
-     un paso más grande que --tipo-6 sin llegar a --tipo-7 —que es el display
-     del hero, no una cabecera de sección—, y ningún --tipo-N intermedio
-     existe para ese hueco. Igualar Research a --tipo-6 borraría la señal de
-     jerarquía que este token existe para conservar. CLAUDE.md § Diseño 6,
-     excepción. */
-  --tipo-titular-research: clamp(1.9rem, 2.6vw, 2.6rem);
-
   /* ── Escala de densidad (rediseño 2) ──
      Dos niveles, cuatro números cada uno. Se aplica con
      `data-densidad="compacta"` o `"comoda"` en la raíz de la sección o
@@ -459,38 +446,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   max-width: var(--ancho-maximo);
   margin-inline: auto;
   padding-inline: 28px;
-}
-
-/* Fase D.3: a 1920px y más, el cuerpo de Portada —Cartera, Cobertura
-   destacada, Próximos catalizadores— se quedaba en la columna de 1240px de
-   siempre, con el resto de la pantalla vacío a los dos lados: "contenido de
-   1440px en medio de una pantalla enorme", justo lo que esta fase pidió no
-   dejar así. Se ensancha SOLO la columna de Portada —el resto de la
-   plataforma sigue midiendo 1240px, que es la anchura editorial que ya
-   tienen validada Companies/Catalizadores/Repositorio— para que la
-   composición aproveche el ancho real sin tocar ningún otro contenedor.
-
-   Fase D.8: `--ancho-portada` sustituye al `1600px` que había aquí suelto,
-   para que el hero y el resto de la portada lean la MISMA cifra — antes eran
-   dos números iguales escritos en dos sitios, y un 1600 que cambiara aquí sin
-   cambiar allí habría desalineado el hero del resto de la portada sin que
-   ninguna prueba lo dijera.
-
-   Fase D.9: el hero dejó de calcular su propio margen izquierdo aparte —ya
-   no era una franja con inset a mano, `.manifiesto__enunciado` llevaba la
-   clase `.contenedor` directamente—, y entró en esta misma lista en vez de
-   llevar su propia regla. Fase D.13 retira esa fila: el hero es la foto a
-   sangre completo, sin `.contenedor` que anchar, así que el selector sale
-   de esta lista con ella. */
-#seccion-inicio { --ancho-portada: var(--ancho-maximo); }
-@media (min-width: 1920px) {
-  #seccion-inicio { --ancho-portada: 1600px; }
-  #seccion-inicio #home-bento .contenedor,
-  #seccion-inicio #home-proceso .contenedor,
-  #seccion-inicio #home-porque .contenedor,
-  #seccion-inicio #home-firma .contenedor {
-    max-width: var(--ancho-portada);
-  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2084,8 +2039,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .manifiesto__acciones .boton:hover .manifiesto__flecha { transform: translateX(3px); }
 
 /* ── Métricas del Hero (Fase D.12) ──
-   El mismo componente «cifra con filete» que ya usan `.research-panel__datos`
-   y `.cartera-home__detalle» —`dato()`, en `inicio.js`—, número grande,
+   El componente «cifra con filete» —`dato()`, en `inicio.js`—, número grande,
    tabular, sin caja. */
 .manifiesto__metricas {
   position: absolute; z-index: 1;
@@ -2509,7 +2463,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .ficha-cotizacion__precio,
 .ficha-cotizacion__var,
 .grupo-agenda__fecha,
-.upcoming__fecha,
 .emergente__fecha,
 .grafico-linea__fecha,
 .mapa-oi__strike,
@@ -3902,62 +3855,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CIFRAS — historial de rentabilidad dentro de Portfolio.
-
-   Fase D.6: ya no flota suelta entre el hero y el bento — vive dentro de
-   `#home-cartera`, como el soporte del track record que declara la sección:
-   comparación con el índice y caída máxima, no solo la cifra de portada.
-
-   Rediseño de Home (post-D.11): las cuatro cifras dejaban de ser una "KPI
-   grid" (D.8) para pasar a una rejilla 2×2 con la misma cifra de mono que el
-   retorno global — dos jerarquías compitiendo por el mismo peso visual en la
-   misma columna estrecha (hallazgo de la auditoría de composición: tres
-   tratamientos tipográficos distintos para el mismo hecho —rentabilidad de
-   cartera— apilados en una sola pantalla). Pasan a apoyo degradado, el mismo
-   filete lateral que ya usa `.research-panel__datos` para su columna de
-   datos: una sola cifra manda (`.cartera-home__valor`), esta es su contexto.
-   `pintarCifras()` se retiró; `pintarCarteraHome()` construye ahora también
-   este bloque, con los mismos campos de `cartera.estadisticos` de siempre
-   (Regla 9 — ningún cálculo aparte). */
-.cartera-home__apoyo {
-  display: flex; flex-direction: column; gap: 14px;
-  margin-block-start: 20px;
-  padding-inline-start: clamp(18px, 2.2vw, 26px);
-  border-inline-start: 1px solid var(--linea);
-}
-/* Mono y --tipo-1: notablemente más pequeña que `.cartera-home__valor`
-   (clamp 2.1–2.9rem) — es apoyo, no un segundo titular. */
-.cartera-home__apoyo .dato__valor {
-  font-family: var(--mono, monospace);
-  font-size: var(--tipo-1);
-}
-/* Tercera línea del dato: desde dónde mide la cifra. La misma función que
-   cumplía `.cinta-metricas__nota` —distinguir dos casillas que publican el
-   mismo número por la misma cuenta—, aquí escopada al dato individual en vez
-   de a la celda. */
-.cartera-home__apoyo .dato__nota {
-  display: block; margin-block-start: 3px;
-  font-size: var(--tipo-0); line-height: 1.35; color: var(--tinta-mate);
-}
-
-/* El pie dice de que muestra hablan las cuatro cifras. Cuelga del bloque de
-   apoyo sin despegarse de él: un respiro corto arriba y ninguno abajo. */
-.cifras__pie {
-  margin-block-start: 16px;
-  font-size: 0.82rem; line-height: 1.5; color: var(--tinta-mate);
-  display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline;
-}
-
-.cifras__enlace {
-  display: inline-flex; align-items: baseline; gap: 7px;
-  color: var(--tinta); text-decoration: none;
-  border-block-end: 1px solid var(--linea-fuerte);
-}
-.cifras__enlace:hover { border-block-end-color: var(--tinta); }
-.cifras__flecha { display: inline-block; transition: transform var(--transicion); }
-.cifras__enlace:hover .cifras__flecha { transform: translateX(4px); }
-
-/* ═══════════════════════════════════════════════════════════════════════════
    HOME — la narrativa que sigue al hero.
 
    El movimiento es de entrada y ocurre una sola vez. Lo único que se mueve de
@@ -4164,174 +4061,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 .vacio--home { padding: 46px 34px; }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   Fase D.11 — la rejilla de portada: Research, Portfolio y Catalysts en una
-   sola composición asimétrica, no en tres bandas apiladas.
-
-   No es `.bento-home` —retirada entera, con Panorama/Radar/Signal, por pagar
-   220px de padding vacío sin ningún hijo visible—. `.rejilla-bento` no lleva
-   caja en ningún hijo: la separación es el mismo filete de 1px de siempre,
-   vertical entre columnas y horizontal entre las piezas de la columna
-   estrecha — nunca un hueco en blanco haciendo de límite. Research ocupa
-   1.7fr y las tres filas; Portfolio, Riesgo y Catalysts se apilan en 1fr.
-   Por debajo de 1024px, una sola columna en el mismo orden de lectura.
-
-   Redirección "hedge fund / fondo de inversión": Riesgo se inserta entre
-   Portfolio y Catalysts —mismo tratamiento de filete horizontal que ya usaba
-   Catalysts contra Portfolio—, y Research pasa de abarcar 2 filas a 3. */
-.bloque-bento { padding-block: clamp(64px, 8.5vh, 104px); border-block-start: 1px solid var(--linea); }
-
-.rejilla-bento {
-  display: grid;
-  grid-template-columns: 1.7fr 1fr;
-  grid-template-rows: auto auto auto;
-  column-gap: 0;
-}
-
-.rejilla-bento__research {
-  grid-column: 1; grid-row: 1 / 4;
-  padding-inline-end: clamp(32px, 4vw, 56px);
-}
-.rejilla-bento__cartera {
-  grid-column: 2; grid-row: 1;
-  padding-inline-start: clamp(32px, 4vw, 56px);
-  border-inline-start: 1px solid var(--linea);
-}
-.rejilla-bento__riesgo {
-  grid-column: 2; grid-row: 2;
-  padding-inline-start: clamp(32px, 4vw, 56px);
-  padding-block-start: clamp(32px, 4.5vh, 48px);
-  margin-block-start: clamp(32px, 4.5vh, 48px);
-  border-inline-start: 1px solid var(--linea);
-  border-block-start: 1px solid var(--linea);
-}
-.rejilla-bento__catalizadores {
-  grid-column: 2; grid-row: 3;
-  padding-inline-start: clamp(32px, 4vw, 56px);
-  padding-block-start: clamp(32px, 4.5vh, 48px);
-  margin-block-start: clamp(32px, 4.5vh, 48px);
-  border-inline-start: 1px solid var(--linea);
-  border-block-start: 1px solid var(--linea);
-}
-
-@media (max-width: 1023px) {
-  .rejilla-bento {
-    grid-template-columns: 1fr;
-    row-gap: clamp(48px, 7vh, 72px);
-  }
-  .rejilla-bento__research,
-  .rejilla-bento__cartera,
-  .rejilla-bento__riesgo,
-  .rejilla-bento__catalizadores {
-    grid-column: 1; grid-row: auto;
-    padding-inline: 0;
-    border-inline-start: none;
-  }
-  .rejilla-bento__cartera { border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
-  .rejilla-bento__riesgo,
-  .rejilla-bento__catalizadores { margin-block-start: 0; border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
-}
-
-/* Fase D.6: Cartera salió del Bento — nunca compartió su lenguaje de tarjeta,
-   y ahora vive como sección propia, igual que Research y Upcoming. */
-
-/* ══════════════════════════ CÓMO INVERTIMOS ═══════════════════════════════
-   Sección nueva, dirección "hedge fund / fondo de inversión": el proceso
-   real, en texto, antes de que nadie pida "el equipo" o "la sofisticación
-   del modelo" — ninguna de las dos existe en el sistema y esta sección no
-   las inventa. Ancho completo, sin caja con sombra: el mismo lenguaje plano
-   de `.bloque-bento`, cinco pasos separados por filete vertical, nunca por
-   icono ilustrado que sugiera más proceso del que el pipeline ejecuta hoy. */
-.como-invertimos {
-  background: var(--superficie); border-block-start: 1px solid var(--linea);
-  padding-block: clamp(56px, 8vh, 96px);
-}
-.como-invertimos__cabecera { max-width: 60ch; margin-block-end: clamp(28px, 4vh, 40px); }
-.como-invertimos__intro {
-  margin-block-start: 14px; font-size: var(--tipo-3); line-height: 1.7;
-  color: var(--tinta-secundaria);
-}
-.como-invertimos__pasos {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  border-block-start: 1px solid var(--linea);
-}
-.como-invertimos__paso {
-  padding: 22px clamp(18px, 2vw, 26px) 0 0;
-  border-inline-end: 1px solid var(--linea);
-}
-.como-invertimos__paso:last-child { border-inline-end: none; }
-.como-invertimos__numero {
-  font-family: var(--mono, monospace); font-size: var(--tipo-0);
-  color: var(--tinta-mate); letter-spacing: 0.06em;
-}
-.como-invertimos__titulo {
-  font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600;
-  margin: 8px 0; letter-spacing: -0.01em;
-}
-.como-invertimos__texto { font-size: var(--tipo-2); line-height: 1.6; color: var(--tinta-secundaria); }
-
-@media (max-width: 900px) {
-  .como-invertimos__pasos { grid-template-columns: 1fr 1fr; row-gap: 24px; }
-  .como-invertimos__paso:nth-child(2n) { border-inline-end: none; }
-}
-@media (max-width: 560px) {
-  .como-invertimos__pasos { grid-template-columns: 1fr; }
-  .como-invertimos__paso { border-inline-end: none; border-block-start: 1px solid var(--linea); padding-block-start: 20px; }
-  .como-invertimos__paso:first-child { border-block-start: none; }
-}
-
-/* ══════════════════════════ POR QUÉ WARRANTS & CO. ═══════════════════════
-   Tres puntos de posicionamiento, mismo lenguaje que "Nuestra metodología"
-   —filete vertical entre columnas, sin caja, sin sombra— con menos piezas
-   (3 en vez de 5) y dos de las tres con enlace a donde se verifica lo que
-   afirman. Fondo `--superficie-alt` en vez de blanco puro: separa esta
-   sección del bloque de texto de arriba sin otro filete horizontal más. */
-.por-que-wc {
-  background: var(--superficie-alt); border-block-start: 1px solid var(--linea);
-  padding-block: clamp(56px, 8vh, 96px);
-}
-.por-que-wc__cabecera { max-width: 60ch; margin-block-end: clamp(28px, 4vh, 40px); }
-.por-que-wc__lista {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  border-block-start: 1px solid var(--linea);
-}
-.por-que-wc__punto { padding: 22px clamp(18px, 2vw, 26px) 0 0; border-inline-end: 1px solid var(--linea); }
-.por-que-wc__punto:last-child { border-inline-end: none; }
-.por-que-wc__numero { font-family: var(--mono, monospace); font-size: var(--tipo-0); color: var(--tinta-mate); letter-spacing: 0.06em; }
-.por-que-wc__titulo { font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600; margin: 8px 0; letter-spacing: -0.01em; }
-.por-que-wc__texto { font-size: var(--tipo-2); line-height: 1.6; color: var(--tinta-secundaria); margin-block-end: 12px; }
-.por-que-wc__punto .enlace-avance { color: var(--tinta); border-block-end: 1px solid var(--linea-fuerte); padding-block-end: 2px; }
-.por-que-wc__punto .enlace-avance:hover { border-block-end-color: var(--tinta); }
-
-@media (max-width: 900px) {
-  .por-que-wc__lista { grid-template-columns: 1fr 1fr; row-gap: 24px; }
-  .por-que-wc__punto:nth-child(2n) { border-inline-end: none; }
-}
-@media (max-width: 560px) {
-  .por-que-wc__lista { grid-template-columns: 1fr; }
-  .por-que-wc__punto { border-inline-end: none; border-block-start: 1px solid var(--linea); padding-block-start: 20px; }
-  .por-que-wc__punto:first-child { border-block-start: none; }
-}
-
-/* ══════════════════════════════ JORGE DÍAZ ════════════════════════════════
-   Análisis firmado por una persona real: nombre, foto y cita, sin caja ni
-   sombra —mismo lenguaje plano del resto de Home—. La foto es redonda y
-   pequeña (96px): una firma, no un retrato editorial; el peso de la sección
-   lo lleva el texto. */
-.firma { background: var(--superficie-alt); border-block-start: 1px solid var(--linea); padding-block: clamp(56px, 8vh, 96px); }
-.firma__grid { display: grid; grid-template-columns: auto 1fr; gap: clamp(24px, 3vw, 40px); align-items: start; max-width: 74ch; }
-.firma__foto { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; border: 1px solid var(--linea); }
-.firma__nombre { font-family: var(--geo); font-size: var(--tipo-5); font-weight: 600; margin: 0 0 4px; letter-spacing: -0.01em; }
-.firma__rol { font-size: var(--tipo-1); color: var(--tinta-mate); margin: 0 0 14px; }
-.firma__cita {
-  font-size: var(--tipo-3); line-height: 1.65; color: var(--tinta-secundaria);
-  border-inline-start: 2px solid var(--linea-fuerte); padding-inline-start: 16px;
-}
-@media (max-width: 560px) {
-  .firma__grid { grid-template-columns: 1fr; }
-  .firma__foto { width: 64px; height: 64px; }
-}
-
 /* ──────────────────────────── 2 · MARKET PULSE ──────────────────────────── */
 
 .pulse { display: grid; gap: 30px; }
@@ -4371,127 +4100,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 }
 .pulse-indice__var { font-size: 0.8rem; font-variant-numeric: tabular-nums; }
 .pulse-indice__pie { font-size: 0.68rem; color: var(--tinta-mate); }
-
-/* ── 3 · CARTERA (bloque de portada) ──
-   Una cifra grande —`resumenPortfolio.retornoPct`, el mismo hecho que el
-   titular del cuadro de mando en `#/cartera`— y dos de apoyo, sin ROIC: esa
-   cifra solo tiene sentido junto al desglose de capital que trae la vista
-   analítica, y aquí la línea roja del dueño la deja fuera. */
-.cartera-home {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  gap: 18px clamp(24px, 4vw, 44px);
-}
-.cartera-home__valor {
-  font-family: var(--mono, monospace);
-  font-size: clamp(2.1rem, 5.2vw, 2.9rem); font-weight: 600;
-  letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
-}
-/* El filete repite el lenguaje de la fila de cifras del hero —cifra grande a
-   un lado, apoyo al otro, separados por línea y no por caja—: la misma
-   composición contada dos veces en la misma página es continuidad, no
-   repetición (regla 9). */
-.cartera-home__detalle {
-  display: flex; flex-direction: column; gap: 4px;
-  padding-inline-start: clamp(20px, 3.2vw, 36px);
-  border-inline-start: 1px solid var(--linea);
-  font-size: 0.82rem; color: var(--tinta-secundaria);
-}
-.cartera-home__detalle strong { color: var(--tinta); font-weight: 600; font-variant-numeric: tabular-nums; }
-
-/* ── Principales posiciones (Fase D.2) ──
-   La performance domina tipográficamente arriba; las posiciones son
-   silenciosas debajo, fila editorial con hairline, sin caja ni tarjeta —el
-   mismo criterio que ya usan Companies y Repositorio para lo mismo. */
-.cartera-home__posiciones { margin-block-start: clamp(26px, 3.5vh, 40px); }
-
-/* Fase D.4 puso aquí una rejilla de dos columnas (performance | posiciones en
-   fila) para el `.contenedor` de ancho completo que tenía entonces Portfolio.
-   Fase D.11: Portfolio deja de tener el ancho completo del `.contenedor`
-   para pasar a la columna estrecha de `.rejilla-bento` (~1fr de 2.7fr) — la
-   rejilla de dos columnas que traía D.4 (performance | posiciones en fila)
-   ya no cabe con dignidad ahí, así que se retira: performance y posiciones
-   vuelven a apilarse, que es exactamente el "resumen ultra-minimalista" que
-   pide esta fase. El padding-block de la sección lo fija ahora `.rejilla-bento`
-   como conjunto, no cada artículo por separado. */
-#home-cartera-cuerpo { display: block; }
-.cartera-home__posiciones-titulo {
-  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.13em;
-  text-transform: uppercase; color: var(--tinta-mate);
-  margin-block-end: 10px;
-}
-.cartera-home__filas { display: flex; flex-direction: column; }
-/* Fase D.4: la fila es ahora un botón — mismo acceso a la ficha que "Otras
-   tesis" — así que hereda su reset y su única microinteracción: el ticker
-   se acentúa al pasar el cursor, nada más se mueve. */
-.cartera-home__fila {
-  display: flex; align-items: baseline; gap: 16px; width: 100%;
-  padding-block: 11px;
-  border-block-end: 1px solid var(--linea-hairline);
-  font: inherit; color: inherit; background: none; border-inline: none; border-block-start: none;
-  cursor: pointer; text-align: start;
-  font-variant-numeric: tabular-nums;
-  transition: border-color var(--transicion);
-}
-.cartera-home__fila:last-child { border-block-end: none; }
-.cartera-home__fila:hover { border-block-end-color: var(--linea-fuerte); }
-.cartera-home__fila:hover .cartera-home__ticker { color: var(--acento); }
-.cartera-home__fila:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
-.cartera-home__ticker {
-  flex: 1; min-width: 0;
-  font-family: var(--mono, monospace);
-  transition: color var(--transicion);
-  font-size: 0.86rem; font-weight: 600; letter-spacing: 0.03em;
-}
-.cartera-home__peso {
-  font-family: var(--mono, monospace);
-  font-size: 0.82rem; color: var(--tinta-secundaria);
-}
-.cartera-home__contribucion {
-  font-family: var(--mono, monospace);
-  font-size: 0.82rem; font-weight: 600;
-  min-width: 5.5ch; text-align: end;
-}
-
-/* ── CAGR: suelo propio (252 sesiones, un año), distinto del de Riesgo (756,
-   tres años) — nunca el mismo contador para las dos cosas, aunque hoy las dos
-   estén retenidas a la vez. Vive dentro de la celda de Cartera, pegada al
-   apoyo degradado de la Fase de composición A. */
-.cagr-home {
-  margin-block-start: 16px; padding-block-start: 12px;
-  border-block-start: 1px solid var(--linea-hairline);
-}
-.cagr-home__fila {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
-}
-.cagr-home__etiqueta {
-  font-size: var(--tipo-0); letter-spacing: 0.09em; text-transform: uppercase; color: var(--tinta-mate);
-}
-.cagr-home__valor {
-  font-family: var(--mono, monospace); font-size: var(--tipo-2); font-weight: 600;
-  color: var(--tinta-mate); font-variant-numeric: tabular-nums; text-align: end;
-}
-
-/* ── Riesgo: seis cifras ajustadas por riesgo, bare number, sin barra de
-   progreso decorativa —el suelo de muestra no es una promesa de "ya casi",
-   es una condición estadística binaria: sostiene la cifra, o no—. Reutiliza
-   notaMuestra()/retenidaPorMuestra() de public/home.js, ya en uso en
-   #/radar: mismo texto, mismo mecanismo, ninguno inventado para portada. */
-.riesgo-home__lista { display: flex; flex-direction: column; }
-.riesgo-home__fila {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
-  padding-block: 6px; border-block-end: 1px solid var(--linea-hairline);
-  font-size: var(--tipo-1); line-height: 1.3;
-}
-.riesgo-home__fila:last-child { border-block-end: none; }
-.riesgo-home__nombre { color: var(--tinta-secundaria); }
-.riesgo-home__cuenta {
-  font-family: var(--mono, monospace); color: var(--tinta-mate);
-  font-variant-numeric: tabular-nums; white-space: nowrap; text-align: end;
-}
-.riesgo-home__pie {
-  font-size: var(--tipo-0); color: var(--tinta-mate); line-height: 1.5;
-  margin-block-start: 10px; max-width: 44ch;
-}
 
 /* ── El gráfico ── */
 .grafico-linea {
@@ -4588,183 +4196,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   font-size: 0.66rem; font-style: italic; color: var(--tinta-mate);
 }
 
-/* ────────────────────────────── 4 · RESEARCH ────────────────────────────── */
-
-.research-selector {
-  display: flex; flex-wrap: wrap; gap: 0;
-  border-block-end: 1px solid var(--linea);
-  margin-block-end: 34px;
-}
-.research-selector__pestana {
-  padding: 12px 20px;
-  font-family: var(--mono, monospace);
-  font-size: 0.76rem; font-weight: 600; letter-spacing: 0.1em;
-  color: var(--tinta-mate); background: none;
-  border: none; border-block-end: 2px solid transparent;
-  cursor: pointer; margin-block-end: -1px;
-  transition: color var(--transicion), border-color var(--transicion);
-}
-.research-selector__pestana:first-child { padding-inline-start: 0; }
-.research-selector__pestana:hover { color: var(--tinta); }
-/* Cláusula 2: la pestaña ELEGIDA es cromo —un estado de la interfaz, no un
-   dato—, así que la marca el acento. Lo que la pestaña abre debajo lleva cifras,
-   y ésas conservan su propia lectura. */
-.research-selector__pestana[aria-selected="true"] {
-  color: var(--acento); border-block-end-color: var(--acento);
-}
-.research-selector__pestana:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
-
-/* Fase D.11: Research sigue siendo el capítulo con más peso —columna ancha
-   de `.rejilla-bento`, titular mayor que Portfolio/Upcoming—, pero ya no fija
-   su propio `padding-block`: la rejilla entera respira como un conjunto (ver
-   `.bloque-bento`), no sección por sección como en D.8/D.9. */
-.rejilla-bento__research .bloque-home__titulo { font-size: var(--tipo-titular-research); }
-
-.research-panel {
-  display: grid; gap: 40px;
-  grid-template-columns: minmax(0, 1.6fr) minmax(190px, 0.85fr);
-  align-items: start;
-  transition: opacity 220ms ease;
-}
-/* La columna de Research en la rejilla (1.7fr) es más estrecha que el
-   `.contenedor` completo que tenía antes de D.11: por debajo de 1280px de
-   ventana ya no hay sitio para tesis y datos en fila sin apretar los datos
-   contra su suelo de 190px. Se apilan, y los datos pasan a fila envolvente
-   —la misma cifra-con-filete de siempre, en horizontal en vez de en columna,
-   el mismo tratamiento que ya usa `.cartera-home__apoyo` para lo mismo. */
-@media (max-width: 1279px) {
-  .rejilla-bento__research .research-panel { grid-template-columns: 1fr; gap: 26px; }
-  .rejilla-bento__research .research-panel__datos {
-    flex-direction: row; flex-wrap: wrap;
-    gap: 14px 30px;
-    padding-inline-start: 0; border-inline-start: none;
-  }
-}
-.research-panel[data-cambiando="true"] { opacity: 0; }
-
-.research-panel__identidad { display: flex; align-items: center; gap: 12px; }
-.research-panel__ticker {
-  font-family: var(--mono, monospace); font-size: 0.78rem;
-  letter-spacing: 0.14em; color: var(--tinta-mate);
-}
-.research-panel__empresa {
-  margin-block-start: 8px;
-  font-family: var(--geo);
-  font-size: var(--tipo-6); font-weight: 500; letter-spacing: -0.02em;
-}
-.research-panel__sector { margin-block-start: 6px; font-size: 0.82rem; color: var(--tinta-mate); }
-/* Fase C, segunda pasada: el resumen lleva su propio filete, como una cita al
-   margen de una nota de research impresa — separa la tesis en prosa del resto
-   del bloque de identidad sin caja ni fondo. */
-.research-panel__resumen {
-  margin-block: 22px 26px;
-  padding-inline-start: 18px;
-  border-inline-start: 2px solid var(--linea-fuerte);
-  font-size: 0.94rem; line-height: 1.75; color: var(--tinta-secundaria);
-  max-width: 60ch;
-}
-.research-panel__vacio {
-  margin-block: 20px 24px;
-  font-size: 0.86rem; font-style: italic; color: var(--tinta-mate);
-}
-
-/* Fase D.8: la caja de valoración —fondo, borde, radio— era exactamente la
-   "card cerrada" que esta fase pide evitar en la tesis protagonista. Pasa a
-   ser un filete lateral con los datos apilados detrás, la misma gramática que
-   ya usa `.cartera-home__detalle` en Portfolio para lo mismo: una cifra con
-   su rótulo, separada del resto por una línea y no por una caja. Es la
-   "gramática compartida" de esta fase, no una coincidencia. */
-.research-panel__datos {
-  display: flex; flex-direction: column; gap: 18px;
-  padding-inline-start: clamp(22px, 2.6vw, 34px);
-  border-inline-start: 1px solid var(--linea);
-}
-/* Las cifras pasan a monospace: dato financiero, no texto — escopado a este
-   panel para no tocar `.dato__valor` en el resto de la plataforma. */
-.research-panel__datos .dato__valor {
-  font-family: var(--mono, monospace);
-  font-size: 1.05rem;
-}
-.research-panel__datos .dato__etiqueta { letter-spacing: 0.09em; }
 .dato__secundario { font-size: 0.74rem; font-variant-numeric: tabular-nums; }
-
-/* ── Otras tesis (Fase D.2) ──
-   La tesis protagonista ya no gira en carrusel: las demás compañías con
-   informe publicado quedan como referencias silenciosas debajo, una fila
-   editorial por compañía —sin pestaña, sin caja—. El cambio de protagonista
-   es un clic a "Ver ficha completa" en cada fila, no un temporizador. */
-.research-otras { margin-block-start: clamp(28px, 4vh, 40px); }
-.research-otras__titulo {
-  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.13em;
-  text-transform: uppercase; color: var(--tinta-mate);
-  margin-block-end: 10px;
-}
-.research-otras__fila {
-  display: flex; align-items: baseline; gap: 16px; width: 100%;
-  padding-block: 11px;
-  border-block-end: 1px solid var(--linea-hairline);
-  font: inherit; color: inherit; background: none; border-inline: none; border-block-start: none;
-  cursor: pointer; text-align: start;
-}
-.research-otras__fila:last-child { border-block-end: none; }
-.research-otras__ticker {
-  flex-shrink: 0; width: 5ch;
-  font-family: var(--mono, monospace);
-  font-size: 0.8rem; font-weight: 600; color: var(--tinta-mate);
-}
-.research-otras__empresa { flex: 1; min-width: 0; font-size: 0.88rem; font-weight: 500; }
-.research-otras__recomendacion { flex-shrink: 0; font-size: 0.78rem; font-weight: 600; }
-.research-otras__fila:hover .research-otras__empresa { color: var(--acento); }
-.research-otras__fila:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
-
-/* ─────────────────────────── 5 · UPCOMING (catalizadores) ─────────────────────────── */
-
-/* Fase D.2: de una cronología de hilo/punto/badge a cuatro líneas — fecha,
-   compañía, tipo, separadas por hairline. La prioridad HIGH ya no lleva chip
-   propio: usa `.lectura--aviso` (ver `inicio.js`), el mismo vocabulario de
-   color+peso que el resto de la plataforma reserva para lo mismo. */
-.upcoming { list-style: none; padding-inline-start: 0; }
-
-/* Fase D.11: Upcoming ya vive en la columna estrecha de `.rejilla-bento` —no
-   necesita un `max-width` propio para no competir con Research, la propia
-   rejilla se lo da—. Sigue siendo deliberadamente el más pequeño de los
-   titulares de la columna: menos aire vertical y un titular más pequeño que
-   Research/Portfolio, la misma jerarquía de D.8 contada ahora en una columna
-   en vez de en una banda. Riesgo comparte ese mismo paso —ni protagoniza como
-   Portfolio ni es tan discreto como Upcoming, es su propio capítulo—. */
-.rejilla-bento__riesgo .bloque-home__titulo,
-.rejilla-bento__catalizadores .bloque-home__titulo { font-size: var(--tipo-5); }
-.upcoming__fila {
-  display: flex; align-items: baseline; gap: 18px;
-  padding-block: 14px;
-  border-block-end: 1px solid var(--linea-hairline);
-}
-.upcoming__fila:last-child { border-block-end: none; }
-
-.upcoming__fecha {
-  flex-shrink: 0; width: 7ch; white-space: nowrap;
-  font-family: var(--mono, monospace);
-  font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
-  color: var(--tinta-mate);
-}
-
-.upcoming__empresa {
-  flex: 1; min-width: 0;
-  padding: 0; margin: 0;
-  font-family: inherit; font-size: 0.9rem; font-weight: 600;
-  color: var(--tinta); background: none; border: none; cursor: pointer;
-  text-align: start;
-  border-block-end: 1px solid transparent;
-  transition: border-color var(--transicion);
-}
-.upcoming__empresa:hover { border-block-end-color: var(--tinta); }
-.upcoming__empresa:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
-
-.upcoming__tipo {
-  flex-shrink: 0;
-  font-size: 0.72rem; color: var(--tinta-mate);
-  white-space: nowrap;
-}
 
 /* ─────────────────────────── 6 · OPTIONS FLOW ─────────────────────────── */
 
@@ -4885,10 +4317,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 /* ──────────────────────────────── responsive ──────────────────────────── */
 
 @media (max-width: 900px) {
-  .research-panel { grid-template-columns: 1fr; gap: 30px; }
-  /* Sigue siendo caja al apilarse: solo cambia a dos columnas dentro. Ya no hay
-     que desmontarle el filete lateral porque ya no lo tiene. */
-  .research-panel__datos { grid-template-columns: repeat(2, 1fr); }
   .signal-home { grid-template-columns: 1fr; gap: 34px; }
   .flujo-vacio { grid-template-columns: 1fr; gap: 30px; }
   .flujo-vacio__contrato {
@@ -4909,12 +4337,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .grafico-linea { padding: 14px 12px 8px; }
 
   .radar-home { grid-template-columns: 1fr; gap: 26px; }
-  .research-panel__datos { grid-template-columns: 1fr; }
-
-  /* `.upcoming__fila` ya es una sola fila flex a cualquier ancho; en móvil el
-     tipo de evento se retira para no competir con el nombre de la compañía
-     en un espacio estrecho —la fecha y la compañía bastan para identificarlo—. */
-  .upcoming__tipo { display: none; }
 
   .ticker__item { padding: 13px 18px; }
 }
@@ -4926,8 +4348,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .revelado { opacity: 1 !important; transform: none !important; transition: none !important; }
   .ticker__pista { animation: none !important; }
   .radar-barra__relleno, .signal-barra__relleno { transition: none !important; }
-  .research-panel { transition: none !important; }
-  .enlace-avance__flecha, .cifras__flecha { transition: none !important; }
+  .enlace-avance__flecha { transition: none !important; }
 
   /* ── Micro-interacciones ──
      El HUNDIMIENTO SE CONSERVA, y es deliberado. Se neutralizó primero, y visto
