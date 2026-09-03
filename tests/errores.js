@@ -36,8 +36,10 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 
 const { API, VALIDACION, cuerpoError } = require('../src/errores');
+const { MOTIVOS_PETICION } = require('../src/extraccion/motivos');
 
 const ORIGEN = path.join(__dirname, '..', 'public', 'idiomas');
+const RUTAS_DIR = path.join(__dirname, '..', 'src', 'routes');
 
 const PREFIJO = 'codigo.';
 
@@ -132,6 +134,74 @@ async function cargarRegistro() {
     avisos.push(
       `${apiSinRotulo.length} códigos de API sin rótulo (E1b): ${apiSinRotulo.join(', ')}`
     );
+  }
+
+  // ── 3 · Ninguna ruta manda un código que el catálogo no reconozca, ni un
+  //       `.status` sin `.codigo` que lo acompañe ──
+  //
+  // Los dos bugs que cerró esta misma sesión —el 415 de `informes.js` sin
+  // código en absoluto, y el `COMPANIA_NO_CUBIERTA` de `companias.js` que no
+  // vivía en ningún catálogo— pasaron desapercibidos porque las comprobaciones
+  // de arriba solo recorren `Object.keys(API)`: nunca miran lo que las rutas
+  // escriben de verdad. Esta es una prueba estática sobre el texto fuente,
+  // no un análisis sintáctico —coherente con el resto de pruebas estáticas
+  // del proyecto (cláusula 8 de CLAUDE.md)—, así que solo caza los dos
+  // patrones concretos que ya fallaron una vez, no cualquier forma de error.
+  {
+    const codigosConocidos = new Set([...codigosApi, ...Object.keys(MOTIVOS_PETICION)]);
+    const ficheros = fs.readdirSync(RUTAS_DIR).filter((f) => f.endsWith('.js'));
+
+    for (const fichero of ficheros) {
+      const ruta = path.join(RUTAS_DIR, fichero);
+      const texto = fs.readFileSync(ruta, 'utf8');
+      const lineas = texto.split('\n');
+
+      // 3a · `codigo: 'X'` (propiedad de objeto) o `.codigo = 'X'` (asignación)
+      // con un código que no está ni en el catálogo de API ni en el de motivos
+      // de extracción —el otro catálogo legítimo que una ruta puede citar—.
+      const patronCodigo = /(?:\bcodigo\s*:|\.codigo\s*=)\s*['"]([A-Za-z0-9_]+)['"]/g;
+      lineas.forEach((linea, i) => {
+        for (const m of linea.matchAll(patronCodigo)) {
+          comprobaciones++;
+          const codigo = m[1];
+          if (!codigosConocidos.has(codigo)) {
+            fallos.push(
+              `[${fichero}:${i + 1}] manda codigo «${codigo}», que no está registrado ` +
+              `ni en API (errores.js) ni en MOTIVOS_PETICION (extraccion/motivos.js)`
+            );
+          }
+        }
+      });
+
+      // 3b · `<variable>.status = <número>` sin que esa misma variable reciba
+      // también `.codigo = …` cerca. Sin código, el cliente no tiene nada que
+      // traducir y cae siempre al castellano del servidor —el bug exacto del
+      // fileFilter de `informes.js`—.
+      //
+      // La búsqueda del `.codigo` se acota a una ventana de líneas alrededor,
+      // no al fichero entero: `err` es el nombre de variable más repetido de
+      // este proyecto, y mirar el fichero completo encontraría el `.codigo`
+      // de un bloque ajeno sin relación —así es como este mismo caso pasó en
+      // verde la primera vez que se probó esta prueba, antes de acotarlo—.
+      const VENTANA = 8;
+      const patronStatus = /\b(\w+)\.status\s*=\s*\d+/g;
+      lineas.forEach((linea, i) => {
+        for (const m of linea.matchAll(patronStatus)) {
+          comprobaciones++;
+          const variable = m[1];
+          const desde = Math.max(0, i - VENTANA);
+          const hasta = Math.min(lineas.length, i + VENTANA + 1);
+          const entorno = lineas.slice(desde, hasta).join('\n');
+          const tieneCodigo = new RegExp(`\\b${variable}\\.codigo\\s*=`).test(entorno);
+          if (!tieneCodigo) {
+            fallos.push(
+              `[${fichero}:${i + 1}] «${variable}.status» se fija sin que «${variable}.codigo» ` +
+              `se fije cerca (±${VENTANA} líneas): el cliente no tendría nada que traducir`
+            );
+          }
+        }
+      });
+    }
   }
 
   // ── Divergencias entre el rótulo base y el mensaje del servidor ──
