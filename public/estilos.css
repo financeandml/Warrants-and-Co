@@ -497,7 +497,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
    distancia, sin decir nada que el visitante no supiera ya. Con el `<span
    class="folio">` y el `<p class="etiqueta-superior">` fuera del HTML, el
    `position: relative` que sostenía el `position: absolute` del folio deja
-   de tener destino y se retira con ellos. */
+   de tener destino y se retira con ellos.
+
+   Con el 01 ya fuera, el 02·03·04 de `.bento-folio` quedó numerando sin
+   punto de partida —una cuenta que no cuenta nada—, así que se retira
+   también: la revisión con `taste-skill` lo señaló como el mismo patrón
+   decorativo que la cláusula del propio hero ya había juzgado y quitado.
+   El eyebrow queda solo con su texto —«Análisis», «Gestión de cartera»—,
+   sin el número ni el `·` que lo precedía. */
 
 .visualmente-oculto {
   position: absolute; width: 1px; height: 1px;
@@ -4266,15 +4273,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   border-inline-start: 1px solid var(--linea);
   border-block-start: 1px solid var(--linea);
 }
-
-/* El número de folio vive dentro del eyebrow —«02 · Análisis»—, fuera del
-   `data-i18n` para que el repintado de idioma no lo borre (ver `inicio.js`,
-   que solo toca `textContent` del nodo con `data-i18n`, no de sus hermanos). */
-.bento-folio {
-  font-family: var(--mono, monospace);
-  color: var(--tinta-mate);
-}
-.bento-folio::after { content: ' · '; }
 
 @media (max-width: 1023px) {
   .rejilla-bento {
