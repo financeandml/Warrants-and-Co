@@ -2076,10 +2076,22 @@ button, input, select, textarea { font: inherit; color: inherit; }
    el mismo bug de la cinta bajo el pliegue que ya se midió una vez en este
    hero. Por eso el suelo es `44px` fijo —el solape— más un margen propio
    que sí escala con la ventana. */
+/* Velo tras los botones (hallazgo 1 de taste-skill): blanco sobre blanco
+   —`--tinta-inversa` puro, sin fondo— se leía bien contra un tramo oscuro
+   de la foto, pero el banner es reemplazable (`public/marca/LEEME.txt`) y
+   con una foto clara como la actual el texto se funde con la nieve. El
+   degradado vive en `::before`, acotado a la franja de los botones —nunca
+   se extiende al resto de la foto ni toca las cifras de arriba—. */
 .manifiesto__acciones {
   position: absolute; z-index: 1;
   inset-inline: 0; inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px;
+}
+.manifiesto__acciones::before {
+  content: ''; position: absolute; z-index: -1;
+  inset: -72px 0 -20px 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.34), transparent);
+  pointer-events: none;
 }
 .manifiesto__acciones .boton {
   background: transparent;
