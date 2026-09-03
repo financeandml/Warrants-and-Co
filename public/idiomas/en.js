@@ -1163,6 +1163,20 @@ export default {
   'catalizadores.pie.fecha': 'Date {calidad}',
   'catalizadores.pie.vinculo': 'Link: {vinculo}',
 
+  // ── Priority reason and expiry title, composed on the client ──
+  'catalizadores.evento.titulo.vencimiento': 'Options expiry · {fecha}',
+  'catalizadores.motivo.plazo.hoy': 'Happening today',
+  'catalizadores.motivo.plazo.manana': 'Happening tomorrow',
+  'catalizadores.motivo.plazo.dias': '{dias} days away',
+  'catalizadores.motivo.sinFecha': 'The event has no known date.',
+  'catalizadores.motivo.pasado': "Event already happened: priority only applies to what's upcoming.",
+  'catalizadores.motivo.secundario': 'Secondary event for the thesis.',
+  'catalizadores.motivo.alta':
+    '{cuando}, and the company is in the portfolio: it could affect the current thesis.',
+  'catalizadores.motivo.mediaEnCartera': '{cuando}, on an open position, but outside the immediate horizon.',
+  'catalizadores.motivo.mediaSinCartera': '{cuando}, on a covered company with no open position.',
+  'catalizadores.motivo.baja': '{cuando}: outside the tracking horizon.',
+
   'catalizadores.dato.interesAbierto': 'Open interest',
   'catalizadores.dato.volumen': 'Volume',
   'catalizadores.dato.cuotaOI': 'OI share',

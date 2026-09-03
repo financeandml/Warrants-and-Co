@@ -132,3 +132,40 @@ const CLAVES_MOTIVO_COTIZACION = {
 /** Rótulo del motivo por el que no hay cotización — solo para el caso con código. */
 export const etiquetaMotivoCotizacion = rotular(CLAVES_MOTIVO_COTIZACION);
 
+/* Título y motivo de prioridad de un evento de catalizador
+   (`src/catalizadores/index.js`, `priorizar()`/`plazo()`). Compuestos aquí a
+   partir de los datos que el evento ya trae —dias, enCartera, relevante—, en
+   vez de recibir la frase entera redactada en castellano.
+
+   Las ramas y el orden en que se comprueban replican `priorizar()` al
+   detalle: un umbral que cambie en un lado y no en el otro sería un hecho
+   con dos fuentes discrepantes (regla 9), así que si alguna vez se toca uno
+   de los dos hay que tocar el otro igual.
+
+   Fuera de aquí a propósito: el título de una publicación propia —usa
+   `tipo_informe`, el vocabulario todavía sin código— y el titular de una
+   mención de prensa, que es cita textual y no se traduce. */
+function plazoEvento(dias) {
+  if (dias === 0) return t('catalizadores.motivo.plazo.hoy');
+  if (dias === 1) return t('catalizadores.motivo.plazo.manana');
+  return t('catalizadores.motivo.plazo.dias', { dias });
+}
+
+/** Título de un evento de vencimiento de opciones. */
+export const tituloVencimiento = (fecha) => t('catalizadores.evento.titulo.vencimiento', { fecha });
+
+/** Motivo de la prioridad de un evento, a partir de `{dias, enCartera, relevante}`. */
+export function motivoPrioridad({ dias, enCartera, relevante = true }) {
+  if (dias === null || dias === undefined) return t('catalizadores.motivo.sinFecha');
+  if (dias < 0) return t('catalizadores.motivo.pasado');
+  if (!relevante) return t('catalizadores.motivo.secundario');
+  const cuando = plazoEvento(dias);
+  if (dias <= 14 && enCartera) return t('catalizadores.motivo.alta', { cuando });
+  if (dias <= 45) {
+    return enCartera
+      ? t('catalizadores.motivo.mediaEnCartera', { cuando })
+      : t('catalizadores.motivo.mediaSinCartera', { cuando });
+  }
+  return t('catalizadores.motivo.baja', { cuando });
+}
+

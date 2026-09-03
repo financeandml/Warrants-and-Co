@@ -14,7 +14,13 @@ import {
 import { t } from './i18n.js';
 import {
   etiquetaTipoEvento, etiquetaPrioridad, etiquetaCalidadFecha, etiquetaVinculacion,
+  tituloVencimiento, motivoPrioridad,
 } from './vocabulario.js';
+
+// Único tipo cuyo título se compone en cliente (TIPOS.VENCIMIENTO en
+// src/catalizadores/index.js): el de una publicación propia usa
+// tipo_informe, todavía sin código, y el de prensa es cita textual.
+const tituloEvento = (e) => (e.tipo === 'OPTIONS EXPIRY' ? tituloVencimiento(e.fecha) : e.titulo);
 import { revelar, observarEntrada, sinMovimiento } from './movimiento.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -352,7 +358,7 @@ function filaEvento(e, alAbrirCompania) {
   if (e.parcial) superior.appendChild(elemento('span', 'chip chip--aviso', t('catalizadores.parcial')));
   cuerpo.appendChild(superior);
 
-  cuerpo.appendChild(elemento('h3', 'evento__titulo', e.titulo));
+  cuerpo.appendChild(elemento('h3', 'evento__titulo', tituloEvento(e)));
 
   const compania = elemento('button', 'evento__compania');
   compania.type = 'button';
@@ -367,7 +373,7 @@ function filaEvento(e, alAbrirCompania) {
   if (detalle) cuerpo.appendChild(detalle);
 
   // ── El motivo de la prioridad, siempre visible ──
-  if (e.motivo) cuerpo.appendChild(elemento('p', 'evento__motivo', e.motivo));
+  cuerpo.appendChild(elemento('p', 'evento__motivo', motivoPrioridad(e)));
 
   const pie = elemento('div', 'evento__pie');
   pie.appendChild(elemento('span', '',
@@ -560,7 +566,7 @@ export function pintarSiguiente(datos, alAbrirCompania) {
   const cuenta = elemento('strong', 'siguiente-catalizador__cuenta');
   pintarValorFundido(cuenta, 'siguiente', distancia(e.dias));
   izquierda.appendChild(cuenta);
-  izquierda.appendChild(elemento('p', 'siguiente-catalizador__titulo', e.titulo));
+  izquierda.appendChild(elemento('p', 'siguiente-catalizador__titulo', tituloEvento(e)));
   pieza.appendChild(izquierda);
 
   const derecha = elemento('div', 'siguiente-catalizador__derecha');

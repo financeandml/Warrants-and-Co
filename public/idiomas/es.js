@@ -1218,6 +1218,20 @@ export default {
   'catalizadores.pie.fecha': 'Fecha {calidad}',
   'catalizadores.pie.vinculo': 'Vínculo: {vinculo}',
 
+  // ── Motivo de prioridad y título de vencimiento, compuestos en cliente ──
+  'catalizadores.evento.titulo.vencimiento': 'Vencimiento de opciones · {fecha}',
+  'catalizadores.motivo.plazo.hoy': 'Ocurre hoy',
+  'catalizadores.motivo.plazo.manana': 'Ocurre mañana',
+  'catalizadores.motivo.plazo.dias': 'Faltan {dias} días',
+  'catalizadores.motivo.sinFecha': 'El evento no tiene fecha conocida.',
+  'catalizadores.motivo.pasado': 'Evento ya ocurrido: la prioridad solo aplica a lo próximo.',
+  'catalizadores.motivo.secundario': 'Evento secundario para la tesis.',
+  'catalizadores.motivo.alta': '{cuando} y la compañía está en cartera: puede afectar a la tesis vigente.',
+  'catalizadores.motivo.mediaEnCartera':
+    '{cuando}, sobre una posición abierta, pero fuera del horizonte inmediato.',
+  'catalizadores.motivo.mediaSinCartera': '{cuando}, sobre una compañía cubierta sin posición abierta.',
+  'catalizadores.motivo.baja': '{cuando}: fuera del horizonte de seguimiento.',
+
   'catalizadores.dato.interesAbierto': 'Interés abierto',
   'catalizadores.dato.volumen': 'Volumen',
   'catalizadores.dato.cuotaOI': 'Cuota del OI',
