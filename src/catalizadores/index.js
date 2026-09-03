@@ -76,15 +76,24 @@ function plazo(dias) {
   return `Faltan ${dias} días`;
 }
 
+/* `relevante` viaja en el resultado, no solo como parámetro interno: sin él
+   el cliente no puede distinguir esta rama (evento secundario) de la de
+   `dias > 45` — las dos salen con la misma prioridad BAJA pero un motivo
+   distinto, y antes de este campo esa distinción se perdía al cruzar al
+   cliente. Necesario para componer `motivo` en cliente (vocabulario.js). */
 function priorizar({ dias, enCartera, relevante = true }) {
   if (dias === null || dias === undefined) {
-    return { prioridad: PRIORIDAD.DESCONOCIDA, motivo: 'El evento no tiene fecha conocida.' };
+    return { prioridad: PRIORIDAD.DESCONOCIDA, motivo: 'El evento no tiene fecha conocida.', relevante };
   }
   if (dias < 0) {
-    return { prioridad: PRIORIDAD.DESCONOCIDA, motivo: 'Evento ya ocurrido: la prioridad solo aplica a lo próximo.' };
+    return {
+      prioridad: PRIORIDAD.DESCONOCIDA,
+      motivo: 'Evento ya ocurrido: la prioridad solo aplica a lo próximo.',
+      relevante,
+    };
   }
   if (!relevante) {
-    return { prioridad: PRIORIDAD.BAJA, motivo: 'Evento secundario para la tesis.' };
+    return { prioridad: PRIORIDAD.BAJA, motivo: 'Evento secundario para la tesis.', relevante };
   }
   const cuando = plazo(dias);
 
@@ -92,6 +101,7 @@ function priorizar({ dias, enCartera, relevante = true }) {
     return {
       prioridad: PRIORIDAD.ALTA,
       motivo: `${cuando} y la compañía está en cartera: puede afectar a la tesis vigente.`,
+      relevante,
     };
   }
   if (dias <= 45) {
@@ -100,9 +110,12 @@ function priorizar({ dias, enCartera, relevante = true }) {
       motivo: enCartera
         ? `${cuando}, sobre una posición abierta, pero fuera del horizonte inmediato.`
         : `${cuando}, sobre una compañía cubierta sin posición abierta.`,
+      relevante,
     };
   }
-  return { prioridad: PRIORIDAD.BAJA, motivo: `${cuando}: fuera del horizonte de seguimiento.` };
+  return {
+    prioridad: PRIORIDAD.BAJA, motivo: `${cuando}: fuera del horizonte de seguimiento.`, relevante,
+  };
 }
 
 /**
