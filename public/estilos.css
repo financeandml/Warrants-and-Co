@@ -4957,6 +4957,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .boton:not(:disabled):active,
 .tarjeta-compania:active,
 .noticia:active,
+.fila-noticia:active,
 a.senal:active, button.senal:active,
 .research:active,
 .destacada:active,
