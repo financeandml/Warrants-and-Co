@@ -287,12 +287,26 @@ están pintados —`#cuadro-mando`, `#home-research-cuerpo`, un `tbody` con fila
 
 - **Nunca con `waitForTimeout`.** Mide la carga de la máquina, no el programa.
 
-  **Deuda conocida, no olvido.** `tests/repintado.js` tiene ocho —líneas 107, 112, 185,
-  221, 369, 561, 563 y 578—, todas esperas de asentamiento tras conmutar de idioma, que
-  es justo lo que esta regla prohíbe. Siguen ahí porque sustituirlas por condiciones
-  puede destapar carreras que hoy tapan, y eso es un encargo propio, no un retoque de
-  paso. Queda escrito para que nadie las tome por precedente: **no se añaden más**, ni
-  ahí ni en ninguna batería, y quien toque una de esas ocho la convierte en condición.
+  `tests/repintado.js` no tiene ninguno: las ocho esperas de tiempo que arrastraba se
+  convirtieron a condición real, cada una sobre lo que de verdad terminaba de pintarse
+  —no todas eran de conmutar idioma, pese a lo que decía aquí antes; había también
+  esperas de navegación, de clic en control y de `selectOption`—. Confirmado con diez
+  corridas seguidas sin fallo, contra una instancia aislada. El patrón, para la próxima
+  vez que haga falta uno:
+  - **Repintado por idioma**: no espera nada. `aplicarIdioma()` (`i18n.js`) es síncrona
+    de punta a punta —`traducir()`, el evento `idioma:cambiado` y su listener en
+    `app.js`— y Playwright ya espera a que ese tick termine antes de resolver `click()`.
+  - **Carga async tras navegar**: `vistaPintada()`, ya definida en el propio fichero,
+    espera con `waitForFunction` a un nodo que solo existe con datos pintados
+    —`#cuerpo-tabla-informes tr`, `.fila-noticia`/`.vacio`—, nunca a que la sección
+    «tenga contenido» a secas.
+  - **Repintado tras una acción del usuario** (clic, `selectOption`): la propia acción
+    suele dejar una marca comprobable —el texto del botón que cambia, una clase
+    `.cargando` que se añade y se retira en el `finally` de la carga— y esa marca es la
+    condición.
+  - Funciones ya escritas para reutilizar en vez de repetir el patrón a mano:
+    `vistaPintada`, `compConDatos`, `companiasPintadas`.
+  **No se añade ninguna espera de tiempo nueva**, ni aquí ni en ninguna batería.
 - **Nunca comprobando que la sección «tenga contenido».** Su armazón —títulos, cabeceras
   de tabla— ya la hace no vacía antes de que llegue ningún dato, así que una sección sin
   pintar pasa por «no menciona el ticker» y por «está en el idioma nuevo».

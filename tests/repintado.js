@@ -116,14 +116,26 @@ const AREAS_OCULTAS = false;
   // Los nodos SVG no tienen `innerText`; se leen por `textContent`.
   const txtSvg = (sel) => p.locator(sel).first().textContent().catch(() => null);
   const opcion = (sel, n) => p.locator(`${sel} option`).nth(n).innerText().catch(() => null);
+  // aplicarIdioma() (i18n.js) es síncrona de punta a punta: traducir(), el
+  // evento `idioma:cambiado` y su listener en app.js (repintarVistas(), no
+  // async) corren enteros dentro del mismo tick que este click. Playwright
+  // ya espera a que ese tick termine antes de resolver `click()`, así que no
+  // hace falta ninguna espera después.
   const idioma = async (clave) => {
     await p.click(`.conmutador-idioma button[data-idioma="${clave}"]`);
-    await p.waitForTimeout(500);
   };
 
   await p.goto(`${B}/#/cartera`, { waitUntil: 'networkidle' });
+  // El cuadro de mando y la leyenda dependen del gráfico, pintado tras un
+  // fetch async: se espera a que la leyenda tenga cifra, no un plazo fijo.
+  const carteraPintada = () => vistaPintada(p,
+    () => {
+      const v = document.querySelector(
+        '#leyenda-grafico .leyenda__elemento:first-child .leyenda__valor');
+      return Boolean(v && v.textContent.trim());
+    }, null, 'cartera');
+  await carteraPintada();
   await idioma('es');
-  await p.waitForTimeout(800);
 
   /* ── La puerta de arriba ──
      Esta batería no comprueba que las vistas existan: comprueba que REPINTAN al
@@ -196,7 +208,8 @@ const AREAS_OCULTAS = false;
   // el de partida, que es justo lo que fallaba.
   comp('conmutador de la tabla, cerrada', await txt('#btn-tabla-serie'), 'Ver datos');
   await p.click('#btn-tabla-serie');
-  await p.waitForTimeout(200);
+  await p.waitForFunction(
+    () => document.querySelector('#btn-tabla-serie')?.textContent.trim() === 'Ocultar datos');
   comp('conmutador de la tabla, abierta', await txt('#btn-tabla-serie'), 'Ocultar datos');
 
   await idioma('en');
@@ -232,7 +245,9 @@ const AREAS_OCULTAS = false;
     await txt('#btn-tabla-serie'), 'Hide data');
 
   await p.goto(`${B}/#/repositorio`);
-  await p.waitForTimeout(1000);
+  await vistaPintada(p,
+    () => document.querySelectorAll('#cuerpo-tabla-informes tr').length > 0,
+    null, 'repositorio');
   seccion('\n  ── repositorio · en inglés ──');
   comp('titular', await txt('#seccion-repositorio h1'), 'Research catalogue');
   comp('columna de la tabla', await txt('#tabla-informes thead th:nth-child(1)'), 'Company');
@@ -380,7 +395,7 @@ const AREAS_OCULTAS = false;
   // La lista está oculta tras la ficha: se repinta igual, y al volver ha de
   // aparecer ya en el idioma nuevo sin pedir nada.
   await p.locator('#btn-volver-companias').click();
-  await p.waitForTimeout(300);
+  await companiasPintadas();
   seccion('\n  ── compañías · la lista oculta también se repintó ──');
   comp('titular', await txt('#seccion-companias h1'), 'Companies');
   comp('antetítulo', await txt('#seccion-companias .etiqueta-superior'), 'Research');
@@ -572,9 +587,11 @@ const AREAS_OCULTAS = false;
   // JavaScript; la categoría y la relevancia llegan del servidor con su rótulo
   // castellano y se traducen desde la clave, como los niveles de acceso.
   await p.goto(`${B}/#/noticias`);
-  await p.waitForTimeout(1200);
+  await vistaPintada(p,
+    () => document.querySelectorAll('#rejilla-noticias .fila-noticia, #rejilla-noticias .vacio')
+      .length > 0,
+    null, 'noticias');
   await idioma('es');
-  await p.waitForTimeout(400);
 
   seccion('\n  ── noticias · castellano de partida ──');
   comp('titular', await txt('#seccion-noticias h1'), 'Noticias de mercado');
@@ -588,8 +605,13 @@ const AREAS_OCULTAS = false;
     (v) => v && /de Investing\.com/.test(v));
 
   // La categoría elegida ha de sobrevivir al repintado, igual que en el catálogo.
+  // cargarNoticias() (app.js) marca la rejilla `.cargando` al empezar y la
+  // retira en su `finally`, tras repintar: es una señal de un solo disparo,
+  // fiable aunque el recuento filtrado coincida por casualidad con el de
+  // partida (cosa que un cambio de texto no podría distinguir).
   await p.selectOption('#filtro-noticias-categoria', { index: 1 });
-  await p.waitForTimeout(700);
+  await p.waitForFunction(
+    () => !document.querySelector('#rejilla-noticias')?.classList.contains('cargando'));
   const categoria = await p.locator('#filtro-noticias-categoria').inputValue();
 
   await idioma('en');
