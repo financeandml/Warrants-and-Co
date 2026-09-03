@@ -942,17 +942,19 @@ function poblarFormulario() {
   // Conserva la selección porque esta función ya no se ejecuta una sola vez:
   // `repintarVistas()` la repite en cada cambio de idioma, y una repoblación no
   // debe alterar el estado del formulario.
-  const conVacio = (select, valores, textoVacio) => {
+  const conVacio = (select, valores, textoVacio, rotular = (x) => x) => {
     if (!select) return;
     const previo = select.value;
     select.textContent = '';
     select.appendChild(opcion('', textoVacio));
-    for (const x of valores) select.appendChild(opcion(x, x));
+    // El valor sigue siendo el texto español —lo que de verdad se guarda—;
+    // solo la etiqueta visible se traduce (mismo criterio que poblarSelect()).
+    for (const x of valores) select.appendChild(opcion(x, rotular(x)));
     if (previo && valores.includes(previo)) select.value = previo;
   };
 
-  conVacio($('#campo-tipo'), v.tipos, t('informe.select.sinClasificar'));
-  conVacio($('#campo-recomendacion'), v.recomendaciones, t('informe.select.sinRecomendacion'));
+  conVacio($('#campo-tipo'), v.tipos, t('informe.select.sinClasificar'), etiquetaTipoInforme);
+  conVacio($('#campo-recomendacion'), v.recomendaciones, t('informe.select.sinRecomendacion'), etiquetaRecomendacion);
 
   const nivel = $('#campo-nivel');
   const nivelPrevio = nivel.value;
@@ -967,13 +969,13 @@ function poblarFormulario() {
   for (const d of v.divisas) divisa.appendChild(opcion(d, d));
   if (divisaPrevia && v.divisas.includes(divisaPrevia)) divisa.value = divisaPrevia;
 
-  const rellenar = (id, valores) => {
+  const rellenar = (id, valores, rotular = (x) => x) => {
     const dl = $(id);
     if (!dl) return;
     dl.textContent = '';
-    for (const x of valores) dl.appendChild(opcion(x, x));
+    for (const x of valores) dl.appendChild(opcion(x, rotular(x)));
   };
-  rellenar('#lista-sectores', [...new Set([...v.sectoresSugeridos, ...v.sectores])]);
+  rellenar('#lista-sectores', [...new Set([...v.sectoresSugeridos, ...v.sectores])], etiquetaSector);
   rellenar('#lista-paises', v.paises);
   rellenar('#lista-analistas', v.analistas);
 }
