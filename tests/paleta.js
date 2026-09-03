@@ -129,7 +129,14 @@ const RETIRADOS = ['--informativo', '--informativo-tenue'];
    No vale tampoco barrer todo nodo con un dígito: un rótulo con un año dentro lo
    cumple y no es una lectura. */
 const VISTAS_CONVERTIDAS = {
-  inicio: ['.portada__cifras__valor', '.dato__valor', '.cronologia__dia'],
+  /* `.portada__cifras__valor` y `.cronologia__dia` llevaban muertas desde la
+     Fase D.16 —el contador de métricas del hero las sustituyó, y desde
+     entonces ningún nodo del documento las lleva—, sin que nadie lo notara:
+     `sels.every(...)` exige las tres a la vez, así que con dos imposibles la
+     condición nunca se cumplía, y esta vista llevaba tiempo cayendo siempre
+     en SIN DATO sin que ninguna corrida reciente la hubiera vuelto a mirar.
+     `.dato__valor` es la única real —vive en `#hero-metricas`—. */
+  inicio: ['.dato__valor'],
   /* En cartera vive el anillo, y sus sectores NO están en esta lista a
      propósito: no son celdas de texto con cifra sino arcos de un SVG, y su
      régimen es la cláusula 1 —cada sector lleva su nombre escrito y la caja su

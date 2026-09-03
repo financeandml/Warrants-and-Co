@@ -64,7 +64,11 @@ const PORdesRUTA = {
 
      Quien reabra el área: añádelas a esta lista en la misma tanda. Lo mismo vale
      para el radar, el flujo y la señal. */
-  inicio: ['.portada__cifras__valor', '.dato__valor'],
+  /* `.portada__cifras__valor` llevaba muerta desde la Fase D.16 —el contador
+     de métricas del hero la sustituyó—, sin que nadie lo notara: `sels.every(...)`
+     exigía las dos a la vez, así que con una imposible esta vista llevaba
+     tiempo cayendo siempre en SIN DATO. `.dato__valor` es la única real. */
+  inicio: ['.dato__valor'],
   /* `.aportacion__valor` vive en realidad en `#seccion-radar`, no en cartera.
      Figura aquí porque esta lista es «por qué ruta pasar para encontrarla» y la
      consulta es global: se mide igual. Queda dicho para que nadie deduzca de
