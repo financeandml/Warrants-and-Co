@@ -1182,6 +1182,7 @@ export default {
   'evento.prioridad.desconocida': 'Sin determinar',
   'evento.fecha.exacta': 'exacta',
   'evento.vinculo.mencionLiteral': 'mención literal',
+  'evento.fuente.prensa': 'Prensa',
 
   // ═════════════════════════ Catalizadores ═════════════════════════════════
   'catalizadores.etiqueta': 'Análisis',

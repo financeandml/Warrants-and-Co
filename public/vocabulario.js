@@ -71,6 +71,14 @@ const CLAVES_PRIORIDAD = {
 const CLAVES_CALIDAD_FECHA = { EXACTA: 'evento.fecha.exacta' };
 const CLAVES_VINCULACION = { 'MENCIÓN LITERAL': 'evento.vinculo.mencionLiteral' };
 
+/* Fuente de un evento de catalizador (`catalizadores/index.js`). La mayoría
+   de valores son nombres propios que no se traducen —«Nasdaq», «Warrants &
+   Co.»—; solo «Prensa» es un rótulo del servidor cuando una mención no trae
+   fuente propia, y ese sí se colaba en castellano en la interfaz inglesa. Un
+   nombre propio real nunca coincide con esta clave, así que pasa intacto por
+   el mismo `rotular()` sin necesitar una tabla más grande. */
+const CLAVES_FUENTE = { PRENSA: 'evento.fuente.prensa' };
+
 const rotular = (tabla) => (codigo) => {
   const clave = tabla[String(codigo ?? '').toUpperCase()];
   return clave ? t(clave) : String(codigo ?? '');
@@ -87,6 +95,9 @@ export const etiquetaCalidadFecha = rotular(CLAVES_CALIDAD_FECHA);
 
 /** Rótulo de la clase de vínculo entre un evento y una compañía. */
 export const etiquetaVinculacion = rotular(CLAVES_VINCULACION);
+
+/** Rótulo de la fuente de un evento — nombres propios pasan intactos. */
+export const etiquetaFuente = rotular(CLAVES_FUENTE);
 
 /* Clasificación de una operación de opciones: sentido, modalidad y carácter de
    apertura o cierre. Tres vocabularios que no colisionan entre sí, de modo que

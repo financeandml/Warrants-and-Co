@@ -1132,6 +1132,7 @@ export default {
   'evento.prioridad.desconocida': 'Undetermined',
   'evento.fecha.exacta': 'exact',
   'evento.vinculo.mencionLiteral': 'literal mention',
+  'evento.fuente.prensa': 'Press',
 
   // ════════════════════════════ Catalysts ══════════════════════════════════
   'catalizadores.etiqueta': 'Research',

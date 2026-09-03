@@ -14,16 +14,18 @@ import {
 import { t } from './i18n.js';
 import {
   etiquetaTipoEvento, etiquetaPrioridad, etiquetaCalidadFecha, etiquetaVinculacion,
-  tituloVencimiento, motivoPrioridad,
+  tituloVencimiento, motivoPrioridad, etiquetaFuente,
 } from './vocabulario.js';
-
-// Único tipo cuyo título se compone en cliente (TIPOS.VENCIMIENTO en
-// src/catalizadores/index.js): el de una publicación propia usa
-// tipo_informe, todavía sin código, y el de prensa es cita textual.
-const tituloEvento = (e) => (e.tipo === 'OPTIONS EXPIRY' ? tituloVencimiento(e.fecha) : e.titulo);
 import { revelar, observarEntrada, sinMovimiento } from './movimiento.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
+
+// Único tipo cuyo título se compone en cliente (TIPOS.VENCIMIENTO en
+// src/catalizadores/index.js): el de una publicación propia usa tipo_informe
+// —con código desde el vocabulario "grande", pero su título mezcla tipo y
+// periodo en una sola frase del servidor, sin componer aquí todavía— y el de
+// prensa es cita textual, correcto no tocarlo.
+const tituloEvento = (e) => (e.tipo === 'OPTIONS EXPIRY' ? tituloVencimiento(e.fecha) : e.titulo);
 
 /* Escalonado entre filas consecutivas al entrar en pantalla: 55ms, dentro de
  * los 40-70ms pedidos. Un contador de módulo, no por grupo —para que el
@@ -377,7 +379,7 @@ function filaEvento(e, alAbrirCompania) {
 
   const pie = elemento('div', 'evento__pie');
   pie.appendChild(elemento('span', '',
-    t('catalizadores.pie.fuente', { fuente: e.fuente ?? noDisponible() })));
+    t('catalizadores.pie.fuente', { fuente: e.fuente ? etiquetaFuente(e.fuente) : noDisponible() })));
   pie.appendChild(elemento('span', '', e.fechaConocida
     ? t('catalizadores.pie.fecha', { calidad: etiquetaCalidadFecha(e.calidadFecha) })
     : noDisponible()));
