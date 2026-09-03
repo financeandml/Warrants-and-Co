@@ -677,7 +677,14 @@ const AREAS_OCULTAS = false;
     return mide === iguales;
   };
 
-  const RETENIDAS = /sharpe|sortino|calmar|jensen|anualizada|annualised|annualized/i;
+  /* Antes de la Sección 2/Riesgo, ninguna de estas seis palabras aparecía
+     jamás en portada: si aparecía, era una fuga de cifra retenida. Ahora
+     `anualizada` (CAGR, dentro de Cartera) y las cinco de Riesgo son
+     contenido deliberado — se comprueban por separado más abajo, cada una
+     exigiendo su frase de retención, no solo su ausencia. */
+  const RETENIDAS_RIESGO = /sharpe|sortino|calmar|jensen|beta|correlaci[oó]n/i;
+  const FRASE_RETENCION_ES = /faltan/i;
+  const FRASE_RETENCION_EN = /short|published from/i;
 
   await idioma('es');
   await filaPintada();
@@ -698,12 +705,18 @@ const AREAS_OCULTAS = false;
   comp('rótulo de la caída', cs[3].etiqueta, 'Máxima caída');
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',
     cs, (v) => equivalencia(v, /desde el capital/i));
-  comp('ninguna cifra retenida por suelo de muestra llega a la portada',
-    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+  comp('ninguna cifra de riesgo se cuela en la celda de Cartera',
+    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS_RIESGO.test(v));
+  comp('el CAGR se declara retenido, nunca una cifra suelta',
+    await txt('.cagr-home__valor'), (v) => v && FRASE_RETENCION_ES.test(v));
   comp('el pie declara el tamaño de la muestra',
     await txt('.cifras__pie'), (v) => v && /\d+ sesiones/.test(v) && /\d+ tesis/.test(v));
   comp('el pie lleva a la cartera',
     await p.locator('.cifras__enlace').first().getAttribute('href'), '#/cartera');
+  comp('Riesgo pinta sus seis filas',
+    await p.locator('#home-riesgo-cuerpo .riesgo-home__fila').count(), 6);
+  comp('las seis cifras de riesgo se declaran retenidas, no huecos ni ceros',
+    await txt('#home-riesgo-cuerpo'), (v) => v && FRASE_RETENCION_ES.test(v));
 
   await idioma('en');
   await filaPintada();
@@ -719,11 +732,17 @@ const AREAS_OCULTAS = false;
   comp('la nota del año sigue al idioma', cs[0].nota, (v) => v && /^From capital/.test(v));
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',
     cs, (v) => equivalencia(v, /from capital/i));
-  comp('ninguna cifra retenida por suelo de muestra llega a la portada',
-    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+  comp('ninguna cifra de riesgo se cuela en la celda de Cartera',
+    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS_RIESGO.test(v));
+  comp('el CAGR se declara retenido, nunca una cifra suelta',
+    await txt('.cagr-home__valor'), (v) => v && FRASE_RETENCION_EN.test(v));
   comp('el pie declara el tamaño de la muestra',
     await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
   comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
+  comp('Riesgo pinta sus seis filas',
+    await p.locator('#home-riesgo-cuerpo .riesgo-home__fila').count(), 6);
+  comp('las seis cifras de riesgo se declaran retenidas, no huecos ni ceros',
+    await txt('#home-riesgo-cuerpo'), (v) => v && FRASE_RETENCION_EN.test(v));
 
   /* ── Portada · la fila de cifras del HERO, al conmutar ──
      La pinta `pintarMetricasHero()` sobre `#hero-metricas` (Fase D.12) —el
@@ -823,8 +842,11 @@ const AREAS_OCULTAS = false;
       gemela(c.etiqueta)?.valor ?? null, c.valor);
   }
 
+  // El hero nunca muestra CAGR ni riesgo, ni siquiera como cuenta atrás: sus
+  // tres cifras son año/índice/total, punto — a diferencia de Cartera y
+  // Riesgo, aquí la lista completa sigue prohibida sin excepción.
   comp('ninguna cifra retenida por suelo de muestra llega al hero',
-    (await txt('#hero-metricas')) ?? '', (v) => !RETENIDAS.test(v));
+    (await txt('#hero-metricas')) ?? '', (v) => !/sharpe|sortino|calmar|jensen|beta|correlaci[oó]n|anualizad|annualised|annualized/i.test(v));
   }
   }
 

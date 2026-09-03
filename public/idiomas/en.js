@@ -83,7 +83,7 @@ export default {
   'pie.lema': 'Internal research and investment platform.',
   'pie.linkedin': 'Warrants & Co. profile on LinkedIn',
   'pie.nav.etiqueta': 'Warrants & Co. sections',
-  'pie.aviso': 'The information on this platform is provided for informational purposes only and does not constitute investment advice or an offer to buy or sell financial instruments. Past performance does not guarantee future returns. Quotes are supplied by market data providers on a best-effort, real-time basis and may be delayed.',
+  'pie.aviso': 'This is research, not investment advice. Theses reflect the judgment of whoever signs them. The portfolio is calculated automatically from what’s published, session by session, with no manual intervention on the outcome.',
 
   // ── Formatting pieces ──
   // They only join data, but they live here all the same: the order and the
@@ -192,6 +192,43 @@ export default {
   'inicio.cartera.posiciones.titulo': 'Top positions',
   'inicio.cartera.vacio.titulo': 'Portfolio not yet constituted',
   'inicio.cartera.vacio.motivo': 'The portfolio is built from published theses with an assigned ticker. Without them there is no return to publish.',
+
+  // ── Home · Risk (bento) ──
+  'inicio.riesgo.etiqueta': 'Portfolio management',
+  'inicio.riesgo.titulo': 'Risk',
+  'inicio.riesgo.enlace': 'View full statistics',
+  'inicio.riesgo.vacio.titulo': 'No risk figures',
+  'inicio.riesgo.vacio.motivo': 'Risk metrics are calculated from the same portfolio; with no portfolio constituted there is nothing to retain or publish.',
+  // Plain language, written for someone who has never heard of a sample
+  // floor: no "floor", no statistical jargon — just why the wait.
+  'inicio.riesgo.pie': 'These six figures need three years of history to be reliable — with less, the margin of error would make them nearly meaningless. Each one publishes the moment the portfolio reaches that minimum, never sooner and never half-measured.',
+
+  // ── Home · How we invest ──
+  'inicio.proceso.etiqueta': 'Methodology',
+  'inicio.proceso.titulo': 'Our methodology',
+  'inicio.proceso.intro': '"High conviction" here doesn’t mean what it means at a fund: there’s no outside capital to defend, no investment committee to convince. It means every thesis passes the same discipline before publication — verifiable, consistent, and with no fee on the outcome.',
+  'inicio.proceso.paso1.titulo': 'Coverage selection',
+  'inicio.proceso.paso1.texto': 'We choose which companies to cover, then commission or write primary research on each.',
+  'inicio.proceso.paso2.titulo': 'Primary research',
+  'inicio.proceso.paso2.texto': 'Every thesis is grounded in a source document. Figures are extracted with a page reference; anything ambiguous is flagged, never guessed.',
+  'inicio.proceso.paso3.titulo': 'Publication',
+  'inicio.proceso.paso3.texto': 'The thesis, recommendation, target price and stated risks are published as a report — before any position is opened.',
+  'inicio.proceso.paso4.titulo': 'Position & tracking',
+  'inicio.proceso.paso4.texto': 'Where a thesis is acted on, the position enters the public portfolio and is tracked against its benchmark from day one — gains and losses alike.',
+  'inicio.proceso.paso5.titulo': 'Disclosure',
+  'inicio.proceso.paso5.texto': 'Performance and risk metrics are published once they are statistically meaningful — never earlier, never estimated.',
+
+  // ── Home · Why Warrants & Co. ──
+  'inicio.porque.etiqueta': 'Position',
+  'inicio.porque.titulo': 'Why Warrants & Co.',
+  'inicio.porque.p1.titulo': 'Verifiable transparency',
+  'inicio.porque.p1.texto': 'Every thesis is published with a price and a date. Nothing retroactive, nothing that can be rewritten after the market proves it right or wrong.',
+  'inicio.porque.p1.enlace': 'View the repository',
+  'inicio.porque.p2.titulo': 'Consistent methodology',
+  'inicio.porque.p2.texto': 'The same extraction, verification and publication discipline for every company covered — no exceptions for whichever thesis is most convenient.',
+  'inicio.porque.p3.titulo': 'A calculated portfolio, not a declared one',
+  'inicio.porque.p3.texto': 'No one writes the performance figure: it comes from an engine that recalculates every position against its real market price, session by session.',
+  'inicio.porque.p3.enlace': 'View the portfolio',
 
   // ── Home · W&C Radar ──
   'inicio.radar.etiqueta': 'Market intelligence',

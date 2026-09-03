@@ -485,8 +485,8 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #seccion-inicio { --ancho-portada: var(--ancho-maximo); }
 @media (min-width: 1920px) {
   #seccion-inicio { --ancho-portada: 1600px; }
-  #seccion-inicio .bento-home .contenedor,
-  #seccion-inicio #home-bento .contenedor {
+  #seccion-inicio #home-bento .contenedor,
+  #seccion-inicio #home-proceso .contenedor {
     max-width: var(--ancho-portada);
   }
 }
@@ -4166,25 +4166,28 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    Fase D.11 — la rejilla de portada: Research, Portfolio y Catalysts en una
    sola composición asimétrica, no en tres bandas apiladas.
 
-   No es `.bento-home` (la caja de abajo, para Panorama/Radar/Signal, que sí
-   lleva borde+fondo+radio: otro lenguaje, para paneles que hoy están
-   `hidden`). `.rejilla-bento` no lleva caja en ningún hijo: la separación es
-   el mismo filete de 1px de siempre, vertical entre columnas y horizontal
-   entre Portfolio y Catalysts en la columna estrecha — nunca un hueco en
-   blanco haciendo de límite. Research ocupa 1.7fr y las dos filas; Portfolio
-   y Catalysts se apilan en 1fr. Por debajo de 1024px, una sola columna en el
-   mismo orden de lectura (Research → Portfolio → Catalysts). */
+   No es `.bento-home` —retirada entera, con Panorama/Radar/Signal, por pagar
+   220px de padding vacío sin ningún hijo visible—. `.rejilla-bento` no lleva
+   caja en ningún hijo: la separación es el mismo filete de 1px de siempre,
+   vertical entre columnas y horizontal entre las piezas de la columna
+   estrecha — nunca un hueco en blanco haciendo de límite. Research ocupa
+   1.7fr y las tres filas; Portfolio, Riesgo y Catalysts se apilan en 1fr.
+   Por debajo de 1024px, una sola columna en el mismo orden de lectura.
+
+   Redirección "hedge fund / fondo de inversión": Riesgo se inserta entre
+   Portfolio y Catalysts —mismo tratamiento de filete horizontal que ya usaba
+   Catalysts contra Portfolio—, y Research pasa de abarcar 2 filas a 3. */
 .bloque-bento { padding-block: clamp(64px, 8.5vh, 104px); border-block-start: 1px solid var(--linea); }
 
 .rejilla-bento {
   display: grid;
   grid-template-columns: 1.7fr 1fr;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto auto auto;
   column-gap: 0;
 }
 
 .rejilla-bento__research {
-  grid-column: 1; grid-row: 1 / 3;
+  grid-column: 1; grid-row: 1 / 4;
   padding-inline-end: clamp(32px, 4vw, 56px);
 }
 .rejilla-bento__cartera {
@@ -4192,8 +4195,16 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   padding-inline-start: clamp(32px, 4vw, 56px);
   border-inline-start: 1px solid var(--linea);
 }
-.rejilla-bento__catalizadores {
+.rejilla-bento__riesgo {
   grid-column: 2; grid-row: 2;
+  padding-inline-start: clamp(32px, 4vw, 56px);
+  padding-block-start: clamp(32px, 4.5vh, 48px);
+  margin-block-start: clamp(32px, 4.5vh, 48px);
+  border-inline-start: 1px solid var(--linea);
+  border-block-start: 1px solid var(--linea);
+}
+.rejilla-bento__catalizadores {
+  grid-column: 2; grid-row: 3;
   padding-inline-start: clamp(32px, 4vw, 56px);
   padding-block-start: clamp(32px, 4.5vh, 48px);
   margin-block-start: clamp(32px, 4.5vh, 48px);
@@ -4208,45 +4219,96 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   }
   .rejilla-bento__research,
   .rejilla-bento__cartera,
+  .rejilla-bento__riesgo,
   .rejilla-bento__catalizadores {
     grid-column: 1; grid-row: auto;
     padding-inline: 0;
     border-inline-start: none;
   }
   .rejilla-bento__cartera { border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
+  .rejilla-bento__riesgo,
   .rejilla-bento__catalizadores { margin-block-start: 0; border-block-start: 1px solid var(--linea); padding-block-start: clamp(32px, 5vh, 48px); }
 }
-
-/* ── Bento reservado: panorama, radar y señal ──
-   Caja con borde, fondo y radio, sin columnas apiladas con filete. Panorama
-   es la celda ancha porque lleva un
-   gráfico; radar y señal caen debajo, a la mitad cada una. Por debajo de
-   960 px, donde el gráfico ya no gana nada de una fila propia, se apila a una
-   columna igual que el resto de `.bloque-home`. */
-.bento-home {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--espacio-3);
-  padding-block: clamp(78px, 11vh, 132px);
-}
-.bento-home > .bloque-home {
-  grid-column: span 1;
-  padding: var(--espacio-4);
-  background: var(--superficie);
-  border: 1px solid var(--linea);
-  border-block-start: 1px solid var(--linea);
-  border-radius: var(--radio-l);
-  transition: border-color var(--transicion), background var(--transicion);
-}
-.bento-home > .bloque-home:hover { border-color: var(--linea-fuerte); background: var(--superficie-alt); }
-.bento-home > #home-pulse { grid-column: 1 / -1; }
 
 /* Fase D.6: Cartera salió del Bento — nunca compartió su lenguaje de tarjeta,
    y ahora vive como sección propia, igual que Research y Upcoming. */
 
-@media (max-width: 960px) {
-  .bento-home { grid-template-columns: 1fr; }
-  .bento-home > .bloque-home { grid-column: 1; }
+/* ══════════════════════════ CÓMO INVERTIMOS ═══════════════════════════════
+   Sección nueva, dirección "hedge fund / fondo de inversión": el proceso
+   real, en texto, antes de que nadie pida "el equipo" o "la sofisticación
+   del modelo" — ninguna de las dos existe en el sistema y esta sección no
+   las inventa. Ancho completo, sin caja con sombra: el mismo lenguaje plano
+   de `.bloque-bento`, cinco pasos separados por filete vertical, nunca por
+   icono ilustrado que sugiera más proceso del que el pipeline ejecuta hoy. */
+.como-invertimos {
+  background: var(--superficie); border-block-start: 1px solid var(--linea);
+  padding-block: clamp(56px, 8vh, 96px);
+}
+.como-invertimos__cabecera { max-width: 60ch; margin-block-end: clamp(28px, 4vh, 40px); }
+.como-invertimos__intro {
+  margin-block-start: 14px; font-size: var(--tipo-3); line-height: 1.7;
+  color: var(--tinta-secundaria);
+}
+.como-invertimos__pasos {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  border-block-start: 1px solid var(--linea);
+}
+.como-invertimos__paso {
+  padding: 22px clamp(18px, 2vw, 26px) 0 0;
+  border-inline-end: 1px solid var(--linea);
+}
+.como-invertimos__paso:last-child { border-inline-end: none; }
+.como-invertimos__numero {
+  font-family: var(--mono, monospace); font-size: var(--tipo-0);
+  color: var(--tinta-mate); letter-spacing: 0.06em;
+}
+.como-invertimos__titulo {
+  font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600;
+  margin: 8px 0; letter-spacing: -0.01em;
+}
+.como-invertimos__texto { font-size: var(--tipo-2); line-height: 1.6; color: var(--tinta-secundaria); }
+
+@media (max-width: 900px) {
+  .como-invertimos__pasos { grid-template-columns: 1fr 1fr; row-gap: 24px; }
+  .como-invertimos__paso:nth-child(2n) { border-inline-end: none; }
+}
+@media (max-width: 560px) {
+  .como-invertimos__pasos { grid-template-columns: 1fr; }
+  .como-invertimos__paso { border-inline-end: none; border-block-start: 1px solid var(--linea); padding-block-start: 20px; }
+  .como-invertimos__paso:first-child { border-block-start: none; }
+}
+
+/* ══════════════════════════ POR QUÉ WARRANTS & CO. ═══════════════════════
+   Tres puntos de posicionamiento, mismo lenguaje que "Nuestra metodología"
+   —filete vertical entre columnas, sin caja, sin sombra— con menos piezas
+   (3 en vez de 5) y dos de las tres con enlace a donde se verifica lo que
+   afirman. Fondo `--superficie-alt` en vez de blanco puro: separa esta
+   sección del bloque de texto de arriba sin otro filete horizontal más. */
+.por-que-wc {
+  background: var(--superficie-alt); border-block-start: 1px solid var(--linea);
+  padding-block: clamp(56px, 8vh, 96px);
+}
+.por-que-wc__cabecera { max-width: 60ch; margin-block-end: clamp(28px, 4vh, 40px); }
+.por-que-wc__lista {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  border-block-start: 1px solid var(--linea);
+}
+.por-que-wc__punto { padding: 22px clamp(18px, 2vw, 26px) 0 0; border-inline-end: 1px solid var(--linea); }
+.por-que-wc__punto:last-child { border-inline-end: none; }
+.por-que-wc__numero { font-family: var(--mono, monospace); font-size: var(--tipo-0); color: var(--tinta-mate); letter-spacing: 0.06em; }
+.por-que-wc__titulo { font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600; margin: 8px 0; letter-spacing: -0.01em; }
+.por-que-wc__texto { font-size: var(--tipo-2); line-height: 1.6; color: var(--tinta-secundaria); margin-block-end: 12px; }
+.por-que-wc__punto .enlace-avance { color: var(--tinta); border-block-end: 1px solid var(--linea-fuerte); padding-block-end: 2px; }
+.por-que-wc__punto .enlace-avance:hover { border-block-end-color: var(--tinta); }
+
+@media (max-width: 900px) {
+  .por-que-wc__lista { grid-template-columns: 1fr 1fr; row-gap: 24px; }
+  .por-que-wc__punto:nth-child(2n) { border-inline-end: none; }
+}
+@media (max-width: 560px) {
+  .por-que-wc__lista { grid-template-columns: 1fr; }
+  .por-que-wc__punto { border-inline-end: none; border-block-start: 1px solid var(--linea); padding-block-start: 20px; }
+  .por-que-wc__punto:first-child { border-block-start: none; }
 }
 
 /* ──────────────────────────── 2 · MARKET PULSE ──────────────────────────── */
@@ -4367,6 +4429,47 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   font-family: var(--mono, monospace);
   font-size: 0.82rem; font-weight: 600;
   min-width: 5.5ch; text-align: end;
+}
+
+/* ── CAGR: suelo propio (252 sesiones, un año), distinto del de Riesgo (756,
+   tres años) — nunca el mismo contador para las dos cosas, aunque hoy las dos
+   estén retenidas a la vez. Vive dentro de la celda de Cartera, pegada al
+   apoyo degradado de la Fase de composición A. */
+.cagr-home {
+  margin-block-start: 16px; padding-block-start: 12px;
+  border-block-start: 1px solid var(--linea-hairline);
+}
+.cagr-home__fila {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+}
+.cagr-home__etiqueta {
+  font-size: var(--tipo-0); letter-spacing: 0.09em; text-transform: uppercase; color: var(--tinta-mate);
+}
+.cagr-home__valor {
+  font-family: var(--mono, monospace); font-size: var(--tipo-2); font-weight: 600;
+  color: var(--tinta-mate); font-variant-numeric: tabular-nums; text-align: end;
+}
+
+/* ── Riesgo: seis cifras ajustadas por riesgo, bare number, sin barra de
+   progreso decorativa —el suelo de muestra no es una promesa de "ya casi",
+   es una condición estadística binaria: sostiene la cifra, o no—. Reutiliza
+   notaMuestra()/retenidaPorMuestra() de public/home.js, ya en uso en
+   #/radar: mismo texto, mismo mecanismo, ninguno inventado para portada. */
+.riesgo-home__lista { display: flex; flex-direction: column; }
+.riesgo-home__fila {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 14px;
+  padding-block: 6px; border-block-end: 1px solid var(--linea-hairline);
+  font-size: var(--tipo-1); line-height: 1.3;
+}
+.riesgo-home__fila:last-child { border-block-end: none; }
+.riesgo-home__nombre { color: var(--tinta-secundaria); }
+.riesgo-home__cuenta {
+  font-family: var(--mono, monospace); color: var(--tinta-mate);
+  font-variant-numeric: tabular-nums; white-space: nowrap; text-align: end;
+}
+.riesgo-home__pie {
+  font-size: var(--tipo-0); color: var(--tinta-mate); line-height: 1.5;
+  margin-block-start: 10px; max-width: 44ch;
 }
 
 /* ── El gráfico ── */
@@ -4603,9 +4706,12 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 
 /* Fase D.11: Upcoming ya vive en la columna estrecha de `.rejilla-bento` —no
    necesita un `max-width` propio para no competir con Research, la propia
-   rejilla se lo da—. Sigue siendo deliberadamente el más pequeño de los tres:
-   menos aire vertical y un titular más pequeño que Research/Portfolio, la
-   misma jerarquía de D.8 contada ahora en una columna en vez de en una banda. */
+   rejilla se lo da—. Sigue siendo deliberadamente el más pequeño de los
+   titulares de la columna: menos aire vertical y un titular más pequeño que
+   Research/Portfolio, la misma jerarquía de D.8 contada ahora en una columna
+   en vez de en una banda. Riesgo comparte ese mismo paso —ni protagoniza como
+   Portfolio ni es tan discreto como Upcoming, es su propio capítulo—. */
+.rejilla-bento__riesgo .bloque-home__titulo,
 .rejilla-bento__catalizadores .bloque-home__titulo { font-size: var(--tipo-5); }
 .upcoming__fila {
   display: flex; align-items: baseline; gap: 18px;

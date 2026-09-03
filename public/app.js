@@ -33,7 +33,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarMetricasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarMetricasHero, pintarCarteraHome, pintarRiesgoHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -1604,6 +1604,10 @@ const PINTORES_INICIO = {
   // degradado, `estadisticos`— y su propia entrada porque el repintado por
   // idioma recorre esta lista, y sus rótulos también se traducen.
   cartera: () => pintarCarteraHome(datosInicio.cartera, irARutaInicio),
+  // Riesgo: misma cartera, mismo estadisticos.muestra que ya usa el apoyo
+  // degradado de arriba — su propia entrada por la misma razón de siempre,
+  // el repintado por idioma recorre esta lista.
+  riesgo: () => pintarRiesgoHome(datosInicio.cartera),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
 };
@@ -1644,6 +1648,7 @@ async function cargarInicio() {
     }, 'ticker'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'metricasHero'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
+    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'riesgo'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),
     // La cobertura destacada no trae cotización ni resumen en el listado, de
     // modo que se pide con ficha. Una sola llamada trae la cobertura entera:

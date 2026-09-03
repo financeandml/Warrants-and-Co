@@ -3,14 +3,23 @@
 
    Piezas encadenadas: cinta de mercado, declaración editorial, research,
    cartera —con su historial de rentabilidad como apoyo degradado, no como
-   bloque propio— y catalizadores. Cada una se alimenta de un endpoint real y
-   ninguna fabrica un número: lo que no existe se declara, con su motivo, y nunca
-   se sustituye por un cero.
+   bloque propio—, riesgo —seis cifras ajustadas por riesgo, retenidas hasta
+   756 sesiones y declaradas como cuenta atrás, nunca como número inventado—,
+   catalizadores y el proceso de inversión. Cada una se alimenta de un
+   endpoint real y ninguna fabrica un número: lo que no existe se declara, con
+   su motivo, y nunca se sustituye por un cero.
 
-   Siguen aquí, exportados y sin usar, los pintores de las piezas que se fueron
-   con las áreas de Mercado y Opciones —pulso, radar, options flow y signal—.
-   Están vivos a propósito: su HTML sigue en el documento con `hidden`, y
-   reabrir el área es devolverles su entrada en `PINTORES_INICIO`.
+   `pintarFlujoHome()` sigue aquí, exportada y sin usar: options flow se fue
+   con el área de Opciones, pero su HTML sigue en el documento con `hidden`
+   (`#home-flujo`), y reabrir el área es devolverle su entrada en
+   `PINTORES_INICIO`. `pintarPulso()`, `pintarRadarHome()` y `pintarSignalHome()`
+   ya NO tienen ese respaldo: su HTML (`#home-pulse`, `#home-radar`,
+   `#home-signal`, agrupados antes en `.bento-home`) se retiró del documento
+   al redirigir Home hacia "hedge fund" —pagaba espacio reservado sin ningún
+   hijo visible—. Siguen exportadas porque no se pidió borrarlas, pero hoy son
+   no-op puro: sus `$(...)` no encuentran nodo y devuelven de inmediato.
+   Reabrir cualquiera de las tres exige devolver su HTML antes de reactivar
+   su entrada en `PINTORES_INICIO`, no solo lo segundo.
 
    El movimiento está al servicio de la lectura, no al revés. Todo entra una vez
    al aparecer en pantalla y se queda quieto; nada parpadea de forma continua
@@ -23,6 +32,9 @@ import {
   porcentaje, formatearPorcentaje } from './formato.js';
 import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
 import { t } from './i18n.js';
+// Mismo mecanismo que ya usa el panel de #/radar para declarar una cifra
+// retenida por suelo de muestra: no se reinventa un segundo vocabulario.
+import { notaMuestra, retenidaPorMuestra } from './home.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
    después y una constante habría quedado congelada en el de arranque. */
@@ -621,6 +633,20 @@ export function pintarCarteraHome(cartera, alNavegar) {
     }
     bloque.appendChild(apoyo);
 
+    /* ── CAGR: suelo propio (252 sesiones, un año), distinto del de Riesgo
+     * (756, tres años) — nunca la misma cuenta atrás para las dos cosas,
+     * aunque hoy con ~150 sesiones las dos estén retenidas a la vez. Mismo
+     * mecanismo que #/radar: retenidaPorMuestra()/notaMuestra(). */
+    const cagrRetenida = retenidaPorMuestra(e.muestra, 'rentabilidadAnualizada');
+    const cagr = elemento('div', 'cagr-home');
+    const cagrFila = elemento('div', 'cagr-home__fila');
+    cagrFila.appendChild(elemento('span', 'cagr-home__etiqueta', t('cartera.metrica.rentabilidadAnualizada')));
+    cagrFila.appendChild(elemento('span',
+      `cagr-home__valor ${cagrRetenida ? '' : claseDireccion(e.rentabilidadAnualizada)}`,
+      cagrRetenida ? notaMuestra(cagrRetenida) : formatearPorcentaje(e.rentabilidadAnualizada)));
+    cagr.appendChild(cagrFila);
+    bloque.appendChild(cagr);
+
     // ── El pie: de qué muestra hablan las cuatro cifras, y dónde se desglosa ──
     const vivas = cartera.posiciones?.length ?? 0;
     const tesis = vivas + (cartera.cerradas?.length ?? 0);
@@ -682,6 +708,57 @@ export function pintarCarteraHome(cartera, alNavegar) {
     lista.appendChild(filas);
     raiz.appendChild(lista);
   }
+}
+
+// ═══════════════════════════ 3c · RIESGO (bento) ═══════════════════════════
+
+/**
+ * Seis cifras ajustadas por riesgo, dirección "hedge fund / fondo de
+ * inversión": Sharpe, Sortino, Calmar, alfa de Jensen, beta y correlación.
+ *
+ * Las seis comparten el mismo suelo de muestra —756 sesiones, tres años,
+ * `SUELO_POR_CIFRA` en `src/cartera.js`— y con ~150 sesiones hoy las seis
+ * están retenidas: cada fila publica un número real (`cartera.estadisticos`)
+ * o, si el motor la retiene, la cuenta atrás exacta que ya usa `#/radar`
+ * (`retenidaPorMuestra()`/`notaMuestra()`, `home.js`) — nunca un guion vacío
+ * ni una cifra a medias. Bare number, sin barra de progreso: el suelo de
+ * muestra no es una promesa de "ya casi", es una condición estadística que
+ * se cumple o no se cumple.
+ */
+export function pintarRiesgoHome(cartera) {
+  const raiz = $('#home-riesgo-cuerpo');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const e = cartera?.estadisticos;
+  if (!e) {
+    raiz.appendChild(bloqueSinDatos(t('inicio.riesgo.vacio.titulo'),
+      cartera?.mensaje ?? t('inicio.riesgo.vacio.motivo')));
+    return;
+  }
+
+  // [clave en SUELO_POR_CIFRA, sufijo de la etiqueta i18n, valor, formateador]
+  const metricas = [
+    ['ratioSharpe', 'sharpe', e.ratioSharpe, (v) => formatearNumero(v, 2)],
+    ['ratioSortino', 'sortino', e.ratioSortino, (v) => formatearNumero(v, 2)],
+    ['ratioCalmar', 'calmar', e.ratioCalmar, (v) => formatearNumero(v, 2)],
+    ['alfaJensen', 'alfa', e.alfaJensen, (v) => formatearPorcentaje(v)],
+    ['beta', 'beta', e.beta, (v) => formatearNumero(v, 2)],
+    ['correlacionIndice', 'correlacion', e.correlacionIndice, (v) => formatearNumero(v, 2)],
+  ];
+
+  const lista = elemento('div', 'riesgo-home__lista');
+  for (const [i, [claveSuelo, etiqueta, valor, formatear]] of metricas.entries()) {
+    const retenida = retenidaPorMuestra(e.muestra, claveSuelo);
+    const fila = elemento('div', 'riesgo-home__fila');
+    fila.appendChild(elemento('span', 'riesgo-home__nombre', t(`cartera.metrica.${etiqueta}`)));
+    fila.appendChild(elemento('span', 'riesgo-home__cuenta',
+      retenida ? notaMuestra(retenida) : (Number.isFinite(valor) ? formatear(valor) : noDisponible())));
+    lista.appendChild(revelar(fila, i * 50));
+  }
+  raiz.appendChild(lista);
+
+  raiz.appendChild(elemento('p', 'riesgo-home__pie', t('inicio.riesgo.pie')));
 }
 
 // ════════════════════════════ 4 · MARKET PULSE ════════════════════════════
@@ -1167,13 +1244,19 @@ const recortar = (t, n) => (t.length <= n ? t : `${t.slice(0, t.lastIndexOf(' ',
  * propio: se apoya en `.lectura--aviso`, el mismo vocabulario de color+peso
  * que usa el resto de la plataforma para lo mismo (hallazgo de la auditoría
  * de Fase D: dos sistemas visuales para un solo concepto). Sin badge nuevo.
+ *
+ * Redirección "hedge fund": de 4 líneas a 3 — Catalysts baja de peso editorial
+ * frente a Portfolio/Riesgo, deja de competir por rango con ellas. El
+ * calendario completo sigue intacto en `#/catalizadores`; aquí solo entra lo
+ * que alguien necesita ver en los primeros cinco segundos: que hay un
+ * calendario y que está vigilado, no desplegarlo entero.
  */
 export function pintarCatalizadoresHome(agenda, alNavegar) {
   const raiz = $('#home-catalizadores-cuerpo');
   if (!raiz) return;
   raiz.textContent = '';
 
-  const proximos = (agenda?.proximos ?? []).slice(0, 4);
+  const proximos = (agenda?.proximos ?? []).slice(0, 3);
   if (!proximos.length) {
     raiz.appendChild(bloqueSinDatos(t('inicio.catalizadores.vacio.titulo'),
       t('inicio.catalizadores.vacio.motivo')));
