@@ -2158,6 +2158,36 @@ function pintarCartera(datos, { avisos = true } = {}) {
  * eso no es una rentabilidad realizada del 0 %, es la ausencia del tercer
  * estado que exige CLAUDE.md.
  */
+/* Icono circular: badge decorativo, redundante con la etiqueta de texto que
+ * ya está al lado —nunca la única forma de identificar la cifra, cumple la
+ * cláusula 1 igual que el glifo ▲/▼—. Solo se usa donde el símbolo tiene
+ * significado real (retorno, capital desplegado, disponible); ROIC no lleva
+ * ninguno, mejor sin icono que con uno vacío de significado. */
+const NS_SVG = 'http://www.w3.org/2000/svg';
+function iconoCircular(trazos, { variacion = null } = {}) {
+  const clase = variacion === null ? ''
+    : ` indicador__icono--${Number(variacion) > 0 ? 'alza' : Number(variacion) < 0 ? 'baja' : 'nula'}`;
+  const circulo = elemento('span', `indicador__icono${clase}`);
+  const svg = document.createElementNS(NS_SVG, 'svg');
+  svg.setAttribute('viewBox', '0 0 24 24');
+  svg.setAttribute('fill', 'none');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap', 'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  svg.setAttribute('aria-hidden', 'true');
+  for (const d of trazos) {
+    const trazo = document.createElementNS(NS_SVG, 'path');
+    trazo.setAttribute('d', d);
+    svg.appendChild(trazo);
+  }
+  circulo.appendChild(svg);
+  return circulo;
+}
+
+const ICONO_RETORNO = ['M7 17 17 7', 'M9 7h8v8'];
+const ICONO_CAPITAL = ['M3 7h18v12H3z', 'M3 11h18', 'M7 15h4'];
+const ICONO_DISPONIBLE = ['M4 6h16v12H4z', 'M4 10h16'];
+
 function pintarResumenPortfolio(datos) {
   const cuadro = $('#resumen-portfolio');
   if (!cuadro) return;
@@ -2167,14 +2197,24 @@ function pintarResumenPortfolio(datos) {
   const na = t('general.noDisponible');
   const cifraPct = (v) => (v === null || v === undefined ? na : formatearPorcentaje(v));
 
-  const indicador = (etiqueta, valor, nota, { principal = false, variacion = null } = {}) => {
+  const indicador = (etiqueta, valor, nota, { principal = false, variacion = null, icono = null } = {}) => {
     const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
-    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    // Con icono, la etiqueta viaja junto a él en una cabecera propia: sin
+    // icono, la etiqueta se queda sola como siempre —`.indicador__etiqueta`
+    // es compartida con el resto de la plataforma y no cambia su `display`.
+    if (icono) {
+      const cabecera = elemento('div', 'indicador__cabecera');
+      cabecera.appendChild(iconoCircular(icono, { variacion }));
+      cabecera.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+      bloque.appendChild(cabecera);
+    } else {
+      bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
+    }
     const v = elemento('strong', 'indicador__valor', valor);
     if (variacion !== null) v.className = `indicador__valor ${claseVariacion(variacion)}`;
     bloque.appendChild(v);
     if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
-    cuadro.appendChild(bloque);
+    return bloque;
   };
 
   if (!r) {
@@ -2188,23 +2228,44 @@ function pintarResumenPortfolio(datos) {
   // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
   // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
   // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
-  indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
-    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct });
-  indicador(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct),
-    r.retornoRealizadoPct === null ? t('cartera.resumen.realizado.vacio') : t('cartera.resumen.realizado.nota'),
-    { variacion: r.retornoRealizadoPct });
-  indicador(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct),
-    r.retornoNoRealizadoPct === null ? t('cartera.resumen.noRealizado.vacio') : t('cartera.resumen.noRealizado.nota'),
-    { variacion: r.retornoNoRealizadoPct });
-  indicador(t('cartera.resumen.capital'), porcentaje(r.capitalDesplegadoPct),
-    t('cartera.resumen.capital.nota'));
-  indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
+  const principal = indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
+    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct, icono: ICONO_RETORNO });
+
+  // Realizada / no realizada: las mismas dos cifras que antes vivían como
+  // celdas propias de esta fila, anidadas ahora bajo el retorno que
+  // descomponen —son su desglose, no una cifra hermana—. La barra de
+  // magnitud de más abajo (`#realizado-comparativa`) sigue aparte: mismo
+  // hecho, otra lectura (comparación por peso, no por cifra).
+  const desglose = elemento('div', 'indicador__desglose');
+  const celdaDesglose = (etiqueta, valor, variacion) => {
+    const c = elemento('div', 'indicador__desglose-celda');
+    c.appendChild(elemento('span', 'indicador__desglose-etiqueta', etiqueta));
+    c.appendChild(elemento('span',
+      `indicador__desglose-valor ${claseVariacion(variacion)}`, valor));
+    desglose.appendChild(c);
+  };
+  celdaDesglose(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct), r.retornoRealizadoPct);
+  celdaDesglose(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct), r.retornoNoRealizadoPct);
+  principal.appendChild(desglose);
+  cuadro.appendChild(principal);
+
+  cuadro.appendChild(indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
     r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
-    { variacion: r.roicPct });
-  indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
-    t('cartera.resumen.abiertas.nota'));
-  indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
-    t('cartera.resumen.cerradas.nota'));
+    { variacion: r.roicPct }));
+  cuadro.appendChild(indicador(t('cartera.resumen.capital'), porcentaje(r.capitalDesplegadoPct),
+    t('cartera.resumen.capital.nota'), { icono: ICONO_CAPITAL }));
+  // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
+  // nunca un segundo cálculo de caja (Regla 9).
+  const caja = datos.liquidez;
+  if (caja && Number.isFinite(caja.pesoActual)) {
+    cuadro.appendChild(indicador(t('cartera.indicador.liquidez'), porcentaje(caja.pesoActual),
+      t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) }),
+      { icono: ICONO_DISPONIBLE }));
+  }
+  cuadro.appendChild(indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
+    t('cartera.resumen.abiertas.nota')));
+  cuadro.appendChild(indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
+    t('cartera.resumen.cerradas.nota')));
 }
 
 /**

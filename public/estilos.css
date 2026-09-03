@@ -1216,6 +1216,61 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-weight: 500;
 }
 
+/* ── Icono circular + cabecera ──
+   Badge decorativo, nunca la única forma de identificar la cifra —la
+   etiqueta de texto viaja siempre a su lado, cláusula 1—. Sigue la
+   decisión "editorial, no tarjeta" de esta sección: es un círculo de 1px
+   de filete, sin sombra ni relleno salvo cuando el retorno es direccional,
+   donde el tinte es el mismo `--alcista`/`--bajista` que ya usa el signo. */
+#seccion-cartera #resumen-portfolio .indicador__cabecera {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
+}
+#seccion-cartera #resumen-portfolio .indicador__cabecera .indicador__etiqueta {
+  margin-bottom: 0;
+}
+#seccion-cartera #resumen-portfolio .indicador__icono {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  border: 1px solid var(--linea-fuerte);
+}
+#seccion-cartera #resumen-portfolio .indicador__icono svg {
+  width: 13px; height: 13px; stroke: var(--tinta-secundaria);
+}
+#seccion-cartera #resumen-portfolio .indicador__icono--alza {
+  border-color: transparent; background: var(--alcista-tenue);
+}
+#seccion-cartera #resumen-portfolio .indicador__icono--alza svg { stroke: var(--alcista); }
+#seccion-cartera #resumen-portfolio .indicador__icono--baja {
+  border-color: transparent; background: var(--bajista-tenue);
+}
+#seccion-cartera #resumen-portfolio .indicador__icono--baja svg { stroke: var(--bajista); }
+
+/* ── Desglose anidado: realizada / no realizada bajo el retorno total ──
+   Mismas dos cifras que antes vivían como celdas propias de esta fila;
+   aquí son su desglose, no una cifra hermana (Regla 9: un hecho, un
+   sitio). La barra de magnitud de `#realizado-comparativa`, más abajo,
+   sigue aparte — mismo hecho, otra lectura. */
+#seccion-cartera #resumen-portfolio .indicador__desglose {
+  display: flex; gap: 20px; margin-top: 14px; padding-top: 12px;
+  border-top: 1px solid var(--linea-hairline);
+}
+#seccion-cartera #resumen-portfolio .indicador__desglose-celda {
+  display: flex; flex-direction: column; gap: 2px;
+}
+#seccion-cartera #resumen-portfolio .indicador__desglose-etiqueta {
+  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-mate);
+}
+#seccion-cartera #resumen-portfolio .indicador__desglose-valor {
+  font-family: var(--mono); font-size: 0.86rem; font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Disclaimer de metodología: tinta neutra a propósito, nunca `--acento`
+   —el acento es cromo (cláusula 2 de CLAUDE.md), esto es dato/metodología. */
+#seccion-cartera .cuadro-mando__aviso {
+  margin-top: var(--espacio-3); font-size: var(--tipo-1); color: var(--tinta-mate);
+}
+
 /* Etiquetas editoriales: pequeñas, versalitas por transformación, con tracking
    —el mismo patrón que ya usa `.indicador__etiqueta` en el resto de la
    plataforma, aquí no hay una segunda regla, solo se hereda. */

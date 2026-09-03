@@ -515,12 +515,17 @@ export default {
   'cartera.resumen.vacio.motivo': 'La cartera no tiene posiciones constituidas todavía.',
   'cartera.resumen.retorno': 'Rentabilidad de la cartera',
   'cartera.resumen.retorno.nota': 'Sobre el capital invertido',
+  // Verdad sobre la metodología, no una promesa: el motor no descuenta
+  // comisión, spread ni coste de transacción alguno (src/cartera.js, sin
+  // ningún cálculo de ese tipo) — afirmar "neto de comisiones" inventaría
+  // una metodología que no es la real. Tinta neutra en `estilos.css`, nunca
+  // `--acento`: es dato/metodología, no cromo.
+  'cartera.resumen.bruto': 'Rentabilidad bruta, sin ajustar por costes de transacción.',
+  // Sin `.nota`/`.vacio`: viven ahora como desglose anidado bajo el retorno
+  // (compacto, dos cifras, sin nota explicativa) y en la barra comparativa
+  // de abajo — ninguno de los dos sitios tiene espacio editorial para nota.
   'cartera.resumen.realizado': 'Rentabilidad realizada',
-  'cartera.resumen.realizado.nota': 'Suma de la contribución de las posiciones cerradas',
-  'cartera.resumen.realizado.vacio': 'Ninguna posición cerrada todavía',
   'cartera.resumen.noRealizado': 'Rentabilidad no realizada',
-  'cartera.resumen.noRealizado.nota': 'Suma de la contribución de las posiciones abiertas',
-  'cartera.resumen.noRealizado.vacio': 'Ninguna posición abierta todavía',
   'cartera.resumen.capital': 'Capital desplegado',
   'cartera.resumen.capital.nota': 'Fracción del capital comprometida en posiciones',
   'cartera.resumen.roic': 'ROIC',

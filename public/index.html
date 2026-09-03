@@ -789,6 +789,14 @@
           </div>
         </div>
         <div class="cuadro-mando cuadro-mando--7" id="resumen-portfolio"></div>
+        <!-- Honesto sobre lo que el motor NO hace: ningún precio de entrada
+             ni de cierre descuenta comisión, spread o coste de transacción
+             alguno (confirmado en src/cartera.js, grep sin resultados sobre
+             comision/fee/gasto/spread). Afirmar "neto de comisiones" sería
+             inventar una metodología que no es la real —regla 1—; esta línea
+             dice la verdad en su lugar. Tinta neutra, nunca --acento: es
+             dato/metodología, no cromo. -->
+        <p class="cuadro-mando__aviso" data-i18n="cartera.resumen.bruto">Rentabilidad bruta, sin ajustar por costes de transacción.</p>
         <!-- Realizada frente a no realizada: mismas dos cifras que ya van en
              el cuadro de arriba, comparadas una junto a otra con una barra de
              magnitud. `pintarRealizadoComparativa()` respeta el mismo tercer
