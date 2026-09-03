@@ -219,7 +219,7 @@ export default {
   'inicio.research.dato.recorrido': 'Upside to target',
 
   // ── Home · catalysts ──
-  'inicio.catalizadores.etiqueta': 'Research',
+  'inicio.catalizadores.etiqueta': 'Research · Catalysts',
   'inicio.catalizadores.titulo': 'Upcoming catalysts',
   'inicio.catalizadores.enlace': 'Full calendar',
   'inicio.catalizadores.vacio.titulo': 'No upcoming events',

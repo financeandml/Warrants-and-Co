@@ -227,7 +227,7 @@ export default {
   'inicio.research.dato.recorrido': 'Recorrido al objetivo',
 
   // ── Inicio · catalizadores ──
-  'inicio.catalizadores.etiqueta': 'Análisis',
+  'inicio.catalizadores.etiqueta': 'Análisis · Catalizadores',
   'inicio.catalizadores.titulo': 'Próximos catalizadores',
   'inicio.catalizadores.enlace': 'Agenda completa',
   'inicio.catalizadores.vacio.titulo': 'Sin eventos próximos',
