@@ -14,7 +14,7 @@ import { alinearContraMaestra, rebasarBase100 } from './benchmarks.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
-import { etiquetaMotivoCierre } from './vocabulario.js';
+import { etiquetaMotivoCierre, etiquetaTipoInforme, etiquetaRecomendacion, etiquetaSector } from './vocabulario.js';
 import {
   pintarSnapshot, pintarRadar, pintarSignal, pintarPanelCartera,
   pintarResearch, pintarCatalizadores, pintarUltimasNoticias,
@@ -541,10 +541,10 @@ function poblarFiltros() {
   // «Todos» y «Todas» son dos claves, no una: el castellano concuerda con el
   // sustantivo elidido —«todas las recomendaciones»— y el inglés no distingue.
   const todos = t('repositorio.filtro.todos');
-  poblarSelect($('#filtro-sector'), v.sectores, todos);
+  poblarSelect($('#filtro-sector'), v.sectores, todos, etiquetaSector);
   poblarSelect($('#filtro-pais'), v.paises, todos);
-  poblarSelect($('#filtro-tipo'), v.tipos, todos);
-  poblarSelect($('#filtro-recomendacion'), v.recomendaciones, t('repositorio.filtro.todas'));
+  poblarSelect($('#filtro-tipo'), v.tipos, todos, etiquetaTipoInforme);
+  poblarSelect($('#filtro-recomendacion'), v.recomendaciones, t('repositorio.filtro.todas'), etiquetaRecomendacion);
   poblarSelect($('#filtro-analista'), v.analistas, todos);
   poblarSelect($('#filtro-nivel'), v.nivelesAcceso, todos, etiquetaAcceso);
 
@@ -676,7 +676,9 @@ function pintarDestacadoRepositorio(informe) {
   pieza.appendChild(izquierda);
 
   const derecha = elemento('div', 'repositorio-destacado__derecha');
-  if (informe.recomendacion) derecha.appendChild(elemento('span', 'distintivo distintivo--fuerte', informe.recomendacion));
+  if (informe.recomendacion) {
+    derecha.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRecomendacion(informe.recomendacion)));
+  }
   const fecha = elemento('div', 'dato');
   fecha.appendChild(elemento('span', 'dato__etiqueta', t('repositorio.col.fecha')));
   fecha.appendChild(elemento('strong', 'dato__valor', formatearFecha(informe.fecha_publicacion)));
@@ -735,12 +737,12 @@ function construirFila(informe) {
   fila.appendChild(celdaEmpresa);
 
   fila.appendChild(elemento('td', 'mono', informe.ticker ?? '—'));
-  fila.appendChild(elemento('td', null, informe.sector ?? '—'));
-  fila.appendChild(elemento('td', null, informe.tipo_informe ?? '—'));
+  fila.appendChild(elemento('td', null, informe.sector ? etiquetaSector(informe.sector) : '—'));
+  fila.appendChild(elemento('td', null, informe.tipo_informe ? etiquetaTipoInforme(informe.tipo_informe) : '—'));
   fila.appendChild(elemento('td', null, informe.periodo ?? '—'));
 
   const celdaRec = document.createElement('td');
-  if (informe.recomendacion) celdaRec.appendChild(elemento('span', 'distintivo', informe.recomendacion));
+  if (informe.recomendacion) celdaRec.appendChild(elemento('span', 'distintivo', etiquetaRecomendacion(informe.recomendacion)));
   else celdaRec.textContent = '—';
   fila.appendChild(celdaRec);
 
@@ -847,14 +849,16 @@ function construirDetalle(i) {
 
   const superior = elemento('div', 'detalle__superior');
   if (i.ticker) superior.appendChild(elemento('span', 'ficha__ticker', i.ticker));
-  if (i.tipo_informe) superior.appendChild(elemento('span', 'distintivo', i.tipo_informe));
-  if (i.recomendacion) superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', i.recomendacion));
+  if (i.tipo_informe) superior.appendChild(elemento('span', 'distintivo', etiquetaTipoInforme(i.tipo_informe)));
+  if (i.recomendacion) {
+    superior.appendChild(elemento('span', 'distintivo distintivo--fuerte', etiquetaRecomendacion(i.recomendacion)));
+  }
   if (i.destacado) superior.appendChild(elemento('span', 'distintivo distintivo--solido', t('informe.detalle.destacado')));
   raiz.appendChild(superior);
 
   raiz.appendChild(elemento('h2', null, i.empresa));
 
-  const partes = [i.sector, i.pais, i.periodo].filter(Boolean);
+  const partes = [i.sector ? etiquetaSector(i.sector) : null, i.pais, i.periodo].filter(Boolean);
   raiz.appendChild(elemento('p', 'detalle__subtitulo',
     partes.join(t('general.separadorLista')) || t('informe.detalle.fichaAnalitica')));
 
@@ -2718,7 +2722,7 @@ function filaDetalle(p, idDetalle) {
     par(t('cartera.col.takeProfit'), formatearMoneda(p.takeProfit, p.divisa));
     par(t('cartera.col.recorrido'), celdaRecorrido(p).firstChild ?? document.createTextNode('—'));
     par(t('cartera.col.precioObjetivo'), formatearMoneda(p.precioObjetivo, p.divisa));
-    par(t('cartera.col.recomendacion'), p.recomendacion ?? '—');
+    par(t('cartera.col.recomendacion'), p.recomendacion ? etiquetaRecomendacion(p.recomendacion) : '—');
   }
 
   celda.appendChild(lista);
@@ -2760,7 +2764,8 @@ function pintarTablaCartera(datos) {
     boton.appendChild(elemento('span', 'fila-cartera__glifo', '+'));
     const textoPosicion = elemento('span', null);
     textoPosicion.appendChild(document.createTextNode(p.empresa));
-    textoPosicion.appendChild(elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`));
+    textoPosicion.appendChild(elemento('small', null,
+      `${p.ticker}${p.sector ? ` · ${etiquetaSector(p.sector)}` : ''}`));
     boton.appendChild(textoPosicion);
     celdaPosicion.appendChild(boton);
     fila.appendChild(celdaPosicion);
@@ -2906,7 +2911,8 @@ function pintarConciliacion(datos) {
 
     const valor = elemento('td', 'celda-empresa celda-valor');
     valor.appendChild(document.createTextNode(p.empresa));
-    valor.appendChild(elemento('small', null, `${p.ticker}${p.sector ? ` · ${p.sector}` : ''}`));
+    valor.appendChild(elemento('small', null,
+      `${p.ticker}${p.sector ? ` · ${etiquetaSector(p.sector)}` : ''}`));
     if (p.cerrada) valor.appendChild(elemento('span', 'distintivo', t('cartera.conciliacion.enCaja')));
     fila.appendChild(valor);
 

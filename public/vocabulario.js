@@ -132,6 +132,57 @@ const CLAVES_MOTIVO_COTIZACION = {
 /** Rótulo del motivo por el que no hay cotización — solo para el caso con código. */
 export const etiquetaMotivoCotizacion = rotular(CLAVES_MOTIVO_COTIZACION);
 
+/* Tipo, recomendación y sector de un informe (`src/validacion.js`,
+   `TIPOS_INFORME`/`RECOMENDACIONES`/`SECTORES`). El código ES el texto
+   castellano que ya guarda la base —mismo criterio que `categoria` de
+   noticia—, no una clave sin diacríticos como `nivel_acceso`: con solo 6
+   informes publicados hoy y sin ningún sitio que compare por igualdad de
+   texto salvo el propio filtro (que sigue mandando este mismo valor),
+   migrar la base no compensaba, y así tampoco se rompe la búsqueda de texto
+   libre por sector/tipo (`informes_fts`, que indexa este mismo campo). */
+const CLAVES_TIPO_INFORME = {
+  'TESIS DE INVERSIÓN': 'informe.tipo.tesisInversion',
+  'INICIO DE COBERTURA': 'informe.tipo.inicioCobertura',
+  'ACTUALIZACIÓN DE RESULTADOS': 'informe.tipo.actualizacionResultados',
+  'NOTA SECTORIAL': 'informe.tipo.notaSectorial',
+  'NOTA MACROECONÓMICA': 'informe.tipo.notaMacro',
+  'REVISIÓN DE VALORACIÓN': 'informe.tipo.revisionValoracion',
+  'ANÁLISIS TÉCNICO': 'informe.tipo.analisisTecnico',
+  'DUE DILIGENCE': 'informe.tipo.dueDiligence',
+};
+
+const CLAVES_RECOMENDACION = {
+  COMPRAR: 'informe.recomendacion.comprar',
+  SOBREPONDERAR: 'informe.recomendacion.sobreponderar',
+  MANTENER: 'informe.recomendacion.mantener',
+  INFRAPONDERAR: 'informe.recomendacion.infraponderar',
+  VENDER: 'informe.recomendacion.vender',
+  'EN REVISIÓN': 'informe.recomendacion.enRevision',
+};
+
+const CLAVES_SECTOR = {
+  'TECNOLOGÍA DE LA INFORMACIÓN': 'informe.sector.tecnologia',
+  SALUD: 'informe.sector.salud',
+  FINANCIERO: 'informe.sector.financiero',
+  'CONSUMO DISCRECIONAL': 'informe.sector.consumoDiscrecional',
+  'CONSUMO BÁSICO': 'informe.sector.consumoBasico',
+  ENERGÍA: 'informe.sector.energia',
+  INDUSTRIALES: 'informe.sector.industriales',
+  MATERIALES: 'informe.sector.materiales',
+  'SERVICIOS DE COMUNICACIÓN': 'informe.sector.comunicacion',
+  UTILITIES: 'informe.sector.utilities',
+  INMOBILIARIO: 'informe.sector.inmobiliario',
+};
+
+/** Rótulo del tipo de informe. */
+export const etiquetaTipoInforme = rotular(CLAVES_TIPO_INFORME);
+
+/** Rótulo de la recomendación. */
+export const etiquetaRecomendacion = rotular(CLAVES_RECOMENDACION);
+
+/** Rótulo del sector. */
+export const etiquetaSector = rotular(CLAVES_SECTOR);
+
 /* Título y motivo de prioridad de un evento de catalizador
    (`src/catalizadores/index.js`, `priorizar()`/`plazo()`). Compuestos aquí a
    partir de los datos que el evento ya trae —dias, enCartera, relevante—, en

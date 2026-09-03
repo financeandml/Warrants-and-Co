@@ -10,7 +10,10 @@ import {
   $, elemento, formatearNumero, formatearFecha, claseVariacion,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
-import { etiquetaSello, claseSello, etiquetaTipoEvento, etiquetaMotivoCotizacion } from './vocabulario.js';
+import {
+  etiquetaSello, claseSello, etiquetaTipoEvento, etiquetaMotivoCotizacion, etiquetaSector,
+  etiquetaRecomendacion,
+} from './vocabulario.js';
 
 /* El rótulo de ausencia es una función y no una constante: se resuelve al
    pintar, que es cuando se sabe el idioma. Escrito a mano —«N/A»— quedaba fuera
@@ -88,12 +91,13 @@ function tarjetaCompania(c, alAbrir, densidad = 'completa', cargarSerie = null) 
       formatearFecha(c.ultimaPublicacion)));
   } else {
     const meta = elemento('p', 'tarjeta-compania__meta',
-      [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible());
+      [c.sector ? etiquetaSector(c.sector) : null, c.pais].filter(Boolean).join(t('general.separadorLista'))
+        || noDisponible());
     tarjeta.appendChild(meta);
 
     const datosClave = elemento('div', 'tarjeta-compania__datos');
     datosClave.appendChild(dato(t('companias.dato.recomendacion'),
-      c.recomendacion ?? noDisponible(),
+      c.recomendacion ? etiquetaRecomendacion(c.recomendacion) : noDisponible(),
       claseRecomendacion(c.recomendacion)));
     datosClave.appendChild(dato(t('companias.dato.objetivo'),
       Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
@@ -218,7 +222,7 @@ function tarjetaDestacadaPrincipal(c, alAbrir) {
 
   const derecha = elemento('div', 'destacada-principal__derecha');
   derecha.appendChild(dato(t('companias.dato.recomendacion'),
-    c.recomendacion ?? noDisponible(), claseRecomendacion(c.recomendacion)));
+    c.recomendacion ? etiquetaRecomendacion(c.recomendacion) : noDisponible(), claseRecomendacion(c.recomendacion)));
   derecha.appendChild(dato(t('companias.dato.objetivo'),
     Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
   derecha.appendChild(dato(t('companias.dato.actual'),
@@ -318,9 +322,11 @@ function pintarSectoresCobertura(companias) {
   if (!bloque || !caja) return;
   caja.textContent = '';
 
+  // La clave del mapa se queda en crudo (o null) — solo se traduce al pintar,
+  // para no agrupar por un texto ya traducido que cambiaría con el idioma.
   const porSector = new Map();
   for (const c of companias) {
-    const s = c.sector || noDisponible();
+    const s = c.sector || null;
     porSector.set(s, (porSector.get(s) ?? 0) + 1);
   }
   const filas = [...porSector.entries()].sort((a, b) => b[1] - a[1]);
@@ -330,7 +336,7 @@ function pintarSectoresCobertura(companias) {
   const maximo = Math.max(...filas.map(([, n]) => n));
   for (const [sector, n] of filas) {
     const fila = elemento('div', 'sector-fila');
-    fila.appendChild(elemento('span', 'sector-fila__nombre', sector));
+    fila.appendChild(elemento('span', 'sector-fila__nombre', sector ? etiquetaSector(sector) : noDisponible()));
     const pista = elemento('div', 'sector-fila__pista');
     const barra = elemento('div', 'sector-fila__barra');
     barra.style.width = `${(n / maximo) * 100}%`;
@@ -417,7 +423,9 @@ export function pintarSectores(sectores, seleccionado = '') {
   const previo = seleccionado || select.value;
   select.textContent = '';
   select.appendChild(new Option(t('companias.filtro.todosSectores'), ''));
-  for (const s of sectores) select.appendChild(new Option(s, s));
+  // El valor sigue siendo el texto español —es lo que el servidor compara
+  // por igualdad exacta (informes.js)—; solo la etiqueta visible se traduce.
+  for (const s of sectores) select.appendChild(new Option(etiquetaSector(s), s));
   select.value = previo;
 }
 
@@ -438,7 +446,8 @@ export function pintarFicha(c, { alAbrirInforme, alVerCatalizadores, alIrCartera
   identidad.appendChild(linea);
   identidad.appendChild(elemento('h2', 'ficha-compania__nombre', c.empresa));
   identidad.appendChild(elemento('p', 'ficha-compania__meta',
-    [c.sector, c.pais].filter(Boolean).join(t('general.separadorLista')) || noDisponible()));
+    [c.sector ? etiquetaSector(c.sector) : null, c.pais].filter(Boolean).join(t('general.separadorLista'))
+      || noDisponible()));
   cabecera.appendChild(identidad);
 
   cabecera.appendChild(bloqueCotizacion(c));
@@ -515,7 +524,7 @@ function bloqueTesis(c) {
 
   const rejilla = elemento('div', 'rejilla-datos');
   rejilla.appendChild(dato(t('companias.dato.recomendacion'),
-    c.recomendacion ?? noDisponible(), claseRecomendacion(c.recomendacion)));
+    c.recomendacion ? etiquetaRecomendacion(c.recomendacion) : noDisponible(), claseRecomendacion(c.recomendacion)));
   rejilla.appendChild(dato(t('companias.dato.objetivo'),
     Number.isFinite(c.precioObjetivo) ? importe(cifra(c.precioObjetivo), c.divisa) : noDisponible()));
 
