@@ -9,7 +9,7 @@ const fs = require('node:fs');
 const crypto = require('node:crypto');
 
 const { db, UPLOAD_DIR } = require('../db');
-const { cuerpoError } = require('../errores');
+const { cuerpoError, fallo } = require('../errores');
 const sincronizacion = require('../noticias/sincronizacion');
 const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
 const { leerPdf, ErrorLectura } = require('../extraccion/pdf');
@@ -61,9 +61,7 @@ const subida = multer({
     // Se exige coherencia entre la extension y el tipo declarado: una extension
     // admitida con un tipo que no le corresponde se rechaza.
     if (!EXT_PERMITIDAS.has(ext) || !extensionesDelTipo || !extensionesDelTipo.includes(ext)) {
-      const err = new Error('Formato no admitido. Únicamente se aceptan ficheros PDF, Word y Excel.');
-      err.status = 415;
-      return cb(err);
+      return cb(fallo('FORMATO_INFORME_NO_ADMITIDO'));
     }
     cb(null, true);
   },

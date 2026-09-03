@@ -6,6 +6,7 @@ const express = require('express');
 const companias = require('../companias');
 const { carteraDeReferencia } = require('../cartera-referencia');
 const catalizadores = require('../catalizadores');
+const { cuerpoError } = require('../errores');
 
 const router = express.Router();
 
@@ -47,10 +48,7 @@ router.get('/:clave', async (req, res, next) => {
     const cartera = await carteraDeReferencia();
     const ficha = await companias.detalle(req.params.clave, { cartera, agendaDe: agendaDe(cartera) });
     if (!ficha) {
-      return res.status(404).json({
-        error: 'La compañía no figura bajo cobertura.',
-        codigo: 'COMPANIA_NO_CUBIERTA',
-      });
+      return res.status(404).json(cuerpoError('COMPANIA_NO_CUBIERTA'));
     }
     res.setHeader('Cache-Control', 'no-store');
     res.json(ficha);

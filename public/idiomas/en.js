@@ -776,6 +776,9 @@ export default {
   'codigo.CAPACIDAD_NO_DISPONIBLE': 'No connected provider offers this capability.',
   'codigo.SIMBOLO_INVALIDO': 'Invalid symbol: {simbolo}',
   'codigo.SIN_SERIE_HISTORICA': 'No historical series available for this instrument.',
+  'codigo.FORMATO_INFORME_NO_ADMITIDO':
+    'Format not supported. Only PDF, Word and Excel files are accepted.',
+  'codigo.COMPANIA_NO_CUBIERTA': 'This company is not under coverage.',
 
   // ═══════════════════════════ Analyst access ═════════════════════════════
   'acceso.credencialInvalida': 'Invalid credentials.',

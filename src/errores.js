@@ -62,6 +62,18 @@ const API = {
     status: 404,
     mensaje: 'No hay serie histórica disponible para este instrumento.',
   },
+  /* E1b: el fileFilter del multer de alta/edición de informes (`informes.js`,
+     instancia `subida`, usada por POST / y PUT /:id) lanzaba `new Error()` con
+     solo `.status`, sin código — el cliente no tenía nada que traducir y
+     siempre mostraba el castellano. */
+  FORMATO_INFORME_NO_ADMITIDO: {
+    status: 415,
+    mensaje: 'Formato no admitido. Únicamente se aceptan ficheros PDF, Word y Excel.',
+  },
+  /* E1b: `companias.js` mandaba un objeto crudo con un código que no vivía en
+     ningún catálogo — el cliente recibía código, pero sin rótulo que buscar,
+     y caía igual al castellano. */
+  COMPANIA_NO_CUBIERTA: { status: 404, mensaje: 'La compañía no figura bajo cobertura.' },
   /* Uno por cada motivo de `CODIGOS_LECTURA` (`src/extraccion/pdf.js`). El
      mismo status —422— que usaba `ErrorLectura` antes de tener catálogo
      propio. Su traducción al cliente no pasa por aquí: la ruta de subida de

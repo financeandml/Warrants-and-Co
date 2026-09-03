@@ -803,6 +803,9 @@ export default {
   'codigo.CAPACIDAD_NO_DISPONIBLE': 'Ningún proveedor conectado ofrece esta capacidad.',
   'codigo.SIMBOLO_INVALIDO': 'Símbolo no válido: {simbolo}',
   'codigo.SIN_SERIE_HISTORICA': 'No hay serie histórica disponible para este instrumento.',
+  'codigo.FORMATO_INFORME_NO_ADMITIDO':
+    'Formato no admitido. Únicamente se aceptan ficheros PDF, Word y Excel.',
+  'codigo.COMPANIA_NO_CUBIERTA': 'La compañía no figura bajo cobertura.',
 
   // ══════════════════════════ Acceso de analista ═══════════════════════════
   'acceso.credencialInvalida': 'Credencial no válida.',
