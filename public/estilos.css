@@ -923,7 +923,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   padding: 4px 11px; font-size: 0.76rem;
   border: 1px solid var(--linea-fuerte); border-radius: 999px;
   background: var(--superficie); color: var(--tinta-secundaria); cursor: pointer;
-  transition: all var(--transicion);
+  transition: border-color var(--transicion), color var(--transicion), background var(--transicion);
 }
 .pastilla:hover { border-color: var(--tinta); color: var(--tinta); }
 /* Filtro ACTIVO: cromo. Blanco sobre `--acento` da 6,29:1 en claro y la tinta
@@ -1000,7 +1000,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   min-width: 38px; padding: 8px 12px; font-size: 0.83rem;
   border: 1px solid var(--linea-fuerte); border-radius: var(--radio-m);
   background: var(--superficie); cursor: pointer;
-  transition: all var(--transicion);
+  transition: border-color var(--transicion), background var(--transicion), color var(--transicion), opacity var(--transicion);
 }
 .paginacion button:hover:not(:disabled) { border-color: var(--tinta); }
 /* La página en la que estás es un estado de la interfaz, no un dato. */
@@ -2272,7 +2272,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   transition: opacity var(--transicion), transform 220ms var(--mov-entrada);
 }
 #seccion-noticias .fila-noticia:last-child { border-bottom: none; }
-#seccion-noticias .fila-noticia:hover { opacity: 0.72; }
+@media (hover: hover) and (pointer: fine) {
+  #seccion-noticias .fila-noticia:hover { opacity: 0.72; }
+}
 #seccion-noticias .fila-noticia:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) {
   #seccion-noticias .fila-noticia { transition: none; }
@@ -2338,7 +2340,9 @@ button, input, select, textarea { font: inherit; color: inherit; }
   overflow: hidden;
 }
 /* La tarjeta entera es pulsable: su realce es cromo. */
-.noticia:hover { border-color: var(--acento); transform: translateY(-2px); }
+@media (hover: hover) and (pointer: fine) {
+  .noticia:hover { border-color: var(--acento); transform: translateY(-2px); }
+}
 
 .noticia__imagen-contenedor {
   position: relative; width: calc(100% + 2 * var(--espacio-4));
@@ -4508,6 +4512,15 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .radar-lectura__ticker:hover { border-block-end-color: var(--tinta); }
 .radar-lectura__valor { font-size: 0.86rem; font-variant-numeric: tabular-nums; }
 
+/* Deuda documentada, no olvido: `.radar-barra__relleno` y
+   `.signal-barra__relleno` (más abajo) animan `width` en vez de
+   `transform: scaleX()` —layout, no GPU—, y `inicio.js` fija ese `width` en
+   JS (`barra.style.width = ...%`). Corregirlo exige tocar el JS que las
+   pinta, no solo el CSS, y las dos secciones —Radar y Signal— siguen
+   `hidden` sin construir en `index.html`: cero impacto visible hoy, y el
+   coste de retocar código que nadie ve no se paga hasta que se reabran.
+   Quien reabra Radar o Signal debe resolver esto antes de destaparlas, no
+   heredarlo como si fuera nuevo. */
 .radar-barra {
   height: 3px; margin-block: 9px 8px;
   background: var(--linea);
