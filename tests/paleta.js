@@ -129,8 +129,7 @@ const RETIRADOS = ['--informativo', '--informativo-tenue'];
    No vale tampoco barrer todo nodo con un dígito: un rótulo con un año dentro lo
    cumple y no es una lectura. */
 const VISTAS_CONVERTIDAS = {
-  inicio: ['.portada__cifras__valor', '.cinta-metricas__valor',
-           '.dato__valor', '.cronologia__dia'],
+  inicio: ['.portada__cifras__valor', '.dato__valor', '.cronologia__dia'],
   /* En cartera vive el anillo, y sus sectores NO están en esta lista a
      propósito: no son celdas de texto con cifra sino arcos de un SVG, y su
      régimen es la cláusula 1 —cada sector lleva su nombre escrito y la caja su

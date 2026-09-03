@@ -639,24 +639,25 @@ const AREAS_OCULTAS = false;
   }
 
 
-  // ── Portada · fila de cifras ──
-  /* La fila la pinta `pintarCifras()` entera: ni una de sus cifras ni uno de sus
-     rótulos lleva `data-i18n`, de modo que sin entrada en `PINTORES_INICIO` se
-     quedaría en el idioma de partida sin que nada más se notara. */
+  // ── Portada · apoyo degradado de Cartera (antes «fila de cifras») ──
+  /* El bloque lo pinta `pintarCarteraHome()` entera —fusionada con la antigua
+     `pintarCifras()`—: ni una de sus cifras ni uno de sus rótulos lleva
+     `data-i18n`, de modo que sin entrada en `PINTORES_INICIO` se quedaría en
+     el idioma de partida sin que nada más se notara. */
   await p.goto(`${B}/#/inicio`);
   // La espera es por condición y sobre un nodo que solo existe pintado: el
   // armazón de la portada —hero, manifiesto, pilares— ya está en el documento
   // mucho antes de que la cartera conteste, y «la sección tiene contenido» daría
   // por buena una fila vacía.
-  const filaPintada = () => vistaPintada(p, 
-    () => document.querySelectorAll('#cifras-portada-cuerpo .cinta-metricas__celda').length === 4,
-    null, 'fila de cifras de portada');
+  const filaPintada = () => vistaPintada(p,
+    () => document.querySelectorAll('#home-cartera-cuerpo .cartera-home__apoyo .dato').length === 4,
+    null, 'apoyo degradado de cartera en portada');
   await filaPintada();
 
-  const celdas = () => p.$$eval('#cifras-portada-cuerpo .cinta-metricas__celda', (cs) => cs.map((c) => ({
-    valor: c.querySelector('.cinta-metricas__valor')?.textContent.trim() ?? null,
-    etiqueta: c.querySelector('.cinta-metricas__etiqueta')?.textContent.trim() ?? null,
-    nota: c.querySelector('.cinta-metricas__nota')?.textContent.trim() ?? null,
+  const celdas = () => p.$$eval('#home-cartera-cuerpo .cartera-home__apoyo .dato', (cs) => cs.map((c) => ({
+    valor: c.querySelector('.dato__valor')?.textContent.trim() ?? null,
+    etiqueta: c.querySelector('.dato__etiqueta')?.textContent.trim() ?? null,
+    nota: c.querySelector('.dato__nota')?.textContent.trim() ?? null,
   })));
 
   /*
@@ -680,7 +681,7 @@ const AREAS_OCULTAS = false;
 
   await idioma('es');
   await filaPintada();
-  seccion('\n  ── portada · fila de cifras en castellano ──');
+  seccion('\n  ── portada · apoyo degradado de cartera en castellano ──');
   let cs = await celdas();
   comp('rótulo del año', cs[0].etiqueta, 'Rentabilidad 2026');
   // El año no es una cantidad: como número, `t()` lo agruparía por millares. En
@@ -698,7 +699,7 @@ const AREAS_OCULTAS = false;
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',
     cs, (v) => equivalencia(v, /desde el capital/i));
   comp('ninguna cifra retenida por suelo de muestra llega a la portada',
-    (await txt('#cifras-portada-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
   comp('el pie declara el tamaño de la muestra',
     await txt('.cifras__pie'), (v) => v && /\d+ sesiones/.test(v) && /\d+ tesis/.test(v));
   comp('el pie lleva a la cartera',
@@ -719,7 +720,7 @@ const AREAS_OCULTAS = false;
   comp('las dos casillas coinciden si y solo si el año mide desde el capital',
     cs, (v) => equivalencia(v, /from capital/i));
   comp('ninguna cifra retenida por suelo de muestra llega a la portada',
-    (await txt('#cifras-portada-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
+    (await txt('#home-cartera-cuerpo')) ?? '', (v) => !RETENIDAS.test(v));
   comp('el pie declara el tamaño de la muestra',
     await txt('.cifras__pie'), (v) => v && /\d+ sessions/.test(v) && /\d+ (thesis|theses)/.test(v));
   comp('porcentaje sin espacio', cs[1].valor, (v) => v && /\d%$/.test(v));
@@ -732,8 +733,9 @@ const AREAS_OCULTAS = false;
      se pinta ya con el diccionario nuevo—, así que se comprueba aquí, donde
      el idioma se conmuta sin recargar.
 
-     Dos de las tres —año y total— comparten fuente exacta con la fila de
-     abajo (`#cifras-portada-cuerpo`, Regla 9) y se comparan contra su gemela.
+     Dos de las tres —año y total— comparten fuente exacta con el apoyo
+     degradado de abajo (`#home-cartera-cuerpo .cartera-home__apoyo`, Regla 9)
+     y se comparan contra su gemela.
      La tercera —el índice EN LO QUE VA DE AÑO— es una cifra propia de esta
      fase (`e.rentabilidadIndiceAnio`, `src/cartera.js`) sin gemela abajo: esa
      fila solo lleva el índice de periodo completo (`e.rentabilidadIndice`),

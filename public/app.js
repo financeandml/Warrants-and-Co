@@ -33,7 +33,7 @@ import {
 import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
-  pintarTicker, pintarCifras, pintarMetricasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
+  pintarTicker, pintarMetricasHero, pintarCarteraHome, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
   pintarResearchHome, pintarCatalizadoresHome, pintarFlujoHome, pintarSignalHome,
   refrescarTicker,
 } from './inicio.js';
@@ -1597,13 +1597,12 @@ const irARutaInicio = (destino) => {
    entrada en este mapa y su llamada abajo. */
 const PINTORES_INICIO = {
   ticker: () => pintarTicker(datosInicio.indices, datosInicio.cartera),
-  cifras: () => pintarCifras(datosInicio.cartera),
-  // Fase D.12: las tres cifras del Hero — misma cartera que `cifras`, su
+  // Fase D.12: las tres cifras del Hero — misma cartera que `cartera`, su
   // propia entrada porque el repintado por idioma recorre esta lista.
   metricasHero: () => pintarMetricasHero(datosInicio.cartera),
-  // Bloque Bento: misma cartera, otro corte —`resumenPortfolio`— y su propia
-  // entrada porque el repintado por idioma recorre esta lista, y sus rótulos
-  // también se traducen.
+  // Bloque Bento: misma cartera, otro corte —`resumenPortfolio` y, como apoyo
+  // degradado, `estadisticos`— y su propia entrada porque el repintado por
+  // idioma recorre esta lista, y sus rótulos también se traducen.
   cartera: () => pintarCarteraHome(datosInicio.cartera, irARutaInicio),
   catalizadores: () => pintarCatalizadoresHome(datosInicio.catalizadores, irARutaInicio),
   research: () => pintarResearchHome(datosInicio.research ?? [], irARutaInicio),
@@ -1643,11 +1642,6 @@ async function cargarInicio() {
       datosInicio.indices = par?.[0] ?? null;
       datosInicio.cartera = par?.[1] ?? null;
     }, 'ticker'),
-    // La fila de cifras sale de la misma cartera que la cinta. Se le da su
-    // propia entrada —y no se pinta dentro de la del ticker— porque el
-    // repintado por idioma recorre esta lista: un bloque que no figure en ella
-    // se quedaría en el idioma anterior.
-    alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cifras'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'metricasHero'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'cartera'),
     alLlegar(api('/api/catalizadores'), (d) => { datosInicio.catalizadores = d; }, 'catalizadores'),

@@ -170,6 +170,19 @@
      principal de Cartera. CLAUDE.md § Diseño 6, excepción. */
   --tipo-indicador-principal: clamp(2.6rem, 6vw, 4.2rem);
 
+  /* Excepción documentada, mismo criterio que --tipo-indicador-principal: no
+     es un clamp() suelto sin nombre. Research, Cartera y Catalizadores —las
+     tres cabeceras de `.rejilla-bento`— llevan tamaños distintos A PROPÓSITO
+     para que la escala del titular cuente la misma jerarquía que el espacio
+     ocupado (Research > Cartera > Catalizadores, Fase D.11). Cartera usa
+     directamente --tipo-6 y Catalizadores --tipo-5; solo Research necesita
+     un paso más grande que --tipo-6 sin llegar a --tipo-7 —que es el display
+     del hero, no una cabecera de sección—, y ningún --tipo-N intermedio
+     existe para ese hueco. Igualar Research a --tipo-6 borraría la señal de
+     jerarquía que este token existe para conservar. CLAUDE.md § Diseño 6,
+     excepción. */
+  --tipo-titular-research: clamp(1.9rem, 2.6vw, 2.6rem);
+
   /* ── Escala de densidad (rediseño 2) ──
      Dos niveles, cuatro números cada uno. Se aplica con
      `data-densidad="compacta"` o `"comoda"` en la raíz de la sección o
@@ -653,42 +666,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .portada__entradilla {
   font-size: 1.05rem; line-height: 1.72; color: var(--tinta-secundaria);
   max-width: 68ch;
-}
-
-/* ─────────────────────────────── Metricas ─────────────────────────────── */
-
-/* Reticula dibujada por las propias celdas. Un fondo gris visto a traves de los
-   huecos dejaria bloques vacios cuando la ultima fila no se completa; el trazo
-   por celda mas el recorte del contenedor se comporta con cualquier recuento. */
-.cinta-metricas {
-  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  border: 1px solid var(--linea); border-radius: var(--radio);
-  margin-top: 44px; margin-bottom: 56px;
-  background: var(--superficie);
-  overflow: hidden;
-}
-
-.cinta-metricas__celda {
-  padding: 22px 24px;
-  box-shadow: 1px 0 0 var(--linea-hairline), 0 1px 0 var(--linea-hairline);
-}
-
-.cinta-metricas__valor {
-  font-size: 1.75rem; font-weight: 600; line-height: 1.1;
-  letter-spacing: -0.02em; display: block; margin-bottom: 4px;
-}
-.cinta-metricas__etiqueta {
-  font-size: 0.68rem; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--tinta-mate);
-}
-
-/* Tercera línea de la celda: desde dónde mide la cifra. No es adorno —es lo que
-   separa dos casillas que hoy publican el mismo número por la misma cuenta—, de
-   modo que se distingue de la etiqueta por caja y no por tamaño, que ya es el
-   mínimo legible. */
-.cinta-metricas__nota {
-  display: block; margin-block-start: 6px;
-  font-size: 0.72rem; line-height: 1.35; color: var(--tinta-mate);
 }
 
 /* ───────────────────────────── Buscador rapido ────────────────────────── */
@@ -2522,8 +2499,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
    `.tabla-opciones td` sobraba por ancho y por redundante: las celdas numéricas
    de esa tabla llevan clase `.num`, que ya compone tabular desde antes, y el
    selector alcanzaba además el símbolo y la insignia de lado. */
-.cinta-metricas__valor,
-.cinta-metricas__nota,
 .dato__valor,
 .indicador__valor,
 .par-dato__valor,
@@ -2550,12 +2525,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .lectura--plana {
   font-variant-numeric: tabular-nums;
 }
-
-/* `.cinta-metricas__valor` lo tenía SOLO bajo `[data-contando]`, que ningún
-   guion llegaba a escribir: el contador que lo ponía estaba exportado y sin
-   importar. De modo que la clase nunca componía tabular, y el salto de ancho que
-   aquella regla decía evitar no llegaba a ocurrir porque no había conteo. Ahora
-   lo lleva siempre, y la regla condicional se ha retirado con su contador. */
 
 /* ════════════════ Lectura de mercado: alza, baja, aviso ═════════════════ */
 
@@ -3000,7 +2969,6 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .cabecera__interior { flex-wrap: wrap; gap: 12px 20px; min-height: 0; padding-block: 12px; }
   .navegacion { order: 3; width: 100%; margin-inline-start: 0; overflow-x: auto; }
   .cabecera__acciones { margin-inline-start: auto; }
-  .cinta-metricas { margin-top: 32px; }
   .cuadro-mando { grid-template-columns: repeat(3, 1fr); }
   .cuadro-mando--7 { grid-template-columns: repeat(4, 1fr); }
   .tarjeta__cabecera { flex-direction: column; align-items: flex-start; }
@@ -3937,43 +3905,41 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    Fase D.6: ya no flota suelta entre el hero y el bento — vive dentro de
    `#home-cartera`, como el soporte del track record que declara la sección:
    comparación con el índice y caída máxima, no solo la cifra de portada.
-   ═══════════════════════════════════════════════════════════════════════════ */
-.cifras {
-  padding-block: 0 clamp(40px, 6vh, 64px);
+
+   Rediseño de Home (post-D.11): las cuatro cifras dejaban de ser una "KPI
+   grid" (D.8) para pasar a una rejilla 2×2 con la misma cifra de mono que el
+   retorno global — dos jerarquías compitiendo por el mismo peso visual en la
+   misma columna estrecha (hallazgo de la auditoría de composición: tres
+   tratamientos tipográficos distintos para el mismo hecho —rentabilidad de
+   cartera— apilados en una sola pantalla). Pasan a apoyo degradado, el mismo
+   filete lateral que ya usa `.research-panel__datos` para su columna de
+   datos: una sola cifra manda (`.cartera-home__valor`), esta es su contexto.
+   `pintarCifras()` se retiró; `pintarCarteraHome()` construye ahora también
+   este bloque, con los mismos campos de `cartera.estadisticos` de siempre
+   (Regla 9 — ningún cálculo aparte). */
+.cartera-home__apoyo {
+  display: flex; flex-direction: column; gap: 14px;
+  margin-block-start: 20px;
+  padding-inline-start: clamp(18px, 2.2vw, 26px);
+  border-inline-start: 1px solid var(--linea);
+}
+/* Mono y --tipo-1: notablemente más pequeña que `.cartera-home__valor`
+   (clamp 2.1–2.9rem) — es apoyo, no un segundo titular. */
+.cartera-home__apoyo .dato__valor {
+  font-family: var(--mono, monospace);
+  font-size: var(--tipo-1);
+}
+/* Tercera línea del dato: desde dónde mide la cifra. La misma función que
+   cumplía `.cinta-metricas__nota` —distinguir dos casillas que publican el
+   mismo número por la misma cuenta—, aquí escopada al dato individual en vez
+   de a la celda. */
+.cartera-home__apoyo .dato__nota {
+  display: block; margin-block-start: 3px;
+  font-size: var(--tipo-0); line-height: 1.35; color: var(--tinta-mate);
 }
 
-/* Fase D.8: dentro de Portfolio, el grid de cuatro celdas con borde y sombra
-   era exactamente el "KPI grid" que esta fase pide evitar — cuatro cajas
-   iguales compitiendo por atención, el lenguaje de un dashboard. Pasa a ser
-   una línea de evidencia: rentabilidad, comparación con el índice y caída
-   máxima como metadatos en fila, separados por un filete vertical y no por
-   una caja cada uno — la misma nota al pie de una cifra de research, no
-   cuatro tarjetas de producto. Se escopa a `#home-cartera`: `.cinta-metricas`
-   sigue siendo la caja con borde en cualquier otro sitio que la use. */
-/* Fase D.11: dentro de la rejilla, `#home-cartera` ya no tiene el ancho
-   completo del `.contenedor` para poner las cuatro cifras en una sola fila
-   —una columna de ~1fr de 2.7fr no da para eso sin apretar cada rótulo a
-   morir—. Pasa a una rejilla de 2×2, mismo filete vertical y horizontal, la
-   misma "línea de evidencia" de D.8 pero en dos filas en vez de en una. */
-#home-cartera .cinta-metricas {
-  display: flex; flex-wrap: wrap;
-  border: none; border-radius: 0; background: none;
-  margin-block: 26px 0;
-  row-gap: 16px;
-}
-#home-cartera .cinta-metricas__celda {
-  box-shadow: none;
-  flex: 1 1 45%;
-  padding: 0 20px 0 0;
-  border-inline-end: 1px solid var(--linea);
-}
-#home-cartera .cinta-metricas__celda:nth-child(2n) { border-inline-end: none; padding-inline-end: 0; }
-#home-cartera .cinta-metricas__celda:nth-child(n+3) { padding-block-start: 14px; border-block-start: 1px solid var(--linea); }
-#home-cartera .cinta-metricas__celda:nth-child(even) { padding-inline-start: 20px; }
-#home-cartera .cinta-metricas__valor { font-family: var(--mono, monospace); font-size: 1.2rem; }
-
-/* El pie dice de que muestra hablan las cuatro cifras. Cuelga de la retícula sin
-   despegarse de ella: un respiro corto arriba y ninguno abajo. */
+/* El pie dice de que muestra hablan las cuatro cifras. Cuelga del bloque de
+   apoyo sin despegarse de él: un respiro corto arriba y ninguno abajo. */
 .cifras__pie {
   margin-block-start: 16px;
   font-size: 0.82rem; line-height: 1.5; color: var(--tinta-mate);
@@ -4176,7 +4142,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .bloque-home__titulo {
   margin-block-start: 10px;
   font-family: var(--geo);
-  font-size: clamp(1.7rem, 3vw, 2.5rem);
+  font-size: var(--tipo-6);
   font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
 }
 
@@ -4528,7 +4494,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    de `.rejilla-bento`, titular mayor que Portfolio/Upcoming—, pero ya no fija
    su propio `padding-block`: la rejilla entera respira como un conjunto (ver
    `.bloque-bento`), no sección por sección como en D.8/D.9. */
-.rejilla-bento__research .bloque-home__titulo { font-size: clamp(1.9rem, 2.6vw, 2.6rem); }
+.rejilla-bento__research .bloque-home__titulo { font-size: var(--tipo-titular-research); }
 
 .research-panel {
   display: grid; gap: 40px;
@@ -4541,7 +4507,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    ventana ya no hay sitio para tesis y datos en fila sin apretar los datos
    contra su suelo de 190px. Se apilan, y los datos pasan a fila envolvente
    —la misma cifra-con-filete de siempre, en horizontal en vez de en columna,
-   el mismo tratamiento que ya usa `.cinta-metricas` para lo mismo. */
+   el mismo tratamiento que ya usa `.cartera-home__apoyo` para lo mismo. */
 @media (max-width: 1279px) {
   .rejilla-bento__research .research-panel { grid-template-columns: 1fr; gap: 26px; }
   .rejilla-bento__research .research-panel__datos {
@@ -4560,7 +4526,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .research-panel__empresa {
   margin-block-start: 8px;
   font-family: var(--geo);
-  font-size: clamp(1.65rem, 3.4vw, 2.6rem); font-weight: 500; letter-spacing: -0.02em;
+  font-size: var(--tipo-6); font-weight: 500; letter-spacing: -0.02em;
 }
 .research-panel__sector { margin-block-start: 6px; font-size: 0.82rem; color: var(--tinta-mate); }
 /* Fase C, segunda pasada: el resumen lleva su propio filete, como una cita al
@@ -4640,7 +4606,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    rejilla se lo da—. Sigue siendo deliberadamente el más pequeño de los tres:
    menos aire vertical y un titular más pequeño que Research/Portfolio, la
    misma jerarquía de D.8 contada ahora en una columna en vez de en una banda. */
-.rejilla-bento__catalizadores .bloque-home__titulo { font-size: clamp(1.3rem, 1.7vw, 1.6rem); }
+.rejilla-bento__catalizadores .bloque-home__titulo { font-size: var(--tipo-5); }
 .upcoming__fila {
   display: flex; align-items: baseline; gap: 18px;
   padding-block: 14px;

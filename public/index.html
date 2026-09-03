@@ -70,7 +70,7 @@
       <div class="manifiesto__visual" id="hero-visual" hidden>
         <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">
         <!-- Fase D.12: las tres cifras de rendimiento del fondo — la misma
-             fuente que ya pinta `#cifras-portada`/`#home-cartera`, nunca un
+             fuente que ya pinta `#home-cartera`, nunca un
              cálculo aparte (Regla 9). `hidden` hasta que `pintarMetricasHero()`
              tenga datos reales que mostrar.
              Posición SIN TERMINAR a propósito: este commit solo remide el
@@ -209,10 +209,13 @@
             <div id="home-research-cuerpo" aria-live="polite"></div>
           </article>
 
-          <!-- Resumen de `resumenPortfolio` — el mismo objeto que ya calcula
-               `calcularCartera()` para `#/cartera`. Nada nuevo: llega dentro
-               de la misma respuesta de `/api/mercado/cartera` que alimenta
-               la cinta (`datosInicio.cartera`). -->
+          <!-- Resumen de `resumenPortfolio` y `estadisticos` — los mismos objetos
+               que ya calcula `calcularCartera()` para `#/cartera`. Nada nuevo:
+               llegan dentro de la misma respuesta de `/api/mercado/cartera` que
+               alimenta la cinta (`datosInicio.cartera`). `pintarCarteraHome()`
+               pinta el retorno como única cifra dominante y año/total/índice/
+               caída como apoyo degradado debajo — ya no hay bloque `#cifras-portada`
+               propio compitiendo por el mismo peso visual. -->
           <article class="rejilla-bento__cartera" id="home-cartera" aria-labelledby="titulo-home-cartera">
             <header class="bloque-home__cabecera">
               <div>
@@ -227,9 +230,6 @@
                 <span class="enlace-avance__flecha" aria-hidden="true">→</span>
               </a>
             </header>
-            <div class="cifras" id="cifras-portada" hidden>
-              <div id="cifras-portada-cuerpo"></div>
-            </div>
             <div id="home-cartera-cuerpo" aria-live="polite"></div>
           </article>
 

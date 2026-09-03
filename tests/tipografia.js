@@ -64,7 +64,7 @@ const PORdesRUTA = {
 
      Quien reabra el área: añádelas a esta lista en la misma tanda. Lo mismo vale
      para el radar, el flujo y la señal. */
-  inicio: ['.portada__cifras__valor', '.cinta-metricas__valor', '.cinta-metricas__nota', '.dato__valor'],
+  inicio: ['.portada__cifras__valor', '.dato__valor'],
   /* `.aportacion__valor` vive en realidad en `#seccion-radar`, no en cartera.
      Figura aquí porque esta lista es «por qué ruta pasar para encontrarla» y la
      consulta es global: se mide igual. Queda dicho para que nadie deduzca de
