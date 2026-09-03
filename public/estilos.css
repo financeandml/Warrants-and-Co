@@ -1336,10 +1336,103 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .pastilla-benchmark:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
 
+/* Píldora de ticker libre: mismo tamaño y tipografía que una pastilla del
+   catálogo fijo, pero sin `aria-pressed` —un libre solo existe activo, no
+   tiene estado apagado— y con su propio botón de quitar en vez de alternar
+   con un segundo clic sobre el texto. */
+.pastilla-benchmark--libre {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 6px 8px 6px 12px; font-size: 0.76rem; font-weight: 500;
+  border: 1px solid var(--acento); border-radius: var(--radio-m);
+  background: var(--acento); color: var(--tinta-inversa);
+}
+.pastilla-benchmark__quitar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; padding: 0; line-height: 1;
+  border: none; border-radius: 50%; background: rgba(255, 255, 255, 0.22);
+  color: inherit; font-size: 0.6rem; cursor: pointer;
+}
+.pastilla-benchmark__quitar:hover { background: rgba(255, 255, 255, 0.36); }
+.pastilla-benchmark__quitar:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
+
+/* Campo de ticker libre: mismo alto y tipografía que las pastillas y el
+   conmutador de rango, para que la fila de controles lea como un solo
+   grupo. Sin lista blanca en el proveedor —Yahoo Finance sirve cualquier
+   ticker válido—, así que no hay autocompletado que ofrecer: se valida al
+   enviar, contra el propio endpoint (`anadirTickerLibre()`, app.js). */
+.buscador-ticker {
+  display: inline-flex; align-items: center; gap: 6px;
+  border: 1px solid var(--linea-fuerte); border-radius: var(--radio-m);
+  padding: 2px 3px 2px 10px; background: var(--superficie);
+}
+.buscador-ticker input {
+  border: none; outline: none; background: none;
+  font-family: var(--mono); font-size: 0.74rem; width: 13ch;
+  color: var(--tinta); text-transform: uppercase;
+}
+.buscador-ticker input::placeholder { text-transform: none; color: var(--tinta-mate); }
+.buscador-ticker button {
+  padding: 5px 10px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.02em;
+  border: none; border-radius: calc(var(--radio-m) - 2px);
+  background: var(--tinta); color: var(--tinta-inversa); cursor: pointer;
+}
+.buscador-ticker button:hover:not(:disabled) { background: var(--tinta-secundaria); }
+.buscador-ticker button:disabled { opacity: 0.5; cursor: default; }
+.buscador-ticker button:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+
+/* Aviso del buscador: estado de error explícito —símbolo sin datos, tope de
+   comparaciones, ticker repetido—, nunca una comparación que "no hace nada"
+   en silencio. Tinta neutra por defecto: no es un dato direccional, es un
+   mensaje de sistema — la cláusula 2 reserva `--acento` para cromo, y esto
+   no lo es tampoco (no hay estado "encendido" que marcar). Color de aviso,
+   no de dato, porque SÍ pide atención inmediata a diferencia de una nota. */
+.buscador-ticker__aviso {
+  margin: 10px 24px 0; padding: 8px 12px;
+  font-size: 0.78rem; color: var(--aviso);
+  background: var(--aviso-tenue); border-radius: var(--radio-m);
+}
+
 /* ─────────────────────────────── Grafico ──────────────────────────────── */
 
 .grafico { position: relative; padding: 22px 24px 8px; }
 .grafico svg { display: block; width: 100%; height: auto; overflow: visible; }
+
+/* ── Gráfico + desglose por posición, en dos columnas ──
+   No existía layout de columnas para el gráfico: ocupaba el 100% del ancho.
+   El panel lateral es una vista distinta del mismo dato de posiciones —ya
+   real, ya usado en `.tabla-posiciones`—, nunca una repetición de la
+   tarjeta de resumen (Regla 9: cartera agregada arriba, posición por
+   posición aquí). Proporción 1.7fr/1fr: la misma que ya usa la portada
+   para research/columna estrecha, no una cifra inventada para esta vista. */
+.grafico-cuerpo {
+  display: grid; grid-template-columns: 1.7fr 1fr; gap: 0;
+  border-top: 1px solid var(--linea-hairline);
+}
+.grafico-columna {
+  padding-inline-end: clamp(20px, 3vw, 32px);
+  border-inline-end: 1px solid var(--linea-hairline);
+}
+.grafico-columna .grafico { padding-inline-start: 0; }
+.grafico-desglose {
+  padding: 20px 0 20px clamp(20px, 3vw, 32px);
+}
+.grafico-desglose h3 {
+  font-size: var(--tipo-4); font-weight: 600; margin: 0 0 14px;
+  letter-spacing: -0.01em;
+}
+.grafico-desglose .tabla-envoltorio { max-height: 300px; overflow-y: auto; }
+.grafico-desglose .celda-empresa {
+  font-family: var(--mono); font-weight: 600; letter-spacing: 0.03em;
+}
+
+@media (max-width: 900px) {
+  .grafico-cuerpo { grid-template-columns: 1fr; }
+  .grafico-columna {
+    padding-inline-end: 0; border-inline-end: none;
+    border-block-end: 1px solid var(--linea-hairline); padding-block-end: 24px;
+  }
+  .grafico-desglose { padding-inline-start: 0; padding-block-start: 20px; }
+}
 
 /* `.grafico__rejilla` se retiró: la cifra del eje sitúa la altura y cinco
    horizontales cruzando la serie competían con ella. La base 100 se conserva
@@ -1352,9 +1445,16 @@ button, input, select, textarea { font: inherit; color: inherit; }
   fill: var(--tinta-mate); font-variant-numeric: tabular-nums;
 }
 
-/* `.grafico__area` se retiró: un relleno mide superficie, y aquí lo que se lee
-   es la ALTURA sobre la base 100. Además tapaba la serie del índice justo en los
-   cruces, que es el punto más interesante del gráfico. */
+/* Reabierto: `.grafico__area` bajo la SERIE DE CARTERA, solo ella —los
+   benchmarks siguen sin relleno—. Las dos razones que la habían retirado
+   siguen siendo ciertas y siguen resueltas: la altura sobre la base 100
+   sigue siendo lo que se lee (el área es un acento al 10% de opacidad
+   arriba, 0% abajo, nunca una segunda lectura de superficie), y ya no tapa
+   ningún cruce con un benchmark porque `grafico.js` la pinta ANTES que las
+   líneas de benchmark en el orden del SVG —quedan encima, a opacidad
+   plena—. Decisión tomada viéndolo compuesto, no una reversión a ciegas. */
+.grafico__area { fill-opacity: 1; }
+.grafico__area-parada { stop-color: var(--serie-cartera); }
 .grafico__linea { fill: none; stroke: var(--serie-cartera); stroke-width: 1.75; stroke-linejoin: round; stroke-linecap: round; }
 /* El trazo discontinuo NO es decorativo: es lo que separa la serie del índice
    de la de la cartera sin recurrir al tono. Se alarga a `8 5` —más sobrio, menos

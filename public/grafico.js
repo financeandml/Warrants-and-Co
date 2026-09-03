@@ -251,6 +251,29 @@ export class GraficoCartera {
       svg.appendChild(et);
     }
 
+    /* ── Área degradada bajo la cartera, SOLO la cartera ──
+       Se pintaba «sin área: aquí lo que se lee es la altura sobre la base
+       100, y un relleno tapaba los benchmarks justo donde se cruzan» —las
+       dos razones siguen siendo ciertas, y esta área no las contradice:
+       vive DETRÁS de las series de benchmark en el orden de pintado (este
+       `<path>` se añade antes que el bucle de benchmarks, más abajo, así
+       que sus trazos quedan encima, a opacidad plena, y ningún cruce se
+       tapa), y su opacidad es lo bastante baja —10% arriba, 0 abajo— para
+       que sea un acento decorativo de la serie protagonista, no una
+       segunda lectura de superficie que compita con la altura. */
+    const dArea = `${cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ')} L ${x(cartera.length - 1).toFixed(2)} ${y(inicio).toFixed(2)} L ${x(0).toFixed(2)} ${y(inicio).toFixed(2)} Z`;
+    const defs = crear('defs');
+    const gradiente = crear('linearGradient', {
+      id: 'grafico-cartera-degradado', x1: '0', x2: '0', y1: '0', y2: '1',
+    });
+    gradiente.appendChild(crear('stop', { offset: '0%', class: 'grafico__area-parada', 'stop-opacity': '0.1' }));
+    gradiente.appendChild(crear('stop', { offset: '100%', class: 'grafico__area-parada', 'stop-opacity': '0' }));
+    defs.appendChild(gradiente);
+    svg.appendChild(defs);
+    svg.appendChild(crear('path', {
+      class: 'grafico__area', d: dArea, fill: 'url(#grafico-cartera-degradado)', stroke: 'none',
+    }));
+
     // ── Series de benchmark (fondo), cada una con su propio patron de trazo ──
     puntosPorBenchmark.forEach((b, k) => {
       if (b.puntos.length < 2) return;
@@ -259,12 +282,8 @@ export class GraficoCartera {
       svg.appendChild(crear('path', { class: `grafico__linea grafico__linea--indice grafico__linea--${clase}`, d }));
     });
 
-    // ── Serie de la cartera: trazo protagonista, sin area de acompañamiento ──
+    // ── Serie de la cartera: trazo protagonista ──
     const dLinea = cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ');
-    /* Sin área bajo la serie. Un relleno mide superficie, y aquí la superficie
-       no significa nada: lo que se lee es la ALTURA sobre la base 100. Además
-       tapaba las series de benchmark justo donde se cruzan, que es el punto
-       más interesante del gráfico. */
     svg.appendChild(crear('path', { class: 'grafico__linea', d: dLinea }));
 
     /* ── Rótulo directo al final de cada serie ──

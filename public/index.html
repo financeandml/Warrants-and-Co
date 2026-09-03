@@ -823,22 +823,65 @@
               <button type="button" data-rango="MAX" class="activo"
                       data-i18n="cartera.grafico.rango.max">Máx</button>
             </div>
-            <!-- Píldoras de benchmark: una por índice del catálogo, pintadas por
-                 `poblarBenchmarks()` desde `datos.benchmarks`. Ninguna se escribe
-                 aquí a mano — el servidor sigue siendo la fuente única. -->
+            <!-- Píldoras de benchmark: una por índice del catálogo fijo, pintadas
+                 por `poblarBenchmarks()` desde `datos.benchmarks`, más una por
+                 cada ticker libre que el analista haya añadido esta sesión
+                 (`estado.benchmarksLibres`). El catálogo fijo sigue viniendo
+                 solo del servidor; los libres no se guardan en ningún sitio,
+                 se pierden al recargar — el proveedor no tiene lista blanca
+                 (Yahoo Finance sirve cualquier ticker válido), así que no hace
+                 falta un catálogo nuevo que mantener. Tope de 4 comparaciones
+                 activas a la vez: son las cuatro clases de color/patrón que
+                 ya existían (`CLASES_BENCHMARK`, grafico.js) y no se inventa
+                 una quinta sin verificarla contra la cláusula de ΔE2000. -->
             <div class="pastillas-benchmark" id="pastillas-benchmark" role="group"
                  data-i18n-attr="aria-label:cartera.grafico.indice" aria-label="Índice de referencia"></div>
+            <form class="buscador-ticker" id="buscador-ticker">
+              <input type="text" id="campo-ticker-libre" maxlength="12" autocomplete="off"
+                     data-i18n-attr="placeholder:cartera.grafico.buscar.placeholder" placeholder="Ticker libre…">
+              <button type="submit" data-i18n="cartera.grafico.buscar.anadir">Añadir</button>
+            </form>
             <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
                     data-i18n="cartera.grafico.verDatos">
               Ver datos
             </button>
           </div>
         </div>
+        <p class="buscador-ticker__aviso" id="aviso-ticker-libre" role="status" hidden></p>
 
-        <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
-        <p class="visualmente-oculto" id="descripcion-grafico"></p>
+        <div class="grafico-cuerpo">
+          <div class="grafico-columna">
+            <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
+            <p class="visualmente-oculto" id="descripcion-grafico"></p>
 
-        <div class="leyenda" id="leyenda-grafico"></div>
+            <div class="leyenda" id="leyenda-grafico"></div>
+          </div>
+
+          <!-- Panel lateral: qué posiciones concretas hay detrás de la cifra
+               agregada del gráfico — nivel de posición, no de cartera. Mismos
+               campos que ya usa `pintarTablaCartera()` (ticker, pesoVigente,
+               contribucionPct): ninguna cifra nueva, ninguna segunda fuente
+               (Regla 9). No repite Realizada/No realizada de la tarjeta de
+               resumen: esa cifra ya tiene su sitio, esta es otra vista del
+               dato —por posición, no por realizado/no realizado. -->
+          <aside class="grafico-desglose" aria-labelledby="titulo-grafico-desglose">
+            <h3 id="titulo-grafico-desglose" data-i18n="cartera.grafico.desglose.titulo">Desglose por posición</h3>
+            <div class="tabla-envoltorio">
+              <table class="tabla-datos" data-densidad="compacta">
+                <caption class="visualmente-oculto"
+                         data-i18n="cartera.grafico.desglose.caption">Peso y contribución de cada posición</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                    <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
+                    <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
+                  </tr>
+                </thead>
+                <tbody id="cuerpo-grafico-desglose"></tbody>
+              </table>
+            </div>
+          </aside>
+        </div>
 
         <!-- Rendimiento por serie: Asset / Start / Current / Return, una fila
              por serie activa. `pintarTablaRendimiento()` la reconstruye entera

@@ -67,6 +67,12 @@ const estado = {
   benchmarksActivos: new Set(['SPY', 'QQQ', 'DIA']),
   // Series crudas ya pedidas a `/api/mercado/serie/:simbolo`, por símbolo.
   seriesBenchmark: new Map(),
+  // Tickers libres añadidos por el analista esta sesión —{simbolo, nombre}—,
+  // fuera del catálogo fijo de 4 que manda el servidor. No se persisten en
+  // ningún sitio: se pierden al recargar, igual que el resto de `estado`. Un
+  // ticker libre solo existe mientras está activo — quitarlo lo borra de
+  // aquí también, no tiene sentido guardarlo apagado.
+  benchmarksLibres: new Map(),
   grafico: null,
   filtrosNoticias: {},
   paginaNoticias: 1,
@@ -2116,6 +2122,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
     $('#resumen-portfolio').textContent = '';
     $('#contribucion-barras').textContent = '';
     $('#cuerpo-posiciones').textContent = '';
+    $('#cuerpo-grafico-desglose').textContent = '';
     $('#rejilla-estadisticos').textContent = '';
     return;
   }
@@ -2124,6 +2131,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarCuadroMando(datos);
   pintarGrafico(datos);
   pintarTablaCartera(datos);
+  pintarDesgloseGrafico(datos);
   pintarContribucion(datos);
   pintarConciliacion(datos);
   pintarEstadisticos(datos);
@@ -2394,24 +2402,41 @@ async function cargarSeriesBenchmark(datos) {
   }));
 }
 
+/* Tope de comparaciones activas a la vez —catálogo fijo y tickers libres
+ * comparten el mismo cupo—: son las cuatro clases de color/patrón que ya
+ * existían en el gráfico (`CLASES_BENCHMARK`, grafico.js) antes de que
+ * existiera la búsqueda libre. Subirlo exige verificar un quinto color
+ * contra la cláusula de ΔE2000 de CLAUDE.md, no es solo añadir una clase. */
+const TOPE_COMPARACIONES = 4;
+
+/** Catálogo fijo del servidor + tickers libres añadidos esta sesión, en ese orden. */
+function catalogoCombinado() {
+  return [...(estado.catalogoBenchmarks ?? []), ...estado.benchmarksLibres.values()];
+}
+
 /**
- * Puebla las píldoras de benchmark desde el catálogo que manda el servidor.
+ * Puebla las píldoras de benchmark: el catálogo fijo que manda el servidor,
+ * más una píldora con botón de quitar por cada ticker libre añadido esta
+ * sesión (`estado.benchmarksLibres`). No hay lista de índices en el
+ * cliente: la había —un mapa de nombres y las opciones de un `<select>`
+ * escritas a mano— y era la segunda y la tercera copia de un hecho que ya
+ * declaraba `src/routes/mercado.js`.
  *
- * No hay lista de índices en el cliente: la había —un mapa de nombres y las
- * opciones de un `<select>` escritas a mano— y era la segunda y la tercera
- * copia de un hecho que ya declaraba `src/routes/mercado.js`.
- *
- * Cada píldora es un `<button aria-pressed>` real, operable por teclado. La
- * cartera no es una píldora más: es la serie protagonista y siempre está
- * visible, así que no lleva control propio.
+ * Cada píldora fija es un `<button aria-pressed>` real, operable por
+ * teclado. La cartera no es una píldora más: es la serie protagonista y
+ * siempre está visible, así que no lleva control propio.
  */
 function poblarBenchmarks(catalogo) {
   const cont = $('#pastillas-benchmark');
   if (!cont || !catalogo?.length) return;
 
   // Los símbolos que ya no están en el catálogo se sueltan del conjunto activo.
+  // Los libres no viven en `catalogo` —vienen de `estado.benchmarksLibres`—,
+  // así que esta limpieza no los toca.
   const vigentes = new Set(catalogo.map((b) => b.simbolo));
-  for (const s of [...estado.benchmarksActivos]) if (!vigentes.has(s)) estado.benchmarksActivos.delete(s);
+  for (const s of [...estado.benchmarksActivos]) {
+    if (!vigentes.has(s) && !estado.benchmarksLibres.has(s)) estado.benchmarksActivos.delete(s);
+  }
 
   cont.textContent = '';
   for (const b of catalogo) {
@@ -2426,16 +2451,34 @@ function poblarBenchmarks(catalogo) {
     boton.addEventListener('click', () => alPulsarPastillaBenchmark(b.simbolo));
     cont.appendChild(boton);
   }
+
+  for (const b of estado.benchmarksLibres.values()) {
+    const pastilla = elemento('span', 'pastilla-benchmark pastilla-benchmark--libre');
+    pastilla.appendChild(document.createTextNode(
+      t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo })));
+    const quitar = elemento('button', 'pastilla-benchmark__quitar', '✕');
+    quitar.type = 'button';
+    quitar.setAttribute('aria-label', t('cartera.grafico.buscar.quitar', { simbolo: b.simbolo }));
+    quitar.addEventListener('click', () => quitarTickerLibre(b.simbolo));
+    pastilla.appendChild(quitar);
+    cont.appendChild(pastilla);
+  }
 }
 
-/** Alterna un benchmark y decide si hace falta recargar la cartera entera. */
+/** Alterna un benchmark del catálogo fijo y decide si hace falta recargar la cartera entera. */
 async function alPulsarPastillaBenchmark(simbolo) {
+  const activando = !estado.benchmarksActivos.has(simbolo);
+  if (activando && estado.benchmarksActivos.size >= TOPE_COMPARACIONES) {
+    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.limite'));
+    return;
+  }
+
   const principalAntes = estado.cartera?.benchmark;
-  if (estado.benchmarksActivos.has(simbolo)) estado.benchmarksActivos.delete(simbolo);
-  else estado.benchmarksActivos.add(simbolo);
+  if (activando) estado.benchmarksActivos.add(simbolo);
+  else estado.benchmarksActivos.delete(simbolo);
 
   const boton = $(`.pastilla-benchmark[data-simbolo="${CSS.escape(simbolo)}"]`);
-  if (boton) boton.setAttribute('aria-pressed', String(estado.benchmarksActivos.has(simbolo)));
+  if (boton) boton.setAttribute('aria-pressed', String(activando));
 
   if (!estado.cartera) return;
 
@@ -2451,9 +2494,9 @@ async function alPulsarPastillaBenchmark(simbolo) {
   pintarGrafico(estado.cartera);
 }
 
-/** Series de los benchmarks activos, alineadas contra `filtrada` y a base 100. */
+/** Series de los benchmarks activos —fijos y libres—, alineadas contra `filtrada` y a base 100. */
 function benchmarksActivosParaGrafico(datos, filtrada) {
-  return (estado.catalogoBenchmarks ?? [])
+  return catalogoCombinado()
     .filter((b) => estado.benchmarksActivos.has(b.simbolo))
     .map((b) => {
       const entrada = estado.seriesBenchmark.get(b.simbolo);
@@ -2464,6 +2507,80 @@ function benchmarksActivosParaGrafico(datos, filtrada) {
         disponible: entrada.disponible, serie: rebasarBase100(alineada),
       };
     });
+}
+
+/** Aviso de la búsqueda de ticker libre: un estado, siempre visible o siempre oculto. */
+function mostrarAvisoTickerLibre(texto) {
+  const aviso = $('#aviso-ticker-libre');
+  if (!aviso) return;
+  if (!texto) { aviso.hidden = true; aviso.textContent = ''; return; }
+  aviso.textContent = texto;
+  aviso.hidden = false;
+}
+
+/**
+ * Añade un ticker libre a la comparación: valida contra el propio proveedor
+ * —Yahoo Finance no tiene lista blanca, así que la única forma honesta de
+ * saber si un símbolo tiene datos es pedirlos— y declara el error tal cual
+ * si no los tiene, en vez de una comparación que "no hace nada" en silencio.
+ */
+// Mismo patrón que `normalizarSimbolo()` en `src/market/index.js`: sin este
+// filtro, un ticker con espacios o caracteres fuera de rango no cae en el
+// 404 limpio de "sin datos" —cae en el 500 genérico que esa ruta reserva
+// para lo que no reconoce como intento de símbolo—, y el aviso mentiría
+// sobre cuál fue el problema real.
+const PATRON_TICKER = /^\^?[A-Z0-9][A-Z0-9.\-]{0,11}$/;
+
+async function anadirTickerLibre() {
+  const campo = $('#campo-ticker-libre');
+  const simbolo = String(campo?.value ?? '').trim().toUpperCase();
+  if (!simbolo) return;
+
+  if (!PATRON_TICKER.test(simbolo)) {
+    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.sinDatos', { simbolo }));
+    return;
+  }
+  if (estado.benchmarksActivos.has(simbolo)) {
+    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.repetido', { simbolo }));
+    return;
+  }
+  if (estado.benchmarksActivos.size >= TOPE_COMPARACIONES) {
+    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.limite'));
+    return;
+  }
+
+  mostrarAvisoTickerLibre(null);
+  const boton = $('#buscador-ticker button[type="submit"]');
+  if (boton) boton.disabled = true;
+
+  try {
+    const primera = estado.cartera?.serie?.[0]?.fecha;
+    const dias = primera
+      ? Math.min(400, Math.ceil((Date.now() - new Date(`${primera}T00:00:00Z`).getTime()) / 86_400_000) + 5)
+      : 180;
+    const r = await api(`/api/mercado/serie/${encodeURIComponent(simbolo)}?dias=${dias}`);
+    estado.seriesBenchmark.set(simbolo, { disponible: true, serie: r.serie ?? [] });
+    estado.benchmarksLibres.set(simbolo, { simbolo, nombre: r.nombre || simbolo });
+    estado.benchmarksActivos.add(simbolo);
+    campo.value = '';
+  } catch {
+    // Sin serie: se declara el error, nunca se añade una comparación vacía.
+    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.sinDatos', { simbolo }));
+    if (boton) boton.disabled = false;
+    return;
+  }
+  if (boton) boton.disabled = false;
+
+  poblarBenchmarks(estado.catalogoBenchmarks);
+  if (estado.cartera) pintarGrafico(estado.cartera);
+}
+
+/** Quita un ticker libre de la comparación por completo —no tiene sentido guardarlo apagado. */
+function quitarTickerLibre(simbolo) {
+  estado.benchmarksLibres.delete(simbolo);
+  estado.benchmarksActivos.delete(simbolo);
+  poblarBenchmarks(estado.catalogoBenchmarks);
+  if (estado.cartera) pintarGrafico(estado.cartera);
 }
 
 function pintarGrafico(datos) {
@@ -2776,6 +2893,36 @@ function pintarTablaCartera(datos) {
       boton.querySelector('.fila-cartera__glifo').textContent = abierto ? '+' : '–';
       panel.hidden = abierto;
     });
+  }
+}
+
+/**
+ * Panel lateral del gráfico: qué posiciones concretas hay detrás de la
+ * cifra agregada — nivel de posición, no de cartera. Mismos campos que
+ * `pintarTablaCartera()` (`ticker`/`empresa`, `pesoVigente`, `contribucionPct`),
+ * ninguna cifra nueva ni una segunda fuente (Regla 9). Ordenada por
+ * contribución absoluta: lo que más ha movido el rendimiento primero, que es
+ * la pregunta que este panel responde —no "qué pesa más hoy", eso ya lo
+ * contesta la tabla de composición de más abajo.
+ */
+function pintarDesgloseGrafico(datos) {
+  const cuerpo = $('#cuerpo-grafico-desglose');
+  if (!cuerpo) return;
+  cuerpo.textContent = '';
+
+  const filas = [...(datos.posiciones ?? []), ...(datos.cerradas ?? [])]
+    .slice()
+    .sort((a, b) => Math.abs(b.contribucionPct ?? 0) - Math.abs(a.contribucionPct ?? 0));
+
+  for (const p of filas) {
+    const fila = document.createElement('tr');
+    const celdaValor = elemento('td', 'celda-empresa');
+    celdaValor.appendChild(document.createTextNode(p.ticker));
+    fila.appendChild(celdaValor);
+    fila.appendChild(elemento('td', 'num', porcentaje(p.pesoVigente ?? p.peso)));
+    fila.appendChild(elemento('td', `num ${claseVariacion(p.contribucionPct)}`,
+      Number.isFinite(p.contribucionPct) ? formatearPorcentaje(p.contribucionPct) : '—'));
+    cuerpo.appendChild(fila);
   }
 }
 
@@ -4131,6 +4278,11 @@ function enlazarEventos() {
   // Las píldoras de benchmark llevan su propio manejador: lo añade
   // `poblarBenchmarks()` a cada botón en cuanto lo pinta, porque el conjunto de
   // botones cambia con el catálogo y no existe uno fijo que delegar aquí.
+
+  $('#buscador-ticker').addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    anadirTickerLibre();
+  });
 
   const btnTabla = $('#btn-tabla-serie');
   btnTabla.addEventListener('click', () => {

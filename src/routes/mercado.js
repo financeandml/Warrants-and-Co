@@ -80,10 +80,21 @@ router.get('/serie/:simbolo', async (req, res, next) => {
   const desde = new Date(Date.now() - dias * 86_400_000).toISOString().slice(0, 10);
 
   try {
-    const crudo = await mercado.obtenerHistorico(simbolo, desde);
+    // El nombre viaja aparte, en paralelo: `obtenerHistorico()` es compartida
+    // con `calcularCartera()` y las señales de momentum/volatilidad, que
+    // esperan el array de filas tal cual — cambiar su forma de retorno para
+    // colar el nombre ahí habría roto esos consumidores en cuanto Yahoo
+    // fuera el proveedor que responde. `obtenerCotizacion()` sí expone
+    // `nombre` sin tocar nada compartido, y un fallo aquí no debe tumbar la
+    // serie: se rotula con el símbolo tal cual si no llega nombre.
+    const [crudo, cotizacion] = await Promise.all([
+      mercado.obtenerHistorico(simbolo, desde),
+      mercado.obtenerCotizacion(simbolo).catch(() => null),
+    ]);
     const serie = (Array.isArray(crudo) ? crudo : crudo?.serie ?? [])
       .filter((p) => p && p.fecha && Number.isFinite(p.cierre))
       .map((p) => ({ fecha: p.fecha, valor: p.cierre }));
+    const nombre = cotizacion?.nombre ?? null;
 
     if (serie.length < 2) {
       return res.status(404).json({
@@ -99,6 +110,7 @@ router.get('/serie/:simbolo', async (req, res, next) => {
     res.setHeader('Cache-Control', 'no-store');
     res.json({
       simbolo,
+      nombre,
       serie,
       puntos: serie.length,
       desde: serie[0].fecha,

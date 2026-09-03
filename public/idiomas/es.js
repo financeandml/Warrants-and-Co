@@ -574,6 +574,18 @@ export default {
   'cartera.grafico.indice': 'Índice de referencia',
   'cartera.grafico.verDatos': 'Ver datos',
   'cartera.grafico.ocultarDatos': 'Ocultar datos',
+  'cartera.grafico.buscar.placeholder': 'Ticker libre…',
+  'cartera.grafico.buscar.anadir': 'Añadir',
+  'cartera.grafico.buscar.quitar': 'Quitar {simbolo}',
+  // El proveedor (Yahoo Finance) no tiene lista blanca: cualquier ticker
+  // sintácticamente válido puede no tener serie —mal escrito, deslistado,
+  // sin historial—. Estado de error explícito, nunca una comparación que
+  // «no hace nada» en silencio.
+  'cartera.grafico.buscar.sinDatos': '{simbolo} — sin datos disponibles. Compruebe el símbolo.',
+  'cartera.grafico.buscar.limite': 'Ya hay 4 comparaciones activas — quite una para añadir otra.',
+  'cartera.grafico.buscar.repetido': '{simbolo} ya está en la comparación.',
+  'cartera.grafico.desglose.titulo': 'Desglose por posición',
+  'cartera.grafico.desglose.caption': 'Peso y contribución de cada posición',
   'cartera.leyenda.cartera': 'Cartera Warrants & Co.',
   'cartera.leyenda.medida.total': 'Medido desde el capital invertido · es la rentabilidad total',
   'cartera.leyenda.medida.rango': 'Medido desde el inicio del rango, {fecha} · no es la rentabilidad total',
