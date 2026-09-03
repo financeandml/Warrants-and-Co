@@ -1107,6 +1107,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
    (`__ticker`, `__nombre`/`__cuenta`, `__resumen`, `__derecha`) sigue siendo
    propio de cada sección: son piezas de contenido distinto —una compañía, un
    informe, una cuenta atrás—, no la misma cosa con otro nombre. */
+/* Deuda documentada, no olvido: sin `min-width: 0` en los ítems de este
+   grid. Mismo patrón encontrado y corregido en Cartera (`.grafico-cuerpo`,
+   commit 027c984) — sin él, un ítem de grid no se encoge por debajo del
+   contenido que lleva dentro (`min-width: auto` es el valor por defecto), y
+   algo sin envolver en la columna `1fr` invertiría la proporción 1.6fr/1fr
+   declarada. NO es "sin usuarios que lo vean hoy" sin más: Repositorio usa
+   esta regla y está visible —medido con contenido real, `695px/434px`,
+   proporción sana hoy, no rota—; Companies y Catalysts sí están ocultas.
+   El riesgo es latente, no activo: solo se dispara si algo dentro de la
+   columna estrecha deja de envolver texto. Antes de dar cualquier cambio de
+   contenido por bueno en estas tres secciones —reabrir Companies/Catalysts,
+   o alargar lo que pinta `.repositorio-destacado__derecha`—, medir
+   `grid-template-columns` computado, no fiarse a ojo. */
 #seccion-companias .destacada-principal,
 #seccion-repositorio .repositorio-destacado,
 #seccion-catalizadores .siguiente-catalizador,
@@ -4317,7 +4330,19 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    `hidden` sin construir en `index.html`: cero impacto visible hoy, y el
    coste de retocar código que nadie ve no se paga hasta que se reabran.
    Quien reabra Radar o Signal debe resolver esto antes de destaparlas, no
-   heredarlo como si fuera nuevo. */
+   heredarlo como si fuera nuevo.
+
+   Segunda deuda, misma sección: `.tarjeta-signal` (más abajo,
+   `grid-template-columns: minmax(220px, 300px) 1fr`) no lleva `min-width: 0`
+   en sus ítems de grid. Encontrado y corregido el mismo patrón en Cartera
+   (`.grafico-cuerpo`, commit 027c984): sin `min-width: 0`, un ítem de grid no
+   se encoge por debajo del contenido que lleva dentro —`min-width: auto` es
+   el valor por defecto—, y si algo sin envolver dentro de la columna `1fr`
+   (una cifra larga, una lista sin wrap) pide más que su cuota, invierte la
+   proporción declarada en vez de respetarla. Sin usuarios que lo vean hoy
+   —Signal sigue `hidden`—, así que no se toca ahora. Quien reabra Signal:
+   medir `grid-template-columns` computado con el contenido real ANTES de dar
+   el layout por bueno, no fiarse de que "se ve bien" a ojo. */
 .radar-barra {
   height: 3px; margin-block: 9px 8px;
   background: var(--linea);
