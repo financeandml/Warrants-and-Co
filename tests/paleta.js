@@ -137,21 +137,21 @@ const VISTAS_CONVERTIDAS = {
      en SIN DATO sin que ninguna corrida reciente la hubiera vuelto a mirar.
      `.dato__valor` es la única real —vive en `#hero-metricas`—. */
   inicio: ['.dato__valor'],
-  /* En cartera vive el anillo, y sus sectores NO están en esta lista a
-     propósito: no son celdas de texto con cifra sino arcos de un SVG, y su
-     régimen es la cláusula 1 —cada sector lleva su nombre escrito y la caja su
-     trama—, no la 3.
-
-     Tampoco está `.aportacion__valor`, aunque `tipografia.js` la clasifique bajo
-     la ruta de cartera: vive en `#seccion-radar`. Allí la lista dice por qué
-     ruta pasar para encontrarla y la consulta es global, así que da igual dónde
-     esté; ésta acota por sección, y no da igual. */
-  cartera: ['.indicador__valor', '.estadistico__nota'],
+  /* `cartera` NO figura aquí, y no es un olvido: la sección está en
+     reconstrucción pieza a pieza (ver la guarda de `pintarCartera()` en
+     app.js), su armazón hoy no lleva ni `.indicador__valor` ni
+     `.estadistico__nota` —ni ninguna otra celda con cifra—, y esperar por lo
+     que nunca va a pintarse solo daría un SIN DATO de 30 s en cada corrida.
+     Mismo criterio que ya usa esta lista con `companias`/`catalizadores`, dos
+     líneas más abajo: la vista vuelve a la lista cuando la pieza que la puebla
+     vuelva a existir, no antes. Antes de esta ronda llevaba
+     `['.indicador__valor', '.estadistico__nota']`, y esos dos selectores
+     siguen siendo los correctos el día que el resumen y los estadísticos
+     regresen. */
 
   /* Descubiertas mirando la vista pintada, no deducidas del CSS: se barrieron
-     los nodos hoja con un dígito dentro de cada sección. Es la misma cautela que
-     evitó meter `.aportacion__valor` en cartera. `.estado-datos` queda fuera a
-     propósito: lleva un recuento, no una lectura.
+     los nodos hoja con un dígito dentro de cada sección. `.estado-datos` queda
+     fuera a propósito: lleva un recuento, no una lectura.
 
      `companias` y `catalizadores` NO figuran, mismo criterio que radar/mercado/
      opciones: su área está oculta (`navegacion.js`, `research-companias`), la

@@ -763,297 +763,38 @@
   <!-- ══════════════════════════════ CARTERA ══════════════════════════════ -->
   <section class="seccion" id="seccion-cartera" data-seccion-panel="cartera" hidden>
     <div class="contenedor">
-
       <div class="titulo-seccion">
         <div>
           <p class="etiqueta-superior" data-i18n="cartera.etiqueta">Gestión de cartera</p>
           <h1 data-i18n="cartera.titulo">Evolución de posiciones</h1>
         </div>
-        <div class="estado-datos" id="estado-datos"></div>
       </div>
 
-      <!-- ══ I · RENDIMIENTO ══ Qué ha hecho la cartera. -->
-      <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
+      <!-- Cartera en reconstrucción: cada pieza vuelve por separado —diseño,
+           mockup, aprobación, implementación, verificación en navegador—, en
+           vez de todas a la vez. Lo que este armazón NO lleva es justo lo que
+           `pintarCartera()` rellenaba (ver la guarda al principio de esa
+           función en app.js): sin esas piezas, no hay nada que romper mientras
+           faltan las demás. -->
+      <div class="vacio" id="cartera-reconstruccion">
+        <strong data-i18n="cartera.reconstruccion.titulo">Página en reconstrucción</strong>
+        <span data-i18n="cartera.reconstruccion.motivo">
+          Se está rediseñando pieza a pieza. Los datos siguen siendo reales y
+          verificados en cada paso; esta página vuelve a completarse poco a
+          poco, no de golpe.
+        </span>
+      </div>
 
-      <!-- Cabecera de `resumenPortfolio`: no repite `#cuadro-mando` de abajo
-           —ese habla del día, el riesgo y la caja—, habla de otra cosa: cuánto
-           capital se ha comprometido y de dónde sale la rentabilidad, realizada
-           o no. La primera casilla SÍ comparte hecho con la de abajo —ambas
-           leen, en última instancia, `estadisticos.rentabilidadTotal`—, y viaja
-           aquí porque el resto de esta fila no se entiende sin ella. -->
-      <section class="tarjeta" aria-labelledby="titulo-resumen-portfolio">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-resumen-portfolio" data-i18n="cartera.resumen.titulo">Resumen de capital</h2>
-            <p data-i18n="cartera.resumen.subtitulo">Cuánto capital está comprometido y de dónde sale la rentabilidad</p>
-          </div>
-        </div>
-        <div class="cuadro-mando cuadro-mando--7" id="resumen-portfolio"></div>
-        <!-- Honesto sobre lo que el motor NO hace: ningún precio de entrada
-             ni de cierre descuenta comisión, spread o coste de transacción
-             alguno (confirmado en src/cartera.js, grep sin resultados sobre
-             comision/fee/gasto/spread). Afirmar "neto de comisiones" sería
-             inventar una metodología que no es la real —regla 1—; esta línea
-             dice la verdad en su lugar. Tinta neutra, nunca --acento: es
-             dato/metodología, no cromo. -->
-        <p class="cuadro-mando__aviso" data-i18n="cartera.resumen.bruto">Rentabilidad bruta, sin ajustar por costes de transacción.</p>
-      </section>
-
-      <div class="cuadro-mando" id="cuadro-mando"></div>
-
-      <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la cartera</h2>
-            <!-- Dos escritores, y no es descuido: `data-i18n` cubre el rótulo
-                 previo a los datos y `pintarGrafico()` lo sustituye por el que
-                 lleva fecha y número de sesiones en cuanto la serie llega. -->
-            <p id="subtitulo-grafico" data-i18n="cartera.grafico.subtitulo">Valor indexado · base 100 = capital invertido</p>
-          </div>
-          <div class="controles-grafico" role="group"
-               data-i18n-attr="aria-label:cartera.grafico.opciones" aria-label="Opciones del gráfico">
-            <div class="conmutador" role="group"
-                 data-i18n-attr="aria-label:cartera.grafico.periodo" aria-label="Periodo">
-              <!-- 1M, 3M, 6M e YTD son códigos de rango, no palabras: no se traducen.
-                   «Máx» sí es una abreviatura de idioma, y lleva su clave. -->
-              <button type="button" data-rango="1M">1M</button>
-              <button type="button" data-rango="3M">3M</button>
-              <button type="button" data-rango="6M">6M</button>
-              <button type="button" data-rango="YTD">YTD</button>
-              <button type="button" data-rango="MAX" class="activo"
-                      data-i18n="cartera.grafico.rango.max">Máx</button>
-            </div>
-            <!-- Píldoras de benchmark: una por índice del catálogo fijo, pintadas
-                 por `poblarBenchmarks()` desde `datos.benchmarks`, más una por
-                 cada ticker libre que el analista haya añadido esta sesión
-                 (`estado.benchmarksLibres`). El catálogo fijo sigue viniendo
-                 solo del servidor; los libres no se guardan en ningún sitio,
-                 se pierden al recargar — el proveedor no tiene lista blanca
-                 (Yahoo Finance sirve cualquier ticker válido), así que no hace
-                 falta un catálogo nuevo que mantener. Tope de 4 comparaciones
-                 activas a la vez: son las cuatro clases de color/patrón que
-                 ya existían (`CLASES_BENCHMARK`, grafico.js) y no se inventa
-                 una quinta sin verificarla contra la cláusula de ΔE2000. -->
-            <div class="pastillas-benchmark" id="pastillas-benchmark" role="group"
-                 data-i18n-attr="aria-label:cartera.grafico.indice" aria-label="Índice de referencia"></div>
-            <form class="buscador-ticker" id="buscador-ticker">
-              <input type="text" id="campo-ticker-libre" maxlength="12" autocomplete="off"
-                     data-i18n-attr="placeholder:cartera.grafico.buscar.placeholder" placeholder="Ticker libre…">
-              <button type="submit" data-i18n="cartera.grafico.buscar.anadir">Añadir</button>
-            </form>
-            <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
-                    data-i18n="cartera.grafico.verDatos">
-              Ver datos
-            </button>
-          </div>
-        </div>
-        <p class="buscador-ticker__aviso" id="aviso-ticker-libre" role="status" hidden></p>
-
-        <div class="grafico-cuerpo">
-          <div class="grafico-columna">
-            <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
-            <p class="visualmente-oculto" id="descripcion-grafico"></p>
-
-            <div class="leyenda" id="leyenda-grafico"></div>
-          </div>
-
-          <!-- Panel lateral: qué posiciones concretas hay detrás de la cifra
-               agregada del gráfico — nivel de posición, no de cartera. Mismos
-               campos que ya usa `pintarTablaCartera()` (ticker, pesoVigente,
-               contribucionPct): ninguna cifra nueva, ninguna segunda fuente
-               (Regla 9). No repite Realizada/No realizada de la tarjeta de
-               resumen: esa cifra ya tiene su sitio, esta es otra vista del
-               dato —por posición, no por realizado/no realizado. -->
-          <aside class="grafico-desglose" aria-labelledby="titulo-grafico-desglose">
-            <h3 id="titulo-grafico-desglose" data-i18n="cartera.grafico.desglose.titulo">Desglose por posición</h3>
-            <div class="tabla-envoltorio">
-              <table class="tabla-datos" data-densidad="compacta">
-                <caption class="visualmente-oculto"
-                         data-i18n="cartera.grafico.desglose.caption">Peso y contribución de cada posición</caption>
-                <thead>
-                  <tr>
-                    <th scope="col" data-i18n="cartera.col.valor">Valor</th>
-                    <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
-                    <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
-                  </tr>
-                </thead>
-                <tbody id="cuerpo-grafico-desglose"></tbody>
-              </table>
-            </div>
-          </aside>
-        </div>
-
-        <!-- Rendimiento por serie: Asset / Start / Current / Return, una fila
-             por serie activa. `pintarTablaRendimiento()` la reconstruye entera
-             en cada cambio de rango o de benchmarks activos. -->
-        <div class="tabla-rendimiento-envoltorio">
-          <table class="tabla-datos tabla-rendimiento" id="tabla-rendimiento" data-densidad="compacta">
-            <caption class="visualmente-oculto" data-i18n="cartera.rendimiento.caption">Rendimiento por serie en el rango seleccionado</caption>
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="cartera.rendimiento.activo">Asset</th>
-                <th scope="col" class="num" data-i18n="cartera.rendimiento.inicio">Start</th>
-                <th scope="col" class="num" data-i18n="cartera.rendimiento.actual">Current</th>
-                <th scope="col" class="num" data-i18n="cartera.rendimiento.retorno">Return</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpo-tabla-rendimiento"></tbody>
-          </table>
-        </div>
-
-        <p class="nota-metodologica" data-i18n="cartera.metodologia.rebase">
-          Todas las series se normalizan a 100 al inicio del periodo seleccionado. El rendimiento de los
-          benchmarks se muestra con fines comparativos y no representa una posición invertible en el
-          índice subyacente salvo que se indique explícitamente.
-        </p>
-
-        <div class="tabla-serie" id="tabla-serie" data-densidad="comoda" hidden>
-          <div class="tabla-envoltorio">
-            <table class="tabla-datos">
-              <caption data-i18n="cartera.serie.caption">Serie histórica de la cartera y de los benchmarks activos</caption>
-              <thead>
-                <!-- Sin columnas escritas: `pintarTablaSerie()` reconstruye la
-                     cabecera entera, una columna por benchmark ACTIVO. -->
-                <tr id="cabecera-tabla-serie"></tr>
-              </thead>
-              <tbody id="cuerpo-tabla-serie"></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-
-      <!-- ══ II · COMPOSICIÓN ══ De qué está hecha hoy, la caja incluida. -->
-      <h2 class="movimiento" data-i18n="cartera.mov.composicion">Composición</h2>
-
-      <section class="tarjeta" aria-labelledby="titulo-anillo">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-anillo" data-i18n="cartera.anillo.titulo">Reparto del patrimonio</h2>
-            <!-- El subtítulo NO es decorativo: conviven dos pesos en esta sección
-                 —sobre patrimonio y sobre capital— y el anillo tiene que declarar
-                 cuál usa en vez de dejarlo a la interpretación. -->
-            <p data-i18n="cartera.anillo.subtitulo">Peso sobre el patrimonio · la caja es un sector más</p>
-          </div>
-        </div>
-        <!-- Llega vacío: lo pinta `pintarAnillo()` desde la misma respuesta que
-             alimenta a la tabla de abajo y al cuadro de mando. -->
-        <div class="anillo" id="anillo-composicion"></div>
-      </section>
-
-      <!-- Tabla única, abiertas y cerradas fundidas: `Status` distingue la fila,
-           y lo que solo aplicaba a un estado —recorrido a TP, motivo de cierre,
-           recomendación, fechas— pasa al panel de detalle que despliega cada
-           fila. `pintarTablaCartera()` construye las dos, fila y panel, del
-           mismo objeto de posición: no hay una segunda lectura que discrepar. -->
-      <section class="tarjeta" aria-labelledby="titulo-posiciones">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-posiciones" data-i18n="cartera.posiciones.titulo">Composición de la cartera</h2>
-            <p data-i18n="cartera.posiciones.subtitulo">Cotizaciones actualizadas en cada carga de la página</p>
-          </div>
-        </div>
-        <div class="tabla-envoltorio">
-          <table class="tabla-datos tabla-posiciones" data-densidad="compacta">
-            <caption class="visualmente-oculto"
-                     data-i18n="cartera.posiciones.caption">Detalle de las posiciones en cartera</caption>
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
-                <th scope="col" data-i18n="cartera.col.estado">Estado</th>
-                <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
-                <th scope="col" class="num" data-i18n="cartera.col.compra">Compra</th>
-                <th scope="col" class="num" data-i18n="cartera.col.actual">Actual/Salida</th>
-                <th scope="col" class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
-                <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpo-posiciones"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ══ III · PROCEDENCIA ══ De dónde sale esa rentabilidad. -->
-
-      <section class="tarjeta" aria-labelledby="titulo-conciliacion">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-conciliacion" data-i18n="cartera.conciliacion.titulo">Conciliación de la rentabilidad</h2>
-            <p data-i18n="cartera.conciliacion.subtitulo">Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total</p>
-          </div>
-        </div>
-        <!-- El gráfico de barras es la lectura rápida —quién suma, quién resta,
-             y cuánto—; la tabla de abajo sigue siendo el detalle exacto, con la
-             procedencia de cada precio. No se fusionan: la tabla explica CÓMO
-             se llega a cada barra, y esa cuenta no cabe en una barra. -->
-        <div class="contribucion-barras" id="contribucion-barras"></div>
-        <div class="tabla-envoltorio">
-          <table class="tabla-datos">
-            <caption class="visualmente-oculto"
-                     data-i18n="cartera.conciliacion.caption">Conciliación de la rentabilidad, posición por posición</caption>
-            <thead>
-              <tr>
-                <th scope="col" data-i18n="cartera.col.valor">Valor</th>
-                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.peso">Peso de capital</th>
-                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.entrada">Precio de entrada</th>
-                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.referencia">Precio de referencia</th>
-                <th scope="col" class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
-                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.valorTramo">Valor del tramo</th>
-                <th scope="col" class="num" data-i18n="cartera.conciliacion.col.contribucion">Contribución</th>
-              </tr>
-            </thead>
-            <tbody id="cuerpo-conciliacion"></tbody>
-            <!-- La fila de total la pinta `pintarConciliacion()`: es la cifra que
-                 tiene que coincidir con el titular del cuadro de mando. -->
-            <tfoot id="pie-conciliacion"></tfoot>
-          </table>
-        </div>
-        <p class="nota-metodologica nota-conciliacion" id="nota-conciliacion"></p>
-      </section>
-
-      <section class="tarjeta" aria-labelledby="titulo-estadisticos">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-estadisticos" data-i18n="cartera.estadisticos.titulo">Parámetros y estadísticos</h2>
-            <!-- Igual que el subtítulo del gráfico: rótulo previo a los datos,
-                 que `pintarEstadisticos()` sustituye por el periodo real. -->
-            <p id="sub-estadisticos" data-i18n="cartera.estadisticos.subtitulo">Métricas de riesgo y rentabilidad</p>
-          </div>
-        </div>
-        <div class="rejilla-estadisticos" id="rejilla-estadisticos"></div>
-      </section>
-
-      <!-- ══ PIE ══ Cómo se calcula todo esto.
-           Aquí vive SOLO la metodología general. Las otras dos notas de la
-           sección —la de la conciliación y la de la muestra— se quedan junto a
-           su tabla y no se recogen aquí: son contextuales y dinámicas, y una que
-           dice «faltan N sesiones» separada de los estadísticos que describe
-           deja de significar nada.
-
-           Plegado y no borrado: es lo que hace legible el +67 %, y quien quiera
-           comprobarlo lo tiene a un clic sin que ocupe el sitio que ocupaba. -->
-      <details class="metodologia">
-        <summary data-i18n="cartera.metodologia.resumen">Cómo se calcula todo esto</summary>
-        <div class="metodologia__cuerpo">
-          <p data-i18n="cartera.nota">
-            La cartera se constituye automáticamente a partir de las tesis de inversión publicadas.
-            La fecha de alta de cada posición corresponde a la fecha de publicación de su informe, y el
-            precio de entrada al de compra consignado en la ficha o, en su defecto, al cierre de esa
-            sesión. El índice, en base 100, reparte el capital en tramos fijos: cada tesis compra el
-            suyo en el alta y lo conserva hasta que se liquida, sin rebalanceos. Lo que sale de una
-            posición liquidada permanece como liquidez y no financia a ninguna otra. Sin aportaciones
-            ni reembolsos externos.
-          </p>
-          <!-- Lo que se pinta desde los datos: la explicación de los suelos de
-               muestra y la nota de la liquidez. Estaban sueltas en la sección
-               —un párrafo bajo los estadísticos y otro bajo el anillo— y ahí
-               repetían lo que sus propias celdas ya dicen. Aquí explican el
-               MÉTODO, que es de lo que va este bloque. -->
-          <div id="metodologia-dinamica"></div>
-          <p data-i18n="cartera.metodologia.remite">
-            La conciliación declara además sus propios supuestos junto a su tabla.
-          </p>
-        </div>
-      </details>
+      <!-- Shells vacíos y ocultos: `enlazarEventos()` (app.js) engancha estos
+           dos elementos sin comprobar que existan —lo hacía antes de esta
+           ronda y seguirá haciéndolo cuando la sección vuelva a tener
+           contenido—. Vacíos de propósito mientras no hay ni buscador de
+           ticker libre ni tabla de datos que mostrar; el día que cualquiera
+           de las dos piezas vuelva, este hueco se rellena con su markup real
+           en vez de crear uno nuevo. -->
+      <form id="buscador-ticker" hidden></form>
+      <button type="button" id="btn-tabla-serie" hidden></button>
+      <div id="tabla-serie" hidden></div>
 
     </div>
   </section>

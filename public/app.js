@@ -2109,6 +2109,18 @@ async function cargarCartera({ silencioso = false } = {}) {
  *   pulsa ES o EN convertiría el conmutador en una fuente de ruido.
  */
 function pintarCartera(datos, { avisos = true } = {}) {
+  // Cartera en reconstrucción: su armazón (`index.html`) no tiene ninguna de
+  // las piezas que este pintado rellena —se retiraron todas a la vez—.
+  // `pintarPanelCartera()` SÍ sigue pintando datos reales: vive en Home/Radar,
+  // lee `datos` directamente y no depende de ninguna de estas piezas. El resto
+  // de esta función queda intacto para cuando cada pieza vuelva, en vez de
+  // reescribirse: cuando `#resumen-portfolio` exista de nuevo, esta guarda
+  // deja de disparar sola.
+  if (!$('#resumen-portfolio')) {
+    pintarPanelCartera(datos);
+    return;
+  }
+
   // Antes del corte por cartera vacía: el selector ha de poder usarse aunque no
   // haya ninguna tesis todavía, y el catálogo viene igual en las dos respuestas.
   poblarBenchmarks(datos.benchmarks);

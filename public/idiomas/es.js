@@ -498,6 +498,8 @@ export default {
   // ═════════════════════════ Cartera · encabezado ═════════════════════════
   'cartera.etiqueta': 'Gestión de cartera',
   'cartera.titulo': 'Evolución de posiciones',
+  'cartera.reconstruccion.titulo': 'Página en reconstrucción',
+  'cartera.reconstruccion.motivo': 'Se está rediseñando pieza a pieza. Los datos siguen siendo reales y verificados en cada paso; esta página vuelve a completarse poco a poco, no de golpe.',
   'cartera.nota': 'La cartera se constituye automáticamente a partir de las tesis de inversión publicadas. La fecha de alta de cada posición corresponde a la fecha de publicación de su informe, y el precio de entrada al de compra consignado en la ficha o, en su defecto, al cierre de esa sesión. El índice, en base 100, reparte el capital en tramos fijos: cada tesis compra el suyo en el alta y lo conserva hasta que se liquida, sin rebalanceos. Lo que sale de una posición liquidada permanece como liquidez y no financia a ninguna otra. Sin aportaciones ni reembolsos externos.',
 
   'cartera.error.mercado': 'Datos de mercado no disponibles',

@@ -54,6 +54,22 @@ const AREAS_OCULTAS = false;
    constante propia. */
 const RESEARCH_COMPANIAS_OCULTA = false;
 
+/* Cartera NO está oculta —sigue en el menú y su ruta admite, a propósito,
+   para que se pueda ver el progreso pieza a pieza (ver la guarda de
+   `pintarCartera()` en app.js)—, pero hoy no pinta ninguna de las piezas que
+   este bloque comprueba: ni `#leyenda-grafico`, ni `#cuadro-mando` con sus
+   indicadores, ni `.tabla-posiciones`, ni `#btn-tabla-serie` interactivo. Sin
+   esta guarda, la espera inicial ya se resuelve sola en SIN DATO a los 45s
+   —`comp()` ya sabe declarar pendiente cuando una vista no llega a
+   pintarse—, pero las ACCIONES de este bloque no pasan por `comp()`: un
+   `p.click('#btn-tabla-serie')` sobre el shell oculto de la reconstrucción
+   no encuentra un botón visible que pulsar y revienta la batería entera con
+   su propio plantón, no con un SIN DATO. Mismo patrón que las dos constantes
+   de arriba: `false` mientras la página siga en reconstrucción, y se
+   reactiva sola —sin tocar el bloque— en cuanto cada pieza que comprueba
+   vuelva a existir. */
+const CARTERA_RECONSTRUIDA = false;
+
 (async () => {
   const navegador = await chromium.launch();
   const ctx = await navegador.newContext({ viewport: { width: 1280, height: 900 } });
@@ -131,6 +147,8 @@ const RESEARCH_COMPANIAS_OCULTA = false;
   const idioma = async (clave) => {
     await p.click(`.conmutador-idioma button[data-idioma="${clave}"]`);
   };
+
+  if (CARTERA_RECONSTRUIDA) {  // página Cartera — en reconstrucción, no oculta
 
   await p.goto(`${B}/#/cartera`, { waitUntil: 'networkidle' });
   // El cuadro de mando y la leyenda dependen del gráfico, pintado tras un
@@ -250,6 +268,34 @@ const RESEARCH_COMPANIAS_OCULTA = false;
 
   comp('el conmutador sigue al estado de la tabla, no al de partida',
     await txt('#btn-tabla-serie'), 'Hide data');
+
+  }  // fin CARTERA_RECONSTRUIDA
+
+  // Lo poco que SÍ hay hoy en Cartera: el armazón —título y el aviso de
+  // reconstrucción, ambos con `data-i18n`— sigue al idioma igual que
+  // cualquier otra sección estática. No repinta nada en JavaScript propio
+  // —de ahí que no haga falta `vistaPintada()` aquí—, así que basta con la
+  // pasada normal sobre el DOM que ya cubre `tests/idiomas.js`; esto solo
+  // confirma que la ruta sigue viva y en castellano de partida.
+  await p.goto(`${B}/#/cartera`, { waitUntil: 'networkidle' });
+  // Sin esto, «castellano de partida» asume que el navegador ya arranca en
+  // español, y no lo hace: `idioma-inicial.js` puede caer en el idioma del
+  // sistema si no hay elección guardada. El bloque original (ahora dormido
+  // en `CARTERA_RECONSTRUIDA`) hacía este mismo `idioma('es')` explícito
+  // antes de comprobar nada.
+  await idioma('es');
+  seccion('\n  ── cartera · en reconstrucción, castellano de partida ──');
+  comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
+  comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Página en reconstrucción');
+  await idioma('en');
+  seccion('\n  ── cartera · en reconstrucción, repintada al conmutar ──');
+  comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
+  comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Page under reconstruction');
+  // Se sigue en inglés a propósito: la sección de repositorio que viene a
+  // continuación comprueba primero el inglés y solo vuelve a castellano
+  // después —es el mismo orden que ya traía esta batería antes de esta
+  // ronda—, así que resetear aquí dejaría esas comprobaciones comparando
+  // texto en inglés contra lo que en realidad ya habría vuelto a español.
 
   await p.goto(`${B}/#/repositorio`);
   await vistaPintada(p,

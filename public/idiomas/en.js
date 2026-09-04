@@ -483,6 +483,8 @@ export default {
   // ═════════════════════════ Portfolio · header ═════════════════════════
   'cartera.etiqueta': 'Portfolio management',
   'cartera.titulo': 'Position performance',
+  'cartera.reconstruccion.titulo': 'Page under reconstruction',
+  'cartera.reconstruccion.motivo': 'This page is being redesigned piece by piece. The data behind it stays real and verified at every step; it comes back together gradually, not all at once.',
   'cartera.nota': 'The portfolio is constituted automatically from the published investment theses. Each position is dated at the publication date of its report, and entered at the purchase price stated in the thesis or, failing that, at that session’s close. The index, base 100, splits the capital into fixed tranches: each thesis buys its own at inception and holds it until it is liquidated, with no rebalancing. Proceeds from a liquidated position stay in cash and fund no other position. No external contributions or withdrawals.',
 
   'cartera.error.mercado': 'Market data unavailable',
