@@ -267,8 +267,9 @@ const CARTERA_RECONSTRUIDA = false;
   const resumenPintado = () => vistaPintada(p,
     () => {
       const v = document.querySelector('#resumen-portfolio .indicador__valor');
-      return Boolean(v && v.textContent.trim());
-    }, null, 'cartera · resumen de capital');
+      const l = document.querySelector('#leyenda-grafico .leyenda__valor');
+      return Boolean(v && v.textContent.trim() && l && l.textContent.trim());
+    }, null, 'cartera · resumen y gráfico');
   // Sin esto, «castellano de partida» asume que el navegador ya arranca en
   // español, y no lo hace: `idioma-inicial.js` puede caer en el idioma del
   // sistema si no hay elección guardada. El bloque original (ahora dormido
@@ -291,6 +292,15 @@ const CARTERA_RECONSTRUIDA = false;
   comp('nota de ROIC',
     await txt('#resumen-secundario .indicador:has-text("ROIC") .indicador__nota'),
     (v) => v && /capital desplegado/.test(v));
+  // El gráfico se pinta entero en JavaScript: leyenda y subtítulo llevan el
+  // número de sesiones y el nombre de cada serie, y sin repintado se quedarían
+  // en el idioma de partida.
+  comp('leyenda del gráfico',
+    await txt('#leyenda-grafico'), (v) => v && /Cartera Warrants & Co\./.test(v));
+  comp('subtítulo del gráfico',
+    await txt('#subtitulo-grafico'), (v) => v && /^Valor indexado/.test(v) && /sesiones/.test(v));
+  comp('cabecera del desglose por posición',
+    await txt('.grafico-desglose thead th:nth-child(3)'), 'Contribución');
 
   await idioma('en');
   await resumenPintado();
@@ -304,6 +314,12 @@ const CARTERA_RECONSTRUIDA = false;
   comp('nota de ROIC',
     await txt('#resumen-secundario .indicador:has-text("ROIC") .indicador__nota'),
     (v) => v && /capital deployed/.test(v));
+  comp('leyenda del gráfico',
+    await txt('#leyenda-grafico'), (v) => v && /Warrants & Co\. portfolio/.test(v));
+  comp('subtítulo del gráfico',
+    await txt('#subtitulo-grafico'), (v) => v && /^Indexed value/.test(v) && /sessions/.test(v));
+  comp('cabecera del desglose por posición',
+    await txt('.grafico-desglose thead th:nth-child(3)'), 'Contribution');
   // Se sigue en inglés a propósito: la sección de repositorio que viene a
   // continuación comprueba primero el inglés y solo vuelve a castellano
   // después —es el mismo orden que ya traía esta batería antes de esta

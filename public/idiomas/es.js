@@ -505,6 +505,7 @@ export default {
 
   'cartera.error.mercado': 'Datos de mercado no disponibles',
   'cartera.vacia.titulo': 'Cartera no constituida',
+  'cartera.recargar': 'Actualizar los datos de la cartera',
   'cartera.estado.actualizado': 'Actualizado a las {hora}',
   'cartera.pie.fuente': 'Datos de mercado: {fuentes}. Última actualización: {momento}.',
 
@@ -565,7 +566,7 @@ export default {
   'cartera.indicador.maximaCaida.nota': 'Desde máximo previo',
 
   // ══════════════════════════ Cartera · gráfico ══════════════════════════
-  'cartera.grafico.titulo': 'Evolución de la cartera',
+  'cartera.grafico.titulo': 'Evolución de la rentabilidad',
   'cartera.grafico.subtitulo': 'Valor indexado · base 100 = capital invertido',
   'cartera.grafico.subtitulo.serie': {
     one: 'Valor indexado · base 100 en {fecha} · {n} sesión',

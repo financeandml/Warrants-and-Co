@@ -771,9 +771,23 @@
           <p class="titulo-seccion__entradilla" data-i18n="cartera.subtitulo">Resumen actualizado de la cartera y su rendimiento.</p>
         </div>
         <!-- La hora de corte del dato, que `pintarEstadoDatos()` rellena con
-             `generadoEn` del propio motor —nunca la del navegador—. Volvió con
-             esta ronda: estaba en el armazón original y se perdió al vaciar. -->
-        <div class="estado-datos" id="estado-datos"></div>
+             `generadoEn` del propio motor —nunca la del navegador—, y al lado
+             el botón que vuelve a pedirla. El botón hace trabajo real:
+             llama a `cargarCartera()`, la misma función del arranque, sin un
+             segundo camino de datos. No gira por adorno —solo mientras hay
+             petición en vuelo— y con `prefers-reduced-motion` no gira en
+             absoluto (cláusula 5), solo se atenúa. -->
+        <div class="estado-datos-fila">
+          <div class="estado-datos" id="estado-datos"></div>
+          <button class="boton-recargar" type="button" id="btn-recargar-cartera"
+                  data-i18n-attr="aria-label:cartera.recargar" aria-label="Actualizar los datos de la cartera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+              <path d="M21 12a9 9 0 1 1-2.64-6.36"></path>
+              <path d="M21 3v6h-6"></path>
+            </svg>
+          </button>
+        </div>
       </div>
 
       <!-- ══ Primera pieza reconstruida: resumen de capital, en dos cajas ══
@@ -808,12 +822,126 @@
         <p class="cuadro-mando__aviso" data-i18n="cartera.resumen.bruto">Rentabilidad bruta, sin ajustar por costes de transacción.</p>
       </section>
 
+      <!-- ══ Segunda pieza reconstruida: el gráfico ══
+           Recuperado de aab908d tal cual estaba —el JavaScript
+           (`pintarGrafico()`, `poblarBenchmarks()`, `anadirTickerLibre()`) y
+           la CSS nunca se borraron, solo este markup—, con dos cosas fuera a
+           propósito, cada una para su propia ronda: la tabla de rendimiento
+           por serie (Asset/Start/Current/Return) y la nota metodológica de
+           rebase. `pintarTablaRendimiento()` es null-safe, así que su
+           ausencia no rompe el pintado.
+
+           El selector de rango se queda en 1M/3M/6M/YTD/Máx. NO se añade el
+           "1A" de la referencia visual: medido sobre la serie real —160
+           sesiones, 7,6 meses—, un rango de 12 meses devuelve exactamente los
+           mismos 160 puntos que Máx, de modo que serían dos botones que
+           pintan lo mismo. Se revisa cuando la cartera pase el año, junto con
+           YTD, que hoy está en la misma situación por haber nacido el 15 de
+           enero. -->
+      <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la rentabilidad</h2>
+            <!-- Dos escritores, y no es descuido: `data-i18n` cubre el rótulo
+                 previo a los datos y `pintarGrafico()` lo sustituye por el que
+                 lleva fecha y número de sesiones en cuanto la serie llega. -->
+            <p id="subtitulo-grafico" data-i18n="cartera.grafico.subtitulo">Valor indexado · base 100 = capital invertido</p>
+          </div>
+          <div class="controles-grafico" role="group"
+               data-i18n-attr="aria-label:cartera.grafico.opciones" aria-label="Opciones del gráfico">
+            <div class="conmutador" role="group"
+                 data-i18n-attr="aria-label:cartera.grafico.periodo" aria-label="Periodo">
+              <!-- 1M, 3M, 6M e YTD son códigos de rango, no palabras: no se traducen.
+                   «Máx» sí es una abreviatura de idioma, y lleva su clave. -->
+              <button type="button" data-rango="1M">1M</button>
+              <button type="button" data-rango="3M">3M</button>
+              <button type="button" data-rango="6M">6M</button>
+              <button type="button" data-rango="YTD">YTD</button>
+              <button type="button" data-rango="MAX" class="activo"
+                      data-i18n="cartera.grafico.rango.max">Máx</button>
+            </div>
+            <!-- Píldoras de benchmark: una por índice del catálogo fijo, pintadas
+                 por `poblarBenchmarks()` desde `datos.benchmarks`, más una por
+                 cada ticker libre que el analista haya añadido esta sesión
+                 (`estado.benchmarksLibres`). El catálogo fijo sigue viniendo
+                 solo del servidor; los libres no se guardan en ningún sitio,
+                 se pierden al recargar — el proveedor no tiene lista blanca
+                 (Yahoo Finance sirve cualquier ticker válido), así que no hace
+                 falta un catálogo nuevo que mantener. Tope de 4 comparaciones
+                 activas a la vez: son las cuatro clases de color/patrón que
+                 ya existían (`CLASES_BENCHMARK`, grafico.js) y no se inventa
+                 una quinta sin verificarla contra la cláusula de ΔE2000. -->
+            <div class="pastillas-benchmark" id="pastillas-benchmark" role="group"
+                 data-i18n-attr="aria-label:cartera.grafico.indice" aria-label="Índice de referencia"></div>
+            <form class="buscador-ticker" id="buscador-ticker">
+              <input type="text" id="campo-ticker-libre" maxlength="12" autocomplete="off"
+                     data-i18n-attr="placeholder:cartera.grafico.buscar.placeholder" placeholder="Ticker libre…">
+              <button type="submit" data-i18n="cartera.grafico.buscar.anadir">Añadir</button>
+            </form>
+            <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
+                    data-i18n="cartera.grafico.verDatos">
+              Ver datos
+            </button>
+          </div>
+        </div>
+        <p class="buscador-ticker__aviso" id="aviso-ticker-libre" role="status" hidden></p>
+
+        <div class="grafico-cuerpo">
+          <div class="grafico-columna">
+            <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
+            <p class="visualmente-oculto" id="descripcion-grafico"></p>
+
+            <div class="leyenda" id="leyenda-grafico"></div>
+          </div>
+
+          <!-- Panel lateral: qué posiciones concretas hay detrás de la cifra
+               agregada del gráfico — nivel de posición, no de cartera. Mismos
+               campos que ya usa `pintarTablaCartera()` (ticker, pesoVigente,
+               contribucionPct): ninguna cifra nueva, ninguna segunda fuente
+               (Regla 9). No repite Realizada/No realizada de la tarjeta de
+               resumen: esa cifra ya tiene su sitio, esta es otra vista del
+               dato —por posición, no por realizado/no realizado. -->
+          <aside class="grafico-desglose" aria-labelledby="titulo-grafico-desglose">
+            <h3 id="titulo-grafico-desglose" data-i18n="cartera.grafico.desglose.titulo">Desglose por posición</h3>
+            <div class="tabla-envoltorio">
+              <table class="tabla-datos" data-densidad="compacta">
+                <caption class="visualmente-oculto"
+                         data-i18n="cartera.grafico.desglose.caption">Peso y contribución de cada posición</caption>
+                <thead>
+                  <tr>
+                    <th scope="col" data-i18n="cartera.col.valor">Valor</th>
+                    <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
+                    <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
+                  </tr>
+                </thead>
+                <tbody id="cuerpo-grafico-desglose"></tbody>
+              </table>
+            </div>
+          </aside>
+        </div>
+
+        <div class="tabla-serie" id="tabla-serie" data-densidad="comoda" hidden>
+          <div class="tabla-envoltorio">
+            <table class="tabla-datos">
+              <caption data-i18n="cartera.serie.caption">Serie histórica de la cartera y de los benchmarks activos</caption>
+              <thead>
+                <!-- Sin columnas escritas: `pintarTablaSerie()` reconstruye la
+                     cabecera entera, una columna por benchmark ACTIVO. -->
+                <tr id="cabecera-tabla-serie"></tr>
+              </thead>
+              <tbody id="cuerpo-tabla-serie"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
       <!-- Cartera en reconstrucción: cada pieza vuelve por separado —diseño,
            mockup, aprobación, implementación, verificación en navegador—, en
-           vez de todas a la vez. El resumen de capital de arriba fue la
-           primera en volver; lo que sigue debajo de este aviso —cuadro de
-           mando, gráfico, tabla de posiciones, conciliación, estadísticos,
-           anillo de composición, metodología— todavía no. `pintarCartera()`
+           vez de todas a la vez. Ya volvieron el resumen de capital y el
+           gráfico; siguen fuera el cuadro de mando, la tabla de posiciones,
+           la conciliación, los estadísticos, el anillo de composición, la
+           metodología, y —de la propia tarjeta del gráfico— la tabla de
+           rendimiento por serie y la nota de rebase. `pintarCartera()`
            (app.js) ya sabe pintar solo lo que existe: cada pintor comprueba
            su propio hueco antes de tocarlo, así que la próxima pieza que
            vuelva no exige tocar esa función. -->
@@ -825,17 +953,6 @@
           poco, no de golpe.
         </span>
       </div>
-
-      <!-- Shells vacíos y ocultos: `enlazarEventos()` (app.js) engancha estos
-           dos elementos sin comprobar que existan —lo hacía antes de esta
-           ronda y seguirá haciéndolo cuando la sección vuelva a tener
-           contenido—. Vacíos de propósito mientras no hay ni buscador de
-           ticker libre ni tabla de datos que mostrar; el día que cualquiera
-           de las dos piezas vuelva, este hueco se rellena con su markup real
-           en vez de crear uno nuevo. -->
-      <form id="buscador-ticker" hidden></form>
-      <button type="button" id="btn-tabla-serie" hidden></button>
-      <div id="tabla-serie" hidden></div>
 
     </div>
   </section>

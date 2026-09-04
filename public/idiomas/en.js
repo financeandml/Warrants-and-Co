@@ -490,6 +490,7 @@ export default {
 
   'cartera.error.mercado': 'Market data unavailable',
   'cartera.vacia.titulo': 'Portfolio not constituted',
+  'cartera.recargar': 'Refresh portfolio data',
   'cartera.estado.actualizado': 'Updated at {hora}',
   'cartera.pie.fuente': 'Market data: {fuentes}. Last updated: {momento}.',
 
@@ -539,7 +540,7 @@ export default {
   'cartera.indicador.maximaCaida.nota': 'From previous peak',
 
   // ══════════════════════════ Portfolio · chart ══════════════════════════
-  'cartera.grafico.titulo': 'Portfolio performance',
+  'cartera.grafico.titulo': 'Return performance',
   'cartera.grafico.subtitulo': 'Indexed value · base 100 = invested capital',
   'cartera.grafico.subtitulo.serie': {
     one: 'Indexed value · base 100 at {fecha} · {n} session',

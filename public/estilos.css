@@ -1182,6 +1182,34 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: none; border: none; border-radius: 0;
 }
 
+/* ── Botón de recarga junto a la hora de corte ──
+   Hace trabajo real: vuelve a pedir la cartera con `cargarCartera()`. Solo
+   gira MIENTRAS hay petición en vuelo —`[data-cargando]`, que el propio
+   manejador pone y quita—, nunca por adorno: un icono que gira sin que haya
+   nada volando afirma un trabajo que no se está haciendo. Se deshabilita en
+   vuelo para que no se encadenen peticiones. Con `prefers-reduced-motion`
+   no gira en absoluto (cláusula 5): se atenúa, que es un estado final, no
+   un movimiento. */
+.estado-datos-fila { display: flex; align-items: center; gap: 10px; }
+.boton-recargar {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex-shrink: 0;
+  padding: 0; border: 1px solid var(--linea-fuerte); border-radius: 50%;
+  background: none; color: var(--tinta-secundaria); cursor: pointer;
+  transition: color var(--transicion), border-color var(--transicion);
+}
+.boton-recargar svg { width: 15px; height: 15px; }
+@media (hover: hover) and (pointer: fine) {
+  .boton-recargar:hover { color: var(--tinta); border-color: var(--tinta-mate); }
+}
+.boton-recargar:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.boton-recargar[disabled] { opacity: 0.5; cursor: default; }
+.boton-recargar[data-cargando="true"] svg { animation: girar-recarga 900ms linear infinite; }
+@keyframes girar-recarga { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .boton-recargar[data-cargando="true"] svg { animation: none; }
+}
+
 /* Entradilla bajo el h1 de la sección: una línea de contexto, tinta mate,
    nunca `--acento` —es texto, no cromo—. */
 .titulo-seccion__entradilla {
@@ -1432,6 +1460,15 @@ button, input, select, textarea { font: inherit; color: inherit; }
   letter-spacing: -0.01em;
 }
 .grafico-desglose .tabla-envoltorio { max-height: 300px; overflow-y: auto; }
+/* `.tabla-datos` lleva `min-width: 760px` global (arriba), dimensionado para
+   las tablas anchas de la plataforma. Aquí el panel mide ~407px, de modo que
+   ese mínimo empujaba la tercera columna —Contribución, que es justo lo que
+   este panel viene a contar— fuera de la vista, tras un scroll horizontal que
+   nadie iba a buscar. Medido: 760px de tabla en 407px de caja. Se libera el
+   mínimo SOLO aquí: tres columnas cortas —ticker, peso, contribución— caben de
+   sobra sin él. Defecto de origen de esta pieza, no del armazón que la
+   recupera; se arregla al traerla de vuelta en vez de heredarlo. */
+.grafico-desglose .tabla-datos { min-width: 0; }
 .grafico-desglose .celda-empresa {
   font-family: var(--mono); font-weight: 600; letter-spacing: 0.03em;
 }

@@ -4251,6 +4251,25 @@ function enlazarEventos() {
     anadirTickerLibre();
   });
 
+  /* Recarga manual de la cartera. Llama a `cargarCartera()`, la misma
+     función que usa el arranque: no hay un segundo camino de datos ni un
+     segundo cálculo (Regla 9). El botón se deshabilita y gira SOLO mientras
+     la petición vuela —`data-cargando`, que se quita en el `finally` pase lo
+     que pase—, de modo que el giro afirma trabajo real y no adorno. El aviso
+     de error, si lo hay, ya lo emite `cargarCartera()` por su propia vía. */
+  const btnRecargar = $('#btn-recargar-cartera');
+  btnRecargar?.addEventListener('click', async () => {
+    if (btnRecargar.disabled) return;
+    btnRecargar.disabled = true;
+    btnRecargar.dataset.cargando = 'true';
+    try {
+      await cargarCartera();
+    } finally {
+      btnRecargar.disabled = false;
+      delete btnRecargar.dataset.cargando;
+    }
+  });
+
   const btnTabla = $('#btn-tabla-serie');
   btnTabla.addEventListener('click', () => {
     const tabla = $('#tabla-serie');
