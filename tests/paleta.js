@@ -137,18 +137,12 @@ const VISTAS_CONVERTIDAS = {
      en SIN DATO sin que ninguna corrida reciente la hubiera vuelto a mirar.
      `.dato__valor` es la única real —vive en `#hero-metricas`—. */
   inicio: ['.dato__valor'],
-  /* `cartera` NO figura aquí, y no es un olvido: la sección está en
-     reconstrucción pieza a pieza (ver la guarda de `pintarCartera()` en
-     app.js), su armazón hoy no lleva ni `.indicador__valor` ni
-     `.estadistico__nota` —ni ninguna otra celda con cifra—, y esperar por lo
-     que nunca va a pintarse solo daría un SIN DATO de 30 s en cada corrida.
-     Mismo criterio que ya usa esta lista con `companias`/`catalizadores`, dos
-     líneas más abajo: la vista vuelve a la lista cuando la pieza que la puebla
-     vuelva a existir, no antes. Antes de esta ronda llevaba
-     `['.indicador__valor', '.estadistico__nota']`, y esos dos selectores
-     siguen siendo los correctos el día que el resumen y los estadísticos
-     regresen. — ACTUALIZADO: `.indicador__valor` volvió con el resumen de
-     capital y ya se comprueba; `.estadistico__nota` sigue fuera. */
+  /* Cartera se reconstruye pieza a pieza (ver la guarda dentro de
+     `pintarCartera()` en app.js): `.indicador__valor` volvió con el resumen
+     de capital y ya se comprueba. `.estadistico__nota` sigue fuera —vive en
+     `#rejilla-estadisticos`, que todavía no ha vuelto—; se añade en la misma
+     tanda en que esa pieza regrese. Mismo criterio que ya usa esta lista con
+     `companias`/`catalizadores`, dos líneas más abajo. */
   cartera: ['.indicador__valor'],
 
   /* Descubiertas mirando la vista pintada, no deducidas del CSS: se barrieron

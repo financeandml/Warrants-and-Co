@@ -1182,48 +1182,65 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: none; border: none; border-radius: 0;
 }
 
-/* Cabecera de `resumenPortfolio`: seis cifras separadas por líneas
-   divisorias verticales —"editorial, no tarjeta": ninguna lleva caja,
-   sombra ni relleno—, mismo lenguaje que ya usaba solo la principal.
-   Sin color en la raya: la dirección (alza/baja) vive en la cifra —glifo
-   ▲/▼ y color—, nunca en el separador. Sin iconos: la referencia que motivó
-   esta composición los llevaba, pero un badge redundante con la etiqueta de
-   texto no aportaba lectura que la propia cifra no diera ya. */
-#seccion-cartera #resumen-portfolio {
-  display: flex; flex-wrap: wrap; align-items: baseline;
-  column-gap: var(--espacio-6); row-gap: var(--espacio-4);
+/* Entradilla bajo el h1 de la sección: una línea de contexto, tinta mate,
+   nunca `--acento` —es texto, no cromo—. */
+.titulo-seccion__entradilla {
+  margin: 6px 0 0; font-size: var(--tipo-3); color: var(--tinta-secundaria);
+  max-width: 60ch;
 }
-#seccion-cartera #resumen-portfolio .indicador { padding: 0; }
-#seccion-cartera #resumen-portfolio .indicador:not(:last-child) {
-  padding-inline-end: var(--espacio-6);
-  border-inline-end: 1px solid var(--linea);
+
+/* Cabecera de `resumenPortfolio`: excepción documentada y consciente a
+   "editorial, no tarjeta" —decisión tomada viendo qué se pierde: la lectura
+   como franja continua que motivó esa regla, y la consistencia con el resto
+   de Cartera, que sigue sin caja—. Dos cajas, una por grupo de lectura, no
+   una por cifra; sigue sin ser el lenguaje "bento" del resto de la
+   plataforma. `--superficie-hundida`, no `--superficie`: ese último es el
+   fondo de la propia página (`body`, estilos.css:420) y con él la caja
+   sería invisible en vez de "ligeramente distinta". */
+#seccion-cartera .cuadro-mando--caja {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  column-gap: var(--espacio-5); row-gap: var(--espacio-4);
+  align-items: start;
+  background: var(--superficie-hundida);
+  border: 1px solid var(--linea-fuerte);
+  border-radius: var(--radio-l);
+  padding: var(--espacio-4) var(--espacio-5);
+  margin-bottom: var(--espacio-3);
 }
-#seccion-cartera #resumen-portfolio .indicador--principal .indicador__valor {
+/* Raya vertical de color en vez de línea divisoria entre celdas —pedido
+   explícito, viendo la referencia—. Coloreada SOLO donde hay una dirección
+   real que afirmar, el mismo signo que ya lleva la cifra (misma fuente,
+   nunca una segunda inferida): retorno, realizada, no realizada y ROIC.
+   Capital desplegado, Liquidez y el recuento de posiciones no son un
+   retorno que suba o baje, así que se quedan en gris — inventarles una
+   dirección sería la misma señal sin respaldo que ya se corrigió una vez
+   con el tinte de los iconos (ver ese commit). */
+#seccion-cartera .cuadro-mando--caja .indicador {
+  padding: 0 0 0 16px;
+  border-inline-start: 3px solid var(--linea-fuerte);
+  min-width: 0;
+}
+#seccion-cartera .cuadro-mando--caja .indicador--alza { border-inline-start-color: var(--alcista); }
+#seccion-cartera .cuadro-mando--caja .indicador--baja { border-inline-start-color: var(--bajista); }
+/* Las ocho celdas miden lo mismo, sin cifra dominante: es lo que pide la
+   referencia y se implementa a petición explícita. Se pierde con ello la
+   pista visual de cuál manda —«Rentabilidad de la cartera» es la que las
+   otras descomponen—; queda dicho aquí para que quien lo lea sepa que fue
+   una decisión y no un descuido. `--tipo-indicador-principal` deja de
+   aplicarse en esta vista: su excepción documentada en CLAUDE.md sigue
+   describiendo el token, que hoy no usa nadie en Cartera. */
+#seccion-cartera .cuadro-mando--caja .indicador__valor,
+#seccion-cartera .cuadro-mando--caja .indicador--principal .indicador__valor {
   font-family: var(--geo);
-  font-size: var(--tipo-indicador-principal);
+  font-size: var(--tipo-5);
   font-weight: 500;
 }
 
-/* ── Desglose anidado: realizada / no realizada bajo el retorno total ──
-   Mismas dos cifras que antes vivían como celdas propias de esta fila;
-   aquí son su desglose, no una cifra hermana (Regla 9: un hecho, un
-   sitio). La barra de magnitud que las repetía debajo, `#realizado-
-   comparativa`, se retiró entera: con el desglose ya aquí era la misma
-   cifra pintada dos veces sin autoridad clara. */
-#seccion-cartera #resumen-portfolio .indicador__desglose {
-  display: flex; gap: 20px; margin-top: 14px; padding-top: 12px;
-  border-top: 1px solid var(--linea-hairline);
-}
-#seccion-cartera #resumen-portfolio .indicador__desglose-celda {
-  display: flex; flex-direction: column; gap: 2px;
-}
-#seccion-cartera #resumen-portfolio .indicador__desglose-etiqueta {
-  font-size: 0.66rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--tinta-mate);
-}
-#seccion-cartera #resumen-portfolio .indicador__desglose-valor {
-  font-family: var(--mono); font-size: 0.86rem; font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
+/* El desglose anidado (`.indicador__desglose*`) se retiró con esta ronda:
+   realizada y no realizada volvieron a ser celdas hermanas, así que ya no
+   hay nada anidado que estilar. El HTML que lo usaba está en el historial
+   —commit del resumen en dos cajas—, por si vuelve la jerarquía. */
 
 /* Disclaimer de metodología: tinta neutra a propósito, nunca `--acento`
    —el acento es cromo (cláusula 2 de CLAUDE.md), esto es dato/metodología. */

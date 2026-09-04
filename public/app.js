@@ -2124,6 +2124,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
       $('#cuadro-mando').appendChild(vacio);
     }
     if ($('#resumen-portfolio')) $('#resumen-portfolio').textContent = '';
+    if ($('#resumen-secundario')) $('#resumen-secundario').textContent = '';
     if ($('#contribucion-barras')) $('#contribucion-barras').textContent = '';
     if ($('#cuerpo-posiciones')) $('#cuerpo-posiciones').textContent = '';
     if ($('#cuerpo-grafico-desglose')) $('#cuerpo-grafico-desglose').textContent = '';
@@ -2168,17 +2169,33 @@ function pintarCartera(datos, { avisos = true } = {}) {
  * eso no es una rentabilidad realizada del 0 %, es la ausencia del tercer
  * estado que exige CLAUDE.md.
  */
+
 function pintarResumenPortfolio(datos) {
   const cuadro = $('#resumen-portfolio');
   if (!cuadro) return;
+  // Dos cajas: rentabilidad y capital arriba, ROIC y recuento debajo. La
+  // segunda es opcional a propósito —si algún día no está en el armazón, la
+  // función sigue pintando la primera en vez de reventar—, misma disciplina
+  // que la guarda por pieza de `pintarCartera()`.
+  const secundario = $('#resumen-secundario');
   cuadro.textContent = '';
+  if (secundario) secundario.textContent = '';
 
   const r = datos.resumenPortfolio;
   const na = t('general.noDisponible');
   const cifraPct = (v) => (v === null || v === undefined ? na : formatearPorcentaje(v));
 
+  // La raya de la izquierda solo se tiñe donde hay una dirección real que
+  // afirmar —el mismo signo que ya lleva la cifra—: Capital desplegado,
+  // Liquidez y el recuento de posiciones no son un retorno que suba o baje,
+  // así que se quedan en la raya gris neutra. Nunca al revés: no se inventa
+  // una dirección para que la raya tenga color.
+  const claseDireccion = (v) => (v === null ? ''
+    : ` indicador--${Number(v) > 0 ? 'alza' : Number(v) < 0 ? 'baja' : 'nula'}`);
+
   const indicador = (etiqueta, valor, nota, { principal = false, variacion = null } = {}) => {
-    const bloque = elemento('div', `indicador${principal ? ' indicador--principal' : ''}`);
+    const bloque = elemento('div',
+      `indicador${principal ? ' indicador--principal' : ''}${claseDireccion(variacion)}`);
     bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
     const v = elemento('strong', 'indicador__valor', valor);
     if (variacion !== null) v.className = `indicador__valor ${claseVariacion(variacion)}`;
@@ -2195,35 +2212,32 @@ function pintarResumenPortfolio(datos) {
     return;
   }
 
+  // ── Caja 1: de dónde sale la rentabilidad y cuánto capital la respalda ──
   // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
   // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
   // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
-  const principal = indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
-    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct });
+  cuadro.appendChild(indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
+    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct }));
 
-  // Realizada / no realizada: las mismas dos cifras que antes vivían como
-  // celdas propias de esta fila, anidadas ahora bajo el retorno que
-  // descomponen —son su desglose, no una cifra hermana—. La barra de
-  // magnitud que las repetía debajo (`#realizado-comparativa`) se retiró
-  // entera: con el desglose ya aquí, era la misma cifra pintada dos veces
-  // sin que ninguna tuviera autoridad, el mismo problema que ya se resolvió
-  // en el bento de Home.
-  const desglose = elemento('div', 'indicador__desglose');
-  const celdaDesglose = (etiqueta, valor, variacion) => {
-    const c = elemento('div', 'indicador__desglose-celda');
-    c.appendChild(elemento('span', 'indicador__desglose-etiqueta', etiqueta));
-    c.appendChild(elemento('span',
-      `indicador__desglose-valor ${claseVariacion(variacion)}`, valor));
-    desglose.appendChild(c);
-  };
-  celdaDesglose(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct), r.retornoRealizadoPct);
-  celdaDesglose(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct), r.retornoNoRealizadoPct);
-  principal.appendChild(desglose);
-  cuadro.appendChild(principal);
+  /* Realizada / no realizada, en celda propia junto al retorno que
+     descomponen. Vivieron anidadas bajo él una ronda —la jerarquía era más
+     fiel a la aritmética—, y vuelven a ser hermanas a petición explícita,
+     comparando con la referencia. No es el caso que la Regla 9 prohíbe: cada
+     una sigue apareciendo UNA vez en pantalla, leída del único campo que la
+     calcula. Lo que sí sigue prohibido, y por eso no está, es repetirlas
+     además en un panel lateral. `null` cuando no hay nada cerrado (o nada
+     abierto) se rotula «N/A», nunca 0 %: es el tercer estado. */
+  cuadro.appendChild(indicador(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct),
+    r.retornoRealizadoPct === null
+      ? t('cartera.resumen.realizado.vacio')
+      : t('cartera.resumen.realizado.nota'),
+    { variacion: r.retornoRealizadoPct }));
+  cuadro.appendChild(indicador(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct),
+    r.retornoNoRealizadoPct === null
+      ? t('cartera.resumen.noRealizado.vacio')
+      : t('cartera.resumen.noRealizado.nota'),
+    { variacion: r.retornoNoRealizadoPct }));
 
-  cuadro.appendChild(indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
-    r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
-    { variacion: r.roicPct }));
   cuadro.appendChild(indicador(t('cartera.resumen.capital'), porcentaje(r.capitalDesplegadoPct),
     t('cartera.resumen.capital.nota')));
   // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
@@ -2233,9 +2247,15 @@ function pintarResumenPortfolio(datos) {
     cuadro.appendChild(indicador(t('cartera.indicador.liquidez'), porcentaje(caja.pesoActual),
       t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) })));
   }
-  cuadro.appendChild(indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
+
+  // ── Caja 2: rendimiento del capital y recuento de tesis ──
+  const segunda = secundario ?? cuadro;
+  segunda.appendChild(indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
+    r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
+    { variacion: r.roicPct }));
+  segunda.appendChild(indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
     t('cartera.resumen.abiertas.nota')));
-  cuadro.appendChild(indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
+  segunda.appendChild(indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
     t('cartera.resumen.cerradas.nota')));
 }
 
@@ -2264,28 +2284,12 @@ function pintarCuadroMando(datos) {
     return acc + (p.variacionDiaPct * peso) / 100;
   }, 0);
 
-  indicador(t('cartera.indicador.rentabilidad'), formatearPorcentaje(e.rentabilidadTotal),
-    t('cartera.indicador.rentabilidad.nota', { fecha: formatearFecha(e.inicio) }),
-    { principal: true, variacion: e.rentabilidadTotal });
-
   // El valor indexado es un nivel, no una rentabilidad: se muestra sin signo ni símbolo.
   indicador(t('cartera.indicador.valorIndexado'), formatearNumero(e.valorIndexado ?? datos.valorIndice),
-    t('cartera.indicador.valorIndexado.nota', { base: formatearNumero(e.baseCapital ?? 100, 0) }));
+    t('cartera.indicador.valorIndexado.nota', { base: formatearNumero(e.baseCapital ?? 100, 0) }),
+    { principal: true });
   indicador(t('cartera.indicador.dia'), formatearPorcentaje(dia),
     t('cartera.indicador.dia.nota'), { variacion: dia });
-  const cerradas = datos.cerradas ?? [];
-  indicador(t('cartera.indicador.posiciones'), String(posiciones.length),
-    cerradas.length
-      ? t('cartera.indicador.posiciones.liquidadas', { n: cerradas.length })
-      : t('cartera.indicador.posiciones.nota'));
-  /* La caja se declara en el cuadro de mando o no se declara: es la diferencia
-     entre una cartera invertida y otra que no lo está, y el rótulo dice de qué
-     total habla cada cifra. */
-  const caja = datos.liquidez;
-  if (caja && Number.isFinite(caja.pesoActual)) {
-    indicador(t('cartera.indicador.liquidez'), porcentaje(caja.pesoActual),
-      t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) }));
-  }
 
   const sharpePendiente = retenidaPorMuestra(e.muestra, 'ratioSharpe');
   indicador(t('cartera.indicador.sharpe'), formatearNumero(e.ratioSharpe),

@@ -763,22 +763,30 @@
   <!-- ══════════════════════════════ CARTERA ══════════════════════════════ -->
   <section class="seccion" id="seccion-cartera" data-seccion-panel="cartera" hidden>
     <div class="contenedor">
+
       <div class="titulo-seccion">
         <div>
           <p class="etiqueta-superior" data-i18n="cartera.etiqueta">Gestión de cartera</p>
           <h1 data-i18n="cartera.titulo">Evolución de posiciones</h1>
+          <p class="titulo-seccion__entradilla" data-i18n="cartera.subtitulo">Resumen actualizado de la cartera y su rendimiento.</p>
         </div>
+        <!-- La hora de corte del dato, que `pintarEstadoDatos()` rellena con
+             `generadoEn` del propio motor —nunca la del navegador—. Volvió con
+             esta ronda: estaba en el armazón original y se perdió al vaciar. -->
+        <div class="estado-datos" id="estado-datos"></div>
       </div>
 
-      <!-- ══ Primera pieza reconstruida: resumen de capital ══
-           Seis cifras reales, separadas por líneas divisorias en vez de
-           tarjetas —cláusula "editorial, no tarjeta"—: retorno (con su
-           desglose realizada/no realizada anidado), ROIC, capital
-           desplegado, disponible, posiciones abiertas y cerradas. Ninguna
-           repite a otra bajo otro nombre —eran diez en la referencia que
-           motivó esta composición, con dos duplicados de capital y dos
-           lecturas repetidas de retorno—; Regla 9, un hecho, una fuente.
-           Mockup aprobado antes de implementar. -->
+      <!-- ══ Primera pieza reconstruida: resumen de capital, en dos cajas ══
+           Ocho celdas en total, todas reales y ninguna repetida: retorno,
+           realizada, no realizada, capital desplegado y disponible en la
+           primera caja; ROIC y el recuento de posiciones en la segunda.
+           Realizada/no realizada dejan de ir anidadas bajo el retorno y
+           pasan a celda propia —decisión revertida a petición explícita,
+           comparando con la referencia; siguen apareciendo UNA sola vez en
+           pantalla, que es lo que la Regla 9 exige, no dónde se colocan—.
+           Lo que NO está, y no es un olvido: «Capital comprometido» y
+           «Exposición neta» de la referencia, que son capital desplegado y
+           disponible bajo otro nombre —el mismo hecho dos veces, Regla 9—. -->
       <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
 
       <section class="tarjeta" aria-labelledby="titulo-resumen-portfolio">
@@ -788,7 +796,8 @@
             <p data-i18n="cartera.resumen.subtitulo">Cuánto capital está comprometido y de dónde sale la rentabilidad</p>
           </div>
         </div>
-        <div class="cuadro-mando" id="resumen-portfolio"></div>
+        <div class="cuadro-mando cuadro-mando--caja" id="resumen-portfolio"></div>
+        <div class="cuadro-mando cuadro-mando--caja" id="resumen-secundario"></div>
         <!-- Honesto sobre lo que el motor NO hace: ningún precio de entrada
              ni de cierre descuenta comisión, spread o coste de transacción
              alguno (confirmado en src/cartera.js, grep sin resultados sobre

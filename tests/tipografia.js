@@ -69,14 +69,14 @@ const PORdesRUTA = {
      exigía las dos a la vez, así que con una imposible esta vista llevaba
      tiempo cayendo siempre en SIN DATO. `.dato__valor` es la única real. */
   inicio: ['.dato__valor'],
-  /* `.indicador__valor` y `.estadistico__nota` SALIERON de esta lista: vivían
-     en `#resumen-portfolio`/`#cuadro-mando`/`#rejilla-estadisticos`, y esas
-     piezas no existen mientras Cartera está en reconstrucción (ver la guarda
-     de `pintarCartera()` en app.js). No es un olvido —añádelas de vuelta en la
-     misma tanda en que vuelva cada pieza—.
+  /* `.indicador__valor` volvió con el resumen de capital, primera pieza
+     reconstruida de Cartera (ver la guarda dentro de `pintarCartera()` en
+     app.js). `.estadistico__nota` sigue fuera —vive en
+     `#rejilla-estadisticos`, que todavía no ha vuelto—; añádela en la misma
+     tanda en que esa pieza regrese.
 
-     `.aportacion__valor` SÍ se queda: vive en realidad en `#seccion-radar`, no
-     en Cartera —figura aquí porque esta lista es «por qué ruta pasar para
+     `.aportacion__valor` vive en realidad en `#seccion-radar`, no en
+     Cartera —figura aquí porque esta lista es «por qué ruta pasar para
      encontrarla» y la consulta es global—, y se sigue pintando al visitar
      `#/cartera` porque `cargarCartera()` alimenta `pintarPanelCartera()` sin
      depender de que la página de Cartera tenga contenido propio. */
