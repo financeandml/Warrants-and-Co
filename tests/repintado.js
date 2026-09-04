@@ -271,26 +271,47 @@ const CARTERA_RECONSTRUIDA = false;
 
   }  // fin CARTERA_RECONSTRUIDA
 
-  // Lo poco que SÍ hay hoy en Cartera: el armazón —título y el aviso de
-  // reconstrucción, ambos con `data-i18n`— sigue al idioma igual que
-  // cualquier otra sección estática. No repinta nada en JavaScript propio
-  // —de ahí que no haga falta `vistaPintada()` aquí—, así que basta con la
-  // pasada normal sobre el DOM que ya cubre `tests/idiomas.js`; esto solo
-  // confirma que la ruta sigue viva y en castellano de partida.
+  // Lo que hay hoy en Cartera: el armazón estático —título y aviso de
+  // reconstrucción, con `data-i18n`— y la primera pieza reconstruida, el
+  // resumen de capital, que SÍ se pinta en JavaScript
+  // (`pintarResumenPortfolio()`) y por tanto sí necesita `vistaPintada()`.
   await p.goto(`${B}/#/cartera`, { waitUntil: 'networkidle' });
+  const resumenPintado = () => vistaPintada(p,
+    () => {
+      const v = document.querySelector('#resumen-portfolio .indicador__valor');
+      return Boolean(v && v.textContent.trim());
+    }, null, 'cartera · resumen de capital');
+  await resumenPintado();
   // Sin esto, «castellano de partida» asume que el navegador ya arranca en
   // español, y no lo hace: `idioma-inicial.js` puede caer en el idioma del
   // sistema si no hay elección guardada. El bloque original (ahora dormido
   // en `CARTERA_RECONSTRUIDA`) hacía este mismo `idioma('es')` explícito
   // antes de comprobar nada.
   await idioma('es');
-  seccion('\n  ── cartera · en reconstrucción, castellano de partida ──');
+  await resumenPintado();
+  seccion('\n  ── cartera · resumen de capital, castellano de partida ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
   comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Página en reconstrucción');
+  comp('etiqueta de la cifra principal',
+    await txt('#resumen-portfolio .indicador--principal .indicador__etiqueta'), 'Rentabilidad de la cartera');
+  comp('etiqueta del desglose realizada',
+    await txt('#resumen-portfolio .indicador__desglose-etiqueta'), 'Rentabilidad realizada');
+  comp('nota de ROIC',
+    await txt('#resumen-portfolio .indicador:has-text("ROIC") .indicador__nota'),
+    (v) => v && /capital desplegado/.test(v));
+
   await idioma('en');
-  seccion('\n  ── cartera · en reconstrucción, repintada al conmutar ──');
+  await resumenPintado();
+  seccion('\n  ── cartera · resumen de capital, repintado al conmutar ──');
   comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
   comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Page under reconstruction');
+  comp('etiqueta de la cifra principal',
+    await txt('#resumen-portfolio .indicador--principal .indicador__etiqueta'), 'Portfolio return');
+  comp('etiqueta del desglose realizada',
+    await txt('#resumen-portfolio .indicador__desglose-etiqueta'), 'Realized return');
+  comp('nota de ROIC',
+    await txt('#resumen-portfolio .indicador:has-text("ROIC") .indicador__nota'),
+    (v) => v && /capital deployed/.test(v));
   // Se sigue en inglés a propósito: la sección de repositorio que viene a
   // continuación comprueba primero el inglés y solo vuelve a castellano
   // después —es el mismo orden que ya traía esta batería antes de esta

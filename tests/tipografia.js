@@ -80,7 +80,7 @@ const PORdesRUTA = {
      encontrarla» y la consulta es global—, y se sigue pintando al visitar
      `#/cartera` porque `cargarCartera()` alimenta `pintarPanelCartera()` sin
      depender de que la página de Cartera tenga contenido propio. */
-  cartera: ['.aportacion__valor'],
+  cartera: ['.indicador__valor', '.aportacion__valor'],
   /* `catalizadores` NO figura: su área está oculta (`navegacion.js`,
      research-companias), la ruta cae en portada y `#seccion-catalizadores`
      no llega a pintarse. Vuelve cuando vuelva el área. */

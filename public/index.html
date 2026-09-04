@@ -770,12 +770,44 @@
         </div>
       </div>
 
+      <!-- ══ Primera pieza reconstruida: resumen de capital ══
+           Seis cifras reales, separadas por líneas divisorias en vez de
+           tarjetas —cláusula "editorial, no tarjeta"—: retorno (con su
+           desglose realizada/no realizada anidado), ROIC, capital
+           desplegado, disponible, posiciones abiertas y cerradas. Ninguna
+           repite a otra bajo otro nombre —eran diez en la referencia que
+           motivó esta composición, con dos duplicados de capital y dos
+           lecturas repetidas de retorno—; Regla 9, un hecho, una fuente.
+           Mockup aprobado antes de implementar. -->
+      <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
+
+      <section class="tarjeta" aria-labelledby="titulo-resumen-portfolio">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-resumen-portfolio" data-i18n="cartera.resumen.titulo">Resumen de capital</h2>
+            <p data-i18n="cartera.resumen.subtitulo">Cuánto capital está comprometido y de dónde sale la rentabilidad</p>
+          </div>
+        </div>
+        <div class="cuadro-mando" id="resumen-portfolio"></div>
+        <!-- Honesto sobre lo que el motor NO hace: ningún precio de entrada
+             ni de cierre descuenta comisión, spread o coste de transacción
+             alguno (confirmado en src/cartera.js, grep sin resultados sobre
+             comision/fee/gasto/spread). Afirmar "neto de comisiones" sería
+             inventar una metodología que no es la real —regla 1—; esta línea
+             dice la verdad en su lugar. Tinta neutra, nunca --acento: es
+             dato/metodología, no cromo. -->
+        <p class="cuadro-mando__aviso" data-i18n="cartera.resumen.bruto">Rentabilidad bruta, sin ajustar por costes de transacción.</p>
+      </section>
+
       <!-- Cartera en reconstrucción: cada pieza vuelve por separado —diseño,
            mockup, aprobación, implementación, verificación en navegador—, en
-           vez de todas a la vez. Lo que este armazón NO lleva es justo lo que
-           `pintarCartera()` rellenaba (ver la guarda al principio de esa
-           función en app.js): sin esas piezas, no hay nada que romper mientras
-           faltan las demás. -->
+           vez de todas a la vez. El resumen de capital de arriba fue la
+           primera en volver; lo que sigue debajo de este aviso —cuadro de
+           mando, gráfico, tabla de posiciones, conciliación, estadísticos,
+           anillo de composición, metodología— todavía no. `pintarCartera()`
+           (app.js) ya sabe pintar solo lo que existe: cada pintor comprueba
+           su propio hueco antes de tocarlo, así que la próxima pieza que
+           vuelva no exige tocar esa función. -->
       <div class="vacio" id="cartera-reconstruccion">
         <strong data-i18n="cartera.reconstruccion.titulo">Página en reconstrucción</strong>
         <span data-i18n="cartera.reconstruccion.motivo">

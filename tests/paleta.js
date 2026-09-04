@@ -147,7 +147,9 @@ const VISTAS_CONVERTIDAS = {
      vuelva a existir, no antes. Antes de esta ronda llevaba
      `['.indicador__valor', '.estadistico__nota']`, y esos dos selectores
      siguen siendo los correctos el día que el resumen y los estadísticos
-     regresen. */
+     regresen. — ACTUALIZADO: `.indicador__valor` volvió con el resumen de
+     capital y ya se comprueba; `.estadistico__nota` sigue fuera. */
+  cartera: ['.indicador__valor'],
 
   /* Descubiertas mirando la vista pintada, no deducidas del CSS: se barrieron
      los nodos hoja con un dígito dentro de cada sección. `.estado-datos` queda

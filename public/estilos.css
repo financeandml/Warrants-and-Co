@@ -1182,16 +1182,19 @@ button, input, select, textarea { font: inherit; color: inherit; }
   background: none; border: none; border-radius: 0;
 }
 
-/* Cabecera de `resumenPortfolio`: Portfolio Return grande a la izquierda,
-   separado por un filete vertical de 1px del resto de cifras, que se leen
-   más pequeñas a la derecha. Sigue siendo el mismo grupo de `.indicador` que
-   pinta `pintarResumenPortfolio()` — solo cambia cómo se distribuyen. */
+/* Cabecera de `resumenPortfolio`: seis cifras separadas por líneas
+   divisorias verticales —"editorial, no tarjeta": ninguna lleva caja,
+   sombra ni relleno—, mismo lenguaje que ya usaba solo la principal.
+   Sin color en la raya: la dirección (alza/baja) vive en la cifra —glifo
+   ▲/▼ y color—, nunca en el separador. Sin iconos: la referencia que motivó
+   esta composición los llevaba, pero un badge redundante con la etiqueta de
+   texto no aportaba lectura que la propia cifra no diera ya. */
 #seccion-cartera #resumen-portfolio {
   display: flex; flex-wrap: wrap; align-items: baseline;
   column-gap: var(--espacio-6); row-gap: var(--espacio-4);
 }
 #seccion-cartera #resumen-portfolio .indicador { padding: 0; }
-#seccion-cartera #resumen-portfolio .indicador--principal {
+#seccion-cartera #resumen-portfolio .indicador:not(:last-child) {
   padding-inline-end: var(--espacio-6);
   border-inline-end: 1px solid var(--linea);
 }
@@ -1200,35 +1203,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--tipo-indicador-principal);
   font-weight: 500;
 }
-
-/* ── Icono circular + cabecera ──
-   Badge decorativo, nunca la única forma de identificar la cifra —la
-   etiqueta de texto viaja siempre a su lado, cláusula 1—. Sigue la
-   decisión "editorial, no tarjeta" de esta sección: es un círculo de 1px
-   de filete, sin sombra ni relleno salvo cuando el retorno es direccional,
-   donde el tinte es el mismo `--alcista`/`--bajista` que ya usa el signo. */
-#seccion-cartera #resumen-portfolio .indicador__cabecera {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 7px;
-}
-#seccion-cartera #resumen-portfolio .indicador__cabecera .indicador__etiqueta {
-  margin-bottom: 0;
-}
-#seccion-cartera #resumen-portfolio .indicador__icono {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
-  border: 1px solid var(--linea-fuerte);
-}
-#seccion-cartera #resumen-portfolio .indicador__icono svg {
-  width: 13px; height: 13px; stroke: var(--tinta-secundaria);
-}
-#seccion-cartera #resumen-portfolio .indicador__icono--alza {
-  border-color: transparent; background: var(--alcista-tenue);
-}
-#seccion-cartera #resumen-portfolio .indicador__icono--alza svg { stroke: var(--alcista); }
-#seccion-cartera #resumen-portfolio .indicador__icono--baja {
-  border-color: transparent; background: var(--bajista-tenue);
-}
-#seccion-cartera #resumen-portfolio .indicador__icono--baja svg { stroke: var(--bajista); }
 
 /* ── Desglose anidado: realizada / no realizada bajo el retorno total ──
    Mismas dos cifras que antes vivían como celdas propias de esta fila;
