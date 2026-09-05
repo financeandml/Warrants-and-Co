@@ -540,6 +540,7 @@ export default {
   'cartera.error.mercado': 'Market data unavailable',
   'cartera.vacia.titulo': 'Portfolio not constituted',
   'cartera.recargar': 'Refresh portfolio data',
+  'cartera.live': 'Live',
   'cartera.estado.actualizado': 'Updated at {hora}',
   'cartera.pie.fuente': 'Market data: {fuentes}. Last updated: {momento}.',
 
@@ -683,6 +684,7 @@ export default {
   'cartera.conciliacion.titulo': 'Return reconciliation',
   'cartera.conciliacion.subtitulo': 'Capital weight: the tranche assigned at inception, which the line answers for. Weight times return is its contribution, and the contributions add up to the total return',
   'cartera.conciliacion.caption': 'Return reconciliation, position by position',
+  'cartera.conciliacion.col.compania': 'Company',
   'cartera.conciliacion.col.peso': 'Capital weight',
   'cartera.conciliacion.col.entrada': 'Entry price',
   'cartera.conciliacion.col.referencia': 'Reference price',

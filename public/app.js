@@ -2233,9 +2233,10 @@ function pintarCartera(datos, { avisos = true } = {}) {
     if ($('#resumen-secundario')) $('#resumen-secundario').textContent = '';
     if ($('#distribucion-capital')) $('#distribucion-capital').textContent = '';
     if ($('#contribucion-barras')) $('#contribucion-barras').textContent = '';
-    if ($('#lista-posiciones')) {
-      $('#lista-posiciones').textContent = '';
-      nodosPosicion.clear();
+    if ($('#cuerpo-conciliacion')) {
+      $('#cuerpo-conciliacion').textContent = '';
+      if ($('#pie-conciliacion')) $('#pie-conciliacion').textContent = '';
+      if ($('#nota-conciliacion')) $('#nota-conciliacion').textContent = '';
     }
     if ($('#cuerpo-grafico-desglose')) $('#cuerpo-grafico-desglose').textContent = '';
     if ($('#rejilla-estadisticos')) $('#rejilla-estadisticos').textContent = '';
@@ -2247,7 +2248,6 @@ function pintarCartera(datos, { avisos = true } = {}) {
   if ($('#distribucion-capital')) pintarDistribucionCapital(datos);
   if ($('#cuadro-mando')) { pintarCuadroMando(datos); pintarAvisoCierre(datos); }
   if ($('#grafico')) { poblarBenchmarks(); pintarGrafico(datos); }
-  if ($('#lista-posiciones')) pintarTablaCartera(datos);
   if ($('#cuerpo-grafico-desglose')) pintarDesgloseGrafico(datos);
   if ($('#contribucion-barras')) pintarContribucion(datos);
   if ($('#cuerpo-conciliacion')) pintarConciliacion(datos);
@@ -2401,6 +2401,11 @@ function pintarResumenPortfolio(datos) {
   // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
   const capRentabilidad = capitulo(t('cartera.resumen.grupo.rentabilidad'));
   const filaRetorno = fila('retorno', t('cartera.resumen.retorno'), r.retornoPct, cifraPct, { variacion: r.retornoPct });
+  // Única cifra que lleva `--tipo-indicador-principal` (CLAUDE.md § Diseño 6,
+  // excepción documentada): de las diez que hay en el resumen, esta es LA
+  // cifra —todo lo demás explica de dónde sale ella—, y el peso tipográfico
+  // tiene que decirlo antes de que se lea una sola palabra.
+  filaRetorno.classList.add('fila--principal');
   /* Realizada / no realizada van anidadas bajo el retorno que descomponen
      —a petición explícita, comparando con la referencia—: una sola fila
      firmada por "Rentabilidad de la cartera", con su aritmética debajo en
@@ -2419,12 +2424,33 @@ function pintarResumenPortfolio(datos) {
   // ── Capítulo 2: cuánto capital hay en juego y cómo rinde ──
   const capCapital = capitulo(t('cartera.resumen.grupo.capital'));
   capCapital.appendChild(fila('roic', t('cartera.resumen.roic'), r.roicPct, cifraPct, { variacion: r.roicPct }));
-  capCapital.appendChild(fila('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple));
+
+  /* Barra de asignación: el mismo `capitalDesplegadoPct`/`pesoActual` que ya
+     pintan las dos filas de arriba, dibujado además como proporción — no un
+     segundo cálculo (Regla 9), la misma cifra en dos lenguajes. Las dos
+     barras NO tienen por qué sumar 100 entre sí: "Capital desplegado" es
+     peso de ENTRADA y "Liquidez" es peso VIGENTE (mismo matiz que ya explica
+     `anillo.js`), así que se dibujan como dos proporciones independientes
+     sobre su propio 100 %, nunca forzadas a repartirse una sola pista. */
+  const barraAsignacion = (pct) => {
+    const pista = elemento('div', 'asignacion-barra');
+    const relleno = elemento('div', 'asignacion-barra__relleno');
+    relleno.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(2)}%`;
+    pista.appendChild(relleno);
+    return pista;
+  };
+
+  const filaCapital = fila('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple);
+  if (Number.isFinite(r.capitalDesplegadoPct)) filaCapital.appendChild(barraAsignacion(r.capitalDesplegadoPct));
+  capCapital.appendChild(filaCapital);
+
   // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
   // nunca un segundo cálculo de caja (Regla 9).
   const caja = datos.liquidez;
   if (caja && Number.isFinite(caja.pesoActual)) {
-    capCapital.appendChild(fila('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple));
+    const filaLiquidez = fila('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple);
+    filaLiquidez.appendChild(barraAsignacion(caja.pesoActual));
+    capCapital.appendChild(filaLiquidez);
   }
   cuadro.appendChild(capCapital);
 
@@ -3202,190 +3228,9 @@ function filaDetalle(p, idDetalle) {
 }
 
 /**
- * Panel de detalle de una tarjeta de posición: lo que no cabe en el frente
- * —fecha de alta siempre; take profit, precio objetivo y recomendación solo
- * en vivas, porque en cerradas ya están la fecha y el motivo de cierre en el
- * propio frente de la tarjeta, y repetirlos aquí sería la misma cifra dos
- * veces (Regla 9)—. Reutiliza `.fila-cartera__panel` tal cual: mismo
- * componente que ya existía para esto, no uno nuevo.
- */
-function panelDetallePosicion(p, cerrada) {
-  const panel = elemento('dl', 'fila-cartera__panel posicion__panel');
-  const par = (etiqueta, valor) => {
-    panel.appendChild(elemento('dt', null, etiqueta));
-    const dd = document.createElement('dd');
-    if (valor instanceof Node) dd.appendChild(valor);
-    else dd.textContent = valor;
-    panel.appendChild(dd);
-  };
-
-  par(t('cartera.fila.detalle.alta'), formatearFecha(p.fechaEntrada ?? p.fechaAlta));
-  if (!cerrada) {
-    par(t('cartera.col.takeProfit'), formatearMoneda(p.takeProfit, p.divisa));
-    par(t('cartera.col.precioObjetivo'), formatearMoneda(p.precioObjetivo, p.divisa));
-    par(t('cartera.col.recomendacion'), p.recomendacion ? etiquetaRecomendacion(p.recomendacion) : '—');
-  }
-  return panel;
-}
-
-/**
- * Contenido de una tarjeta de posición, reescrito en sitio sobre el `nodo`
- * que ya existe —nunca recreado—: así un repintado (sondeo silencioso,
- * cambio de idioma) actualiza las cifras sin disparar ninguna transición ni
- * perder el estado de `aria-expanded` que el propio usuario haya dejado
- * abierto. La coreografía de entrada vive en el LLAMADOR (`pintarTablaCartera`),
- * nunca aquí: esta función no sabe si el nodo es nuevo o viejo.
- */
-function rellenarTarjetaPosicion(nodo, p, cerrada) {
-  const expandido = nodo.getAttribute('aria-expanded') === 'true';
-  nodo.textContent = '';
-  nodo.className = `posicion${cerrada ? ' posicion--cerrada' : ''}`;
-  nodo.setAttribute('aria-expanded', String(expandido));
-  nodo.setAttribute('aria-label', t('cartera.fila.desplegar', { ticker: p.ticker }));
-
-  const identidad = elemento('div', 'posicion__identidad');
-  identidad.appendChild(elemento('p', 'posicion__empresa', p.empresa));
-  identidad.appendChild(elemento('p', 'posicion__meta',
-    `${p.ticker}${p.sector ? ` · ${etiquetaSector(p.sector)}` : ''}`));
-  nodo.appendChild(identidad);
-
-  const cifras = elemento('div', 'posicion__cifras');
-  const pesoCifra = elemento('div', 'posicion__cifra');
-  pesoCifra.appendChild(elemento('span', 'posicion__cifra-valor', porcentaje(p.pesoVigente ?? p.peso)));
-  pesoCifra.appendChild(elemento('span', 'posicion__cifra-etiqueta', t('cartera.posiciones.col.peso')));
-  cifras.appendChild(pesoCifra);
-
-  const contribucionCifra = elemento('div', 'posicion__cifra');
-  contribucionCifra.appendChild(elemento('span',
-    `posicion__cifra-valor ${claseVariacion(p.contribucionPct)}`,
-    Number.isFinite(p.contribucionPct) ? formatearPorcentaje(p.contribucionPct) : '—'));
-  contribucionCifra.appendChild(elemento('span', 'posicion__cifra-etiqueta', t('cartera.conciliacion.col.contribucion')));
-  cifras.appendChild(contribucionCifra);
-  nodo.appendChild(cifras);
-
-  if (cerrada) {
-    // El cierre como cifra protagonista propia: fecha, motivo y resultado
-    // final, en vez de la barra de avance, que ya no aplica —el motor deja
-    // `recorridoTakeProfitPct` en `null` en una posición cerrada—.
-    const cierre = elemento('div', 'posicion__cierre');
-    cierre.appendChild(elemento('span', 'posicion__cierre-glifo', '↳'));
-    const motivo = p.motivoCierre ? etiquetaMotivoCierre(p.motivoCierre) : t('cartera.cerradas.motivo');
-    cierre.appendChild(document.createTextNode(
-      t('cartera.posiciones.cierre', { fecha: formatearFecha(p.fechaCierre), motivo }) + ' · '));
-    cierre.appendChild(elemento('span', null, `${t('cartera.cerradas.col.resultado')} `));
-    cierre.appendChild(elemento('strong', claseVariacion(p.rentabilidadPct), formatearPorcentaje(p.rentabilidadPct)));
-    nodo.appendChild(cierre);
-  } else {
-    const avance = elemento('div', 'posicion__avance');
-    const pista = elemento('div', 'posicion__avance-pista');
-    const relleno = elemento('div', 'posicion__avance-relleno');
-    const tieneAvance = Number.isFinite(p.recorridoTakeProfitPct);
-    relleno.style.width = tieneAvance ? `${Math.max(0, Math.min(100, p.recorridoTakeProfitPct)).toFixed(1)}%` : '0%';
-    pista.appendChild(relleno);
-    avance.appendChild(pista);
-    const pie = elemento('div', 'posicion__avance-pie');
-    pie.appendChild(elemento('span', null, t('cartera.col.recorrido')));
-    pie.appendChild(elemento('strong', null, tieneAvance ? porcentaje(p.recorridoTakeProfitPct) : '—'));
-    avance.appendChild(pie);
-    nodo.appendChild(avance);
-  }
-
-  const cue = elemento('span', 'posicion__detalle-cue',
-    t(expandido ? 'cartera.posiciones.detalle.ocultar' : 'cartera.posiciones.detalle.ver'));
-  nodo.appendChild(cue);
-
-  const panel = panelDetallePosicion(p, cerrada);
-  panel.hidden = !expandido;
-  nodo.appendChild(panel);
-}
-
-// Escalón del stagger de entrada de las tarjetas de posición, y el mismo
-// candado de "una sola vez" que ya usa `coreografiaEntradaCartera()`: aquí
-// vive por nodo (`Map`), no por página entera, porque cada tarjeta es su
-// propio elemento persistente entre repintados.
-const ESCALON_POSICIONES_MS = 55;
-const nodosPosicion = new Map();
-let posicionesPrimeraCarga = true;
-
-/**
- * Tarjetas de posición, abiertas y cerradas fundidas por `Status`, al estilo
- * de gestión activa (Cobas AM / azValor / Magallanes): cada una una decisión
- * con nombre, no una fila de tabla.
- *
- * Nunca vacía y reconstruye: un nodo existente (`nodosPosicion`, por
- * `ticker`) se actualiza EN SITIO —`rellenarTarjetaPosicion()`— y solo se
- * reordena con `appendChild` si el peso cambió su lugar en la lista; mover un
- * nodo que ya está en el documento no reinicia ninguna transición ni relanza
- * el listener de clic. Solo una tarjeta genuinamente nueva entra con
- * animación, y el escalonado completo —Cláusula 8, "una vez por visita"—
- * solo se aplica en la primera carga de la sección: un sondeo silencioso o un
- * cambio de idioma jamás hacen que las tarjetas "reaparezcan".
- */
-function pintarTablaCartera(datos) {
-  const contenedor = $('#lista-posiciones');
-  if (!contenedor) return;
-
-  const posiciones = datos.posiciones ?? [];
-  const cerradas = datos.cerradas ?? [];
-  const filas = [...posiciones, ...cerradas];
-  const clavesVistas = new Set();
-  const animar = !sinMovimiento();
-  const curva = curvaEntradaCartera();
-
-  filas.forEach((p, i) => {
-    const cerrada = cerradas.includes(p);
-    const clave = p.ticker;
-    clavesVistas.add(clave);
-    let entrada = nodosPosicion.get(clave);
-
-    if (!entrada) {
-      const nodo = elemento('article', 'posicion');
-      nodo.setAttribute('role', 'button');
-      nodo.tabIndex = 0;
-      nodo.setAttribute('aria-expanded', 'false');
-      const alternar = () => {
-        const abierto = nodo.getAttribute('aria-expanded') === 'true';
-        nodo.setAttribute('aria-expanded', String(!abierto));
-        nodo.querySelector('.posicion__panel').hidden = abierto;
-        nodo.querySelector('.posicion__detalle-cue').textContent =
-          t(abierto ? 'cartera.posiciones.detalle.ver' : 'cartera.posiciones.detalle.ocultar');
-      };
-      nodo.addEventListener('click', alternar);
-      nodo.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); alternar(); }
-      });
-
-      contenedor.appendChild(nodo);
-      entrada = { nodo };
-      nodosPosicion.set(clave, entrada);
-      rellenarTarjetaPosicion(nodo, p, cerrada);
-
-      if (animar) {
-        const retardo = posicionesPrimeraCarga ? i * ESCALON_POSICIONES_MS : 0;
-        nodo.animate(
-          [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'translateY(0)' }],
-          { duration: 300, delay: retardo, easing: curva, fill: 'backwards' }
-        );
-      }
-    } else {
-      rellenarTarjetaPosicion(entrada.nodo, p, cerrada);
-      // Reordena si el peso movió su lugar en la lista: `appendChild` sobre
-      // un nodo ya presente en el documento solo lo desplaza, no lo recrea.
-      contenedor.appendChild(entrada.nodo);
-    }
-  });
-
-  for (const [clave, entrada] of nodosPosicion) {
-    if (!clavesVistas.has(clave)) { entrada.nodo.remove(); nodosPosicion.delete(clave); }
-  }
-
-  posicionesPrimeraCarga = false;
-}
-
-/**
  * Panel lateral del gráfico: qué posiciones concretas hay detrás de la
  * cifra agregada — nivel de posición, no de cartera. Mismos campos que
- * `pintarTablaCartera()` (`ticker`/`empresa`, `pesoVigente`, `contribucionPct`),
+ * `pintarConciliacion()` (`ticker`/`empresa`, `pesoVigente`, `contribucionPct`),
  * ninguna cifra nueva ni una segunda fuente (Regla 9). Ordenada por
  * contribución absoluta: lo que más ha movido el rendimiento primero, que es
  * la pregunta que este panel responde —no "qué pesa más hoy", eso ya lo
@@ -3525,6 +3370,7 @@ function pintarConciliacion(datos) {
 
   for (const p of lineas) {
     const fila = document.createElement('tr');
+    if (p.cerrada) fila.className = 'cerrada';
 
     const valor = elemento('td', 'celda-empresa celda-valor');
     valor.appendChild(document.createTextNode(p.empresa));

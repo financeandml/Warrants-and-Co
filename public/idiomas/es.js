@@ -555,6 +555,7 @@ export default {
   'cartera.error.mercado': 'Datos de mercado no disponibles',
   'cartera.vacia.titulo': 'Cartera no constituida',
   'cartera.recargar': 'Actualizar los datos de la cartera',
+  'cartera.live': 'En vivo',
   'cartera.estado.actualizado': 'Actualizado a las {hora}',
   'cartera.pie.fuente': 'Datos de mercado: {fuentes}. Última actualización: {momento}.',
 
@@ -711,6 +712,7 @@ export default {
   'cartera.conciliacion.titulo': 'Conciliación de la rentabilidad',
   'cartera.conciliacion.subtitulo': 'Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total',
   'cartera.conciliacion.caption': 'Conciliación de la rentabilidad, posición por posición',
+  'cartera.conciliacion.col.compania': 'Compañía',
   'cartera.conciliacion.col.peso': 'Peso de capital',
   'cartera.conciliacion.col.entrada': 'Precio de entrada',
   'cartera.conciliacion.col.referencia': 'Precio de referencia',

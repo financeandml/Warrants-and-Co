@@ -924,6 +924,16 @@
              petición en vuelo— y con `prefers-reduced-motion` no gira en
              absoluto (cláusula 5), solo se atenúa. -->
         <div class="estado-datos-fila">
+          <!-- Discreto a propósito (cláusula del pedido: "nada de un botón
+               grande"): un punto y una palabra, sin caja ni fondo. Es un
+               hecho real, no decorativo — `programarRefrescoCartera()`
+               (app.js) sondea la cartera mientras la sección está abierta y
+               la pestaña visible, así que "LIVE" no promete más de lo que
+               el propio refresco ya hace. -->
+          <span class="etiqueta-live">
+            <span class="indicador-live" aria-hidden="true"></span>
+            <span data-i18n="cartera.live">EN VIVO</span>
+          </span>
           <div class="estado-datos" id="estado-datos"></div>
           <button class="boton-recargar" type="button" id="btn-recargar-cartera"
                   data-i18n-attr="aria-label:cartera.recargar" aria-label="Actualizar los datos de la cartera">
@@ -1077,16 +1087,17 @@
         <div class="distribucion-capital" id="distribucion-capital"></div>
       </section>
 
-      <!-- ══ Posiciones: cada tesis como una decisión, no una fila ══
-           Rediseño al estilo de gestión activa (Cobas AM / azValor /
-           Magallanes): nombre completo con autoridad tipográfica, peso y
-           contribución como cifras protagonistas, avance a take profit visto
-           —nunca una tabla compacta—. Cerradas y abiertas fundidas por
-           `pintarTablaCartera()` (`app.js`), mismos campos que ya usaba la
-           tabla anterior (Regla 9, ningún cálculo nuevo). Aún quedan fuera de
-           esta reconstrucción: cuadro de mando, conciliación, estadísticos,
-           anillo de composición por posición, metodología — sin aviso propio
-           ya, retirado a petición explícita en este commit. -->
+      <!-- ══ Posiciones: tabla institucional, no tarjetas ══
+           Rediseño "hedge fund dashboard": vuelve la tabla fundida de
+           conciliación —`pintarConciliacion()` en `app.js` nunca se borró,
+           solo se quedó sin ancla en el documento cuando la ronda anterior
+           pasó a tarjetas (`.posicion`, retiradas en este mismo commit)—.
+           Mismos campos que ya calculaba el motor, ninguno nuevo: peso de
+           entrada, precio de entrada, precio de referencia (con su fuente:
+           cotización, cierre o precio de salida), rentabilidad, valor del
+           tramo y contribución. La fila de Total cierra la cuenta a partir
+           de lo que la propia tabla suma, nunca copiada del resumen de
+           arriba (Regla 9: si un día discreparan, aquí se vería). -->
       <section class="tarjeta" aria-labelledby="titulo-posiciones">
         <div class="tarjeta__cabecera">
           <div>
@@ -1094,7 +1105,27 @@
             <p data-i18n="cartera.posiciones.lista.subtitulo">Cada tesis publicada, abierta o cerrada, con su peso y su contribución reales a la rentabilidad.</p>
           </div>
         </div>
-        <div class="lista-posiciones" id="lista-posiciones"></div>
+        <div class="tabla-envoltorio">
+          <table class="tabla-datos tabla-posiciones" id="tabla-posiciones" data-densidad="compacta">
+            <caption class="visualmente-oculto" data-i18n="cartera.conciliacion.caption">
+              Conciliación de la rentabilidad, posición por posición
+            </caption>
+            <thead>
+              <tr>
+                <th data-i18n="cartera.conciliacion.col.compania">Compañía</th>
+                <th class="num" data-i18n="cartera.conciliacion.col.peso">Peso de capital</th>
+                <th class="num" data-i18n="cartera.conciliacion.col.entrada">Precio de entrada</th>
+                <th class="num" data-i18n="cartera.conciliacion.col.referencia">Precio de referencia</th>
+                <th class="num" data-i18n="cartera.col.rentabilidad">Rentabilidad</th>
+                <th class="num" data-i18n="cartera.conciliacion.col.valorTramo">Valor del tramo</th>
+                <th class="num" data-i18n="cartera.conciliacion.col.contribucion">Contribución</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpo-conciliacion"></tbody>
+            <tfoot id="pie-conciliacion"></tfoot>
+          </table>
+        </div>
+        <p class="nota-conciliacion" id="nota-conciliacion"></p>
       </section>
 
     </div>

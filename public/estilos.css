@@ -1203,6 +1203,29 @@ button, input, select, textarea { font: inherit; color: inherit; }
    no gira en absoluto (cláusula 5): se atenúa, que es un estado final, no
    un movimiento. */
 .estado-datos-fila { display: flex; align-items: center; gap: 10px; }
+/* El indicador LIVE: un punto, nada más — sin caja, sin fondo, sin la
+   palabra en mayúsculas gritando. `--alcista` es la dirección correcta aquí
+   (algo positivo está ocurriendo: el dato se sigue refrescando solo), no
+   `--acento` — el acento es identidad neutra, nunca dirección (CLAUDE.md §
+   Diseño, cláusula 2), y esto SÍ es una dirección. El latido se apaga entero
+   con `prefers-reduced-motion` y queda como un punto fijo: sigue siendo
+   cierto sin el movimiento, así que no hace falta fingir nada en su lugar. */
+.etiqueta-live {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: var(--tipo-0); font-weight: 600; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tinta-mate);
+}
+.indicador-live {
+  display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--alcista); flex-shrink: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .indicador-live { animation: latido-live 2.4s ease-in-out infinite; }
+}
+@keyframes latido-live {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
 .boton-recargar {
   display: inline-flex; align-items: center; justify-content: center;
   width: 30px; height: 30px; flex-shrink: 0;
@@ -1272,6 +1295,36 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #seccion-cartera .fila__valor {
   font-family: var(--geo); font-size: var(--tipo-6); font-weight: 500;
   line-height: 1; white-space: nowrap;
+}
+/* La única cifra que lleva `--tipo-indicador-principal`: excepción
+   documentada de CLAUDE.md § Diseño 6, aquí aplicada por fin a la cifra que
+   la motivó —"Rentabilidad de la cartera" es LA cifra del resumen, todo lo
+   demás explica de dónde sale ella—. Mismo token que ya mide el hero de la
+   Home, no un tamaño inventado (Regla 9 en tipografía). El resto del
+   capítulo se queda en `--tipo-6`: la jerarquía se hace con UNA cifra
+   dominante, no con la fila entera engordada. */
+#seccion-cartera .fila--principal .fila__etiqueta {
+  font-size: var(--tipo-1); letter-spacing: 0.08em; text-transform: uppercase;
+}
+#seccion-cartera .fila--principal .fila__valor {
+  font-size: var(--tipo-indicador-principal); font-weight: 600;
+}
+#seccion-cartera .fila--principal { padding-block: var(--espacio-3) var(--espacio-4); }
+
+/* Barra de asignación de capital: pista de 3px, sin relleno redondeado
+   agresivo, sin gradiente — la misma disciplina "sin adorno" que ya rige el
+   resto de Cartera. `flex-basis: 100%` la manda a su propia línea bajo
+   etiqueta+valor, igual que `.fila__caption`. */
+#seccion-cartera .asignacion-barra {
+  flex-basis: 100%; height: 3px; margin-top: 10px;
+  background: var(--linea); border-radius: 1px; overflow: hidden;
+}
+#seccion-cartera .asignacion-barra__relleno {
+  height: 100%; background: var(--tinta);
+  transition: width 700ms var(--mov-entrada);
+}
+@media (prefers-reduced-motion: reduce) {
+  #seccion-cartera .asignacion-barra__relleno { transition: none; }
 }
 /* Desglose anidado bajo "Rentabilidad de la cartera": aritmética en letra
    pequeña debajo de la cifra que descompone, no filas hermanas —a petición
@@ -1350,90 +1403,6 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .fila-cartera__panel dd { font-size: var(--tipo-2); }
 
-/* ═══════════════ Posiciones: la tarjeta de decisión, no la fila ═══════════════
-   Rediseño de gestión activa (Cobas AM / azValor / Magallanes): cifras
-   grandes sin adorno, nombre con autoridad tipográfica, aire entre bloques.
-   Filete de 1px entre tarjetas —el mismo lenguaje "editorial, no tarjeta" que
-   ya rige el resto de Cartera—, nunca fondo/borde/sombra propios (Cláusula
-   "The Flat-By-Default Rule", DESIGN.md). El panel de detalle reutiliza
-   `.fila-cartera__panel` tal cual —mismo componente, no uno nuevo (Regla 9)—. */
-.lista-posiciones { display: flex; flex-direction: column; }
-#seccion-cartera .posicion {
-  display: grid; grid-template-columns: 1fr auto; gap: 8px 24px;
-  padding-block: var(--espacio-4);
-  border-block-start: 1px solid var(--linea);
-  cursor: pointer;
-}
-#seccion-cartera .posicion:first-child { border-block-start: none; padding-block-start: 0; }
-#seccion-cartera .posicion:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
-
-#seccion-cartera .posicion__identidad { grid-column: 1; min-width: 0; }
-#seccion-cartera .posicion__empresa {
-  margin: 0; font-family: var(--geo); font-weight: 600;
-  font-size: clamp(1.15rem, 2.4vw, 1.5rem); letter-spacing: -0.01em; line-height: 1.15;
-}
-#seccion-cartera .posicion__meta {
-  margin: 5px 0 0; font-family: var(--mono); font-size: var(--tipo-1);
-  letter-spacing: 0.04em; color: var(--tinta-mate);
-}
-
-#seccion-cartera .posicion__cifras { grid-column: 2; display: flex; gap: 28px; align-items: baseline; }
-#seccion-cartera .posicion__cifra { text-align: end; }
-#seccion-cartera .posicion__cifra-valor {
-  display: block; font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums;
-  font-size: clamp(1.3rem, 3vw, 1.75rem); letter-spacing: -0.01em; line-height: 1.1;
-}
-/* `.variacion--positiva/--negativa` (formato.js) ya trae el glifo ▲/▼ —
-   Cláusula 1, el color nunca carga solo—; esta regla solo ajusta el tamaño
-   del glifo a la escala grande de la cifra, que si no queda diminuto. */
-#seccion-cartera .posicion__cifra-valor.variacion::before { font-size: 0.5em; }
-#seccion-cartera .posicion__cifra-etiqueta {
-  display: block; margin-top: 4px; font-size: var(--tipo-0); letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--tinta-mate);
-}
-
-/* ── Avance hacia el take profit: solo posiciones vivas ── */
-#seccion-cartera .posicion__avance { grid-column: 1 / -1; margin-top: 14px; }
-#seccion-cartera .posicion__avance-pista {
-  position: relative; height: 3px; background: var(--linea); border-radius: 2px; overflow: hidden;
-}
-#seccion-cartera .posicion__avance-relleno {
-  position: absolute; inset-block: 0; left: 0; background: var(--tinta); border-radius: 2px;
-  transition: width 900ms var(--mov-entrada);
-}
-#seccion-cartera .posicion__avance-pie {
-  display: flex; justify-content: space-between; margin-top: 7px;
-  font-size: var(--tipo-1); color: var(--tinta-mate);
-}
-#seccion-cartera .posicion__avance-pie strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
-@media (prefers-reduced-motion: reduce) {
-  #seccion-cartera .posicion__avance-relleno { transition: none; }
-}
-
-/* ── Posición cerrada: atenuada, el cierre como cifra protagonista propia ── */
-#seccion-cartera .posicion--cerrada { opacity: 0.72; }
-#seccion-cartera .posicion--cerrada .posicion__empresa { color: var(--tinta-secundaria); }
-#seccion-cartera .posicion__cierre {
-  grid-column: 1 / -1; margin-top: 12px;
-  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  font-size: var(--tipo-1); color: var(--tinta-mate);
-}
-#seccion-cartera .posicion__cierre-glifo { font-family: var(--mono); }
-#seccion-cartera .posicion__cierre .variacion { font-weight: 600; }
-
-/* ── El detalle: mismo panel que la tabla anterior, reutilizado ── */
-#seccion-cartera .posicion__detalle-cue {
-  grid-column: 1 / -1; margin-top: 10px;
-  font-size: var(--tipo-1); color: var(--tinta-mate); text-decoration: underline;
-  text-underline-offset: 3px;
-}
-#seccion-cartera .posicion[aria-expanded="true"] .posicion__detalle-cue { color: var(--tinta); }
-#seccion-cartera .posicion__panel { grid-column: 1 / -1; margin-top: 14px; padding-block-start: 14px; border-block-start: 1px solid var(--linea-hairline); }
-
-@media (max-width: 520px) {
-  #seccion-cartera .posicion { grid-template-columns: 1fr; }
-  #seccion-cartera .posicion__cifras { grid-column: 1; justify-content: flex-start; }
-}
 
 /* Barras de contribución: ultra-finas, alineadas con su ticker. El color vive
    SOLO en la barra y en el signo de la cifra, nunca de fondo de una caja. */
