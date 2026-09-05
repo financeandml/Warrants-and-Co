@@ -546,8 +546,8 @@ export default {
 
   // ═════════════════════════ Cartera · encabezado ═════════════════════════
   'cartera.etiqueta': 'Gestión de cartera',
-  'cartera.titulo': 'Evolución de posiciones',
-  'cartera.subtitulo': 'Resumen actualizado de la cartera y su rendimiento.',
+  'cartera.titulo': 'Cartera Warrants & Co.',
+  'cartera.subtitulo': 'Seguimiento de posiciones, asignación de capital y rendimiento de la cartera.',
   'cartera.reconstruccion.titulo': 'Página en reconstrucción',
   'cartera.reconstruccion.motivo': 'Se está rediseñando pieza a pieza. Los datos siguen siendo reales y verificados en cada paso; esta página vuelve a completarse poco a poco, no de golpe.',
   'cartera.nota': 'La cartera se constituye automáticamente a partir de las tesis de inversión publicadas. La fecha de alta de cada posición corresponde a la fecha de publicación de su informe, y el precio de entrada al de compra consignado en la ficha o, en su defecto, al cierre de esa sesión. El índice, en base 100, reparte el capital en tramos fijos: cada tesis compra el suyo en el alta y lo conserva hasta que se liquida, sin rebalanceos. Lo que sale de una posición liquidada permanece como liquidez y no financia a ninguna otra. Sin aportaciones ni reembolsos externos.',
@@ -556,6 +556,15 @@ export default {
   'cartera.vacia.titulo': 'Cartera no constituida',
   'cartera.recargar': 'Actualizar los datos de la cartera',
   'cartera.live': 'En vivo',
+  'cartera.bloque.rendimiento': 'Rendimiento de la cartera',
+  'cartera.bloque.asignacion': 'Asignación de capital',
+  'cartera.bloque.actividad': 'Actividad de la cartera',
+  'cartera.rendimiento.total': 'Rentabilidad total',
+  'cartera.asignacion.barra': 'Capital desplegado {desplegado}, sin desplegar {pendiente}.',
+  'cartera.grafico.contexto.base': 'Índice, base 100',
+  'cartera.grafico.contexto.periodo': 'Periodo',
+  'cartera.conciliacion.totalCartera': 'Total cartera',
+  'cartera.nota.metodologia': 'Nota metodológica',
   'cartera.estado.actualizado': 'Actualizado a las {hora}',
   'cartera.pie.fuente': 'Datos de mercado: {fuentes}. Última actualización: {momento}.',
 
@@ -565,41 +574,17 @@ export default {
   // y otro para cuando no hay nada de ese lado todavía —tercer estado, no cero—.
   'cartera.resumen.vacio.titulo': 'Sin resumen que publicar',
   'cartera.resumen.vacio.motivo': 'La cartera no tiene posiciones constituidas todavía.',
-  'cartera.resumen.grupo.rentabilidad': 'Rentabilidad',
-  'cartera.resumen.grupo.capital': 'Capital',
-  'cartera.resumen.grupo.actividad': 'Actividad',
-  'cartera.resumen.retorno': 'Rentabilidad de la cartera',
-  'cartera.resumen.retorno.nota': 'Sobre el capital invertido',
   'cartera.resumen.realizado.corta': 'realizada',
   'cartera.resumen.noRealizado.corta': 'no realizada',
   // Sin `.nota`/`.vacio`: viven ahora como desglose anidado bajo el retorno
   // (compacto, dos cifras, sin nota explicativa) y en la barra comparativa
   // de abajo — ninguno de los dos sitios tiene espacio editorial para nota.
-  'cartera.resumen.realizado': 'Rentabilidad realizada',
-  'cartera.resumen.realizado.nota': 'Suma de la contribución de las posiciones cerradas',
-  'cartera.resumen.realizado.vacio': 'Ninguna posición cerrada todavía',
-  'cartera.resumen.noRealizado': 'Rentabilidad no realizada',
-  'cartera.resumen.noRealizado.nota': 'Suma de la contribución de las posiciones abiertas',
-  'cartera.resumen.noRealizado.vacio': 'Ninguna posición abierta todavía',
   'cartera.resumen.capital': 'Capital desplegado',
-  'cartera.resumen.capital.nota': 'Fracción del capital comprometida en posiciones',
-  'cartera.distribucionCapital.titulo': 'Distribución de la Cartera',
-  'cartera.distribucionCapital.subtitulo': 'Capital desplegado en posiciones frente a lo aún no comprometido, sobre el peso de entrada.',
-  'cartera.distribucionCapital.pendiente': 'Pendiente de desplegar',
-  'cartera.distribucionCapital.descripcion': 'Distribución del capital: {partes}.',
   'cartera.distribucionCapital.vacio.titulo': 'Sin capital que repartir',
   'cartera.distribucionCapital.vacio.motivo': 'No consta el capital desplegado todavía.',
   'cartera.resumen.roic': 'ROIC',
-  'cartera.resumen.roic.nota': 'Rentabilidad sobre el capital desplegado',
-  'cartera.resumen.roic.vacio': 'Sin capital desplegado que dividir',
   'cartera.resumen.abiertas': 'Posiciones abiertas',
-  'cartera.resumen.abiertas.nota': 'Tesis vivas en cartera',
   'cartera.resumen.cerradas': 'Posiciones cerradas',
-  'cartera.resumen.cerradas.nota': 'Tesis liquidadas',
-  'cartera.resumen.comprometido': 'Capital comprometido',
-  'cartera.resumen.comprometido.nota': 'Del capital total',
-  'cartera.resumen.exposicion': 'Exposición neta',
-  'cartera.resumen.exposicion.nota': 'Capital no comprometido',
 
   // ═══════════════════════ Cartera · cuadro de mando ═══════════════════════
   'cartera.indicador.rentabilidad': 'Rentabilidad acumulada',
@@ -660,18 +645,11 @@ export default {
   'cartera.metodologia.rebase': 'Todas las series se normalizan a 100 al inicio del periodo seleccionado. El rendimiento de los benchmarks se muestra con fines comparativos y no representa una posición invertible en el índice subyacente salvo que se indique explícitamente.',
 
   // ════════════════════════ Cartera · composición ════════════════════════
-  'cartera.posiciones.titulo': 'Composición de la cartera',
-  'cartera.posiciones.subtitulo': 'Peso actual: cuánto pesa hoy cada posición sobre el patrimonio, liquidez incluida · cotizaciones actualizadas en cada carga de la página',
-  'cartera.posiciones.caption': 'Detalle de las posiciones en cartera',
   // Lista de tarjetas de posición (rediseño de gestión activa): distinta de
   // las tres claves de arriba, que describen la pieza pendiente con la caja
   // de liquidez. Aquí solo hay tesis reales, sin fila de caja.
   'cartera.posiciones.lista.titulo': 'Posiciones',
-  'cartera.posiciones.lista.subtitulo': 'Cada tesis publicada, abierta o cerrada, con su peso y su contribución reales a la rentabilidad.',
-  'cartera.posiciones.col.peso': 'Peso',
-  'cartera.posiciones.cierre': 'Cerrada el {fecha} · {motivo}',
-  'cartera.posiciones.detalle.ver': 'Detalle',
-  'cartera.posiciones.detalle.ocultar': 'Ocultar detalle',
+  'cartera.posiciones.lista.subtitulo': 'Contribución de cada posición al rendimiento de la cartera.',
   'cartera.col.alta': 'Alta',
   'cartera.col.compra': 'Compra',
   'cartera.col.cotizacion': 'Cotización',
@@ -709,8 +687,6 @@ export default {
   'cartera.liquidez.nota.sinLiquidar': 'Peso sobre el patrimonio. Es el {capital} del capital, que ninguna tesis ha reclamado todavía.',
 
   // ════════════════════════ Cartera · conciliación ════════════════════════
-  'cartera.conciliacion.titulo': 'Conciliación de la rentabilidad',
-  'cartera.conciliacion.subtitulo': 'Peso de capital: el tramo asignado en el alta, del que responde la línea. Peso por rentabilidad es su contribución, y las contribuciones suman la rentabilidad total',
   'cartera.conciliacion.caption': 'Conciliación de la rentabilidad, posición por posición',
   'cartera.conciliacion.col.compania': 'Compañía',
   'cartera.conciliacion.col.peso': 'Peso de capital',
@@ -722,10 +698,8 @@ export default {
   'cartera.conciliacion.fuente.cotizacion': 'Cotización',
   'cartera.conciliacion.fuente.cierre': 'Cierre · {fecha}',
   'cartera.conciliacion.fuente.ausente': 'Sin precio publicado',
-  'cartera.conciliacion.enCaja': 'En caja',
   'cartera.conciliacion.sinDesplegar': 'Capital sin desplegar',
   'cartera.conciliacion.sinDesplegar.detalle': 'Ninguna tesis lo ha reclamado',
-  'cartera.conciliacion.total': 'Total',
   'cartera.conciliacion.total.nota': {
     one: '{n} tramo · base {base} = capital',
     other: '{n} tramos · base {base} = capital',

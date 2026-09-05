@@ -910,11 +910,17 @@
   <section class="seccion" id="seccion-cartera" data-seccion-panel="cartera" hidden>
     <div class="contenedor">
 
-      <div class="titulo-seccion">
+      <!-- ══ Cabecera institucional ══
+           Tres líneas, como la portada de un factsheet: la disciplina
+           (`etiqueta-superior`), el nombre de la cartera y qué se está
+           mirando. El h1 nombra LA CARTERA, no la vista —"Gestión de
+           cartera" ya lo dice el rótulo de encima, y repetirlo en el titular
+           dejaba la cabecera diciendo dos veces lo mismo. -->
+      <div class="titulo-seccion cartera-masthead">
         <div>
           <p class="etiqueta-superior" data-i18n="cartera.etiqueta">Gestión de cartera</p>
-          <h1 data-i18n="cartera.titulo">Evolución de posiciones</h1>
-          <p class="titulo-seccion__entradilla" data-i18n="cartera.subtitulo">Resumen actualizado de la cartera y su rendimiento.</p>
+          <h1 data-i18n="cartera.titulo">Cartera Warrants &amp; Co.</h1>
+          <p class="titulo-seccion__entradilla" data-i18n="cartera.subtitulo">Seguimiento de posiciones, asignación de capital y rendimiento de la cartera.</p>
         </div>
         <!-- La hora de corte del dato, que `pintarEstadoDatos()` rellena con
              `generadoEn` del propio motor —nunca la del navegador—, y al lado
@@ -946,22 +952,17 @@
         </div>
       </div>
 
-      <!-- ══ Resumen de capital: ledger de una sola columna, en capítulos ══
-           Rentabilidad (con realizada/no realizada anidadas debajo del
-           retorno) y Capital (ROIC, capital desplegado, liquidez) en
-           `#resumen-portfolio`; posiciones abiertas/cerradas en su propio
-           capítulo de Actividad, en `#resumen-secundario` debajo —son
-           recuento de tesis, no una métrica de retorno, así que se separan
-           del grupo principal—. Sin caja, sin fondo distinto al de la
-           página, sin rayas verticales: solo espacio en blanco y un filete
-           horizontal gris entre filas, estilo cobasam.com/azvalor.com/
-           magallanesvalue.com. Composición D de dos rondas de mockup: la B
-           partía el resumen en dos columnas de altura distinta y el hueco
-           resultante se leía como roto; esta es de una sola columna, nada
-           que desalinear. -->
-      <section class="tarjeta">
-        <div id="resumen-portfolio"></div>
-        <div id="resumen-secundario"></div>
+      <!-- ══ 1 · Rendimiento: la cifra que manda ══
+           Composición editorial, NO una rejilla de tarjetas: la rentabilidad
+           total ocupa sola la primera línea, a `--tipo-indicador-principal`,
+           y realizada/no realizada quedan debajo a un tamaño claramente
+           menor —son sus dos sumandos, no sus iguales—. Lo pinta
+           `pintarRendimiento()` (`app.js`) desde `resumenPortfolio`, los
+           mismos campos de siempre: aquí no se calcula nada. -->
+      <section class="bloque-cartera" aria-labelledby="titulo-rendimiento">
+        <h2 class="bloque-cartera__rotulo" id="titulo-rendimiento"
+            data-i18n="cartera.bloque.rendimiento">Rendimiento de la cartera</h2>
+        <div class="rendimiento" id="rendimiento-cartera"></div>
       </section>
 
       <!-- ══ Segunda pieza reconstruida: el gráfico ══
@@ -980,10 +981,10 @@
            pintan lo mismo. Se revisa cuando la cartera pase el año, junto con
            YTD, que hoy está en la misma situación por haber nacido el 15 de
            enero. -->
-      <section class="tarjeta tarjeta--grafico" aria-labelledby="titulo-grafico">
-        <div class="tarjeta__cabecera">
+      <section class="bloque-cartera bloque-cartera--grafico" aria-labelledby="titulo-grafico">
+        <div class="bloque-cartera__cabecera">
           <div>
-            <h2 id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la rentabilidad</h2>
+            <h2 class="bloque-cartera__rotulo" id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la rentabilidad</h2>
           </div>
           <div class="controles-grafico" role="group"
                data-i18n-attr="aria-label:cartera.grafico.opciones" aria-label="Opciones del gráfico">
@@ -1043,14 +1044,24 @@
         <p class="buscador-ticker__aviso" id="aviso-ticker-libre" role="status" hidden></p>
 
         <!-- El desglose lateral por posición se retiró a petición explícita;
-             el gráfico pasa a ocupar el ancho completo de la tarjeta —ver
-             `.grafico-cuerpo` en estilos.css, ahora una sola columna. -->
+             el gráfico pasa a ocupar el ancho completo —ver `.grafico-cuerpo`
+             en estilos.css, ahora una sola columna. -->
         <div class="grafico-cuerpo">
           <div class="grafico-columna">
             <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
             <p class="visualmente-oculto" id="descripcion-grafico"></p>
 
-            <div class="leyenda" id="leyenda-grafico"></div>
+            <!-- Pie del gráfico: primero las cuatro medidas del tramo que se
+                 está viendo —base, rentabilidad, periodo y sesiones—, que
+                 antes solo existían dentro del emergente y de la descripción
+                 para lector de pantalla; debajo, la leyenda de series. Las
+                 cuatro las pinta `pintarContextoGrafico()` a partir de LA
+                 MISMA serie ya rebasada que recibe la leyenda, de modo que
+                 no pueden discrepar de lo dibujado (Regla 9). -->
+            <div class="grafico-pie">
+              <dl class="grafico-contexto" id="grafico-contexto"></dl>
+              <div class="leyenda" id="leyenda-grafico"></div>
+            </div>
           </div>
         </div>
 
@@ -1069,44 +1080,49 @@
         </div>
       </section>
 
-      <!-- ══ Distribución de la Cartera: capital desplegado vs. pendiente ══
-           Anillo de dos segmentos, junto al gráfico principal. Deliberadamente
-           distinto del futuro "Reparto del patrimonio" por posición —el anillo
-           de `anillo.js`, aún sin hueco propio en este documento, más abajo en
-           la nota de reconstrucción—: aquí solo dos partes, ambas del mismo
-           campo que ya pinta "Capital desplegado" en el resumen de arriba
-           (`resumenPortfolio.capitalDesplegadoPct`) y su complemento aritmético
-           exacto. `pintarDistribucionCapital()` (`app.js`) es null-safe. -->
-      <section class="tarjeta" aria-labelledby="titulo-distribucion-capital">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-distribucion-capital" data-i18n="cartera.distribucionCapital.titulo">Distribución de la Cartera</h2>
-            <p data-i18n="cartera.distribucionCapital.subtitulo">Capital desplegado en posiciones frente a lo aún no comprometido, sobre el peso de entrada.</p>
-          </div>
-        </div>
-        <div class="distribucion-capital" id="distribucion-capital"></div>
+      <!-- ══ 3 · Asignación de capital ══
+           Sustituye al anillo de dos segmentos: mismo hecho
+           (`capitalDesplegadoPct` y su complemento aritmético), contado como
+           una barra fina de dos tramos que se lee de un vistazo y que no
+           necesita 140px de alto ni una leyenda aparte para explicarse. Bajo
+           la barra, la fila de medidas de contexto —ROIC, liquidez y el
+           recuento de posiciones abiertas/cerradas—: los recuentos viven aquí
+           y no en un bloque propio porque son ACTIVIDAD sobre el mismo
+           capital del que habla la barra, y separarlos obligaba a repetir el
+           encabezamiento. Lo pinta `pintarAsignacionCapital()` (`app.js`). -->
+      <section class="bloque-cartera" aria-labelledby="titulo-asignacion">
+        <h2 class="bloque-cartera__rotulo" id="titulo-asignacion"
+            data-i18n="cartera.bloque.asignacion">Asignación de capital</h2>
+        <div class="asignacion" id="asignacion-capital"></div>
       </section>
 
-      <!-- ══ Posiciones: tabla institucional, no tarjetas ══
-           Rediseño "hedge fund dashboard": vuelve la tabla fundida de
-           conciliación —`pintarConciliacion()` en `app.js` nunca se borró,
-           solo se quedó sin ancla en el documento cuando la ronda anterior
-           pasó a tarjetas (`.posicion`, retiradas en este mismo commit)—.
-           Mismos campos que ya calculaba el motor, ninguno nuevo: peso de
-           entrada, precio de entrada, precio de referencia (con su fuente:
-           cotización, cierre o precio de salida), rentabilidad, valor del
-           tramo y contribución. La fila de Total cierra la cuenta a partir
-           de lo que la propia tabla suma, nunca copiada del resumen de
-           arriba (Regla 9: si un día discreparan, aquí se vería). -->
-      <section class="tarjeta" aria-labelledby="titulo-posiciones">
-        <div class="tarjeta__cabecera">
+      <!-- ══ 4 · Actividad ══
+           Recuento de tesis, no una métrica de retorno: bloque propio, el
+           último y el más pequeño de las cifras. Lo pinta
+           `pintarActividad()`. -->
+      <section class="bloque-cartera bloque-cartera--menor" aria-labelledby="titulo-actividad">
+        <h2 class="bloque-cartera__rotulo" id="titulo-actividad"
+            data-i18n="cartera.bloque.actividad">Actividad de la cartera</h2>
+        <div class="actividad" id="actividad-cartera"></div>
+      </section>
+
+      <!-- ══ 5 · Posiciones: la pieza mayor de la página ══
+           Tabla de conciliación a ancho completo —`pintarConciliacion()` en
+           `app.js`, la misma de siempre—: peso de entrada, precio de entrada,
+           precio de referencia (con su procedencia: cotización, cierre o
+           precio de salida), rentabilidad, valor del tramo y contribución.
+           Ninguna cifra se calcula aquí. La fila de Total cierra la cuenta
+           sumando LO QUE LA TABLA ENSEÑA, nunca copiando el titular de
+           arriba: si un día discreparan, se vería aquí (Regla 9). -->
+      <section class="bloque-cartera bloque-cartera--posiciones" aria-labelledby="titulo-posiciones">
+        <div class="bloque-cartera__cabecera">
           <div>
-            <h2 id="titulo-posiciones" data-i18n="cartera.posiciones.lista.titulo">Posiciones</h2>
-            <p data-i18n="cartera.posiciones.lista.subtitulo">Cada tesis publicada, abierta o cerrada, con su peso y su contribución reales a la rentabilidad.</p>
+            <h2 class="bloque-cartera__rotulo" id="titulo-posiciones" data-i18n="cartera.posiciones.lista.titulo">Posiciones</h2>
+            <p class="bloque-cartera__entradilla" data-i18n="cartera.posiciones.lista.subtitulo">Contribución de cada posición al rendimiento de la cartera.</p>
           </div>
         </div>
         <div class="tabla-envoltorio">
-          <table class="tabla-datos tabla-posiciones" id="tabla-posiciones" data-densidad="compacta">
+          <table class="tabla-datos tabla-posiciones" id="tabla-posiciones">
             <caption class="visualmente-oculto" data-i18n="cartera.conciliacion.caption">
               Conciliación de la rentabilidad, posición por posición
             </caption>
@@ -1125,7 +1141,13 @@
             <tfoot id="pie-conciliacion"></tfoot>
           </table>
         </div>
-        <p class="nota-conciliacion" id="nota-conciliacion"></p>
+        <!-- Nota metodológica: por qué la liquidez no lleva línea propia. Sin
+             caja, sin fondo — rótulo en versalitas y texto pequeño, como el
+             pie de un informe. La redacta `pintarConciliacion()`. -->
+        <div class="nota-metodo">
+          <p class="nota-metodo__rotulo" data-i18n="cartera.nota.metodologia">Nota metodológica</p>
+          <p class="nota-metodo__cuerpo" id="nota-conciliacion"></p>
+        </div>
       </section>
 
     </div>

@@ -2229,9 +2229,10 @@ function pintarCartera(datos, { avisos = true } = {}) {
       vacio.appendChild(document.createTextNode(datos.mensaje));
       $('#cuadro-mando').appendChild(vacio);
     }
-    if ($('#resumen-portfolio')) $('#resumen-portfolio').textContent = '';
-    if ($('#resumen-secundario')) $('#resumen-secundario').textContent = '';
-    if ($('#distribucion-capital')) $('#distribucion-capital').textContent = '';
+    if ($('#rendimiento-cartera')) $('#rendimiento-cartera').textContent = '';
+    if ($('#asignacion-capital')) $('#asignacion-capital').textContent = '';
+    if ($('#actividad-cartera')) $('#actividad-cartera').textContent = '';
+    if ($('#grafico-contexto')) $('#grafico-contexto').textContent = '';
     if ($('#contribucion-barras')) $('#contribucion-barras').textContent = '';
     if ($('#cuerpo-conciliacion')) {
       $('#cuerpo-conciliacion').textContent = '';
@@ -2244,8 +2245,9 @@ function pintarCartera(datos, { avisos = true } = {}) {
     return;
   }
 
-  if ($('#resumen-portfolio')) pintarResumenPortfolio(datos);
-  if ($('#distribucion-capital')) pintarDistribucionCapital(datos);
+  if ($('#rendimiento-cartera')) pintarRendimiento(datos);
+  if ($('#asignacion-capital')) pintarAsignacionCapital(datos);
+  if ($('#actividad-cartera')) pintarActividad(datos);
   if ($('#cuadro-mando')) { pintarCuadroMando(datos); pintarAvisoCierre(datos); }
   if ($('#grafico')) { poblarBenchmarks(); pintarGrafico(datos); }
   if ($('#cuerpo-grafico-desglose')) pintarDesgloseGrafico(datos);
@@ -2302,7 +2304,7 @@ function coreografiaEntradaCartera() {
   coreografiaCarteraHecha = true;
   if (sinMovimiento()) return; // se quedan en su estado final, nunca ocultos
 
-  const objetivos = ['resumen-portfolio', 'resumen-secundario', 'distribucion-capital']
+  const objetivos = ['rendimiento-cartera', 'asignacion-capital', 'actividad-cartera']
     .map((id) => $(`#${id}`))
     .filter(Boolean);
   if (!objetivos.length) return;
@@ -2318,197 +2320,123 @@ function coreografiaEntradaCartera() {
   });
 }
 
-/**
- * Cabecera de `resumenPortfolio`: siete cifras — rentabilidad, realizada, no
- * realizada, capital desplegado, ROIC y el recuento de posiciones abiertas y
- * cerradas.
- *
- * Cada campo que el motor entrega en `null` se rotula «N/A», nunca con un cero
- * ni con el guion silencioso de `formatearPorcentaje()`: aquí el hueco es una
- * afirmación —«esta cifra no aplica todavía»—, no un adorno tipográfico. Las
- * dos que pueden faltar de verdad son `retornoRealizadoPct` y
- * `retornoNoRealizadoPct`: una cartera recién nacida no tiene nada cerrado, y
- * eso no es una rentabilidad realizada del 0 %, es la ausencia del tercer
- * estado que exige CLAUDE.md.
- */
+/* ════════════════════ CARTERA · las tres piezas de cifras ═══════════════════
+   Composición editorial, no una rejilla de tarjetas. Las tres funciones de
+   abajo pintan cifras que YA vienen calculadas del motor (`resumenPortfolio`,
+   `liquidez`): ninguna hace aritmética propia, y cada campo que el motor
+   entrega en `null` se rotula «N/A» —nunca un cero ni el guion silencioso de
+   `formatearPorcentaje()`—, porque el hueco es una afirmación: «esta cifra no
+   aplica todavía», el tercer estado que exige CLAUDE.md. Las dos que faltan de
+   verdad en una cartera recién nacida son `retornoRealizadoPct` y
+   `retornoNoRealizadoPct`.
+   ========================================================================= */
 
-function pintarResumenPortfolio(datos) {
-  const cuadro = $('#resumen-portfolio');
-  if (!cuadro) return;
-  // Ledger de una sola columna, en capítulos —Rentabilidad y Capital aquí,
-  // Actividad en `#resumen-secundario` debajo—. Reemplaza el split en dos
-  // columnas de la ronda anterior: con 1 fila (+ desglose) en un lado y 3
-  // filas en el otro, las columnas medían distinto y dejaban un hueco
-  // irregular que se leía como roto. Sin columnas que sincronizar, no hay
-  // nada que desalinear. `secundario` es opcional a propósito —si algún día
-  // no está en el armazón, la función sigue pintando los dos capítulos
-  // principales en vez de reventar—, misma disciplina que la guarda por
-  // pieza de `pintarCartera()`.
-  const secundario = $('#resumen-secundario');
-  cuadro.textContent = '';
-  if (secundario) secundario.textContent = '';
+const naCifra = () => t('general.noDisponible');
+const pctFirmado = (v) => (v === null || v === undefined ? naCifra() : formatearPorcentaje(v));
+const pctLlano = (v) => (v === null || v === undefined ? naCifra() : porcentaje(v));
+/* Recuentos a dos dígitos —«04», no «4»—: en una columna de cifras, un dígito
+   suelto rompe la alineación óptica contra el resto de la fila. Es formato de
+   presentación, no un dato distinto. */
+const recuento = (v) => (Number.isFinite(v) ? String(Math.round(v)).padStart(2, '0') : naCifra());
+
+/**
+ * Rótulo pequeño + cifra: el par que se repite en toda la sección.
+ *
+ * El ORDEN de los dos no es capricho y distingue dos registros de lectura:
+ *
+ *   · `hero: true` → cifra arriba, rótulo debajo. Es el registro del bloque de
+ *     rendimiento: se viene a leer la cifra y el rótulo solo la nombra.
+ *   · por defecto  → rótulo arriba, cifra debajo. Es el registro de una fila de
+ *     medidas de referencia —asignación, actividad, pie del gráfico—: el ojo
+ *     baja por los rótulos buscando cuál quiere y solo entonces lee la cifra.
+ *
+ * Mezclarlos dentro de una misma fila se ve enseguida; separarlos por bloque
+ * es lo que hace que la página parezca compuesta y no ensamblada.
+ */
+function medida(rotulo, clave, crudo, formatear, { variacion = null, tono = null, hero = false } = {}) {
+  const clases = ['medida'];
+  if (tono) clases.push(`medida--${tono}`);
+  if (hero) clases.push('medida--hero');
+  const nodo = elemento('div', clases.join(' '));
+
+  const etiqueta = elemento('span', 'medida__rotulo', rotulo);
+  const cifra = elemento('strong', 'medida__cifra', '');
+  if (variacion !== null && variacion !== undefined) {
+    cifra.className = `medida__cifra ${claseVariacion(variacion)}`;
+  }
+  // El orden del DOM es el orden de lectura: nada de reordenar con CSS, que
+  // dejaría al lector de pantalla oyendo lo contrario de lo que se ve.
+  if (hero) { nodo.appendChild(cifra); nodo.appendChild(etiqueta); }
+  else { nodo.appendChild(etiqueta); nodo.appendChild(cifra); }
+
+  pintarCifraIndicador(cifra, clave, crudo, formatear);
+  return nodo;
+}
+
+/**
+ * ── 1 · Rendimiento ──
+ *
+ * La rentabilidad total es EL número de la página: ocupa sola la primera
+ * columna, a `--tipo-indicador-principal`. Realizada y no realizada son sus
+ * dos sumandos y se leen a su derecha, separadas por un filete vertical y a un
+ * tamaño claramente menor —la jerarquía la hace la tipografía, no una caja—.
+ * `retornoPct` es literalmente `estadisticos.rentabilidadTotal`: el mismo
+ * hecho que cierra la tabla de posiciones abajo, nunca un segundo cálculo.
+ */
+function pintarRendimiento(datos) {
+  const destino = $('#rendimiento-cartera');
+  if (!destino) return;
+  destino.textContent = '';
 
   const r = datos.resumenPortfolio;
-  const na = t('general.noDisponible');
-  const cifraPct = (v) => (v === null || v === undefined ? na : formatearPorcentaje(v));
-  const cifraPctSimple = (v) => (v === null || v === undefined ? na : porcentaje(v));
-  const cifraEntera = (v) => (v === null || v === undefined ? na : String(Math.round(v)));
-
   if (!r) {
     const vacio = elemento('div', 'vacio');
     vacio.appendChild(elemento('strong', null, t('cartera.resumen.vacio.titulo')));
     vacio.appendChild(document.createTextNode(t('cartera.resumen.vacio.motivo')));
-    cuadro.appendChild(vacio);
+    destino.appendChild(vacio);
     return;
   }
 
-  const capitulo = (titulo) => {
-    const nodo = elemento('section', 'capitulo');
-    nodo.appendChild(elemento('p', 'capitulo__titulo', titulo));
-    return nodo;
-  };
+  const principal = elemento('div', 'rendimiento__principal');
+  const cifra = elemento('strong', `rendimiento__cifra ${claseVariacion(r.retornoPct)}`, '');
+  pintarCifraIndicador(cifra, 'retorno', r.retornoPct, pctFirmado);
+  principal.appendChild(cifra);
+  principal.appendChild(elemento('span', 'rendimiento__rotulo', t('cartera.rendimiento.total')));
+  destino.appendChild(principal);
 
-  /* `clave` identifica la fila ENTRE pintados —nunca la etiqueta traducida,
-     que cambia con el idioma sin que el dato se haya movido—: es lo que
-     `pintarCifraIndicador()` usa para saber si hay un valor anterior real
-     con el que comparar, o si esta es la primera vez que la fila se pinta. */
-  const fila = (clave, etiqueta, crudo, formatear, { variacion = null } = {}) => {
-    const nodo = elemento('div', 'fila');
-    nodo.appendChild(elemento('span', 'fila__etiqueta', etiqueta));
-    const v = elemento('strong', 'fila__valor', '');
-    if (variacion !== null) v.className = `fila__valor ${claseVariacion(variacion)}`;
-    nodo.appendChild(v);
-    pintarCifraIndicador(v, clave, crudo, formatear);
-    return nodo;
-  };
-
-  // Parte del desglose anidado —"realizada +X % · no realizada +Y %"—, cada
-  // mitad con su propio contador en vivo, igual que cualquier otra cifra del
-  // resumen (misma `pintarCifraIndicador()`, misma clave por mitad).
-  const parteDesglose = (clave, etiquetaCorta, crudo, formatear) => {
-    const parte = elemento('span', 'fila__caption-parte');
-    parte.appendChild(document.createTextNode(`${etiquetaCorta} `));
-    const v = elemento('strong', '', '');
-    if (crudo !== null && crudo !== undefined) v.className = claseVariacion(crudo);
-    parte.appendChild(v);
-    pintarCifraIndicador(v, clave, crudo, formatear);
-    return parte;
-  };
-
-  // ── Capítulo 1: de dónde sale la rentabilidad ──
-  // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
-  // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
-  // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
-  const capRentabilidad = capitulo(t('cartera.resumen.grupo.rentabilidad'));
-  const filaRetorno = fila('retorno', t('cartera.resumen.retorno'), r.retornoPct, cifraPct, { variacion: r.retornoPct });
-  // Única cifra que lleva `--tipo-indicador-principal` (CLAUDE.md § Diseño 6,
-  // excepción documentada): de las diez que hay en el resumen, esta es LA
-  // cifra —todo lo demás explica de dónde sale ella—, y el peso tipográfico
-  // tiene que decirlo antes de que se lea una sola palabra.
-  filaRetorno.classList.add('fila--principal');
-  /* Realizada / no realizada van anidadas bajo el retorno que descomponen
-     —a petición explícita, comparando con la referencia—: una sola fila
-     firmada por "Rentabilidad de la cartera", con su aritmética debajo en
-     vez de como filas hermanas. Sigue siendo la Regla 9 cumplida: cada
-     cifra aparece UNA vez en pantalla, leída del único campo que la calcula.
-     `null` cuando no hay nada cerrado (o nada abierto) se rotula «N/A» vía
-     `cifraPct`, nunca 0 %: es el tercer estado. */
-  const caption = elemento('span', 'fila__caption');
-  caption.appendChild(parteDesglose('realizado', t('cartera.resumen.realizado.corta'), r.retornoRealizadoPct, cifraPct));
-  caption.appendChild(document.createTextNode(' · '));
-  caption.appendChild(parteDesglose('noRealizado', t('cartera.resumen.noRealizado.corta'), r.retornoNoRealizadoPct, cifraPct));
-  filaRetorno.appendChild(caption);
-  capRentabilidad.appendChild(filaRetorno);
-  cuadro.appendChild(capRentabilidad);
-
-  // ── Capítulo 2: cuánto capital hay en juego y cómo rinde ──
-  const capCapital = capitulo(t('cartera.resumen.grupo.capital'));
-  capCapital.appendChild(fila('roic', t('cartera.resumen.roic'), r.roicPct, cifraPct, { variacion: r.roicPct }));
-
-  /* Barra de asignación: el mismo `capitalDesplegadoPct`/`pesoActual` que ya
-     pintan las dos filas de arriba, dibujado además como proporción — no un
-     segundo cálculo (Regla 9), la misma cifra en dos lenguajes. Las dos
-     barras NO tienen por qué sumar 100 entre sí: "Capital desplegado" es
-     peso de ENTRADA y "Liquidez" es peso VIGENTE (mismo matiz que ya explica
-     `anillo.js`), así que se dibujan como dos proporciones independientes
-     sobre su propio 100 %, nunca forzadas a repartirse una sola pista. */
-  const barraAsignacion = (pct) => {
-    const pista = elemento('div', 'asignacion-barra');
-    const relleno = elemento('div', 'asignacion-barra__relleno');
-    relleno.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(2)}%`;
-    pista.appendChild(relleno);
-    return pista;
-  };
-
-  const filaCapital = fila('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple);
-  if (Number.isFinite(r.capitalDesplegadoPct)) filaCapital.appendChild(barraAsignacion(r.capitalDesplegadoPct));
-  capCapital.appendChild(filaCapital);
-
-  // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
-  // nunca un segundo cálculo de caja (Regla 9).
-  const caja = datos.liquidez;
-  if (caja && Number.isFinite(caja.pesoActual)) {
-    const filaLiquidez = fila('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple);
-    filaLiquidez.appendChild(barraAsignacion(caja.pesoActual));
-    capCapital.appendChild(filaLiquidez);
-  }
-  cuadro.appendChild(capCapital);
-
-  // ── Capítulo 3: Actividad, recuento de tesis ──
-  // No es una métrica de retorno —es contexto—, así que va en su propio
-  // capítulo debajo, en `#resumen-secundario`. Las dos cifras comparten fila
-  // separadas solo por espacio —nunca una raya vertical entre ellas—.
-  if (secundario) {
-    const capActividad = capitulo(t('cartera.resumen.grupo.actividad'));
-    const filaDoble = elemento('div', 'fila fila--doble');
-    const par = (clave, etiqueta, crudo) => {
-      const nodo = elemento('div', 'par');
-      nodo.appendChild(elemento('span', 'fila__etiqueta', etiqueta));
-      const v = elemento('strong', 'fila__valor', '');
-      nodo.appendChild(v);
-      pintarCifraIndicador(v, clave, crudo, cifraEntera);
-      return nodo;
-    };
-    filaDoble.appendChild(par('abiertas', t('cartera.resumen.abiertas'), r.posicionesAbiertas));
-    filaDoble.appendChild(par('cerradas', t('cartera.resumen.cerradas'), r.posicionesCerradas));
-    capActividad.appendChild(filaDoble);
-    secundario.appendChild(capActividad);
-  }
-  // Capital comprometido / Exposición neta ya no se pintan aquí: eran el
-  // mismo valor exacto que Capital desplegado y Liquidez, solo con otro
-  // rótulo —la excepción a la Regla 9 que las sostenía se revocó comparando
-  // con las tres referencias de gestión activa (cobasam.com, azvalor.com,
-  // magallanesvalue.com): ninguna repite la misma cifra dos veces en pantalla.
+  const desglose = elemento('div', 'rendimiento__desglose');
+  desglose.appendChild(medida(
+    t('cartera.resumen.realizado.corta'), 'realizado', r.retornoRealizadoPct, pctFirmado,
+    { variacion: r.retornoRealizadoPct, hero: true }));
+  desglose.appendChild(medida(
+    t('cartera.resumen.noRealizado.corta'), 'noRealizado', r.retornoNoRealizadoPct, pctFirmado,
+    { variacion: r.retornoNoRealizadoPct, hero: true }));
+  destino.appendChild(desglose);
 }
 
-const NS_DISTRIBUCION = 'http://www.w3.org/2000/svg';
-/* Misma proporción que `anillo.js` (`G`): 140×140, radio 52, grosor 18 — no
-   se inventa una segunda geometría de anillo para la misma clase de gráfico. */
-const G_DISTRIBUCION = { lado: 140, radio: 52, grosor: 18 };
-
 /**
- * "Distribución de la Cartera": anillo de DOS segmentos, capital desplegado
- * frente a lo que aún no se ha comprometido. Deliberadamente NO es el mismo
- * hecho que "Liquidez"/"Exposición neta" del resumen (`datos.liquidez.pesoActual`,
- * más arriba): ese campo es peso VIGENTE —se mueve con el mercado y con las
- * liquidaciones—, mientras que aquí se parte de `resumenPortfolio.capitalDesplegadoPct`,
- * peso de ENTRADA —cuánto ha llegado a comprometerse alguna vez—. Las dos
- * bases no suman 100 juntas (mismo motivo que documenta `pintarAnillo()` en
- * `anillo.js` para `pesoVigente` vs `pesoCapital`), así que este anillo usa
- * una sola de las dos y su complemento aritmético exacto —nunca la mezcla de
- * las dos, que pondría en pantalla un segundo "capital disponible" en
- * desacuerdo con el que ya se lee en la celda de Liquidez (Regla 9)—.
+ * ── 2 · Asignación de capital ──
  *
- * Sigue la disciplina de tres estados de `anillo.js`: sin
- * `capitalDesplegadoPct` no se dibuja nada, nunca un anillo con un hueco sin
- * explicar.
+ * Sustituye al anillo de dos segmentos que ocupaba aquí 140px de alto para
+ * decir lo mismo: `capitalDesplegadoPct` y su complemento aritmético, ahora
+ * como una barra de dos tramos que se lee de un vistazo y no necesita
+ * leyenda propia.
+ *
+ * ROIC y liquidez van DEBAJO de la barra, no dentro: son medidas del mismo
+ * capital, pero ninguna de las dos se reparte sobre esa barra. La liquidez, en
+ * particular, es peso VIGENTE —se mueve con el mercado y con las
+ * liquidaciones— mientras que el desplegado es peso de ENTRADA, así que las
+ * dos NO suman 100 entre sí (el mismo matiz que ya documenta `anillo.js` para
+ * `pesoVigente` frente a `pesoCapital`). Dibujarlas en la misma pista habría
+ * afirmado un reparto que no existe.
  */
-function pintarDistribucionCapital(datos) {
-  const destino = $('#distribucion-capital');
+function pintarAsignacionCapital(datos) {
+  const destino = $('#asignacion-capital');
   if (!destino) return;
   destino.textContent = '';
 
-  const desplegado = datos?.resumenPortfolio?.capitalDesplegadoPct;
+  const r = datos.resumenPortfolio;
+  const desplegado = r?.capitalDesplegadoPct;
   if (!Number.isFinite(desplegado)) {
     const vacio = elemento('div', 'vacio');
     vacio.appendChild(elemento('strong', null, t('cartera.distribucionCapital.vacio.titulo')));
@@ -2516,70 +2444,54 @@ function pintarDistribucionCapital(datos) {
     destino.appendChild(vacio);
     return;
   }
-
   const pendiente = Math.max(0, 100 - desplegado);
-  const sectores = [
-    { clave: 'desplegado', etiqueta: t('cartera.resumen.capital'), peso: desplegado, relleno: 'var(--anillo-1)' },
-    { clave: 'pendiente', etiqueta: t('cartera.distribucionCapital.pendiente'), peso: pendiente, relleno: 'var(--anillo-3)' },
-  ];
 
-  const G = G_DISTRIBUCION;
-  const crearSvg = (nombre, atributos = {}) => {
-    const el = document.createElementNS(NS_DISTRIBUCION, nombre);
-    for (const [k, v] of Object.entries(atributos)) el.setAttribute(k, String(v));
-    return el;
-  };
+  const reparto = elemento('div', 'asignacion__reparto');
+  reparto.appendChild(medida(t('cartera.resumen.capital'), 'capital', desplegado, pctLlano));
+  reparto.appendChild(medida(
+    t('cartera.conciliacion.sinDesplegar'), 'sinDesplegar', pendiente, pctLlano, { tono: 'fin' }));
+  destino.appendChild(reparto);
 
-  const cuerpo = elemento('div', 'distribucion-capital__cuerpo');
-  const svg = crearSvg('svg', {
-    viewBox: `0 0 ${G.lado} ${G.lado}`, class: 'distribucion-capital__svg',
-    role: 'img', 'aria-labelledby': 'distribucion-capital-desc',
-  });
-  const desc = crearSvg('title', { id: 'distribucion-capital-desc' });
-  desc.textContent = t('cartera.distribucionCapital.descripcion', {
-    partes: sectores.map((s) => `${s.etiqueta} ${porcentaje(s.peso)}`).join(' · '),
-  });
-  svg.appendChild(desc);
+  const barra = elemento('div', 'asignacion__barra');
+  barra.setAttribute('role', 'img');
+  barra.setAttribute('aria-label', t('cartera.asignacion.barra', {
+    desplegado: porcentaje(desplegado), pendiente: porcentaje(pendiente),
+  }));
+  const tramo = elemento('div', 'asignacion__tramo');
+  tramo.style.width = `${Math.max(0, Math.min(100, desplegado)).toFixed(2)}%`;
+  barra.appendChild(tramo);
+  destino.appendChild(barra);
 
-  const centro = G.lado / 2;
-  const circunferencia = 2 * Math.PI * G.radio;
-  let acumulado = 0;
-  for (const s of sectores) {
-    if (s.peso > 0) {
-      // La rotación de arranque (12 en punto) vive en un <g> propio, como
-      // atributo, y NO en el <circle> — que es quien lleva `transform-origin`
-      // y `transition: transform` para el hover (estilos.css). Las dos cosas
-      // en el MISMO nodo chocan: al no haber un valor `transform` explícito
-      // en CSS, el atributo del propio nodo deja de aplicarse y el arco
-      // desaparece entero, sin avisar. Separar el nodo que posiciona del
-      // nodo que anima evita la colisión sin perder ninguna de las dos cosas.
-      const g = crearSvg('g', { transform: `rotate(-90 ${centro} ${centro})` });
-      g.appendChild(crearSvg('circle', {
-        class: 'distribucion-capital__arco',
-        cx: centro, cy: centro, r: G.radio,
-        fill: 'none', stroke: s.relleno, 'stroke-width': G.grosor,
-        'stroke-dasharray': `${((s.peso / 100) * circunferencia).toFixed(3)} ${circunferencia.toFixed(3)}`,
-        'stroke-dashoffset': `${(-(acumulado / 100) * circunferencia).toFixed(3)}`,
-      }));
-      svg.appendChild(g);
-    }
-    acumulado += s.peso;
+  // ROIC y liquidez: mismos campos que ya publicaba el resumen anterior
+  // —`roicPct` y `datos.liquidez.pesoActual`—, sin un segundo cálculo de caja.
+  const secundarias = elemento('div', 'asignacion__secundarias');
+  secundarias.appendChild(medida(
+    t('cartera.resumen.roic'), 'roic', r.roicPct, pctFirmado, { variacion: r.roicPct }));
+  const caja = datos.liquidez;
+  if (caja && Number.isFinite(caja.pesoActual)) {
+    secundarias.appendChild(medida(
+      t('cartera.indicador.liquidez'), 'liquidez', caja.pesoActual, pctLlano));
   }
-  cuerpo.appendChild(svg);
+  destino.appendChild(secundarias);
+}
 
-  const lista = elemento('ul', 'distribucion-capital__lista');
-  for (const s of sectores) {
-    const fila = elemento('li', 'distribucion-capital__fila');
-    const muestra = elemento('span', 'distribucion-capital__muestra');
-    muestra.style.background = s.relleno;
-    muestra.setAttribute('aria-hidden', 'true');
-    fila.appendChild(muestra);
-    fila.appendChild(elemento('span', 'distribucion-capital__nombre', s.etiqueta));
-    fila.appendChild(elemento('strong', 'distribucion-capital__cifra', porcentaje(s.peso)));
-    lista.appendChild(fila);
-  }
-  cuerpo.appendChild(lista);
-  destino.appendChild(cuerpo);
+/**
+ * ── 3 · Actividad ──
+ *
+ * Recuento de tesis, no una métrica de retorno: por eso va en su propio
+ * bloque, el último de las cifras y el más pequeño de los tres. Dos pares
+ * rótulo/cifra separados por aire, nunca dos cajas.
+ */
+function pintarActividad(datos) {
+  const destino = $('#actividad-cartera');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const r = datos.resumenPortfolio;
+  if (!r) return;
+
+  destino.appendChild(medida(t('cartera.resumen.abiertas'), 'abiertas', r.posicionesAbiertas, recuento));
+  destino.appendChild(medida(t('cartera.resumen.cerradas'), 'cerradas', r.posicionesCerradas, recuento));
 }
 
 /* Un valor anterior por celda, entre pintados —clave estable, nunca la
@@ -2997,6 +2909,7 @@ function pintarGrafico(datos) {
     base: completa ? baseCapital : null,
     desde: serie[0]?.fecha,
   });
+  pintarContextoGrafico(serie, { base: completa ? baseCapital : null });
   pintarTablaRendimiento(serie, benchmarks);
   pintarTablaSerie(serie, benchmarks);
   // Sincroniza el indicador deslizante con el botón activo cada vez que el
@@ -3006,6 +2919,43 @@ function pintarGrafico(datos) {
   // que posicionarlo solo al cablear los botones en el arranque llegaría
   // tarde). Mismo criterio que ya sigue `marcarVentana()` para Catalysts.
   moverIndicadorRango($('#conmutador-rango .activo'));
+}
+
+/**
+ * Las cuatro medidas del tramo que se está viendo, bajo el gráfico: nivel del
+ * índice, rentabilidad del tramo, periodo y número de sesiones.
+ *
+ * Se calculan sobre LA MISMA serie ya rebasada que recibe `pintarLeyenda()`
+ * —no sobre `datos.serie` ni sobre `estadisticos`—, de modo que cambian con el
+ * selector de rango a la vez que la línea dibujada y no pueden discrepar de
+ * ella (Regla 9). Hasta ahora estas cifras solo existían dentro del emergente
+ * del gráfico y de la descripción para lector de pantalla.
+ */
+function pintarContextoGrafico(serie, medida = {}) {
+  const destino = $('#grafico-contexto');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const conValor = (serie ?? []).filter((p) => Number.isFinite(p.valor));
+  if (!conValor.length) return;
+
+  const primero = conValor[0];
+  const ultimo = conValor[conValor.length - 1];
+  const partida = medida.base ?? primero.valor;
+  const retorno = partida > 0 ? (ultimo.valor / partida - 1) * 100 : null;
+
+  const par = (rotulo, valor, clase = null) => {
+    const grupo = elemento('div', 'grafico-contexto__medida');
+    grupo.appendChild(elemento('dt', 'medida__rotulo', rotulo));
+    grupo.appendChild(elemento('dd', `medida__cifra${clase ? ` ${clase}` : ''}`, valor));
+    destino.appendChild(grupo);
+  };
+
+  par(t('cartera.grafico.contexto.base'), formatearNumero(ultimo.valor));
+  par(t('cartera.col.rentabilidad'), formatearPorcentaje(retorno), claseVariacion(retorno));
+  par(t('cartera.grafico.contexto.periodo'),
+    `${formatearFecha(primero.fecha)} — ${formatearFecha(ultimo.fecha)}`);
+  par(t('cartera.grupo.sesiones'), String(conValor.length));
 }
 
 /**
@@ -3039,6 +2989,13 @@ function pintarLeyenda(serie, benchmarks, medida = {}) {
     el.appendChild(elemento('strong', `leyenda__valor ${claseVariacion(variacion)}`, formatearPorcentaje(variacion)));
     leyenda.appendChild(el);
   };
+
+  /* Sin comparaciones activas hay UNA sola línea dibujada, y entonces la
+     leyenda no identifica nada: repite el nombre de la cartera y su
+     rentabilidad, que es exactamente la cifra que ya da la tira de contexto
+     justo encima (Regla 9 — el mismo hecho dos veces en la misma pantalla).
+     Aparece en cuanto hay algo con lo que confundir la línea. */
+  if (!benchmarks.length) return;
 
   entrada(t('cartera.leyenda.cartera'), serie, false, medida.base);
   for (const b of benchmarks) {
@@ -3372,11 +3329,23 @@ function pintarConciliacion(datos) {
     const fila = document.createElement('tr');
     if (p.cerrada) fila.className = 'cerrada';
 
+    /* Identidad de la posición: el NOMBRE manda y el ticker baja a la línea
+       de contexto junto al sector. Al lado, el estado —abierta o cerrada— como
+       un punto de 5px y una palabra en versalitas, no como distintivo con
+       caja: en una tabla de treinta filas, treinta cajas son treinta manchas
+       compitiendo con las cifras, que es lo que se viene a leer. El punto va
+       relleno en abierta y hueco en cerrada, de modo que el estado se
+       distingue sin depender del color (Cláusula 1). */
     const valor = elemento('td', 'celda-empresa celda-valor');
-    valor.appendChild(document.createTextNode(p.empresa));
-    valor.appendChild(elemento('small', null,
+    const identidad = elemento('div', 'posicion-identidad');
+    identidad.appendChild(elemento('span',
+      `sello-estado sello-estado--${p.cerrada ? 'cerrada' : 'abierta'}`));
+    const textos = elemento('div', 'posicion-identidad__textos');
+    textos.appendChild(elemento('span', 'posicion-identidad__nombre', p.empresa));
+    textos.appendChild(elemento('small', 'posicion-identidad__meta',
       `${p.ticker}${p.sector ? ` · ${etiquetaSector(p.sector)}` : ''}`));
-    if (p.cerrada) valor.appendChild(elemento('span', 'distintivo', t('cartera.conciliacion.enCaja')));
+    identidad.appendChild(textos);
+    valor.appendChild(identidad);
     fila.appendChild(valor);
 
     fila.appendChild(elemento('td', 'num', porcentaje(p.peso)));
@@ -3389,7 +3358,9 @@ function pintarConciliacion(datos) {
     fila.appendChild(elemento('td', `num ${claseVariacion(p.rentabilidadPct)}`,
       formatearPorcentaje(p.rentabilidadPct)));
     fila.appendChild(elemento('td', 'num', formatearNumero(p.valorTramo)));
-    fila.appendChild(elemento('td', `num ${claseVariacion(p.contribucionPct)}`,
+    /* Contribución: la columna que responde a la pregunta de la página —cuánto
+       ha aportado de verdad cada línea—, y la única que va a peso 600. */
+    fila.appendChild(elemento('td', `num num--contribucion ${claseVariacion(p.contribucionPct)}`,
       formatearPorcentaje(p.contribucionPct)));
 
     cuerpo.appendChild(fila);
@@ -3409,9 +3380,17 @@ function pintarConciliacion(datos) {
   };
 
   if (sinDesplegar > 0.005) {
+    /* Misma estructura de identidad que una posición, con el hueco del sello
+       vacío en vez de un punto: no es una tesis y no tiene estado, pero su
+       texto tiene que alinearse con el de las demás o la columna se rompe. */
     const valor = elemento('td', 'celda-empresa celda-valor');
-    valor.appendChild(document.createTextNode(t('cartera.conciliacion.sinDesplegar')));
-    valor.appendChild(elemento('small', null, t('cartera.conciliacion.sinDesplegar.detalle')));
+    const identidad = elemento('div', 'posicion-identidad');
+    identidad.appendChild(elemento('span', 'sello-estado sello-estado--vacio'));
+    const textos = elemento('div', 'posicion-identidad__textos');
+    textos.appendChild(elemento('span', 'posicion-identidad__nombre', t('cartera.conciliacion.sinDesplegar')));
+    textos.appendChild(elemento('small', 'posicion-identidad__meta', t('cartera.conciliacion.sinDesplegar.detalle')));
+    identidad.appendChild(textos);
+    valor.appendChild(identidad);
     cuerpo.appendChild(filaTexto([
       valor,
       elemento('td', 'num', porcentaje(sinDesplegar)),
@@ -3419,12 +3398,12 @@ function pintarConciliacion(datos) {
       elemento('td', 'num', '—'),
       elemento('td', 'num', '—'),
       elemento('td', 'num', formatearNumero(sinDesplegar)),
-      elemento('td', `num ${claseVariacion(0)}`, formatearPorcentaje(0)),
+      elemento('td', `num num--contribucion ${claseVariacion(0)}`, formatearPorcentaje(0)),
     ]));
   }
 
   const rotuloTotal = elemento('td', 'celda-total');
-  rotuloTotal.appendChild(document.createTextNode(t('cartera.conciliacion.total')));
+  rotuloTotal.appendChild(document.createTextNode(t('cartera.conciliacion.totalCartera')));
   rotuloTotal.appendChild(elemento('small', null, t('cartera.conciliacion.total.nota', {
     n: lineas.length, base: formatearNumero(datos.baseCapital ?? 100, 0),
   })));
@@ -3436,7 +3415,7 @@ function pintarConciliacion(datos) {
     elemento('td', 'num', '—'),
     elemento('td', 'num', '—'),
     elemento('td', 'num', formatearNumero(valorDesplegado + sinDesplegar)),
-    elemento('td', `num ${claseVariacion(contribuciones)}`, formatearPorcentaje(contribuciones)),
+    elemento('td', `num num--contribucion ${claseVariacion(contribuciones)}`, formatearPorcentaje(contribuciones)),
   ]));
 
   if (!nota) return;

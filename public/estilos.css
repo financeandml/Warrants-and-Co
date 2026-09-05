@@ -1252,130 +1252,272 @@ button, input, select, textarea { font: inherit; color: inherit; }
   max-width: 60ch;
 }
 
-/* Resumen de capital: ledger de una sola columna, en capítulos —composición
-   D, aprobada tras descartar la B: aquella partía el resumen en dos
-   columnas de altura distinta (Rentabilidad con una fila, Capital con tres)
-   y el hueco irregular resultante se leía como roto. Sin columnas que
-   sincronizar, no hay nada que desalinear. Sin caja ni fondo distinto al de
-   la página, sin rayas verticales de ningún color: la única línea es el
-   filete horizontal gris entre filas, mismo `--linea-fuerte`/`--linea-hairline`
-   que ya separa filas en el resto de la plataforma. Las cifras van a
-   `--tipo-6` —el mismo token del h1— en vez de `--tipo-4/5`: es el peso
-   editorial que pide la referencia (Cobas/Azvalor/Magallanes), y sigue
-   siendo un token existente, no un literal suelto (CLAUDE.md § Diseño 6). */
-#seccion-cartera .capitulo {
-  margin-top: var(--espacio-6);
-}
-/* Solo el primer capítulo de `#resumen-portfolio` pierde el margen superior
-   —es el primero de la pieza entera—. El capítulo de Actividad en
-   `#resumen-secundario`, aunque también sea `:first-child` de SU propio
-   contenedor, es el segundo capítulo de la pieza y necesita el mismo aire
-   que separa cualquier otro par: sin este scope, los dos contenedores
-   quedaban pegados y "Actividad" se leía encimado sobre la última fila de
-   Capital. */
-#seccion-cartera #resumen-portfolio > .capitulo:first-child {
-  margin-top: 0;
-}
-#seccion-cartera .capitulo__titulo {
-  font-size: var(--tipo-1); font-weight: 600; letter-spacing: 0.08em;
-  text-transform: uppercase; color: var(--tinta-mate);
-  margin: 0 0 var(--espacio-2);
-}
-#seccion-cartera .capitulo .fila {
-  display: flex; justify-content: space-between; align-items: baseline;
-  flex-wrap: wrap; column-gap: var(--espacio-4);
-  padding-block: 18px; border-top: 1px solid var(--linea-fuerte);
-}
-#seccion-cartera .capitulo .fila + .fila {
-  border-top: 1px solid var(--linea-hairline);
-}
-#seccion-cartera .fila__etiqueta {
-  font-size: var(--tipo-3); color: var(--tinta-secundaria);
-}
-#seccion-cartera .fila__valor {
-  font-family: var(--geo); font-size: var(--tipo-6); font-weight: 500;
-  line-height: 1; white-space: nowrap;
-}
-/* La única cifra que lleva `--tipo-indicador-principal`: excepción
-   documentada de CLAUDE.md § Diseño 6, aquí aplicada por fin a la cifra que
-   la motivó —"Rentabilidad de la cartera" es LA cifra del resumen, todo lo
-   demás explica de dónde sale ella—. Mismo token que ya mide el hero de la
-   Home, no un tamaño inventado (Regla 9 en tipografía). El resto del
-   capítulo se queda en `--tipo-6`: la jerarquía se hace con UNA cifra
-   dominante, no con la fila entera engordada. */
-#seccion-cartera .fila--principal .fila__etiqueta {
-  font-size: var(--tipo-1); letter-spacing: 0.08em; text-transform: uppercase;
-}
-#seccion-cartera .fila--principal .fila__valor {
-  font-size: var(--tipo-indicador-principal); font-weight: 600;
-}
-#seccion-cartera .fila--principal { padding-block: var(--espacio-3) var(--espacio-4); }
+/* ══════════════ Cartera · composición institucional ══════════════
+   Rediseño completo tras dos rondas descartadas. El diagnóstico de las dos
+   anteriores era el mismo: cada cifra acababa en su propio contenedor y la
+   página se leía como una rejilla de tarjetas, por mucho que se les quitara
+   el fondo. Aquí la jerarquía NO la hace la caja: la hacen el tamaño, la
+   alineación y el filete.
 
-/* Barra de asignación de capital: pista de 3px, sin relleno redondeado
-   agresivo, sin gradiente — la misma disciplina "sin adorno" que ya rige el
-   resto de Cartera. `flex-basis: 100%` la manda a su propia línea bajo
-   etiqueta+valor, igual que `.fila__caption`. */
-#seccion-cartera .asignacion-barra {
-  flex-basis: 100%; height: 3px; margin-top: 10px;
-  background: var(--linea); border-radius: 1px; overflow: hidden;
+   Tres decisiones que lo gobiernan todo:
+
+   1. UN SOLO RITMO VERTICAL. Cada bloque abre con un filete a todo el ancho y
+      su rótulo en versalitas; el aire entre bloques es `--espacio-6`, no el
+      doble como en la ronda anterior —de ahí que quepa un tercio más de
+      información sin comprimir nada.
+   2. UNA SOLA CIFRA MANDA. La rentabilidad total va a
+      `--tipo-indicador-principal`; todo lo demás cae a `--tipo-5` o menos. No
+      hay dos cifras del mismo tamaño en toda la sección salvo las que son
+      hermanas de verdad (realizada/no realizada, desplegado/sin desplegar).
+   3. LOS RÓTULOS SON MICROTIPOGRAFÍA. `--tipo-0`, versalitas, `0.12em` de
+      tracking, `--tinta-mate`. Nunca compiten con la cifra que rotulan.
+   ================================================================= */
+
+/* ── El bloque: filete + rótulo + contenido ── */
+#seccion-cartera .bloque-cartera {
+  padding-block-start: var(--espacio-3);
+  margin-block-start: var(--espacio-5);
+  border-block-start: 1px solid var(--linea-fuerte);
 }
-#seccion-cartera .asignacion-barra__relleno {
+#seccion-cartera .bloque-cartera--menor { margin-block-start: var(--espacio-4); }
+#seccion-cartera .bloque-cartera__rotulo {
+  margin: 0 0 var(--espacio-3);
+  font-family: var(--sans);
+  font-size: var(--tipo-0); font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--tinta-mate);
+}
+#seccion-cartera .bloque-cartera__cabecera {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  justify-content: space-between; gap: 10px var(--espacio-4);
+  margin-block-end: var(--espacio-3);
+}
+#seccion-cartera .bloque-cartera__cabecera .bloque-cartera__rotulo { margin-block-end: 4px; }
+#seccion-cartera .bloque-cartera__entradilla {
+  margin: 0; font-size: var(--tipo-2); color: var(--tinta-mate);
+}
+
+/* ── El par rótulo/cifra: la unidad que se repite en toda la sección ──
+   Rótulo ARRIBA y cifra debajo, no al revés: en una columna de medidas, el
+   ojo baja por los rótulos para encontrar el que busca y solo entonces lee la
+   cifra. Es también lo que permite alinear medidas de anchos distintos sin
+   una caja que las contenga. */
+#seccion-cartera .medida__rotulo {
+  display: block; margin-block-end: 6px;
+  font-size: var(--tipo-0); font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--tinta-mate); white-space: nowrap;
+}
+#seccion-cartera .medida__cifra {
+  display: block; margin: 0;
+  font-family: var(--geo); font-size: var(--tipo-5); font-weight: 500;
+  font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap;
+}
+/* El glifo ▲/▼ que trae `.variacion` (formato.js) se ajusta a la escala de la
+   cifra: a tamaño completo pesa más que el signo y desequilibra la línea. */
+#seccion-cartera .medida__cifra.variacion::before { font-size: 0.52em; }
+
+/* Variante hero: cifra arriba, rótulo debajo —el registro del bloque de
+   rendimiento, donde se viene a leer el número—. El orden lo decide el DOM
+   (`medida()` en app.js), no un `order` de flex: reordenar por CSS dejaría al
+   lector de pantalla oyendo lo contrario de lo que se ve. */
+#seccion-cartera .medida--hero .medida__rotulo {
+  margin: 9px 0 0; letter-spacing: 0.14em;
+}
+/* `--tipo-5`, no `--tipo-6`: a 40px los dos sumandos competían con el total y
+   la primera lectura ya no era «cuánto ha rendido la cartera» sino «hay tres
+   cifras grandes». A 22px contra 67px la respuesta es una sola. */
+#seccion-cartera .medida--hero .medida__cifra { font-size: var(--tipo-5); }
+
+/* ── 1 · Rendimiento ──
+   Una sola línea: la cifra dominante a la izquierda y sus dos sumandos a la
+   derecha, separados por un filete vertical. En vertical ocupa lo que ocupa
+   la cifra grande y nada más —la ronda anterior gastaba aquí tres filas de
+   ledger para decir lo mismo—. */
+#seccion-cartera .rendimiento {
+  display: flex; flex-wrap: wrap; align-items: flex-end;
+  gap: var(--espacio-4) clamp(28px, 6vw, 72px);
+  padding-block: 4px var(--espacio-2);
+}
+#seccion-cartera .rendimiento__principal { min-width: 0; }
+#seccion-cartera .rendimiento__cifra {
+  display: block;
+  font-family: var(--geo); font-size: var(--tipo-indicador-principal);
+  font-weight: 600; font-variant-numeric: tabular-nums;
+  line-height: 0.95; letter-spacing: -0.02em; white-space: nowrap;
+}
+#seccion-cartera .rendimiento__cifra.variacion::before { font-size: 0.42em; }
+#seccion-cartera .rendimiento__rotulo {
+  display: block; margin-block-start: 10px;
+  font-size: var(--tipo-1); font-weight: 600;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--tinta-mate);
+}
+/* Los dos sumandos: mismo tamaño entre sí —son hermanos— y muy por debajo del
+   total. El filete vertical los ata a la cifra que descomponen. */
+#seccion-cartera .rendimiento__desglose {
+  display: flex; flex-wrap: wrap; gap: var(--espacio-3) clamp(24px, 4vw, 48px);
+  padding-inline-start: clamp(24px, 4vw, 48px);
+  border-inline-start: 1px solid var(--linea);
+  align-self: stretch; align-items: flex-end;
+}
+
+/* ── 2 · Asignación de capital ──
+   Los dos extremos rotulados, la barra entre ellos y las dos medidas de
+   contexto debajo. La barra es de 6px y a todo el ancho: es la única
+   visualización de la sección, así que se lee sin esfuerzo y no compite con
+   nada. Sustituye al anillo, que gastaba 140px de alto para el mismo hecho. */
+#seccion-cartera .asignacion__reparto {
+  display: flex; justify-content: space-between; align-items: flex-end;
+  gap: var(--espacio-4); margin-block-end: 12px;
+}
+#seccion-cartera .medida--fin { text-align: end; }
+#seccion-cartera .asignacion__barra {
+  display: flex; height: 6px; background: var(--linea);
+  overflow: hidden;
+}
+#seccion-cartera .asignacion__tramo {
   height: 100%; background: var(--tinta);
   transition: width 700ms var(--mov-entrada);
 }
 @media (prefers-reduced-motion: reduce) {
-  #seccion-cartera .asignacion-barra__relleno { transition: none; }
+  #seccion-cartera .asignacion__tramo { transition: none; }
 }
-/* Desglose anidado bajo "Rentabilidad de la cartera": aritmética en letra
-   pequeña debajo de la cifra que descompone, no filas hermanas —a petición
-   explícita, comparando con la referencia—. Ocupa el ancho completo de la
-   fila (`flex-basis: 100%`) para que quede debajo de etiqueta+valor y no al
-   lado, sin forzar la fila a envolver por falta de sitio. */
-#seccion-cartera .fila__caption {
-  flex-basis: 100%; font-size: var(--tipo-1); color: var(--tinta-mate);
-  margin-top: 4px;
+/* ROIC y liquidez: medidas del mismo capital, pero NO tramos de esa barra
+   —ver la nota de `pintarAsignacionCapital()`—, así que van debajo y
+   separadas por un filete, nunca dentro de la pista. */
+#seccion-cartera .asignacion__secundarias,
+#seccion-cartera .actividad {
+  display: flex; flex-wrap: wrap;
+  gap: var(--espacio-3) clamp(32px, 6vw, 88px);
+  margin-block-start: var(--espacio-3);
+  padding-block-start: var(--espacio-3);
+  border-block-start: 1px solid var(--linea);
 }
-#seccion-cartera .fila__caption-parte { white-space: nowrap; }
-#seccion-cartera .fila__caption-parte strong { font-weight: 600; }
+#seccion-cartera .actividad {
+  margin-block-start: 0; padding-block-start: 0; border-block-start: none;
+}
+/* Los recuentos van un paso por debajo del resto: son contexto, no una cifra
+   de rentabilidad, y la sección entera se leería plana si midieran igual. */
+#seccion-cartera .actividad .medida__cifra { font-size: var(--tipo-4); }
 
-/* Capítulo de Actividad (`#resumen-secundario`): las dos cifras comparten
-   una sola fila, separadas solo por espacio —nunca una raya vertical entre
-   ellas, a petición explícita: solo aire y tipografía como separadores—.
-   Van a `--tipo-5`, un paso por debajo del resto: son recuento, no una
-   cifra de rentabilidad, y no compiten por el mismo peso. */
-#seccion-cartera .fila--doble {
-  display: flex; flex-wrap: wrap; column-gap: var(--espacio-6); row-gap: var(--espacio-3);
+/* ── Pie del gráfico: contexto + leyenda ──
+   Las cuatro medidas del tramo visible en una fila, y la leyenda de series
+   debajo separada por un filete. Antes esto no existía: base, periodo y
+   sesiones solo vivían dentro del emergente y de la descripción para lector
+   de pantalla. */
+#seccion-cartera .grafico-pie {
+  margin-block-start: var(--espacio-3);
+  padding-block-start: var(--espacio-3);
+  border-block-start: 1px solid var(--linea);
 }
-#seccion-cartera .fila--doble .par {
-  display: flex; align-items: baseline; gap: var(--espacio-2);
+#seccion-cartera .grafico-contexto {
+  display: flex; flex-wrap: wrap; margin: 0;
+  gap: var(--espacio-3) clamp(28px, 5vw, 76px);
 }
-#seccion-cartera .fila--doble .fila__valor {
-  font-size: var(--tipo-5);
+#seccion-cartera .grafico-contexto .medida__cifra { font-size: var(--tipo-4); }
+/* Sin comparaciones activas la leyenda no se pinta (ver `pintarLeyenda()`), y
+   un contenedor vacío dejaría aquí su filete y su margen: una raya suelta
+   bajo el gráfico sin nada que separar. */
+#seccion-cartera .grafico-pie .leyenda:not(:empty) {
+  margin-block-start: var(--espacio-3);
+  padding-block-start: var(--espacio-3);
+  border-block-start: 1px solid var(--linea-hairline);
 }
 
-/* Tabla fundida: cifras en monospace del sistema (`--mono`, sin fichero
-   propio) y alineadas a la derecha. La cabecera y el filete de fila siguen el
-   mismo `.tabla-datos` de siempre; aquí solo se retira el marco de la caja. */
+/* ══ La tabla de posiciones ══
+   Cifras en monospace del sistema (`--mono`, sin fichero propio) y alineadas
+   a la derecha; cabecera y filete de fila del `.tabla-datos` compartido, sin
+   marco de caja. Lo propio de esta tabla es la jerarquía DENTRO de la fila:
+   el nombre de la compañía manda, el ticker y el sector bajan a una segunda
+   línea gris, y de las cinco columnas de cifras solo una —contribución— va a
+   peso 600, porque es la que responde a la pregunta de la página. */
 #seccion-cartera .tabla-posiciones .num,
 #seccion-cartera #cuerpo-conciliacion .num {
   font-family: var(--mono);
 }
 #seccion-cartera .tabla-posiciones tbody tr:hover { background: var(--superficie-alt); }
-#seccion-cartera .tabla-posiciones tbody tr.cerrada { opacity: 0.6; }
+#seccion-cartera .tabla-posiciones th { background: none; }
+#seccion-cartera .tabla-posiciones th,
+#seccion-cartera .tabla-posiciones td { padding: 12px 14px; }
+#seccion-cartera .tabla-posiciones th:first-child,
+#seccion-cartera .tabla-posiciones td:first-child { padding-inline-start: 0; }
+#seccion-cartera .tabla-posiciones th:last-child,
+#seccion-cartera .tabla-posiciones td:last-child { padding-inline-end: 0; }
 
-/* ── Densidad compacta (rediseño 2) ──
-   `[data-densidad="compacta"] td` (estilos.css, cerca de :root) empata en
-   especificidad con `.tabla-datos td` —el padding compartido de toda la
-   plataforma— y perdía el desempate por orden de aparición: el genérico va
-   declarado antes. Este prefijo de sección sube la especificidad sin tocar
-   la regla compartida, que sigue rigiendo cualquier otra tabla que no lleve
-   el atributo. La fila de detalle desplegada (`.fila-cartera__detalle`, más
-   abajo) no es parte de lo que se escanea —es lectura puntual, cláusula 7—
-   y conserva su propio respiro porque su regla viene después en el fichero.
-   CLAUDE.md § Diseño 7. */
-#seccion-cartera .tabla-posiciones[data-densidad="compacta"] th,
-#seccion-cartera .tabla-posiciones[data-densidad="compacta"] td {
-  padding-block: var(--densidad-compacta-relleno);
+/* La columna que responde a la pregunta de la página. Única cifra de la tabla
+   a peso 600: si lo llevaran todas, no destacaría ninguna. */
+#seccion-cartera .tabla-posiciones .num--contribucion {
+  font-weight: 600; color: var(--tinta);
+}
+
+/* Identidad de la posición: sello de estado + nombre + meta. */
+#seccion-cartera .posicion-identidad {
+  display: grid; grid-template-columns: 7px 1fr; align-items: start;
+  column-gap: 11px;
+}
+#seccion-cartera .posicion-identidad__textos { min-width: 0; }
+#seccion-cartera .posicion-identidad__nombre {
+  display: block; font-size: var(--tipo-2); font-weight: 600;
+  line-height: 1.3; color: var(--tinta);
+}
+#seccion-cartera .posicion-identidad__meta {
+  display: block; margin-block-start: 3px;
+  font-family: var(--mono); font-size: var(--tipo-0);
+  letter-spacing: 0.04em; color: var(--tinta-mate);
+}
+/* El sello: 7px, relleno si la posición sigue abierta y hueco si está
+   cerrada. La FORMA —relleno frente a contorno— es la que porta el dato, no
+   el color: se lee impreso en blanco y negro y con cualquier daltonismo
+   (Cláusula 1). Sustituye al distintivo «EN CAJA» con caja, que en una tabla
+   de treinta filas eran treinta manchas compitiendo con las cifras. */
+#seccion-cartera .sello-estado {
+  width: 7px; height: 7px; border-radius: 50%;
+  margin-block-start: 6px; box-sizing: border-box;
+}
+#seccion-cartera .sello-estado--abierta { background: var(--tinta); }
+#seccion-cartera .sello-estado--cerrada {
+  background: none; border: 1px solid var(--tinta-mate);
+}
+#seccion-cartera .sello-estado--vacio { background: none; }
+/* Una posición cerrada se atenúa, pero solo hasta donde sigue siendo legible:
+   su contribución ya realizada cuenta igual en el total y tiene que poder
+   leerse, así que se apaga el texto de identidad, no la fila entera. */
+#seccion-cartera .tabla-posiciones tbody tr.cerrada .posicion-identidad__nombre,
+#seccion-cartera .tabla-posiciones tbody tr.cerrada .posicion-identidad__meta {
+  color: var(--tinta-secundaria);
+}
+
+/* La fila de Total: cierra la conciliación, así que lleva filete propio más
+   marcado y ni fondo ni caja —el peso lo da la línea y la tipografía—. */
+#seccion-cartera .tabla-posiciones tfoot td {
+  padding: 16px 14px; background: none;
+  border-top: 2px solid var(--tinta); border-bottom: none;
+}
+#seccion-cartera .tabla-posiciones tfoot td:first-child { padding-inline-start: 0; }
+#seccion-cartera .tabla-posiciones tfoot td:last-child { padding-inline-end: 0; }
+#seccion-cartera .tabla-posiciones tfoot .celda-total {
+  font-size: var(--tipo-1); font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+#seccion-cartera .tabla-posiciones tfoot .celda-total small {
+  letter-spacing: normal; text-transform: none;
+}
+#seccion-cartera .tabla-posiciones tfoot .num { font-size: var(--tipo-3); }
+
+/* Nota metodológica: pie de informe, no aviso. Rótulo en versalitas y cuerpo
+   pequeño, sin caja ni fondo. */
+#seccion-cartera .nota-metodo {
+  margin-block-start: var(--espacio-4);
+  padding-block-start: var(--espacio-3);
+  border-block-start: 1px solid var(--linea-hairline);
+  max-width: 88ch;
+}
+#seccion-cartera .nota-metodo__rotulo {
+  margin: 0 0 6px; font-size: var(--tipo-0); font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--tinta-mate);
+}
+#seccion-cartera .nota-metodo__cuerpo {
+  margin: 0; font-size: var(--tipo-1); line-height: 1.65; color: var(--tinta-mate);
 }
 
 .fila-cartera__estado {
@@ -1441,6 +1583,18 @@ button, input, select, textarea { font: inherit; color: inherit; }
    estado discreto y terminado, exactamente el caso que la propia cláusula
    nombra para `--mov-estado`. Un rebote aquí sería decoración sin gesto que
    lo justifique, lo mismo que la cláusula ya prohíbe para el marquee. */
+/* Controles a escuadra dentro de Cartera. El radio de 10px de `.conmutador`
+   —que en Radar o Signal está bien, son controles de una herramienta de
+   consulta— aquí leía a píldora de aplicación, y esta sección es un documento
+   financiero: se cuadran a `--radio` (2px), igual que la tabla y los filetes
+   que la rodean. Acotado a `#seccion-cartera`: no toca los mismos controles
+   en el resto de la plataforma. */
+#seccion-cartera .controles-grafico .conmutador,
+#seccion-cartera .controles-grafico .buscador-ticker input,
+#seccion-cartera .controles-grafico .buscador-ticker button,
+#seccion-cartera .controles-grafico .pastilla-benchmark {
+  border-radius: var(--radio);
+}
 #seccion-cartera .controles-grafico .conmutador--rango {
   position: relative;
 }
@@ -1828,54 +1982,12 @@ button, input, select, textarea { font: inherit; color: inherit; }
 .anillo__vacio strong { display: block; margin-block-end: 6px; }
 .anillo__vacio p { margin: 0; font-size: var(--tipo-2); line-height: 1.6; color: var(--tinta-mate); max-width: 62ch; }
 
-/* ── Distribución de la Cartera: mismo lenguaje visual que `.anillo`, misma
-   geometría (140px, radio 52, grosor 18 — `G_DISTRIBUCION` en `app.js`), pero
-   es un componente propio: solo dos segmentos, sin trama de caja, sin
-   `pesoVigente`. Reutiliza el patrón de tarjeta, no el cálculo (Regla 9: el
-   hecho que dibuja —`capitalDesplegadoPct`— es distinto del que dibuja
-   `.anillo`). */
-.distribucion-capital { padding: 4px 24px 24px; }
-.distribucion-capital__cuerpo {
-  display: flex; align-items: center;
-  gap: clamp(24px, 4vw, 52px);
-  flex-wrap: wrap;
-}
-.distribucion-capital__svg { width: 140px; height: 140px; flex: 0 0 auto; display: block; }
-
-/* ── El gesto de hover: el segmento se expande ligeramente ──
-   `stroke-width` engorda el arco y `scale(1.05)` lo separa del centro —las
-   dos son propiedades de composición (Cláusula 8: transform/opacity; el grosor
-   de un trazo SVG no dispara layout de documento, solo repintado del propio
-   `<svg>`), nunca `r` ni `cx`/`cy`, que sí recalcularían la geometría de los
-   DEMÁS arcos al compartir centro. `transform-origin: center` en un `<svg>`
-   toma el centro del `viewBox` por defecto, que es exactamente el centro del
-   anillo, así que el arco crece desde su propio eje sin desplazar a su vecino.
-   Solo con puntero de precisión y solo con movimiento no reducido: es un
-   gesto de exploración, no información. */
-.distribucion-capital__arco {
-  transform-origin: center;
-  transition: transform var(--transicion), stroke-width var(--transicion);
-}
-@media (hover: hover) and (pointer: fine) {
-  .distribucion-capital__arco:hover { transform: scale(1.05); stroke-width: 21; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .distribucion-capital__arco { transition: none; }
-  .distribucion-capital__arco:hover { transform: none; stroke-width: 18; }
-}
-
-.distribucion-capital__lista { list-style: none; margin: 0; padding: 0; flex: 1 1 240px; min-width: 220px; max-width: 380px; }
-.distribucion-capital__fila {
-  display: grid; grid-template-columns: 10px 1fr auto; align-items: baseline;
-  gap: 11px; padding-block: 9px; border-block-end: 1px solid var(--linea-hairline);
-}
-.distribucion-capital__fila:last-child { border-block-end: none; }
-.distribucion-capital__muestra { width: 10px; height: 10px; border-radius: 2px; align-self: center; }
-.distribucion-capital__nombre { font-size: var(--tipo-2); color: var(--tinta); }
-.distribucion-capital__cifra {
-  font-size: var(--tipo-2); font-weight: 600;
-  font-variant-numeric: tabular-nums; color: var(--tinta);
-}
+/* El anillo de "Distribución de la Cartera" se retiró: decía el mismo hecho
+   que la barra de `.asignacion` —capital desplegado y su complemento— y
+   gastaba 140px de alto y una leyenda propia para decirlo. Una sola
+   visualización por hecho (Regla 9). `.anillo` (anillo.js) se conserva: es
+   otro reparto —el del patrimonio por posición— y hoy no tiene hueco en el
+   documento. */
 
 /* ── Los tres movimientos de la sección ── */
 .movimiento {
