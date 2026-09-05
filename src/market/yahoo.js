@@ -245,4 +245,31 @@ async function obtenerHistorico(simbolo, desdeISO) {
   return filas;
 }
 
-module.exports = { nombre: 'Yahoo Finance', obtenerCotizacion, obtenerHistorico, ProveedorError };
+/**
+ * Autocompletado de tickers para el buscador de benchmarks de Cartera.
+ * Reutiliza `llamarApi()` —misma sesión, mismo crumb— contra el buscador
+ * de Yahoo, que no exige un endpoint distinto del resto del proveedor.
+ * Solo `EQUITY` y `ETF`: son los únicos tipos que `obtenerHistorico()`
+ * sabe servir después con una serie diaria comparable a la cartera; un
+ * índice o una divisa en la lista invitaría a un clic que luego falla.
+ */
+async function buscarSimbolos(consulta) {
+  const datos = await llamarApi('/v1/finance/search', {
+    q: consulta,
+    quotesCount: 8,
+    newsCount: 0,
+  });
+  const quotes = Array.isArray(datos?.quotes) ? datos.quotes : [];
+  return quotes
+    .filter((q) => q.symbol && (q.quoteType === 'EQUITY' || q.quoteType === 'ETF'))
+    .map((q) => ({
+      simbolo: q.symbol,
+      nombre: q.shortname || q.longname || q.symbol,
+      tipo: q.quoteType,
+      mercado: q.exchange || null,
+    }));
+}
+
+module.exports = {
+  nombre: 'Yahoo Finance', obtenerCotizacion, obtenerHistorico, buscarSimbolos, ProveedorError,
+};

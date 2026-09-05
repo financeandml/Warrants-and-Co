@@ -125,6 +125,31 @@ async function obtenerCotizaciones(simbolos) {
   return { cotizaciones: salida, fallidos };
 }
 
+const TTL_BUSQUEDA_MS = Number(process.env.TTL_BUSQUEDA_MS ?? 5 * 60_000);
+const cacheBusqueda = new Map(); // consulta -> { valor, expira }
+
+/**
+ * Autocompletado de tickers. Solo Yahoo lo sirve —ni cnbc ni nasdaq exponen
+ * un buscador de símbolos por texto—, así que no hay cascada de proveedores
+ * que orquestar: un fallo aquí se declara tal cual, nunca como lista vacía
+ * (que el buscador de Cartera leería como "sin resultados", un hecho
+ * distinto de "el proveedor no respondió").
+ */
+async function buscarSimbolos(consultaBruta) {
+  const consulta = String(consultaBruta ?? '').trim();
+  if (consulta.length < 1) return [];
+
+  const clave = consulta.toUpperCase();
+  const cacheado = leerCache(cacheBusqueda, clave);
+  if (cacheado) return cacheado;
+
+  return deduplicar(`b:${clave}`, async () => {
+    const valor = await yahoo.buscarSimbolos(consulta);
+    cacheBusqueda.set(clave, { valor, expira: Date.now() + TTL_BUSQUEDA_MS });
+    return valor;
+  });
+}
+
 function estado() {
   return {
     ...diagnostico,
@@ -136,4 +161,6 @@ function estado() {
   };
 }
 
-module.exports = { obtenerCotizacion, obtenerCotizaciones, obtenerHistorico, normalizarSimbolo, estado };
+module.exports = {
+  obtenerCotizacion, obtenerCotizaciones, obtenerHistorico, buscarSimbolos, normalizarSimbolo, estado,
+};

@@ -182,6 +182,23 @@ router.get('/cotizacion/:simbolo', async (req, res, next) => {
   }
 });
 
+/**
+ * Autocompletado del buscador de ticker libre en Cartera. Mínimo 1 carácter
+ * —dejar que el propio proveedor decida qué es "demasiado poco" en vez de
+ * inventar aquí un umbral— y máximo 12, el mismo tope que ya impone
+ * `PATRON_TICKER` en el cliente para lo que puede llegar a ser un símbolo.
+ */
+router.get('/buscar', async (req, res, next) => {
+  const q = String(req.query.q ?? '').slice(0, 12);
+  try {
+    const resultados = await mercado.buscarSimbolos(q);
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ resultados });
+  } catch (err) {
+    next(err);
+  }
+});
+
 router.get('/estado', (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json({ mercado: mercado.estado(), momento: new Date().toISOString() });

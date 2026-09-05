@@ -70,6 +70,12 @@ const API = {
     status: 415,
     mensaje: 'Formato no admitido. Únicamente se aceptan ficheros PDF, Word y Excel.',
   },
+  /* Mismo patrón que `FORMATO_INFORME_NO_ADMITIDO`, para el fileFilter del
+     multer de video de portada (`informes.js`, instancia `subidaVideo`). */
+  FORMATO_VIDEO_NO_ADMITIDO: {
+    status: 415,
+    mensaje: 'Formato no admitido. Únicamente se aceptan ficheros MP4 y WebM.',
+  },
   /* E1b: `companias.js` mandaba un objeto crudo con un código que no vivía en
      ningún catálogo — el cliente recibía código, pero sin rótulo que buscar,
      y caía igual al castellano. */

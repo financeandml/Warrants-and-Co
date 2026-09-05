@@ -72,15 +72,45 @@ function descartarFicheros(ficheros) {
   for (const f of ficheros ?? []) fs.promises.unlink(f.path).catch(() => {});
 }
 
+// ------------------------------------------------------ video de portada
+
+// Mudo, en bucle, de fondo: no hace falta mas contenedor que mp4/webm.
+// El tope es mas alto que el de documentacion (25 MB) porque un video, por
+// corto que sea, pesa mas que un PDF -pero sigue acotado: esto es una pieza
+// de fondo silenciosa, no una descarga de contenido.
+const LIMITE_BYTES_VIDEO = 60 * 1024 * 1024;
+const EXT_VIDEO_PERMITIDAS = new Set(['.mp4', '.webm']);
+const FORMATOS_VIDEO = new Map([
+  ['video/mp4', ['.mp4']],
+  ['video/webm', ['.webm']],
+]);
+
+const subidaVideo = multer({
+  storage: almacenamiento,
+  limits: { fileSize: LIMITE_BYTES_VIDEO, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    const extensionesDelTipo = FORMATOS_VIDEO.get(file.mimetype ?? '');
+    if (!EXT_VIDEO_PERMITIDAS.has(ext) || !extensionesDelTipo || !extensionesDelTipo.includes(ext)) {
+      return cb(fallo('FORMATO_VIDEO_NO_ADMITIDO'));
+    }
+    cb(null, true);
+  },
+});
+
 function mapearInforme(fila) {
   if (!fila) return null;
   let etiquetas = [];
   try { etiquetas = JSON.parse(fila.etiquetas ?? '[]'); } catch { etiquetas = []; }
+  // El nombre de fichero en disco no sale al cliente -ni falta que hace-: la
+  // vitrina solo necesita saber si hay video que pedir a su propia ruta.
+  const { video_portada, video_portada_tipo, ...resto } = fila;
   return {
-    ...fila,
+    ...resto,
     etiquetas: Array.isArray(etiquetas) ? etiquetas : [],
     destacado: Boolean(fila.destacado),
     en_cartera: Boolean(fila.en_cartera),
+    tieneVideoPortada: Boolean(video_portada),
   };
 }
 
@@ -446,13 +476,17 @@ router.put('/:id(\\d+)', subida.array('ficheros', MAX_FICHEROS), (req, res) => {
 
 router.delete('/:id(\\d+)', (req, res) => {
   const id = Number(req.params.id);
-  const existente = db.prepare('SELECT ticker FROM informes WHERE id = ?').get(id);
+  const existente = db.prepare('SELECT ticker, video_portada FROM informes WHERE id = ?').get(id);
   if (!existente) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO'));
 
   const ficheros = db.prepare('SELECT nombre_fichero FROM adjuntos WHERE informe_id = ?').all(id);
   db.prepare('DELETE FROM informes WHERE id = ?').run(id);
   // Los registros caen por ON DELETE CASCADE; el soporte fisico se retira aqui.
   for (const f of ficheros) fs.promises.unlink(path.join(UPLOAD_DIR, f.nombre_fichero)).catch(() => {});
+  // El video de portada no vive en `adjuntos`: se limpia aparte.
+  if (existente.video_portada) {
+    fs.promises.unlink(path.join(UPLOAD_DIR, existente.video_portada)).catch(() => {});
+  }
 
   // Con la tesis ya borrada, si ninguna otra la respalda el ticker deja de
   // estar en cartera: se retira de las noticias que lo llevaban.
@@ -469,6 +503,82 @@ router.delete('/:id(\\d+)/adjuntos/:adjuntoId(\\d+)', (req, res) => {
   db.prepare('DELETE FROM adjuntos WHERE id = ?').run(Number(adjuntoId));
   fs.promises.unlink(path.join(UPLOAD_DIR, fila.nombre_fichero)).catch(() => {});
   res.json({ eliminado: Number(adjuntoId) });
+});
+
+// ------------------------------------------------------ video de portada
+
+/** Uno por informe: una subida nueva sustituye a la anterior, nunca la acumula. */
+router.post('/:id(\\d+)/video', subidaVideo.single('video'), (req, res) => {
+  const id = Number(req.params.id);
+  const existente = db.prepare('SELECT video_portada FROM informes WHERE id = ?').get(id);
+  if (!existente) {
+    if (req.file) fs.promises.unlink(req.file.path).catch(() => {});
+    return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO'));
+  }
+  if (!req.file) return res.status(400).json(cuerpoError('FORMATO_VIDEO_NO_ADMITIDO'));
+
+  db.prepare("UPDATE informes SET video_portada = ?, video_portada_tipo = ?, actualizado_en = datetime('now') WHERE id = ?")
+    .run(req.file.filename, req.file.mimetype, id);
+  // La sustitución retira el fichero anterior del disco; el nuevo ya quedó guardado.
+  if (existente.video_portada) {
+    fs.promises.unlink(path.join(UPLOAD_DIR, existente.video_portada)).catch(() => {});
+  }
+  res.status(201).json({ id, tieneVideoPortada: true });
+});
+
+router.delete('/:id(\\d+)/video', (req, res) => {
+  const id = Number(req.params.id);
+  const existente = db.prepare('SELECT video_portada FROM informes WHERE id = ?').get(id);
+  if (!existente) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO'));
+  if (!existente.video_portada) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO'));
+
+  db.prepare("UPDATE informes SET video_portada = NULL, video_portada_tipo = NULL, actualizado_en = datetime('now') WHERE id = ?").run(id);
+  fs.promises.unlink(path.join(UPLOAD_DIR, existente.video_portada)).catch(() => {});
+  res.json({ id, tieneVideoPortada: false });
+});
+
+/**
+ * Sirve el video con soporte de `Range`: sin el, un `<video>` no puede buscar
+ * ni empezar a reproducir hasta tener el fichero entero, y con un tope de
+ * 60 MB eso es un arranque perceptiblemente lento. La lectura es publica,
+ * como la del resto del research (Regla de acceso del repositorio).
+ */
+router.get('/:id(\\d+)/video', (req, res) => {
+  const fila = db.prepare('SELECT video_portada, video_portada_tipo FROM informes WHERE id = ?').get(Number(req.params.id));
+  if (!fila?.video_portada) return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO'));
+
+  const ruta = path.join(UPLOAD_DIR, path.basename(fila.video_portada));
+  let tam;
+  try { tam = fs.statSync(ruta).size; } catch { return res.status(404).json(cuerpoError('RECURSO_NO_ENCONTRADO')); }
+
+  res.setHeader('Content-Type', fila.video_portada_tipo || 'video/mp4');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Accept-Ranges', 'bytes');
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+
+  const rango = req.headers.range;
+  if (!rango) {
+    res.setHeader('Content-Length', tam);
+    fs.createReadStream(ruta).pipe(res);
+    return;
+  }
+
+  const coincide = /^bytes=(\d*)-(\d*)$/.exec(rango);
+  if (!coincide) {
+    res.setHeader('Content-Range', `bytes */${tam}`);
+    return res.status(416).end();
+  }
+  const inicio = coincide[1] ? Number(coincide[1]) : 0;
+  const fin = coincide[2] ? Number(coincide[2]) : tam - 1;
+  if (inicio >= tam || fin >= tam || inicio > fin) {
+    res.setHeader('Content-Range', `bytes */${tam}`);
+    return res.status(416).end();
+  }
+
+  res.status(206);
+  res.setHeader('Content-Range', `bytes ${inicio}-${fin}/${tam}`);
+  res.setHeader('Content-Length', fin - inicio + 1);
+  fs.createReadStream(ruta, { start: inicio, end: fin }).pipe(res);
 });
 
 // ------------------------------------------------------------- descarga

@@ -479,6 +479,62 @@ const aTerna = (css) => {
       infractoras.length === 0, infractoras.slice(0, 5).join(' | '));
   }
 
+  /* ── 5 · escala tipográfica: cero literales sueltos por debajo del tramo grande ──
+     CLAUDE.md (cláusula 6) exige que todo `font-size` referencie `var(--tipo-N)`
+     o una excepción nombrada. La auditoría de 2026-09 encontró 300 declaraciones
+     literales de 306: el tramo corto (11-22px, donde vive el dato — `--tipo-0` a
+     `--tipo-5`) ya se migró. El tramo grande (cifras de tarjeta, 1.28rem-5.2rem,
+     unas 15 declaraciones distintas repartidas por Cartera/Options/Signal/
+     Catalysts) no: son quince pantallas de "número grande" afinadas cada una a su
+     propio contenedor, y colapsarlas en un token compartido sin verlas en
+     navegador sería rediseñar la jerarquía numérica de la plataforma a ciegas, no
+     migrar una literal. Queda constatado y sin tocar —igual que la inconsistencia
+     de Catalysts documentada en `estilos.css` junto a `.indicador--principal`—
+     hasta que haya una decisión de diseño explícita. Este test cubre el tramo ya
+     migrado y dos usos relativos legítimos que no son pasos de lectura: el `em`
+     de los glifos ▲/▼ (escalan al tamaño ya tokenizado del texto que los rodea)
+     y el `pt` de `@media print`. */
+  {
+    const lineas = fs.readFileSync(HOJA, 'utf8').split('\n');
+    let dentroComentario = false;
+    let dentroMediaPrint = false;
+    let profundidadPrint = 0;
+    const TRAMO_CORTO = /font-size:\s*(0\.\d+|1(\.0\d*)?)(rem|px)(?!\w)/;
+    const infractoras = [];
+
+    lineas.forEach((linea, i) => {
+      let limpia = '', j = 0;
+      while (j < linea.length) {
+        if (dentroComentario) {
+          const fin = linea.indexOf('*/', j);
+          if (fin === -1) { j = linea.length; } else { dentroComentario = false; j = fin + 2; }
+        } else {
+          const ini = linea.indexOf('/*', j);
+          if (ini === -1) { limpia += linea.slice(j); j = linea.length; }
+          else { limpia += linea.slice(j, ini); dentroComentario = true; j = ini + 2; }
+        }
+      }
+
+      if (/@media print/.test(limpia)) dentroMediaPrint = true;
+      if (dentroMediaPrint) {
+        profundidadPrint += (limpia.match(/{/g) || []).length;
+        profundidadPrint -= (limpia.match(/}/g) || []).length;
+        if (profundidadPrint <= 0) dentroMediaPrint = false;
+      }
+
+      if (!/font-size:/.test(limpia)) return;
+      if (/font-size:\s*var\(--(tipo|densidad)/.test(limpia)) return;   // ya es token
+      if (/font-size:\s*[\d.]+em\b/.test(limpia)) return;               // glifo ▲/▼, relativo
+      if (dentroMediaPrint) return;                                    // @media print, pt aparte
+      if (!TRAMO_CORTO.test(limpia)) return;                           // tramo grande: pendiente, no se audita aquí
+
+      infractoras.push(`${i + 1}: ${limpia.trim()}`);
+    });
+
+    t(`escala tipográfica: tramo corto (≤22px) sin literales sueltos · ${lineas.length} líneas`,
+      infractoras.length === 0, infractoras.slice(0, 5).join(' | '));
+  }
+
   t('sin errores de consola', errores.length === 0, errores.slice(0, 3).join(' | '));
 
   await navegador.close();

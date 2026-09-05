@@ -95,6 +95,13 @@ anadirColumna('informes', 'stop_loss', 'REAL');
 // calculo. Opcional: sin el, la ficha declara N/A, nunca una cadena vacia.
 anadirColumna('informes', 'riesgos_clave', 'TEXT');
 
+// Video de portada para la vitrina editorial del repositorio: mudo, en bucle,
+// opcional. Vive como dos columnas -nombre en disco y tipo MIME- igual que un
+// adjunto, pero fuera de la tabla `adjuntos` porque no es documentacion de la
+// tesis: es una pieza de identidad visual, uno por informe, nunca una lista.
+anadirColumna('informes', 'video_portada', 'TEXT');
+anadirColumna('informes', 'video_portada_tipo', 'TEXT');
+
 db.exec(`
   CREATE TABLE IF NOT EXISTS noticias (
     id                INTEGER PRIMARY KEY AUTOINCREMENT,

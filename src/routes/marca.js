@@ -22,6 +22,9 @@ const RECURSOS = {
   logo: ['logo.svg', 'logo.png', 'logo.jpg', 'logo.jpeg', 'logo.webp'],
   sello: ['logo-marca.svg', 'logo-marca.png', 'sello.svg', 'sello.png'],
   banner: ['banner.jpg', 'banner.jpeg', 'banner.png', 'banner.webp', 'banner.avif'],
+  // Vídeo de fondo del hero, mudo y en bucle. Mismo criterio de depósito que el
+  // resto de `public/marca/`: basta con dejar el fichero, sin tocar código.
+  bannerVideo: ['banner.mp4', 'banner.webm'],
 };
 
 /** Localiza la primera variante disponible de un recurso. */
@@ -50,12 +53,14 @@ router.get('/', (req, res) => {
   const logo = resolver('logo');
   const sello = resolver('sello');
   const banner = resolver('banner');
+  const bannerVideo = resolver('bannerVideo');
 
   res.setHeader('Cache-Control', 'no-store');
   res.json({
     logo,
     sello,
     banner,
+    bannerVideo,
     // Ruta y nombres admitidos, para que el equipo sepa donde depositar los ficheros.
     directorio: 'public/marca/',
     nombresAdmitidos: RECURSOS,
