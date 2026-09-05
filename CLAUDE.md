@@ -46,11 +46,17 @@ blanco y negro y con cualquier daltonismo. Esta cláusula no ha cambiado y no se
 
 **2 · El índigo significa siempre lo mismo.** No es un acento decorativo con un semántico
 azul al lado: es **un solo token**. En cromo —cabecera, navegación, foco, botón primario,
-marcador de sección, carga— es identidad; en un dato es **información neutra, sin
-dirección**. Las dos cosas son el mismo hecho —la plataforma hablando sin apuntar a ningún
-lado— y por la regla 9 salen de la misma fuente: `--acento`. **No existe `--informativo`
-aparte**; un segundo azul sería justo el color que esta cláusula impide. La dirección la
-llevan los otros tres, y solo ellos.
+carga— es identidad; en un dato es **información neutra, sin dirección**. Las dos cosas
+son el mismo hecho —la plataforma hablando sin apuntar a ningún lado— y por la regla 9
+salen de la misma fuente: `--acento`. **No existe `--informativo` aparte**; un segundo
+azul sería justo el color que esta cláusula impide. La dirección la llevan los otros
+tres, y solo ellos.
+
+El marcador de sección —`.etiqueta-superior`, el rótulo pequeño sobre cada `h1`— salió de
+esta lista: decisión de producto explícita, revertida a propósito. Ningún rótulo superior
+vuelve a llevar `--acento`; se queda en `--tinta-mate`, igual que cualquier otro texto
+editorial. No es un hueco para colar el acento ahí «porque total, es cromo»: quien lo haga
+estaría deshaciendo la decisión, no completándola.
 
 **3 · Distancia mínima entre tonos con significado: ΔE2000 25.** En los dos temas, y
 `tests/paleta.js` lo afirma. Se escribió primero en grados de tono —45°— y estaba mal: el
@@ -186,9 +192,26 @@ abajo—.
 No anima, explícitamente: reordenar o filtrar cartera o cotizaciones —se repinta al
 instante, es dato que el usuario lee para decidir—; ningún contador ascendente en cifras
 que se repintan en cada visita o refresco —**salvo la excepción documentada de las tres
-métricas del Hero, más abajo**—; parallax o cursor personalizado en el hero —ya prohibido
-por la cláusula 5—; pausa o rebote del marquee al pasar el ratón —no hay gesto que
-justifique un spring—.
+métricas del Hero, más abajo**—; cursor personalizado en el hero; pausa o rebote del
+marquee al pasar el ratón —no hay gesto que justifique un spring—.
+
+**Revocación documentada: parallax en el fondo del Hero.** La prohibición decía "parallax
+[...] en el hero —ya prohibido por la cláusula 5—", y era una lectura floja de esa
+cláusula: la 5 solo obliga a que el parallax se retire con `prefers-reduced-motion:
+reduce`, en cualquier sitio de la plataforma, no a que el Hero no lleve ninguno. Pedido
+explícitamente después de flagearlo como conflicto: `.manifiesto__imagen`/
+`.manifiesto__video` llevan un parallax nativo por `animation-timeline: view()`, con
+`animation-range: cover 0% cover 100%`, que traslada el fondo una fracción de su propio
+alto mientras la sección cruza el viewport —el texto y los botones del Hero no lo
+acompañan, de ahí la sensación de profundidad—. Convive con el zoom de entrada de arriba
+sin pelearse por la misma propiedad: el zoom anima `scale` y el parallax anima `translate`
+—las dos son propiedades de transformación independientes de CSS Transforms Level 2, no
+la abreviatura `transform`—, así que ninguna sobrescribe a la otra. Sigue dentro de
+`@media (prefers-reduced-motion: no-preference)`: con movimiento reducido el fondo se
+queda quieto, igual que en cualquier otro parallax de la casa (Vitrina de tesis). Quien
+retome la prohibición general de parallax en el Hero debería revertir este párrafo
+explícitamente, no dar por hecho que la cláusula 5 ya lo cubre —la lectura que motivó
+esta revocación es la prueba de que no es evidente por sí sola.
 
 **Excepción documentada: el cambio de valor en la cinta.** No usa `--mov-entrada` ni
 `--mov-estado`, y no es un olvido. `ticker-valor-sale`/`ticker-valor-entra`
@@ -225,6 +248,43 @@ más peso editorial —la casa hablando más alto, ya lo dice la cláusula 6—,
 mismo criterio que ya sostiene al contador existente. Quien active este contador en un
 futuro refresco periódico de estas cifras —si algún día lo hubiera— estaría reintroduciendo
 el caso que la prohibición general prohíbe, no extendiendo esta excepción.
+
+**Excepción documentada: las diez celdas del resumen de capital de Cartera.** Llevan un
+contador que corre cuando —y SOLO cuando— la cifra cambió de verdad entre dos sondeos
+reales (`pintarCifraIndicador()`, `app.js`), pedido y confirmado de forma explícita: quería
+las cifras "en vivo y en directo", sin depender de recargar la página. Es la situación
+inversa a la que la prohibición general nombra, no una segunda instancia de ella. La
+prohibición existe contra un contador que sugiera movimiento sobre un repintado que NO
+cambió nada —de ahí que las tres del Hero, arriba, se limiten a no tener refresco
+periódico—; aquí el refresco periódico existe a propósito
+(`programarRefrescoCartera()`, cada `REFRESCO_MS` mientras la sección está abierta y la
+pestaña visible) y el contador solo se dispara si el número de después es distinto del de
+antes: la primera pintura de cada celda, y cualquier repintado que traiga el mismo valor
+—incluido el que dispara un cambio de idioma, que repinta desde lo ya guardado—, se
+escribe de golpe, sin animación. El contador no anima el refresco: anima el cambio, y sin
+un cambio real no corre. Quien lo dispare en cada repintado sin comparar contra el valor
+anterior —quitando la comparación de `pintarCifraIndicador()`— estaría reintroduciendo el
+caso que la prohibición general prohíbe.
+
+**Excepción documentada: el zoom de entrada de la foto del Hero.** `.manifiesto__imagen` y
+`.manifiesto__video` entran a `scale(1.05)` y se asientan en `scale(1)` en 900ms con
+`var(--mov-entrada)` (`estilos.css`), disparado una sola vez cuando `cargarMarca()`
+(`app.js`) quita `hidden` tras precargar el fichero real. No es el parallax que esta
+cláusula prohíbe por nombre para el Hero: el parallax liga la posición al recorrido de
+scroll y se repite en cada píxel que el usuario baja o sube; este zoom no escucha el
+scroll en absoluto —corre una vez, al montar, y termina— y es del mismo género que la
+entrada de un modal (cláusula 8, más arriba) o que el barrido del trazado de
+`dibujarSerie()` en `inicio.js`: una transición de llegada puntual, no un recorrido
+continuo atado a la posición de la página. La prohibición existe contra el efecto que
+convierte el gesto de leer en una fuente de movimiento —el mismo scroll que usa el
+visitante para avanzar mueve también la foto—; aquí el visitante no controla nada del
+gesto, así que no aplica. Usa `transition-behavior: allow-discrete` + `@starting-style`
+—el mismo mecanismo que ya anima la salida de `display:none` en otras piezas de la
+Home—, y queda dentro de `@media (prefers-reduced-motion: no-preference)`: con movimiento
+reducido la foto aparece directamente en `scale(1)`, sin zoom que retirar porque nunca
+llegó a declararse. Quien lo dispare más de una vez por visita, o lo ligue a scroll o a
+`IntersectionObserver`, estaría reintroduciendo el parallax que la cláusula prohíbe, no
+extendiendo esta excepción.
 
 **Reglas verificables:**
 

@@ -16,3 +16,14 @@ data/copias/
 # El script .claude/auto-push.sh SI se versiona; lo que no viaja es la
 # decision de tenerlo encendido, que es por maquina.
 .claude/settings.local.json
+
+# Skills de agentes IA instaladas en local (npx skills add / impeccable install).
+# Herramientas de entorno personal, no parte del proyecto compartido: quien
+# las necesite las instala con los mismos comandos.
+.agents/
+.claude/skills/
+.codex/
+.github/agents/
+.impeccable/
+skills-lock.json
+QUANTUM/
