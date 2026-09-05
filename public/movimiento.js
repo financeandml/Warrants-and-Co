@@ -102,3 +102,68 @@ export function revelar(nodo, retardo = 0) {
   observarEntrada(nodo);
   return nodo;
 }
+
+/**
+ * Efecto imán: un botón se deja atraer un poco por el cursor dentro de un
+ * radio, y vuelve a su sitio con rebote de muelle real al soltarlo.
+ *
+ * Escucha en el CONTENEDOR, no en cada botón — el imán tira ANTES de que el
+ * cursor lo toque, que es lo que distingue un imán de un hover corriente. El
+ * desplazamiento no se escribe en `style.transform` directamente: se calcula
+ * en JS (distancia del cursor al centro, acotada a `maximo` px) y se publica
+ * en dos variables propias del botón, `--tx`/`--ty`, con `setProperty()` — el
+ * propio `transform: translate(var(--tx,0px), var(--ty,0px))` vive en
+ * `estilos.css`, no aquí. Es la misma variable la que lee y escribe el MISMO
+ * elemento, nunca un padre calculando el `transform` de un hijo (esa práctica
+ * sí dispara un recálculo de estilo en cascada; esta no).
+ *
+ * Sin transición mientras seguimos al cursor —seguirlo con un retardo de
+ * transición lo haría sentir pastoso— y una transición con rebote SOLO al
+ * soltar, que es el único momento con "gesto que termina" (Cláusula de
+ * interrupción del skill de animación): `--mov-resorte`, un `linear()` que
+ * muestrea un oscilador amortiguado real, la misma curva que ya usa la
+ * tarjeta de la Vitrina — ningún cubic-bezier ni curva nueva. Nunca por
+ * debajo de `hover:hover and pointer:fine` ni con movimiento reducido: en
+ * táctil no hay "acercarse" y con movimiento reducido el gesto físico es
+ * justo lo que se retira.
+ */
+export function activarImantados(contenedorSelector, botonSelector, { radio = 80, fuerza = 0.34, maximo = 9 } = {}) {
+  if (sinMovimiento() || !window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  const contenedor = document.querySelector(contenedorSelector);
+  if (!contenedor) return;
+
+  const acotar = (v, lim) => Math.max(-lim, Math.min(lim, v));
+
+  const soltar = (boton) => {
+    boton.dataset.imantado = 'false';
+    // Dos propiedades, la misma curva de muelle: `box-shadow` va aquí y no
+    // solo en la hoja de estilos porque este `transition` inline —puesto para
+    // que el ARRASTRE no transicione— reemplaza entero al de la hoja mientras
+    // dura, y una lista de una sola propiedad habría dejado la sombra sin
+    // transición propia al soltar.
+    boton.style.transition = 'transform 320ms var(--mov-resorte), box-shadow 320ms var(--mov-resorte)';
+    boton.style.setProperty('--tx', '0px');
+    boton.style.setProperty('--ty', '0px');
+  };
+
+  contenedor.addEventListener('pointermove', (ev) => {
+    for (const boton of contenedor.querySelectorAll(botonSelector)) {
+      const r = boton.getBoundingClientRect();
+      const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      const dx = ev.clientX - cx, dy = ev.clientY - cy;
+      const distancia = Math.hypot(dx, dy);
+      if (distancia > radio) {
+        if (boton.dataset.imantado === 'true') soltar(boton);
+        continue;
+      }
+      boton.dataset.imantado = 'true';
+      boton.style.transition = 'none';
+      boton.style.setProperty('--tx', `${acotar(dx * fuerza, maximo)}px`);
+      boton.style.setProperty('--ty', `${acotar(dy * fuerza, maximo)}px`);
+    }
+  });
+
+  contenedor.addEventListener('pointerleave', () => {
+    for (const boton of contenedor.querySelectorAll(botonSelector)) soltar(boton);
+  });
+}

@@ -748,8 +748,16 @@ function dibujarSerie(svg, datos) {
   const figura = $('#pulse-figura');
   if (!lectura || !figura) return;
 
-  const mover = (ev) => {
-    const caja = svg.getBoundingClientRect();
+  // Caja del SVG: se mide una vez al entrar el puntero, no en cada
+  // `pointermove` — `getBoundingClientRect()` es una lectura de layout y
+  // repetirla en caliente es el mismo coste que `activarBrilloVitrina()` (más
+  // abajo) evita con rAF. El recuadro no cambia mientras el puntero está
+  // dentro, así que una lectura por gesto basta.
+  let caja = null;
+  let pendiente = null;
+
+  const escribir = (ev) => {
+    pendiente = null;
     const proporcion = Math.min(Math.max((ev.clientX - caja.left) / caja.width, 0), 1);
     const i = Math.round(proporcion * (serie.length - 1));
     const p = serie[i];
@@ -775,7 +783,17 @@ function dibujarSerie(svg, datos) {
     lectura.style.left = `${izquierda}px`;
   };
 
+  // Un solo vuelo de rAF por movimiento: si llegan varios `pointermove` antes
+  // de que pinte el frame, solo el último de ellos escribe.
+  const mover = (ev) => {
+    if (!caja) caja = svg.getBoundingClientRect();
+    if (pendiente) cancelAnimationFrame(pendiente);
+    pendiente = requestAnimationFrame(() => escribir(ev));
+  };
+
   const salir = () => {
+    if (pendiente) { cancelAnimationFrame(pendiente); pendiente = null; }
+    caja = null;
     guia.setAttribute('opacity', '0');
     punto.setAttribute('opacity', '0');
     lectura.hidden = true;
@@ -783,6 +801,7 @@ function dibujarSerie(svg, datos) {
     lectura.style.left = '0px';
   };
 
+  figura.addEventListener('pointerenter', () => { caja = svg.getBoundingClientRect(); });
   figura.addEventListener('pointermove', mover);
   figura.addEventListener('pointerleave', salir);
 }
@@ -1093,4 +1112,213 @@ function bloqueSinDatos(titulo, motivo) {
 /** Prepara las cabeceras de sección para que entren con el scroll. */
 export function animarCabeceras() {
   for (const c of document.querySelectorAll('#seccion-inicio .bloque-home__cabecera')) revelar(c);
+}
+
+// ═══════════════════ METODOLOGÍA / LOS TRES ESTADOS (home) ═══════════════
+
+/**
+ * Revela las celdas bento de Metodología y de Los tres estados: son
+ * contenido estático —no dependen de ninguna fuente—, así que se marcan en
+ * el propio HTML con `data-revelar` y su retardo, si lleva, en `data-retardo`.
+ * El retardo se traduce aquí a la llamada real de `revelar()` — nunca se
+ * declara dos veces, en el atributo Y en una variable CSS suelta.
+ */
+export function animarBentoEstatico() {
+  for (const nodo of document.querySelectorAll(
+    '#home-metodologia [data-revelar], #home-estados [data-revelar]'
+  )) {
+    revelar(nodo, Number(nodo.dataset.retardo) || 0);
+  }
+}
+
+// ═══════════════════════ CIFRAS EN VIVO (home) ═══════════════════════════
+
+/**
+ * Tres celdas: sesiones de histórico real, tesis publicadas y estado del
+ * suelo estadístico de Sharpe/Sortino/Calmar/alfa —el más exigente de los
+ * dos—. Las dos primeras y la tercera salen de `cartera.estadisticos`, la
+ * MISMA respuesta que ya usan la cinta, el Hero y Cartera (Regla 9: ningún
+ * cálculo aparte); `totalTesis` llega ya resuelto de `cargarInicio()`, que lo
+ * pide una vez a `/api/informes`. Sin cartera o sin histórico, la celda dice
+ * que no hay dato — nunca un cero de relleno (Regla 1).
+ */
+export function pintarCifrasHome(cartera, totalTesis) {
+  const raiz = $('#bento-cifras');
+  if (!raiz) return;
+  raiz.textContent = '';
+
+  const e = cartera?.estadisticos;
+
+  const celda = (clase, cifra, etiqueta) => {
+    const c = elemento('article', `bento-cifras__celda ${clase}`.trim());
+    c.setAttribute('data-revelar', '');
+    c.appendChild(elemento('p', 'bento-cifras__cifra', cifra));
+    c.appendChild(elemento('p', 'bento-cifras__etiqueta', etiqueta));
+    return c;
+  };
+
+  raiz.appendChild(celda(
+    'bento-cifras__celda--grande',
+    Number.isFinite(e?.sesiones) ? formatearNumero(e.sesiones, 0) : noDisponible(),
+    t('inicio.cifras.sesiones.etiqueta'),
+  ));
+
+  raiz.appendChild(celda(
+    '',
+    Number.isFinite(totalTesis) ? formatearNumero(totalTesis, 0) : noDisponible(),
+    t('inicio.cifras.tesis.etiqueta'),
+  ));
+
+  /* La cifra grande lleva SOLO el número —igual que las otras dos celdas—;
+     la sentencia completa no cabe en `--tipo-7` sin partirse a media palabra.
+     Alcanzado el suelo, la cifra pasa a ser la palabra misma: no hay número
+     que mostrar y no se inventa uno. */
+  const suelo = e?.muestra?.suelos?.ratios;
+  const alcanzado = suelo && suelo.restantes <= 0;
+  const cifraSuelo = !suelo
+    ? noDisponible()
+    : alcanzado ? t('inicio.cifras.suelo.alcanzado') : formatearNumero(suelo.restantes, 0);
+  const etiquetaSuelo = !suelo
+    ? t('inicio.cifras.suelo.etiqueta')
+    : alcanzado ? t('inicio.cifras.suelo.etiqueta') : t('inicio.cifras.suelo.faltan');
+  raiz.appendChild(celda('', cifraSuelo, etiquetaSuelo));
+
+  for (const nodo of raiz.querySelectorAll('[data-revelar]')) revelar(nodo);
+}
+
+// ═══════════════════════ VITRINA DE TESIS (home) ═══════════════════════
+
+/**
+ * "Galería de proyectos" del encargo, mapeada a lo que el producto tiene de
+ * verdad: tesis de inversión ya publicadas, con sus compañías reales. Cada
+ * tarjeta abre el mismo diálogo de detalle que el resto de la plataforma
+ * (`alAbrir`, hoy `abrirDetalle()` de `app.js` — Regla 9: un solo mecanismo
+ * de apertura, no uno nuevo para esta vista).
+ *
+ * Sin vídeo de portada (`tieneVideoPortada`), la tarjeta intenta el logotipo
+ * local de la compañía —`/assets/logos/<TICKER>.svg`, servido por el propio
+ * origen, nunca un CDN (CSP)— y solo si ese fichero no existe cae al mismo
+ * lenguaje de marca de agua tipográfica que ya usa `.tarjeta-compania` en
+ * Companies. Ninguno de los dos casos fabrica un logo ni una foto que no
+ * exista (Regla 1): el fichero lo deposita quien mantiene la marca en
+ * `public/assets/logos/`, igual que el banner en `public/marca/`.
+ */
+/**
+ * El "medio" de una tarjeta sin vídeo: intenta el logo local de la
+ * compañía y, si el fichero no existe (404, o el ticker es una compañía sin
+ * logo depositado — hoy, p. ej., una biotech pequeña), sustituye el propio
+ * nodo por el monograma tipográfico. `onerror` se asigna como propiedad del
+ * elemento, no como atributo `onerror=""` del marcado —lo segundo violaría
+ * la CSP (sin `onclick=`/manejadores en línea); asignarlo desde el script
+ * cargado por `'self'` no la toca—.
+ */
+function marcaOLogo(inf) {
+  if (!inf.ticker) return elemento('p', 'vitrina-tesis__marca', (inf.empresa || '?').charAt(0));
+
+  const chip = elemento('div', 'vitrina-tesis__logo-chip');
+  const logo = elemento('img', 'vitrina-tesis__logo');
+  logo.alt = '';
+  logo.setAttribute('aria-hidden', 'true');
+  logo.loading = 'lazy';
+  logo.decoding = 'async';
+  logo.src = `/assets/logos/${encodeURIComponent(inf.ticker)}.svg`;
+  logo.onerror = () => {
+    chip.replaceWith(elemento('p', 'vitrina-tesis__marca', (inf.ticker || inf.empresa || '?').charAt(0)));
+  };
+  chip.appendChild(logo);
+  return chip;
+}
+
+export function pintarVitrinaTesis(informes, alAbrir) {
+  const seccion = $('#home-vitrina');
+  const raiz = $('#vitrina-tesis');
+  if (!raiz || !seccion) return;
+  raiz.textContent = '';
+
+  const lista = (informes ?? []).slice(0, 6);
+  seccion.hidden = lista.length === 0;
+  if (!lista.length) return;
+
+  for (const inf of lista) {
+    const tarjeta = elemento('article', 'vitrina-tesis__tarjeta');
+    tarjeta.setAttribute('role', 'button');
+    tarjeta.setAttribute('tabindex', '0');
+    tarjeta.setAttribute('data-revelar', '');
+    const etiquetaAbrir = t('inicio.vitrina.abrir', { empresa: inf.empresa });
+    tarjeta.setAttribute('aria-label', etiquetaAbrir);
+
+    const medio = elemento('div', 'vitrina-tesis__medio');
+    if (inf.tieneVideoPortada) {
+      const video = elemento('video', 'vitrina-tesis__video');
+      video.muted = true; video.loop = true; video.autoplay = true; video.playsInline = true;
+      video.src = `/api/informes/${inf.id}/video`;
+      if (sinMovimiento()) { video.autoplay = false; video.removeAttribute('autoplay'); }
+      medio.appendChild(video);
+    } else {
+      // El césped es la excepción documentada de DESIGN.md a The Monochrome
+      // Register Rule, acotada a esta tarjeta — capa propia, separada del
+      // logo/monograma, para que el parallax de más abajo pueda mover el
+      // fondo sin arrastrar el chip que sí debe quedarse quieto encima.
+      medio.appendChild(elemento('div', 'vitrina-tesis__fondo'));
+      medio.appendChild(marcaOLogo(inf));
+    }
+    medio.appendChild(elemento('div', 'vitrina-tesis__velo'));
+    tarjeta.appendChild(medio);
+    tarjeta.appendChild(elemento('div', 'vitrina-tesis__brillo'));
+
+    const texto = elemento('div', 'vitrina-tesis__texto');
+    texto.appendChild(elemento('p', 'vitrina-tesis__ticker', inf.ticker || noDisponible()));
+    texto.appendChild(elemento('p', 'vitrina-tesis__empresa', inf.empresa));
+    const meta = [inf.sector, inf.tipo_informe].filter(Boolean).join(' · ');
+    if (meta) texto.appendChild(elemento('p', 'vitrina-tesis__meta', meta));
+    // Texto adicional real, revelado solo al pasar el ratón — nunca inventado:
+    // es `resumen_ejecutivo`, recortado, no una frase redactada aquí.
+    const resumen = recorte(inf.resumen_ejecutivo, 140);
+    if (resumen) texto.appendChild(elemento('p', 'vitrina-tesis__resumen', resumen));
+    tarjeta.appendChild(texto);
+
+    const abrir = () => alAbrir?.(inf.id);
+    tarjeta.addEventListener('click', abrir);
+    tarjeta.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); abrir(); }
+    });
+
+    raiz.appendChild(tarjeta);
+  }
+
+  for (const nodo of raiz.querySelectorAll('[data-revelar]')) revelar(nodo);
+  activarBrilloVitrina(raiz);
+}
+
+/** Recorta por palabra completa, nunca a media palabra. `null` si no hay texto. */
+function recorte(texto, limite) {
+  if (!texto) return null;
+  const plano = String(texto).trim();
+  if (plano.length <= limite) return plano;
+  return `${plano.slice(0, limite).replace(/\s+\S*$/, '')}…`;
+}
+
+/**
+ * Brillo que sigue al ratón: escribe `--mx`/`--my` (posición en % dentro de
+ * la tarjeta) en cada `pointermove`, acotado a un fotograma por movimiento
+ * con `requestAnimationFrame` — nunca un `transform` recalculado en el
+ * padre para el hijo (evitaría el recálculo en cascada), solo una custom
+ * property que el propio `::` de `.vitrina-tesis__brillo` ya consume en CSS.
+ * Sin ratón de precisión no se escucha nada: no hay posición continua que
+ * seguir en táctil.
+ */
+function activarBrilloVitrina(raiz) {
+  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
+  let pendiente = null;
+  raiz.addEventListener('pointermove', (ev) => {
+    const tarjeta = ev.target.closest('.vitrina-tesis__tarjeta');
+    if (!tarjeta) return;
+    if (pendiente) return;
+    pendiente = requestAnimationFrame(() => {
+      pendiente = null;
+      const r = tarjeta.getBoundingClientRect();
+      tarjeta.style.setProperty('--mx', `${((ev.clientX - r.left) / r.width) * 100}%`);
+      tarjeta.style.setProperty('--my', `${((ev.clientY - r.top) / r.height) * 100}%`);
+    });
+  });
 }

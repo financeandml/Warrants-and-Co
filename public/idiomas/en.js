@@ -166,6 +166,46 @@ export default {
   // ── Home · market ticker ──
   'inicio.ticker.etiqueta': 'Market quotes',
 
+  // ── Home · methodology ──
+  'inicio.metodologia.etiqueta': 'Methodology',
+  'inicio.metodologia.titulo': 'How the portfolio is built',
+  'inicio.metodologia.regla.cifra': '100%',
+  'inicio.metodologia.regla.texto': 'of the portfolio is derived from published theses. No position is ever declared apart from the report history.',
+  'inicio.metodologia.tramos.titulo': 'Fixed tranches',
+  'inicio.metodologia.tramos.detalle': 'Every thesis enters with the same allocated capital. No rebalancing afterward.',
+  'inicio.metodologia.takeprofit.titulo': 'Automatic take profit',
+  'inicio.metodologia.takeprofit.detalle': 'Once the target price is reached, the position closes itself. No manual intervention on the result.',
+  'inicio.metodologia.suelos.titulo': 'Statistical floors',
+  'inicio.metodologia.suelos.detalle': '252 sessions for annualized return, 756 for Sharpe and Sortino — the profession\'s minimum, not a choice of ours.',
+
+  // ── Home · live figures ──
+  'inicio.cifras.etiqueta': 'Engine status',
+  'inicio.cifras.titulo': 'Live figures, not brochure copy',
+  'inicio.cifras.nota': 'Every figure below is computed by the same engine that runs the portfolio. None of them is drafted separately.',
+  'inicio.cifras.sesiones.etiqueta': 'Sessions of real track record',
+  'inicio.cifras.tesis.etiqueta': 'Investment theses published',
+  'inicio.cifras.suelo.etiqueta': 'Sharpe/Sortino statistical floor',
+  'inicio.cifras.suelo.alcanzado': 'Reached',
+  'inicio.cifras.suelo.faltan': 'Sessions left for the floor',
+
+  // ── Home · the three states ──
+  'inicio.estados.etiqueta': 'Data discipline',
+  'inicio.estados.titulo': 'Three states, never a made-up one',
+  'inicio.estados.hayDato.nombre': 'There is data',
+  'inicio.estados.hayDato.ejemplo': '12.4%',
+  'inicio.estados.hayDato.detalle': 'A real figure, with its source, ready to be cited.',
+  'inicio.estados.esCero.nombre': 'The data is zero',
+  'inicio.estados.esCero.ejemplo': '0.0%',
+  'inicio.estados.esCero.detalle': 'A real, measured zero is not the same as a gap. It is shown as it is.',
+  'inicio.estados.noHay.nombre': 'There is no data',
+  'inicio.estados.noHay.detalle': 'No provider publishes it. It is labeled as such — never filled in with an estimate.',
+
+  // ── Home · thesis showcase ──
+  'inicio.vitrina.etiqueta': 'Research',
+  'inicio.vitrina.titulo': 'Published theses',
+  'inicio.vitrina.enlace': 'View the repository',
+  'inicio.vitrina.abrir': 'Open the {empresa} thesis',
+
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',
   'inicio.pulse.titulo': 'Market pulse',
@@ -495,13 +535,10 @@ export default {
   'cartera.pie.fuente': 'Market data: {fuentes}. Last updated: {momento}.',
 
   // ═════════════════════ Portfolio · capital summary ═════════════════════
-  'cartera.resumen.titulo': 'Capital summary',
-  'cartera.resumen.subtitulo': 'How much capital is committed and where the return comes from',
   'cartera.resumen.vacio.titulo': 'No summary to publish',
   'cartera.resumen.vacio.motivo': 'The portfolio has no positions constituted yet.',
   'cartera.resumen.retorno': 'Portfolio return',
   'cartera.resumen.retorno.nota': 'On invested capital',
-  'cartera.resumen.bruto': 'Gross return, not adjusted for transaction costs.',
   'cartera.resumen.realizado': 'Realized return',
   'cartera.resumen.realizado.nota': 'Sum of the contribution of closed positions',
   'cartera.resumen.realizado.vacio': 'No closed position yet',
@@ -510,6 +547,12 @@ export default {
   'cartera.resumen.noRealizado.vacio': 'No open position yet',
   'cartera.resumen.capital': 'Capital deployed',
   'cartera.resumen.capital.nota': 'Fraction of capital committed to positions',
+  'cartera.distribucionCapital.titulo': 'Portfolio Distribution',
+  'cartera.distribucionCapital.subtitulo': 'Capital deployed into positions against what has not been committed yet, on entry weight.',
+  'cartera.distribucionCapital.pendiente': 'Not yet deployed',
+  'cartera.distribucionCapital.descripcion': 'Capital distribution: {partes}.',
+  'cartera.distribucionCapital.vacio.titulo': 'No capital to break down',
+  'cartera.distribucionCapital.vacio.motivo': 'Deployed capital is not available yet.',
   'cartera.resumen.roic': 'ROIC',
   'cartera.resumen.roic.nota': 'Return on capital deployed',
   'cartera.resumen.roic.vacio': 'No capital deployed to divide by',
@@ -517,6 +560,10 @@ export default {
   'cartera.resumen.abiertas.nota': 'Live theses in the portfolio',
   'cartera.resumen.cerradas': 'Closed positions',
   'cartera.resumen.cerradas.nota': 'Liquidated theses',
+  'cartera.resumen.comprometido': 'Committed capital',
+  'cartera.resumen.comprometido.nota': 'Of total capital',
+  'cartera.resumen.exposicion': 'Net exposure',
+  'cartera.resumen.exposicion.nota': 'Uncommitted capital',
 
   // ═══════════════════════ Portfolio · dashboard ═══════════════════════
   'cartera.indicador.rentabilidad': 'Cumulative return',
@@ -541,15 +588,6 @@ export default {
 
   // ══════════════════════════ Portfolio · chart ══════════════════════════
   'cartera.grafico.titulo': 'Return performance',
-  'cartera.grafico.subtitulo': 'Indexed value · base 100 = invested capital',
-  'cartera.grafico.subtitulo.serie': {
-    one: 'Indexed value · base 100 at {fecha} · {n} session',
-    other: 'Indexed value · base 100 at {fecha} · {n} sessions',
-  },
-  'cartera.grafico.subtitulo.completa': {
-    one: 'Indexed value · base {base} = invested capital · {n} session',
-    other: 'Indexed value · base {base} = invested capital · {n} sessions',
-  },
   'cartera.grafico.opciones': 'Chart options',
   'cartera.grafico.periodo': 'Period',
   'cartera.grafico.rango.max': 'Max',
@@ -562,11 +600,7 @@ export default {
   'cartera.grafico.buscar.sinDatos': '{simbolo} — no data available. Check the symbol.',
   'cartera.grafico.buscar.limite': '4 comparisons are already active — remove one to add another.',
   'cartera.grafico.buscar.repetido': '{simbolo} is already in the comparison.',
-  'cartera.grafico.desglose.titulo': 'Position breakdown',
-  'cartera.grafico.desglose.caption': 'Weight and contribution of each position',
   'cartera.leyenda.cartera': 'Warrants & Co. portfolio',
-  'cartera.leyenda.medida.total': 'Measured from invested capital · this is the total return',
-  'cartera.leyenda.medida.rango': 'Measured from the start of the range, {fecha} · not the total return',
 
   'cartera.serie.caption': 'Historical series of the portfolio and the active benchmarks',
   'cartera.serie.fecha': 'Date',
@@ -589,8 +623,6 @@ export default {
   'cartera.posiciones.titulo': 'Portfolio composition',
   'cartera.posiciones.subtitulo': 'Current weight: how much each position is worth today against portfolio value, cash included · quotes refreshed on every page load',
   'cartera.posiciones.caption': 'Breakdown of portfolio positions',
-  'cartera.col.valor': 'Holding',
-  'cartera.col.peso': 'Current weight',
   'cartera.col.alta': 'Opened',
   'cartera.col.compra': 'Entry',
   'cartera.col.cotizacion': 'Last',
@@ -602,7 +634,6 @@ export default {
   'cartera.col.recomendacion': 'Recommendation',
   'cartera.col.estado': 'Status',
   'cartera.col.actual': 'Current/Exit',
-  'cartera.col.contribucion': 'Contribution',
   'cartera.estado.abierta': 'Open',
   'cartera.estado.cerrada': 'Closed',
   'cartera.fila.desplegar': 'Detail for {ticker}',
@@ -610,7 +641,6 @@ export default {
   'cartera.fila.detalle.cierre': 'Exit date',
   'cartera.recorrido.title': '{avance} of the path to take profit',
 
-  'cartera.mov.rendimiento': 'Performance',
   'cartera.mov.composicion': 'Composition',
   'cartera.mov.procedencia': 'Attribution',
   'cartera.anillo.titulo': 'Portfolio breakdown',
@@ -788,6 +818,8 @@ export default {
   'codigo.SIN_SERIE_HISTORICA': 'No historical series available for this instrument.',
   'codigo.FORMATO_INFORME_NO_ADMITIDO':
     'Format not supported. Only PDF, Word and Excel files are accepted.',
+  'codigo.FORMATO_VIDEO_NO_ADMITIDO':
+    'Format not supported. Only MP4 and WebM files are accepted.',
   'codigo.COMPANIA_NO_CUBIERTA': 'This company is not under coverage.',
 
   // ═══════════════════════════ Analyst access ═════════════════════════════

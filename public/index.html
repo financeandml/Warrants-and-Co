@@ -67,8 +67,19 @@
          oculto y la secuencia pasa directa de la cabecera a la cinta —hoy
          sin nada de texto que la sustituya, a diferencia de D.9. -->
     <div class="manifiesto">
+      <!-- El visual admite foto O vídeo, nunca los dos a la vez: `cargarMarca()`
+           revela uno solo, según lo que `/api/marca` resuelva. El vídeo es mudo,
+           en bucle y sin controles —fondo, nunca contenido que reclame atención
+           propia (Cláusula 5)— y `prefers-reduced-motion` lo congela en su primer
+           fotograma en vez de reproducirlo (ver `estilos.css`). El filtro de
+           desaturación es del propio contenedor, no del fichero: cualquier foto o
+           vídeo que se deposite entra ya al registro monocromo de la casa
+           (`DESIGN.md`, The Monochrome Register Rule), sin depender de que quien
+           lo suba lo entregue ya en blanco y negro. -->
       <div class="manifiesto__visual" id="hero-visual" hidden>
         <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">
+        <video class="manifiesto__imagen manifiesto__video" id="hero-video"
+               muted loop autoplay playsinline hidden></video>
         <!-- Fase D.12: las tres cifras de rendimiento del fondo — la misma
              fuente que ya pinta `#home-cartera`, nunca un
              cálculo aparte (Regla 9). `hidden` hasta que `pintarMetricasHero()`
@@ -97,6 +108,141 @@
          data-i18n-attr="aria-label:inicio.ticker.etiqueta" aria-label="Cotizaciones de mercado">
       <div class="ticker__pista" id="ticker-pista"></div>
     </div>
+
+    <!-- ═══════════════════ METODOLOGÍA (bento asimétrico) ═════════════════
+         Una sola idea: las reglas MECÁNICAS de la cartera, no un argumento de
+         venta. Distinto de "Cifras en vivo" (estado ahora mismo) y de "Los tres
+         estados" (disciplina del dato): este bloque dice CÓMO se construye,
+         nada más. Contenido real, ya documentado en README/CLAUDE.md — no se
+         redacta nada nuevo, se presenta lo que ya rige el motor. -->
+    <section class="bloque-home bloque-home--metodologia" id="home-metodologia" aria-labelledby="titulo-home-metodologia">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.metodologia.etiqueta">Metodología</p>
+            <h2 id="titulo-home-metodologia" class="bloque-home__titulo"
+                data-i18n="inicio.metodologia.titulo">Cómo se construye la cartera</h2>
+          </div>
+        </header>
+        <div class="bento-metodologia">
+          <article class="bento-metodologia__celda bento-metodologia__celda--grande" data-revelar>
+            <p class="bento-metodologia__cifra" data-i18n="inicio.metodologia.regla.cifra">100%</p>
+            <p class="bento-metodologia__texto" data-i18n="inicio.metodologia.regla.texto">
+              de la cartera se deriva de tesis publicadas. Ninguna posición se declara aparte del historial de informes.
+            </p>
+          </article>
+          <article class="bento-metodologia__celda" data-revelar data-retardo="70">
+            <p class="bento-metodologia__titulo" data-i18n="inicio.metodologia.tramos.titulo">Tramos fijos</p>
+            <p class="bento-metodologia__detalle" data-i18n="inicio.metodologia.tramos.detalle">
+              Cada tesis entra con el mismo capital asignado. Sin rebalanceo posterior.
+            </p>
+          </article>
+          <article class="bento-metodologia__celda" data-revelar data-retardo="140">
+            <p class="bento-metodologia__titulo" data-i18n="inicio.metodologia.takeprofit.titulo">Take profit automático</p>
+            <p class="bento-metodologia__detalle" data-i18n="inicio.metodologia.takeprofit.detalle">
+              Al alcanzar el precio objetivo, la posición se cierra sola. Sin intervención manual sobre el resultado.
+            </p>
+          </article>
+          <article class="bento-metodologia__celda" data-revelar data-retardo="210">
+            <p class="bento-metodologia__titulo" data-i18n="inicio.metodologia.suelos.titulo">Suelos estadísticos</p>
+            <p class="bento-metodologia__detalle" data-i18n="inicio.metodologia.suelos.detalle">
+              252 sesiones para rentabilidad anualizada, 756 para Sharpe y Sortino — el mínimo del oficio, no una elección propia.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ CIFRAS EN VIVO (bento asimétrico) ═══════════════
+         Distinto de Metodología: aquí no hay reglas, hay ESTADO — lo que el
+         motor puede demostrar hoy mismo. Las tres cifras salen de
+         `datosInicio.cartera` (ya cargado para la cinta y el hero, Regla 9: la
+         misma fuente, ninguna petición nueva) y de un cuarto dato — el total de
+         tesis publicadas — pedido una vez a `/api/informes?limite=1`. Si la
+         fuente no responde, la celda dice que no hay dato: nunca un cero de
+         relleno (Regla 1). -->
+    <section class="bloque-home bloque-home--cifras" id="home-cifras" aria-labelledby="titulo-home-cifras">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.cifras.etiqueta">Estado del motor</p>
+            <h2 id="titulo-home-cifras" class="bloque-home__titulo"
+                data-i18n="inicio.cifras.titulo">Cifras en vivo, no de folleto</h2>
+          </div>
+        </header>
+        <p class="bento-cifras__nota" data-i18n="inicio.cifras.nota">
+          Cada cifra de abajo la calcula el mismo motor que la cartera. Ninguna se redacta aparte.
+        </p>
+        <div class="bento-cifras" id="bento-cifras" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ LOS TRES ESTADOS (editorial, sin datos) ══════════════
+         Tercera idea, distinta de las otras dos: no es CÓMO se construye ni
+         CUÁNTO hay ahora — es POR QUÉ se puede confiar en lo que se muestra.
+         Contenido estático, tomado literal de la Regla 2 de CLAUDE.md; no
+         necesita fuente porque no afirma ningún dato, describe la disciplina
+         con la que se tratan todos. -->
+    <section class="bloque-home bloque-home--estados" id="home-estados" aria-labelledby="titulo-home-estados">
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.estados.etiqueta">Disciplina del dato</p>
+            <h2 id="titulo-home-estados" class="bloque-home__titulo"
+                data-i18n="inicio.estados.titulo">Tres estados, nunca uno inventado</h2>
+          </div>
+        </header>
+        <div class="franja-estados">
+          <article class="franja-estados__celda" data-revelar>
+            <p class="franja-estados__glifo" aria-hidden="true" data-i18n="inicio.estados.hayDato.ejemplo">12,4%</p>
+            <p class="franja-estados__nombre" data-i18n="inicio.estados.hayDato.nombre">Hay dato</p>
+            <p class="franja-estados__detalle" data-i18n="inicio.estados.hayDato.detalle">
+              Una cifra real, con su fuente, lista para citarse.
+            </p>
+          </article>
+          <article class="franja-estados__celda" data-revelar data-retardo="70">
+            <p class="franja-estados__glifo" aria-hidden="true" data-i18n="inicio.estados.esCero.ejemplo">0,0%</p>
+            <p class="franja-estados__nombre" data-i18n="inicio.estados.esCero.nombre">El dato es cero</p>
+            <p class="franja-estados__detalle" data-i18n="inicio.estados.esCero.detalle">
+              Un cero real y medido no es lo mismo que un hueco. Se muestra tal cual.
+            </p>
+          </article>
+          <article class="franja-estados__celda" data-revelar data-retardo="140">
+            <p class="franja-estados__glifo" aria-hidden="true">N/A</p>
+            <p class="franja-estados__nombre" data-i18n="inicio.estados.noHay.nombre">No hay dato</p>
+            <p class="franja-estados__detalle" data-i18n="inicio.estados.noHay.detalle">
+              Ningún proveedor lo publica. Se rotula así, nunca se rellena con una estimación.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════ VITRINA DE TESIS (galería editorial) ═════════════
+         "Galería de proyectos" pedida por el encargo, mapeada a contenido real:
+         Warrants & Co. no tiene proyectos, tiene tesis de inversión publicadas
+         (Research) — esto es una vitrina visual de ESO, con las compañías reales
+         de `/api/informes`, nunca una categoría de producto inventada. Cada
+         tarjeta admite un vídeo de portada mudo y en bucle (`tieneVideoPortada`,
+         servido por `/api/informes/:id/video`); sin vídeo, cae a un fondo
+         editorial propio —el mismo lenguaje de marca de agua tipográfica que ya
+         usa `.tarjeta-compania`, nunca una foto de stock inventada. -->
+    <section class="bloque-home bloque-home--vitrina" id="home-vitrina" aria-labelledby="titulo-home-vitrina" hidden>
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.vitrina.etiqueta">Research</p>
+            <h2 id="titulo-home-vitrina" class="bloque-home__titulo"
+                data-i18n="inicio.vitrina.titulo">Tesis publicadas</h2>
+          </div>
+          <a class="enlace-avance" href="#/repositorio" data-ruta>
+            <span data-i18n="inicio.vitrina.enlace">Ver el repositorio</span>
+            <span class="enlace-avance__flecha" aria-hidden="true">→</span>
+          </a>
+        </header>
+        <div class="vitrina-tesis" id="vitrina-tesis" aria-live="polite"></div>
+      </div>
+    </section>
 
     <!-- ══════════════════════════ OPTIONS FLOW ════════════════════════════ -->
     <section class="bloque-home" id="home-flujo" aria-labelledby="titulo-home-flujo" hidden>
@@ -791,35 +937,22 @@
       </div>
 
       <!-- ══ Primera pieza reconstruida: resumen de capital, en dos cajas ══
-           Ocho celdas en total, todas reales y ninguna repetida: retorno,
-           realizada, no realizada, capital desplegado y disponible en la
-           primera caja; ROIC y el recuento de posiciones en la segunda.
+           Diez celdas en total: retorno, realizada, no realizada, capital
+           desplegado y disponible en la primera caja; ROIC, abiertas,
+           cerradas, capital comprometido y exposición neta en la segunda.
            Realizada/no realizada dejan de ir anidadas bajo el retorno y
            pasan a celda propia —decisión revertida a petición explícita,
            comparando con la referencia; siguen apareciendo UNA sola vez en
            pantalla, que es lo que la Regla 9 exige, no dónde se colocan—.
-           Lo que NO está, y no es un olvido: «Capital comprometido» y
-           «Exposición neta» de la referencia, que son capital desplegado y
-           disponible bajo otro nombre —el mismo hecho dos veces, Regla 9—. -->
-      <h2 class="movimiento" data-i18n="cartera.mov.rendimiento">Rendimiento</h2>
-
-      <section class="tarjeta" aria-labelledby="titulo-resumen-portfolio">
-        <div class="tarjeta__cabecera">
-          <div>
-            <h2 id="titulo-resumen-portfolio" data-i18n="cartera.resumen.titulo">Resumen de capital</h2>
-            <p data-i18n="cartera.resumen.subtitulo">Cuánto capital está comprometido y de dónde sale la rentabilidad</p>
-          </div>
-        </div>
+           «Capital comprometido» y «Exposición neta» SÍ se repiten a
+           propósito: son capital desplegado y disponible con el rótulo de
+           la referencia, duplicado confirmado y pedido de forma explícita
+           —no un olvido de la Regla 9, una excepción a ella con nombre—.
+           Sin cabecera propia ni aviso de metodología: retirados a petición
+           explícita, junto con el "Rendimiento" que encabezaba el bloque. -->
+      <section class="tarjeta">
         <div class="cuadro-mando cuadro-mando--caja" id="resumen-portfolio"></div>
         <div class="cuadro-mando cuadro-mando--caja" id="resumen-secundario"></div>
-        <!-- Honesto sobre lo que el motor NO hace: ningún precio de entrada
-             ni de cierre descuenta comisión, spread o coste de transacción
-             alguno (confirmado en src/cartera.js, grep sin resultados sobre
-             comision/fee/gasto/spread). Afirmar "neto de comisiones" sería
-             inventar una metodología que no es la real —regla 1—; esta línea
-             dice la verdad en su lugar. Tinta neutra, nunca --acento: es
-             dato/metodología, no cromo. -->
-        <p class="cuadro-mando__aviso" data-i18n="cartera.resumen.bruto">Rentabilidad bruta, sin ajustar por costes de transacción.</p>
       </section>
 
       <!-- ══ Segunda pieza reconstruida: el gráfico ══
@@ -842,15 +975,19 @@
         <div class="tarjeta__cabecera">
           <div>
             <h2 id="titulo-grafico" data-i18n="cartera.grafico.titulo">Evolución de la rentabilidad</h2>
-            <!-- Dos escritores, y no es descuido: `data-i18n` cubre el rótulo
-                 previo a los datos y `pintarGrafico()` lo sustituye por el que
-                 lleva fecha y número de sesiones en cuanto la serie llega. -->
-            <p id="subtitulo-grafico" data-i18n="cartera.grafico.subtitulo">Valor indexado · base 100 = capital invertido</p>
           </div>
           <div class="controles-grafico" role="group"
                data-i18n-attr="aria-label:cartera.grafico.opciones" aria-label="Opciones del gráfico">
-            <div class="conmutador" role="group"
+            <div class="conmutador conmutador--rango" id="conmutador-rango" role="group"
                  data-i18n-attr="aria-label:cartera.grafico.periodo" aria-label="Periodo">
+              <!-- El relleno sólido del botón activo vive en este indicador, que
+                   se desliza —mismo mecanismo que `#conmutador-ventana-indicador`
+                   en Catalysts (`moverIndicadorVentana()`, `app.js`), medido sobre
+                   `offsetLeft`/`offsetWidth` reales del botón, nunca una cifra fija
+                   (el texto mide distinto en cada idioma). No se inventa un segundo
+                   mecanismo de indicador deslizante (Regla 9); `moverIndicadorRango()`
+                   es la misma técnica aplicada a este grupo. -->
+              <span class="conmutador--rango__indicador" id="conmutador-rango-indicador" aria-hidden="true"></span>
               <!-- 1M, 3M, 6M e YTD son códigos de rango, no palabras: no se traducen.
                    «Máx» sí es una abreviatura de idioma, y lleva su clave. -->
               <button type="button" data-rango="1M">1M</button>
@@ -860,22 +997,32 @@
               <button type="button" data-rango="MAX" class="activo"
                       data-i18n="cartera.grafico.rango.max">Máx</button>
             </div>
-            <!-- Píldoras de benchmark: una por índice del catálogo fijo, pintadas
-                 por `poblarBenchmarks()` desde `datos.benchmarks`, más una por
-                 cada ticker libre que el analista haya añadido esta sesión
-                 (`estado.benchmarksLibres`). El catálogo fijo sigue viniendo
-                 solo del servidor; los libres no se guardan en ningún sitio,
-                 se pierden al recargar — el proveedor no tiene lista blanca
-                 (Yahoo Finance sirve cualquier ticker válido), así que no hace
-                 falta un catálogo nuevo que mantener. Tope de 4 comparaciones
-                 activas a la vez: son las cuatro clases de color/patrón que
-                 ya existían (`CLASES_BENCHMARK`, grafico.js) y no se inventa
-                 una quinta sin verificarla contra la cláusula de ΔE2000. -->
+            <!-- Píldoras de benchmark: nada por defecto —a petición explícita,
+                 `poblarBenchmarks()` ya no pinta el catálogo fijo del servidor
+                 al arrancar—, solo una por cada ticker que el analista añada
+                 esta sesión (`estado.benchmarksLibres`). No se guardan en
+                 ningún sitio, se pierden al recargar — el proveedor no tiene
+                 lista blanca (Yahoo Finance sirve cualquier ticker válido),
+                 así que no hace falta un catálogo que mantener. Tope de 4
+                 comparaciones activas a la vez: son las cuatro clases de
+                 color/patrón que ya existían (`CLASES_BENCHMARK`, grafico.js)
+                 y no se inventa una quinta sin verificarla contra la cláusula
+                 de ΔE2000. -->
             <div class="pastillas-benchmark" id="pastillas-benchmark" role="group"
                  data-i18n-attr="aria-label:cartera.grafico.indice" aria-label="Índice de referencia"></div>
-            <form class="buscador-ticker" id="buscador-ticker">
-              <input type="text" id="campo-ticker-libre" maxlength="12" autocomplete="off"
-                     data-i18n-attr="placeholder:cartera.grafico.buscar.placeholder" placeholder="Ticker libre…">
+            <!-- Combobox ARIA 1.2 (`role="combobox"` + `listbox` propio, sin
+                 `<datalist>`: el nativo no permite estilar la lista ni leer
+                 nombre+mercado en cada fila, solo el símbolo). `aria-expanded`
+                 y `aria-activedescendant` los mantiene `anadirTickerLibre.js`
+                 en `app.js`, nunca a mano en dos sitios (Regla 9). -->
+            <form class="buscador-ticker" id="buscador-ticker" autocomplete="off">
+              <div class="buscador-ticker__combo">
+                <input type="text" id="campo-ticker-libre" maxlength="12" autocomplete="off"
+                       role="combobox" aria-autocomplete="list" aria-expanded="false"
+                       aria-controls="sugerencias-ticker"
+                       data-i18n-attr="placeholder:cartera.grafico.buscar.placeholder" placeholder="Ticker libre…">
+                <ul class="sugerencias-ticker" id="sugerencias-ticker" role="listbox" hidden></ul>
+              </div>
               <button type="submit" data-i18n="cartera.grafico.buscar.anadir">Añadir</button>
             </form>
             <button class="boton boton--texto" type="button" id="btn-tabla-serie" aria-expanded="false"
@@ -886,6 +1033,9 @@
         </div>
         <p class="buscador-ticker__aviso" id="aviso-ticker-libre" role="status" hidden></p>
 
+        <!-- El desglose lateral por posición se retiró a petición explícita;
+             el gráfico pasa a ocupar el ancho completo de la tarjeta —ver
+             `.grafico-cuerpo` en estilos.css, ahora una sola columna. -->
         <div class="grafico-cuerpo">
           <div class="grafico-columna">
             <div class="grafico" id="grafico" role="img" aria-labelledby="titulo-grafico" aria-describedby="descripcion-grafico"></div>
@@ -893,31 +1043,6 @@
 
             <div class="leyenda" id="leyenda-grafico"></div>
           </div>
-
-          <!-- Panel lateral: qué posiciones concretas hay detrás de la cifra
-               agregada del gráfico — nivel de posición, no de cartera. Mismos
-               campos que ya usa `pintarTablaCartera()` (ticker, pesoVigente,
-               contribucionPct): ninguna cifra nueva, ninguna segunda fuente
-               (Regla 9). No repite Realizada/No realizada de la tarjeta de
-               resumen: esa cifra ya tiene su sitio, esta es otra vista del
-               dato —por posición, no por realizado/no realizado. -->
-          <aside class="grafico-desglose" aria-labelledby="titulo-grafico-desglose">
-            <h3 id="titulo-grafico-desglose" data-i18n="cartera.grafico.desglose.titulo">Desglose por posición</h3>
-            <div class="tabla-envoltorio">
-              <table class="tabla-datos" data-densidad="compacta">
-                <caption class="visualmente-oculto"
-                         data-i18n="cartera.grafico.desglose.caption">Peso y contribución de cada posición</caption>
-                <thead>
-                  <tr>
-                    <th scope="col" data-i18n="cartera.col.valor">Valor</th>
-                    <th scope="col" class="num" data-i18n="cartera.col.peso">Peso</th>
-                    <th scope="col" class="num" data-i18n="cartera.col.contribucion">Contribución</th>
-                  </tr>
-                </thead>
-                <tbody id="cuerpo-grafico-desglose"></tbody>
-              </table>
-            </div>
-          </aside>
         </div>
 
         <div class="tabla-serie" id="tabla-serie" data-densidad="comoda" hidden>
@@ -933,6 +1058,24 @@
             </table>
           </div>
         </div>
+      </section>
+
+      <!-- ══ Distribución de la Cartera: capital desplegado vs. pendiente ══
+           Anillo de dos segmentos, junto al gráfico principal. Deliberadamente
+           distinto del futuro "Reparto del patrimonio" por posición —el anillo
+           de `anillo.js`, aún sin hueco propio en este documento, más abajo en
+           la nota de reconstrucción—: aquí solo dos partes, ambas del mismo
+           campo que ya pinta "Capital desplegado" en el resumen de arriba
+           (`resumenPortfolio.capitalDesplegadoPct`) y su complemento aritmético
+           exacto. `pintarDistribucionCapital()` (`app.js`) es null-safe. -->
+      <section class="tarjeta" aria-labelledby="titulo-distribucion-capital">
+        <div class="tarjeta__cabecera">
+          <div>
+            <h2 id="titulo-distribucion-capital" data-i18n="cartera.distribucionCapital.titulo">Distribución de la Cartera</h2>
+            <p data-i18n="cartera.distribucionCapital.subtitulo">Capital desplegado en posiciones frente a lo aún no comprometido, sobre el peso de entrada.</p>
+          </div>
+        </div>
+        <div class="distribucion-capital" id="distribucion-capital"></div>
       </section>
 
       <!-- Cartera en reconstrucción: cada pieza vuelve por separado —diseño,

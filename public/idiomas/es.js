@@ -177,6 +177,46 @@ export default {
   // ── Inicio · cinta de mercado ──
   'inicio.ticker.etiqueta': 'Cotizaciones de mercado',
 
+  // ── Inicio · metodología ──
+  'inicio.metodologia.etiqueta': 'Metodología',
+  'inicio.metodologia.titulo': 'Cómo se construye la cartera',
+  'inicio.metodologia.regla.cifra': '100%',
+  'inicio.metodologia.regla.texto': 'de la cartera se deriva de tesis publicadas. Ninguna posición se declara aparte del historial de informes.',
+  'inicio.metodologia.tramos.titulo': 'Tramos fijos',
+  'inicio.metodologia.tramos.detalle': 'Cada tesis entra con el mismo capital asignado. Sin rebalanceo posterior.',
+  'inicio.metodologia.takeprofit.titulo': 'Take profit automático',
+  'inicio.metodologia.takeprofit.detalle': 'Al alcanzar el precio objetivo, la posición se cierra sola. Sin intervención manual sobre el resultado.',
+  'inicio.metodologia.suelos.titulo': 'Suelos estadísticos',
+  'inicio.metodologia.suelos.detalle': '252 sesiones para rentabilidad anualizada, 756 para Sharpe y Sortino — el mínimo del oficio, no una elección propia.',
+
+  // ── Inicio · cifras en vivo ──
+  'inicio.cifras.etiqueta': 'Estado del motor',
+  'inicio.cifras.titulo': 'Cifras en vivo, no de folleto',
+  'inicio.cifras.nota': 'Cada cifra de abajo la calcula el mismo motor que la cartera. Ninguna se redacta aparte.',
+  'inicio.cifras.sesiones.etiqueta': 'Sesiones de histórico real',
+  'inicio.cifras.tesis.etiqueta': 'Tesis de inversión publicadas',
+  'inicio.cifras.suelo.etiqueta': 'Suelo estadístico de Sharpe/Sortino',
+  'inicio.cifras.suelo.alcanzado': 'Alcanzado',
+  'inicio.cifras.suelo.faltan': 'Sesiones que faltan para el suelo',
+
+  // ── Inicio · los tres estados ──
+  'inicio.estados.etiqueta': 'Disciplina del dato',
+  'inicio.estados.titulo': 'Tres estados, nunca uno inventado',
+  'inicio.estados.hayDato.nombre': 'Hay dato',
+  'inicio.estados.hayDato.ejemplo': '12,4%',
+  'inicio.estados.hayDato.detalle': 'Una cifra real, con su fuente, lista para citarse.',
+  'inicio.estados.esCero.nombre': 'El dato es cero',
+  'inicio.estados.esCero.ejemplo': '0,0%',
+  'inicio.estados.esCero.detalle': 'Un cero real y medido no es lo mismo que un hueco. Se muestra tal cual.',
+  'inicio.estados.noHay.nombre': 'No hay dato',
+  'inicio.estados.noHay.detalle': 'Ningún proveedor lo publica. Se rotula así, nunca se rellena con una estimación.',
+
+  // ── Inicio · vitrina de tesis ──
+  'inicio.vitrina.etiqueta': 'Research',
+  'inicio.vitrina.titulo': 'Tesis publicadas',
+  'inicio.vitrina.enlace': 'Ver el repositorio',
+  'inicio.vitrina.abrir': 'Abrir la tesis de {empresa}',
+
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',
   'inicio.pulse.titulo': 'Pulso de mercado',
@@ -513,18 +553,10 @@ export default {
   // Las siete cifras de `resumenPortfolio`. «Realizada» y «no realizada» usan
   // dos rótulos de nota distintos: uno para cuando hay una cifra que explicar
   // y otro para cuando no hay nada de ese lado todavía —tercer estado, no cero—.
-  'cartera.resumen.titulo': 'Resumen de capital',
-  'cartera.resumen.subtitulo': 'Cuánto capital está comprometido y de dónde sale la rentabilidad',
   'cartera.resumen.vacio.titulo': 'Sin resumen que publicar',
   'cartera.resumen.vacio.motivo': 'La cartera no tiene posiciones constituidas todavía.',
   'cartera.resumen.retorno': 'Rentabilidad de la cartera',
   'cartera.resumen.retorno.nota': 'Sobre el capital invertido',
-  // Verdad sobre la metodología, no una promesa: el motor no descuenta
-  // comisión, spread ni coste de transacción alguno (src/cartera.js, sin
-  // ningún cálculo de ese tipo) — afirmar "neto de comisiones" inventaría
-  // una metodología que no es la real. Tinta neutra en `estilos.css`, nunca
-  // `--acento`: es dato/metodología, no cromo.
-  'cartera.resumen.bruto': 'Rentabilidad bruta, sin ajustar por costes de transacción.',
   // Sin `.nota`/`.vacio`: viven ahora como desglose anidado bajo el retorno
   // (compacto, dos cifras, sin nota explicativa) y en la barra comparativa
   // de abajo — ninguno de los dos sitios tiene espacio editorial para nota.
@@ -536,6 +568,12 @@ export default {
   'cartera.resumen.noRealizado.vacio': 'Ninguna posición abierta todavía',
   'cartera.resumen.capital': 'Capital desplegado',
   'cartera.resumen.capital.nota': 'Fracción del capital comprometida en posiciones',
+  'cartera.distribucionCapital.titulo': 'Distribución de la Cartera',
+  'cartera.distribucionCapital.subtitulo': 'Capital desplegado en posiciones frente a lo aún no comprometido, sobre el peso de entrada.',
+  'cartera.distribucionCapital.pendiente': 'Pendiente de desplegar',
+  'cartera.distribucionCapital.descripcion': 'Distribución del capital: {partes}.',
+  'cartera.distribucionCapital.vacio.titulo': 'Sin capital que repartir',
+  'cartera.distribucionCapital.vacio.motivo': 'No consta el capital desplegado todavía.',
   'cartera.resumen.roic': 'ROIC',
   'cartera.resumen.roic.nota': 'Rentabilidad sobre el capital desplegado',
   'cartera.resumen.roic.vacio': 'Sin capital desplegado que dividir',
@@ -543,6 +581,10 @@ export default {
   'cartera.resumen.abiertas.nota': 'Tesis vivas en cartera',
   'cartera.resumen.cerradas': 'Posiciones cerradas',
   'cartera.resumen.cerradas.nota': 'Tesis liquidadas',
+  'cartera.resumen.comprometido': 'Capital comprometido',
+  'cartera.resumen.comprometido.nota': 'Del capital total',
+  'cartera.resumen.exposicion': 'Exposición neta',
+  'cartera.resumen.exposicion.nota': 'Capital no comprometido',
 
   // ═══════════════════════ Cartera · cuadro de mando ═══════════════════════
   'cartera.indicador.rentabilidad': 'Rentabilidad acumulada',
@@ -567,15 +609,6 @@ export default {
 
   // ══════════════════════════ Cartera · gráfico ══════════════════════════
   'cartera.grafico.titulo': 'Evolución de la rentabilidad',
-  'cartera.grafico.subtitulo': 'Valor indexado · base 100 = capital invertido',
-  'cartera.grafico.subtitulo.serie': {
-    one: 'Valor indexado · base 100 en {fecha} · {n} sesión',
-    other: 'Valor indexado · base 100 en {fecha} · {n} sesiones',
-  },
-  'cartera.grafico.subtitulo.completa': {
-    one: 'Valor indexado · base {base} = capital invertido · {n} sesión',
-    other: 'Valor indexado · base {base} = capital invertido · {n} sesiones',
-  },
   'cartera.grafico.opciones': 'Opciones del gráfico',
   'cartera.grafico.periodo': 'Periodo',
   'cartera.grafico.rango.max': 'Máx',
@@ -592,11 +625,7 @@ export default {
   'cartera.grafico.buscar.sinDatos': '{simbolo} — sin datos disponibles. Compruebe el símbolo.',
   'cartera.grafico.buscar.limite': 'Ya hay 4 comparaciones activas — quite una para añadir otra.',
   'cartera.grafico.buscar.repetido': '{simbolo} ya está en la comparación.',
-  'cartera.grafico.desglose.titulo': 'Desglose por posición',
-  'cartera.grafico.desglose.caption': 'Peso y contribución de cada posición',
   'cartera.leyenda.cartera': 'Cartera Warrants & Co.',
-  'cartera.leyenda.medida.total': 'Medido desde el capital invertido · es la rentabilidad total',
-  'cartera.leyenda.medida.rango': 'Medido desde el inicio del rango, {fecha} · no es la rentabilidad total',
 
   'cartera.serie.caption': 'Serie histórica de la cartera y de los benchmarks activos',
   'cartera.serie.fecha': 'Fecha',
@@ -619,8 +648,6 @@ export default {
   'cartera.posiciones.titulo': 'Composición de la cartera',
   'cartera.posiciones.subtitulo': 'Peso actual: cuánto pesa hoy cada posición sobre el patrimonio, liquidez incluida · cotizaciones actualizadas en cada carga de la página',
   'cartera.posiciones.caption': 'Detalle de las posiciones en cartera',
-  'cartera.col.valor': 'Valor',
-  'cartera.col.peso': 'Peso actual',
   'cartera.col.alta': 'Alta',
   'cartera.col.compra': 'Compra',
   'cartera.col.cotizacion': 'Cotización',
@@ -632,7 +659,6 @@ export default {
   'cartera.col.recomendacion': 'Recomendación',
   'cartera.col.estado': 'Estado',
   'cartera.col.actual': 'Actual/Salida',
-  'cartera.col.contribucion': 'Contribución',
   'cartera.estado.abierta': 'Abierta',
   'cartera.estado.cerrada': 'Cerrada',
   'cartera.fila.desplegar': 'Detalle de {ticker}',
@@ -640,7 +666,6 @@ export default {
   'cartera.fila.detalle.cierre': 'Cierre',
   'cartera.recorrido.title': '{avance} del recorrido hasta el take profit',
 
-  'cartera.mov.rendimiento': 'Rendimiento',
   'cartera.mov.composicion': 'Composición',
   'cartera.mov.procedencia': 'Procedencia',
   'cartera.anillo.titulo': 'Reparto del patrimonio',
@@ -830,6 +855,8 @@ export default {
   'codigo.SIN_SERIE_HISTORICA': 'No hay serie histórica disponible para este instrumento.',
   'codigo.FORMATO_INFORME_NO_ADMITIDO':
     'Formato no admitido. Únicamente se aceptan ficheros PDF, Word y Excel.',
+  'codigo.FORMATO_VIDEO_NO_ADMITIDO':
+    'Formato no admitido. Únicamente se aceptan ficheros MP4 y WebM.',
   'codigo.COMPANIA_NO_CUBIERTA': 'La compañía no figura bajo cobertura.',
 
   // ══════════════════════════ Acceso de analista ═══════════════════════════
