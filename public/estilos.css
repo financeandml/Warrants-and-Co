@@ -2362,6 +2362,14 @@ button, input, select, textarea { font: inherit; color: inherit; }
   inset-inline: 0; inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
   display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px;
 }
+/* Corto a propósito: es el resplandor DETRÁS DE LOS BOTONES, no la costura
+   con la cinta —esa la resuelve `.manifiesto__visual::after`, más arriba,
+   con su propio degradado y sin el riesgo de este veil de pintarse por
+   encima de la cinta (`.manifiesto__acciones` lleva `z-index:1` propio y
+   escapa a compararse con `.ticker` en la raíz en vez de quedarse detrás
+   por ir antes en el DOM). Estirar este offset para tapar el hueco fue un
+   intento fallido: agrandaba el veil entero a un bloque gris demasiado
+   grande Y ademas terminaba pintándose sobre la cinta. */
 .manifiesto__acciones::before {
   content: ''; position: absolute; z-index: -1;
   inset: -72px 0 -20px 0;
@@ -2530,12 +2538,38 @@ button, input, select, textarea { font: inherit; color: inherit; }
   height: calc(100vh - var(--alto-cabecera) - 22px);
   overflow: hidden;
 }
+/* Costura pie de foto → cinta: degradado propio, deliberadamente separado
+   del velo de `.manifiesto__acciones` (justo abajo). Ese velo existe para
+   la legibilidad de los botones y es corto a propósito; estirarlo hasta
+   aquí lo convertía en un bloque gris demasiado grande y, peor, se pintaba
+   POR ENCIMA de la cinta —`.manifiesto__acciones` lleva `z-index:1` propio
+   y escapa a compararse con `.ticker` en la raíz, en vez de quedarse detrás
+   por ir antes en el DOM—. Este `::after` no fija `z-index`: pinta en el
+   orden normal del documento, así que la cinta —que llega después— lo tapa
+   sin más en el tramo que solapa, igual que ya tapa la foto sin tratar. */
+.manifiesto__visual::after {
+  content: ''; position: absolute;
+  inset-inline: 0; inset-block-end: 0;
+  height: 64px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.22), transparent);
+  pointer-events: none;
+}
 /* El árbol vive en la banda 37,3–54,3% del alto del fichero (medido en Fase
    C) y algo a la derecha del centro. `object-position` mantiene esa banda
    centrada en el recorte en vez de dejarla a merced de la proporción de cada
    ventana. */
+/* `bottom: -2px` en vez de heredar el `0` de `inset` de arriba: el fondo
+   lleva un `animation-timeline: view()` (el parallax de más abajo) que en
+   WebKit/Safari lo sube a su propia capa de composición GPU, y esa capa
+   rasteriza con un redondeo de subpíxel propio, distinto del resto del
+   documento — deja una línea clara de 1-2px justo en el borde de recorte,
+   confirmada en WebKit real (Playwright) contra la cinta. `overflow: hidden`
+   en `.manifiesto__visual` sigue recortando estos 2px de más, así que no
+   cambia nada visible; lo que cambia es que el límite de la capa ya no
+   coincide con el límite del recorte, que es donde WebKit dejaba la costura. */
 .manifiesto__imagen {
   position: absolute; inset: 0;
+  bottom: -2px;
   display: block;
   width: 100%; height: 100%;
   object-fit: cover;
