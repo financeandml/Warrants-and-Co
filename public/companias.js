@@ -10,6 +10,7 @@ import {
   $, elemento, formatearNumero, formatearFecha, claseVariacion,
   porcentaje, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
+import { revelar } from './movimiento.js';
 import {
   etiquetaSello, claseSello, etiquetaTipoEvento, etiquetaMotivoCotizacion, etiquetaSector,
   etiquetaRecomendacion,
@@ -358,6 +359,59 @@ export function pintarHubCompanias(datos, alAbrir, cargarSerie = null) {
   pintarRecientesCompanias(companias, alAbrir);
   pintarSectoresCobertura(companias);
   pintarCompanias({ ...datos, companias }, alAbrir, cargarSerie);
+  animarHubCompanias();
+}
+
+/* ¿Ya se hizo la cascada de entrada de la rejilla en esta carga de página?
+   Una sola vez: la primera pintura del hub —nunca en cada tecla de
+   búsqueda—, que es donde una cascada cuenta una historia; repetirla en
+   cada repintado sería el caso que la cláusula de frecuencia prohíbe
+   (decenas de veces por sesión, casi imperceptible o ninguno). */
+let cascadaCompaniasHecha = false;
+
+/**
+ * Cascada de entrada del hub: hero → cabeceras de bloque → primeras tarjetas
+ * de "All companies", cada una un poco después que la anterior — "uno tras
+ * otro", con CSS nativo (`transition-delay` vía la variable `--retardo` de
+ * `revelar()`), nunca WAAPI aquí: el propio `movimiento.js` cuenta que tener
+ * DOS mecanismos de entrada a la vez —antes `.aparicion` y `.revelado`—
+ * dejaba uno de los dos sin efecto durante meses. Con un solo mecanismo ya
+ * establecido en toda la plataforma, WAAPI sería exactamente esa segunda vía
+ * compitiendo con la primera. `revelar()` es idempotente sobre un nodo ya
+ * revelado, así que llamarlo en cada visita —incluida cada búsqueda— es
+ * seguro para el hero y las cabeceras; la rejilla se trata aparte, más abajo,
+ * porque a diferencia de esas dos SÍ se destruye y reconstruye en cada tecla.
+ */
+function animarHubCompanias() {
+  const PASO = 70; // ms entre piezas de la cascada — dentro del rango de stagger (30-80ms)
+  let paso = 0;
+
+  const hero = document.querySelector('#seccion-companias .companias-hero__interior');
+  if (hero) revelar(hero, paso);
+  paso += PASO;
+
+  for (const h2 of document.querySelectorAll('#seccion-companias h2.movimiento')) {
+    revelar(h2, paso);
+    paso += PASO;
+  }
+
+  cascadaRejillaCompanias(paso);
+}
+
+/**
+ * Cascada de las primeras tarjetas de "All companies", continuando el mismo
+ * reloj que hero y cabeceras — solo la primera vez que se pinta el hub esta
+ * carga de página. Tope de 8 tarjetas y 40ms de paso: con más, la cola de
+ * espera de la última tarjeta se nota más que la propia cascada (Cláusula de
+ * "grupo de entrada": 30-80ms, decorativo, nunca bloqueante).
+ */
+function cascadaRejillaCompanias(inicioMs) {
+  if (cascadaCompaniasHecha) return;
+  const tarjetas = [...document.querySelectorAll('#rejilla-companias .tarjeta-compania')].slice(0, 8);
+  if (!tarjetas.length) return; // sin datos aún: no hay nada que cascadear
+  const PASO_TARJETA = 40;
+  tarjetas.forEach((tarjeta, i) => revelar(tarjeta, inicioMs + i * PASO_TARJETA));
+  cascadaCompaniasHecha = true;
 }
 
 export function pintarCompanias(datos, alAbrir, cargarSerie = null) {
@@ -389,13 +443,19 @@ export function pintarCompanias(datos, alAbrir, cargarSerie = null) {
 
   for (const c of datos.companias) rejilla.appendChild(tarjetaCompania(c, alAbrir, 'completa', cargarSerie));
 
-  // Fundido CSS puro al reorganizar por búsqueda/filtro: nunca FLIP ni
-  // reordenación animada de posiciones. La rejilla ya se reconstruyó entera
-  // arriba; aquí solo se pide un fotograma para que la transición de opacidad
-  // tenga un punto de partida distinto del de llegada.
-  rejilla.classList.add('rejilla-companias--transicion');
-  rejilla.style.opacity = '0';
-  requestAnimationFrame(() => { rejilla.style.opacity = '1'; });
+  // La primerísima vez, `animarHubCompanias()` —llamada justo después por
+  // `pintarHubCompanias()`— cascadea las tarjetas una a una: el fundido de
+  // contenedor de aquí abajo no aplica todavía, o se verían dos animaciones
+  // de opacidad a la vez sobre lo mismo.
+  if (cascadaCompaniasHecha) {
+    // Fundido CSS puro al reorganizar por búsqueda/filtro: nunca FLIP ni
+    // reordenación animada de posiciones. La rejilla ya se reconstruyó entera
+    // arriba; aquí solo se pide un fotograma para que la transición de opacidad
+    // tenga un punto de partida distinto del de llegada.
+    rejilla.classList.add('rejilla-companias--transicion');
+    rejilla.style.opacity = '0';
+    requestAnimationFrame(() => { rejilla.style.opacity = '1'; });
+  }
 }
 
 /**

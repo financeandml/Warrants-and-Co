@@ -11,6 +11,7 @@ import { pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import { pintarAnillo } from './anillo.js';
 import { alinearContraMaestra, rebasarBase100 } from './benchmarks.js';
+import { sinMovimiento, activarImantados } from './movimiento.js';
 import {
   $, $$, elemento, formatearNumero, formatearMoneda, formatearPorcentaje, porcentaje,
   formatearFecha, formatearMomento, formatearBytes, claseVariacion, localeFormato } from './formato.js';
@@ -34,7 +35,7 @@ import { pintarPanorama } from './mercado.js';
 import { iniciarCarga } from './carga.js';
 import {
   pintarTicker, pintarMetricasHero, animarManifiesto, animarCabeceras, pintarPulso, pintarRadarHome,
-  pintarFlujoHome, pintarSignalHome,
+  pintarFlujoHome, pintarSignalHome, animarBentoEstatico, pintarCifrasHome, pintarVitrinaTesis,
   refrescarTicker,
 } from './inicio.js';
 
@@ -58,13 +59,13 @@ const estado = {
   cartera: null,
   mercado: null,
   rangoGrafico: 'MAX',
-  /* Benchmarks activos en el gráfico: símbolos del catálogo, en el orden en que
-     el usuario los fue encendiendo. El PRINCIPAL —el que alimenta beta,
-     correlación y rentabilidadIndice, que el servidor calcula contra UNO solo—
-     es siempre el primero del catálogo que esté activo, no el último tocado:
-     así no cambia de estadísticas cada vez que se enciende y apaga un segundo
-     benchmark que no es el principal. */
-  benchmarksActivos: new Set(['SPY', 'QQQ', 'DIA']),
+  /* Benchmarks activos en el gráfico: símbolos, en el orden en que el usuario
+     los fue añadiendo por el buscador de ticker libre —el catálogo fijo ya no
+     se activa por defecto, a petición explícita—. El PRINCIPAL —el que
+     alimenta beta, correlación y rentabilidadIndice, que el servidor calcula
+     contra UNO solo— es siempre el primero del catálogo que esté activo, o el
+     primero del catálogo a secas si ninguno lo está (`benchmarkPrincipal()`). */
+  benchmarksActivos: new Set(),
   // Series crudas ya pedidas a `/api/mercado/serie/:simbolo`, por símbolo.
   seriesBenchmark: new Map(),
   // Tickers libres añadidos por el analista esta sesión —{simbolo, nombre}—,
@@ -222,6 +223,11 @@ function irA(seccion, pestana = null, { empujar = true } = {}) {
   purgarSiCaducada(seccion);
 
   if (seccion === 'opciones' && pestana) seleccionarPestanaOpciones(pestana);
+  // El sondeo en vivo del resumen de capital solo corre DENTRO de Cartera:
+  // se arranca al entrar y se para al salir, nunca sigue pidiendo datos de
+  // una sección que el analista ya no está mirando.
+  if (seccion === 'cartera') programarRefrescoCartera();
+  else pararRefrescoCartera();
   // Devuelve la promesa del cargador. Casi todas las llamadas la ignoran —el
   // enrutador no espera a nadie—; la del arranque sí la necesita, porque la
   // pantalla de carga se retira cuando la primera vista está PINTADA y no
@@ -378,16 +384,35 @@ async function cargarMarca() {
 
   const visual = $('#hero-visual');
   const imagen = $('#hero-imagen');
-  if (marca.banner?.url && visual && imagen) {
+  const video = $('#hero-video');
+
+  const usarImagen = () => {
+    if (!marca.banner?.url || !imagen) { if (visual) visual.hidden = true; return; }
     const precarga = new Image();
     precarga.onload = () => {
       imagen.src = `${marca.banner.url}?v=${marca.banner.version}`;
+      imagen.hidden = false;
+      if (video) video.hidden = true;
       visual.hidden = false;
     };
     precarga.onerror = () => { visual.hidden = true; };
     precarga.src = `${marca.banner.url}?v=${marca.banner.version}`;
-  } else if (visual) {
-    visual.hidden = true;
+  };
+
+  /* El vídeo es fondo mudo, nunca contenido: con movimiento reducido no se
+     reproduce —cae a la foto, si existe, en vez de a un fotograma congelado
+     a medias— (Cláusula 5). Sin foto de respaldo, el hero se queda oculto: es
+     preferible a una imagen que no se sabe si terminó de decodificar. */
+  if (marca.bannerVideo?.url && video && visual && !sinMovimiento()) {
+    video.src = `${marca.bannerVideo.url}?v=${marca.bannerVideo.version}`;
+    video.oncanplay = () => {
+      video.hidden = false;
+      imagen.hidden = true;
+      visual.hidden = false;
+    };
+    video.onerror = usarImagen;
+  } else {
+    usarImagen();
   }
 }
 
@@ -1573,6 +1598,7 @@ let inicioMontado = false;
 const datosInicio = {
   indices: null, cartera: null, radar: null,
   catalizadores: null, flujo: null, signal: null, research: null,
+  totalTesis: null, vitrina: null,
 };
 
 /* Bloques que ya se han pintado alguna vez. Hace falta distinguir «su fuente aún
@@ -1600,6 +1626,12 @@ const PINTORES_INICIO = {
   // Fase D.12: las tres cifras del Hero — misma cartera que `cartera`, su
   // propia entrada porque el repintado por idioma recorre esta lista.
   metricasHero: () => pintarMetricasHero(datosInicio.cartera),
+  // Home: cifras en vivo bajo la cinta — misma `cartera` de arriba, más el
+  // total de tesis publicadas (`totalTesis`), su propia entrada del mapa.
+  cifrasHome: () => pintarCifrasHome(datosInicio.cartera, datosInicio.totalTesis),
+  // Home: vitrina de tesis — abre el mismo diálogo de detalle que el resto
+  // de la plataforma (Regla 9: un solo mecanismo de apertura).
+  vitrinaHome: () => pintarVitrinaTesis(datosInicio.vitrina, abrirDetalle),
 };
 
 /**
@@ -1615,6 +1647,9 @@ async function cargarInicio() {
 
   animarManifiesto();
   animarCabeceras();
+  // Metodología y Los tres estados no dependen de ninguna fuente: se revelan
+  // ya, sin esperar a `Promise.allSettled` de abajo.
+  animarBentoEstatico();
 
   // Guarda lo que llegue —resuelva la fuente o falle— y pinta ese bloque.
   const alLlegar = (promesa, guardar, bloque) => {
@@ -1626,6 +1661,16 @@ async function cargarInicio() {
   // llamada, se fue con el área de Mercado.
   const indices = api('/api/radar/indices');
   const cartera = api('/api/mercado/cartera').catch(() => null);
+  // `limite=1`: la celda de Cifras en vivo solo necesita el total de la
+  // paginación, no una sola fila de contenido.
+  const totalTesis = api('/api/informes?limite=1')
+    .then((d) => d?.paginacion?.total ?? null)
+    .catch(() => null);
+  // Vitrina: las tesis más recientes, tal cual las lista Repositorio —mismo
+  // orden, ninguna curación aparte para esta vista.
+  const vitrina = api('/api/informes?limite=6&orden=recientes')
+    .then((d) => d?.informes ?? null)
+    .catch(() => null);
 
   await Promise.allSettled([
     // Los índices se atrapan aquí dentro para que el par NUNCA se rechace. Si
@@ -1637,6 +1682,11 @@ async function cargarInicio() {
       datosInicio.cartera = par?.[1] ?? null;
     }, 'ticker'),
     alLlegar(cartera, (d) => { datosInicio.cartera = d; }, 'metricasHero'),
+    alLlegar(Promise.all([cartera, totalTesis]), (par) => {
+      datosInicio.cartera = par?.[0] ?? null;
+      datosInicio.totalTesis = par?.[1] ?? null;
+    }, 'cifrasHome'),
+    alLlegar(vitrina, (d) => { datosInicio.vitrina = d; }, 'vitrinaHome'),
   ]);
 
   /* La cinta queda viva a partir de aquí. Se arranca DESPUÉS del `allSettled`
@@ -1734,12 +1784,37 @@ function programarRefrescoCinta() {
 /* Al volver a la pestaña se vuelve al ritmo corto y se pide de inmediato: quien
    regresa quiere ver el dato de ahora, no el de cuando se fue. */
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState !== 'visible') { pararRefrescoCinta(); return; }
-  if (!inicioMontado) return;
-  pasadasSinCambio = 0;
-  pasadaDeCinta().catch(() => {});
-  programarRefrescoCinta();
+  if (document.visibilityState !== 'visible') { pararRefrescoCinta(); pararRefrescoCartera(); return; }
+  if (inicioMontado) { pasadasSinCambio = 0; pasadaDeCinta().catch(() => {}); programarRefrescoCinta(); }
+  if (estado.seccion === 'cartera') programarRefrescoCartera();
 });
+
+/**
+ * Sondeo silencioso del resumen de capital: mientras el analista está EN
+ * Cartera, `cargarCartera({ silencioso: true })` se repite cada
+ * `REFRESCO_MS` —el mismo ritmo que ya usa la cinta, no un segundo número
+ * inventado— sin el filete de carga de una recarga manual. Es lo que hace
+ * que las cifras cambien solas, sin pulsar el icono ni recargar la página,
+ * y es también la fuente del "cambio real" que anima `pintarCifraIndicador()`.
+ * Se para al salir de la sección o al perder la pestaña el foco —cláusula 5,
+ * y sin sentido pedir datos que nadie va a ver—.
+ */
+let refrescoCarteraTemporizador = null;
+
+function pararRefrescoCartera() {
+  clearTimeout(refrescoCarteraTemporizador); refrescoCarteraTemporizador = null;
+}
+
+function programarRefrescoCartera() {
+  pararRefrescoCartera();
+  if (document.visibilityState !== 'visible' || estado.seccion !== 'cartera') return;
+  refrescoCarteraTemporizador = setTimeout(async () => {
+    if (estado.seccion === 'cartera' && document.visibilityState === 'visible') {
+      await cargarCartera({ silencioso: true }).catch(() => {});
+    }
+    programarRefrescoCartera();
+  }, REFRESCO_MS);
+}
 
 /**
  * Repinta lo que la pasada sobre el DOM no alcanza.
@@ -2125,6 +2200,7 @@ function pintarCartera(datos, { avisos = true } = {}) {
     }
     if ($('#resumen-portfolio')) $('#resumen-portfolio').textContent = '';
     if ($('#resumen-secundario')) $('#resumen-secundario').textContent = '';
+    if ($('#distribucion-capital')) $('#distribucion-capital').textContent = '';
     if ($('#contribucion-barras')) $('#contribucion-barras').textContent = '';
     if ($('#cuerpo-posiciones')) $('#cuerpo-posiciones').textContent = '';
     if ($('#cuerpo-grafico-desglose')) $('#cuerpo-grafico-desglose').textContent = '';
@@ -2134,8 +2210,9 @@ function pintarCartera(datos, { avisos = true } = {}) {
   }
 
   if ($('#resumen-portfolio')) pintarResumenPortfolio(datos);
+  if ($('#distribucion-capital')) pintarDistribucionCapital(datos);
   if ($('#cuadro-mando')) { pintarCuadroMando(datos); pintarAvisoCierre(datos); }
-  if ($('#grafico')) { poblarBenchmarks(datos.benchmarks); pintarGrafico(datos); }
+  if ($('#grafico')) { poblarBenchmarks(); pintarGrafico(datos); }
   if ($('#cuerpo-posiciones')) pintarTablaCartera(datos);
   if ($('#cuerpo-grafico-desglose')) pintarDesgloseGrafico(datos);
   if ($('#contribucion-barras')) pintarContribucion(datos);
@@ -2154,6 +2231,45 @@ function pintarCartera(datos, { avisos = true } = {}) {
   pintarPanelCartera(datos);
 
   if (avisos) for (const a of datos.avisos ?? []) avisar(a, { claro: true, duracion: 8000 });
+
+  coreografiaEntradaCartera();
+}
+
+// Una sola vez por visita: `pintarCartera()` se vuelve a llamar en cada
+// sondeo silencioso (20s) y en cada cambio de idioma, y ninguno de los dos es
+// "la página acaba de terminar de cargar" —repetir el barrido ahí sería
+// animar un repintado que el usuario ya está leyendo, justo lo que la
+// Cláusula 8 de CLAUDE.md prohíbe para Cartera—.
+let coreografiaCarteraHecha = false;
+
+/**
+ * Coreografía de entrada: las dos cajas del resumen de capital y la tarjeta
+ * de "Distribución de la Cartera" entran en cascada —fade + `translateY`,
+ * WAAPI nativo— cuando la página termina de pintar datos reales por primera
+ * vez. Ningún bloque lleva fondo/borde/sombra propios: Cartera destruyó ese
+ * lenguaje a propósito (DESIGN.md, "editorial, no tarjeta") y esta
+ * coreografía no lo reabre, solo mueve lo que ya hay.
+ */
+function coreografiaEntradaCartera() {
+  if (coreografiaCarteraHecha) return;
+  coreografiaCarteraHecha = true;
+  if (sinMovimiento()) return; // se quedan en su estado final, nunca ocultos
+
+  const objetivos = ['resumen-portfolio', 'resumen-secundario', 'distribucion-capital']
+    .map((id) => $(`#${id}`))
+    .filter(Boolean);
+  if (!objetivos.length) return;
+
+  const curva = getComputedStyle(document.documentElement).getPropertyValue('--mov-entrada').trim()
+    || 'cubic-bezier(0.23, 1, 0.32, 1)';
+  const ESCALON_MS = 70;
+
+  objetivos.forEach((nodo, i) => {
+    nodo.animate(
+      [{ opacity: 0, transform: 'translateY(16px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 300, delay: i * ESCALON_MS, easing: curva, fill: 'backwards' }
+    );
+  });
 }
 
 /**
@@ -2184,6 +2300,8 @@ function pintarResumenPortfolio(datos) {
   const r = datos.resumenPortfolio;
   const na = t('general.noDisponible');
   const cifraPct = (v) => (v === null || v === undefined ? na : formatearPorcentaje(v));
+  const cifraPctSimple = (v) => (v === null || v === undefined ? na : porcentaje(v));
+  const cifraEntera = (v) => (v === null || v === undefined ? na : String(Math.round(v)));
 
   // La raya de la izquierda solo se tiñe donde hay una dirección real que
   // afirmar —el mismo signo que ya lleva la cifra—: Capital desplegado,
@@ -2193,14 +2311,19 @@ function pintarResumenPortfolio(datos) {
   const claseDireccion = (v) => (v === null ? ''
     : ` indicador--${Number(v) > 0 ? 'alza' : Number(v) < 0 ? 'baja' : 'nula'}`);
 
-  const indicador = (etiqueta, valor, nota, { principal = false, variacion = null } = {}) => {
+  /* `clave` identifica la celda ENTRE pintados —nunca la etiqueta traducida,
+     que cambia con el idioma sin que el dato se haya movido—: es lo que
+     `pintarCifraIndicador()` usa para saber si hay un valor anterior real
+     con el que comparar, o si esta es la primera vez que la celda se pinta. */
+  const indicador = (clave, etiqueta, crudo, formatear, nota, { principal = false, variacion = null } = {}) => {
     const bloque = elemento('div',
       `indicador${principal ? ' indicador--principal' : ''}${claseDireccion(variacion)}`);
     bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
-    const v = elemento('strong', 'indicador__valor', valor);
+    const v = elemento('strong', 'indicador__valor', '');
     if (variacion !== null) v.className = `indicador__valor ${claseVariacion(variacion)}`;
     bloque.appendChild(v);
     if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
+    pintarCifraIndicador(v, clave, crudo, formatear);
     return bloque;
   };
 
@@ -2216,7 +2339,7 @@ function pintarResumenPortfolio(datos) {
   // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
   // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
   // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
-  cuadro.appendChild(indicador(t('cartera.resumen.retorno'), cifraPct(r.retornoPct),
+  cuadro.appendChild(indicador('retorno', t('cartera.resumen.retorno'), r.retornoPct, cifraPct,
     t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct }));
 
   /* Realizada / no realizada, en celda propia junto al retorno que
@@ -2227,36 +2350,179 @@ function pintarResumenPortfolio(datos) {
      calcula. Lo que sí sigue prohibido, y por eso no está, es repetirlas
      además en un panel lateral. `null` cuando no hay nada cerrado (o nada
      abierto) se rotula «N/A», nunca 0 %: es el tercer estado. */
-  cuadro.appendChild(indicador(t('cartera.resumen.realizado'), cifraPct(r.retornoRealizadoPct),
+  cuadro.appendChild(indicador('realizado', t('cartera.resumen.realizado'), r.retornoRealizadoPct, cifraPct,
     r.retornoRealizadoPct === null
       ? t('cartera.resumen.realizado.vacio')
       : t('cartera.resumen.realizado.nota'),
     { variacion: r.retornoRealizadoPct }));
-  cuadro.appendChild(indicador(t('cartera.resumen.noRealizado'), cifraPct(r.retornoNoRealizadoPct),
+  cuadro.appendChild(indicador('noRealizado', t('cartera.resumen.noRealizado'), r.retornoNoRealizadoPct, cifraPct,
     r.retornoNoRealizadoPct === null
       ? t('cartera.resumen.noRealizado.vacio')
       : t('cartera.resumen.noRealizado.nota'),
     { variacion: r.retornoNoRealizadoPct }));
 
-  cuadro.appendChild(indicador(t('cartera.resumen.capital'), porcentaje(r.capitalDesplegadoPct),
+  cuadro.appendChild(indicador('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple,
     t('cartera.resumen.capital.nota')));
   // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
   // nunca un segundo cálculo de caja (Regla 9).
   const caja = datos.liquidez;
   if (caja && Number.isFinite(caja.pesoActual)) {
-    cuadro.appendChild(indicador(t('cartera.indicador.liquidez'), porcentaje(caja.pesoActual),
+    cuadro.appendChild(indicador('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple,
       t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) })));
   }
 
   // ── Caja 2: rendimiento del capital y recuento de tesis ──
   const segunda = secundario ?? cuadro;
-  segunda.appendChild(indicador(t('cartera.resumen.roic'), cifraPct(r.roicPct),
+  segunda.appendChild(indicador('roic', t('cartera.resumen.roic'), r.roicPct, cifraPct,
     r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
     { variacion: r.roicPct }));
-  segunda.appendChild(indicador(t('cartera.resumen.abiertas'), String(r.posicionesAbiertas),
+  segunda.appendChild(indicador('abiertas', t('cartera.resumen.abiertas'), r.posicionesAbiertas, cifraEntera,
     t('cartera.resumen.abiertas.nota')));
-  segunda.appendChild(indicador(t('cartera.resumen.cerradas'), String(r.posicionesCerradas),
+  segunda.appendChild(indicador('cerradas', t('cartera.resumen.cerradas'), r.posicionesCerradas, cifraEntera,
     t('cartera.resumen.cerradas.nota')));
+  // Capital comprometido / Exposición neta: mismo hecho que Capital desplegado
+  // y Liquidez de la caja 1, con el rótulo que pide la referencia —no un
+  // segundo cálculo (Regla 9), la misma cifra con otro nombre a petición
+  // explícita. `caja` ya está resuelto arriba, en el mismo pintado.
+  segunda.appendChild(indicador('comprometido', t('cartera.resumen.comprometido'), r.capitalDesplegadoPct,
+    cifraPctSimple, t('cartera.resumen.comprometido.nota')));
+  if (caja && Number.isFinite(caja.pesoActual)) {
+    segunda.appendChild(indicador('exposicion', t('cartera.resumen.exposicion'), caja.pesoActual,
+      cifraPctSimple, t('cartera.resumen.exposicion.nota')));
+  }
+}
+
+const NS_DISTRIBUCION = 'http://www.w3.org/2000/svg';
+/* Misma proporción que `anillo.js` (`G`): 140×140, radio 52, grosor 18 — no
+   se inventa una segunda geometría de anillo para la misma clase de gráfico. */
+const G_DISTRIBUCION = { lado: 140, radio: 52, grosor: 18 };
+
+/**
+ * "Distribución de la Cartera": anillo de DOS segmentos, capital desplegado
+ * frente a lo que aún no se ha comprometido. Deliberadamente NO es el mismo
+ * hecho que "Liquidez"/"Exposición neta" del resumen (`datos.liquidez.pesoActual`,
+ * más arriba): ese campo es peso VIGENTE —se mueve con el mercado y con las
+ * liquidaciones—, mientras que aquí se parte de `resumenPortfolio.capitalDesplegadoPct`,
+ * peso de ENTRADA —cuánto ha llegado a comprometerse alguna vez—. Las dos
+ * bases no suman 100 juntas (mismo motivo que documenta `pintarAnillo()` en
+ * `anillo.js` para `pesoVigente` vs `pesoCapital`), así que este anillo usa
+ * una sola de las dos y su complemento aritmético exacto —nunca la mezcla de
+ * las dos, que pondría en pantalla un segundo "capital disponible" en
+ * desacuerdo con el que ya se lee en la celda de Liquidez (Regla 9)—.
+ *
+ * Sigue la disciplina de tres estados de `anillo.js`: sin
+ * `capitalDesplegadoPct` no se dibuja nada, nunca un anillo con un hueco sin
+ * explicar.
+ */
+function pintarDistribucionCapital(datos) {
+  const destino = $('#distribucion-capital');
+  if (!destino) return;
+  destino.textContent = '';
+
+  const desplegado = datos?.resumenPortfolio?.capitalDesplegadoPct;
+  if (!Number.isFinite(desplegado)) {
+    const vacio = elemento('div', 'vacio');
+    vacio.appendChild(elemento('strong', null, t('cartera.distribucionCapital.vacio.titulo')));
+    vacio.appendChild(document.createTextNode(t('cartera.distribucionCapital.vacio.motivo')));
+    destino.appendChild(vacio);
+    return;
+  }
+
+  const pendiente = Math.max(0, 100 - desplegado);
+  const sectores = [
+    { clave: 'desplegado', etiqueta: t('cartera.resumen.capital'), peso: desplegado, relleno: 'var(--anillo-1)' },
+    { clave: 'pendiente', etiqueta: t('cartera.distribucionCapital.pendiente'), peso: pendiente, relleno: 'var(--anillo-3)' },
+  ];
+
+  const G = G_DISTRIBUCION;
+  const crearSvg = (nombre, atributos = {}) => {
+    const el = document.createElementNS(NS_DISTRIBUCION, nombre);
+    for (const [k, v] of Object.entries(atributos)) el.setAttribute(k, String(v));
+    return el;
+  };
+
+  const cuerpo = elemento('div', 'distribucion-capital__cuerpo');
+  const svg = crearSvg('svg', {
+    viewBox: `0 0 ${G.lado} ${G.lado}`, class: 'distribucion-capital__svg',
+    role: 'img', 'aria-labelledby': 'distribucion-capital-desc',
+  });
+  const desc = crearSvg('title', { id: 'distribucion-capital-desc' });
+  desc.textContent = t('cartera.distribucionCapital.descripcion', {
+    partes: sectores.map((s) => `${s.etiqueta} ${porcentaje(s.peso)}`).join(' · '),
+  });
+  svg.appendChild(desc);
+
+  const centro = G.lado / 2;
+  const circunferencia = 2 * Math.PI * G.radio;
+  let acumulado = 0;
+  for (const s of sectores) {
+    if (s.peso > 0) {
+      svg.appendChild(crearSvg('circle', {
+        class: 'distribucion-capital__arco',
+        cx: centro, cy: centro, r: G.radio,
+        fill: 'none', stroke: s.relleno, 'stroke-width': G.grosor,
+        'stroke-dasharray': `${((s.peso / 100) * circunferencia).toFixed(3)} ${circunferencia.toFixed(3)}`,
+        'stroke-dashoffset': `${(-(acumulado / 100) * circunferencia).toFixed(3)}`,
+        transform: `rotate(-90 ${centro} ${centro})`,
+      }));
+    }
+    acumulado += s.peso;
+  }
+  cuerpo.appendChild(svg);
+
+  const lista = elemento('ul', 'distribucion-capital__lista');
+  for (const s of sectores) {
+    const fila = elemento('li', 'distribucion-capital__fila');
+    const muestra = elemento('span', 'distribucion-capital__muestra');
+    muestra.style.background = s.relleno;
+    muestra.setAttribute('aria-hidden', 'true');
+    fila.appendChild(muestra);
+    fila.appendChild(elemento('span', 'distribucion-capital__nombre', s.etiqueta));
+    fila.appendChild(elemento('strong', 'distribucion-capital__cifra', porcentaje(s.peso)));
+    lista.appendChild(fila);
+  }
+  cuerpo.appendChild(lista);
+  destino.appendChild(cuerpo);
+}
+
+/* Un valor anterior por celda, entre pintados —clave estable, nunca la
+   etiqueta traducida (Ver `indicador()` arriba). Vive fuera de la función
+   porque el resumen se repinta entero en cada sondeo silencioso y necesita
+   sobrevivir a esos repintados para saber qué cambió de verdad. */
+const valoresResumenPrevios = new Map();
+
+/**
+ * Pinta la cifra de una celda del resumen de capital y, si de verdad cambió
+ * desde el último pintado —no en la primera vez, no si el sondeo silencioso
+ * trajo el mismo número—, la cuenta en vivo del valor viejo al nuevo.
+ *
+ * Excepción documentada de la Cláusula 8 de CLAUDE.md, pedida y confirmada de
+ * forma explícita: la prohibición general es contra un contador que sugiera
+ * movimiento en vivo sobre un repintado que no cambió nada. Aquí es al
+ * revés —el contador SOLO corre cuando la cifra cambió de verdad entre dos
+ * sondeos reales (`programarRefrescoCartera()`), nunca en el primer pintado
+ * ni cuando el sondeo trae el mismo número—, así que nunca miente sobre si
+ * algo se movió.
+ */
+function pintarCifraIndicador(nodo, clave, crudo, formatear) {
+  const previo = valoresResumenPrevios.get(clave);
+  valoresResumenPrevios.set(clave, crudo);
+
+  if (!Number.isFinite(crudo) || !Number.isFinite(previo) || previo === crudo || sinMovimiento()) {
+    nodo.textContent = formatear(crudo);
+    return;
+  }
+
+  const inicio = performance.now();
+  const duracion = 700;
+  const paso = (ahora) => {
+    const avance = Math.min((ahora - inicio) / duracion, 1);
+    const suave = 1 - (1 - avance) ** 3;
+    nodo.textContent = formatear(previo + (crudo - previo) * suave);
+    if (avance < 1) requestAnimationFrame(paso);
+    else nodo.textContent = formatear(crudo);
+  };
+  requestAnimationFrame(paso);
 }
 
 function pintarCuadroMando(datos) {
@@ -2382,43 +2648,18 @@ function catalogoCombinado() {
 }
 
 /**
- * Puebla las píldoras de benchmark: el catálogo fijo que manda el servidor,
- * más una píldora con botón de quitar por cada ticker libre añadido esta
- * sesión (`estado.benchmarksLibres`). No hay lista de índices en el
- * cliente: la había —un mapa de nombres y las opciones de un `<select>`
- * escritas a mano— y era la segunda y la tercera copia de un hecho que ya
- * declaraba `src/routes/mercado.js`.
- *
- * Cada píldora fija es un `<button aria-pressed>` real, operable por
- * teclado. La cartera no es una píldora más: es la serie protagonista y
- * siempre está visible, así que no lleva control propio.
+ * Puebla las píldoras de benchmark: solo una por cada ticker libre añadido
+ * esta sesión (`estado.benchmarksLibres`), con su botón de quitar. El
+ * catálogo fijo que manda el servidor ya no se pinta por defecto —a
+ * petición explícita—; `catalogo` sigue siendo el argumento porque
+ * `benchmarkPrincipal()` lo necesita en otras llamadas, pero esta función
+ * no lo recorre.
  */
-function poblarBenchmarks(catalogo) {
+function poblarBenchmarks() {
   const cont = $('#pastillas-benchmark');
-  if (!cont || !catalogo?.length) return;
-
-  // Los símbolos que ya no están en el catálogo se sueltan del conjunto activo.
-  // Los libres no viven en `catalogo` —vienen de `estado.benchmarksLibres`—,
-  // así que esta limpieza no los toca.
-  const vigentes = new Set(catalogo.map((b) => b.simbolo));
-  for (const s of [...estado.benchmarksActivos]) {
-    if (!vigentes.has(s) && !estado.benchmarksLibres.has(s)) estado.benchmarksActivos.delete(s);
-  }
+  if (!cont) return;
 
   cont.textContent = '';
-  for (const b of catalogo) {
-    const boton = document.createElement('button');
-    boton.type = 'button';
-    boton.className = 'pastilla-benchmark';
-    boton.dataset.simbolo = b.simbolo;
-    const activo = estado.benchmarksActivos.has(b.simbolo);
-    boton.setAttribute('aria-pressed', String(activo));
-    // El mismo rótulo compuesto que llevan las cifras, del mismo diccionario.
-    boton.textContent = t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo });
-    boton.addEventListener('click', () => alPulsarPastillaBenchmark(b.simbolo));
-    cont.appendChild(boton);
-  }
-
   for (const b of estado.benchmarksLibres.values()) {
     const pastilla = elemento('span', 'pastilla-benchmark pastilla-benchmark--libre');
     pastilla.appendChild(document.createTextNode(
@@ -2430,35 +2671,6 @@ function poblarBenchmarks(catalogo) {
     pastilla.appendChild(quitar);
     cont.appendChild(pastilla);
   }
-}
-
-/** Alterna un benchmark del catálogo fijo y decide si hace falta recargar la cartera entera. */
-async function alPulsarPastillaBenchmark(simbolo) {
-  const activando = !estado.benchmarksActivos.has(simbolo);
-  if (activando && estado.benchmarksActivos.size >= TOPE_COMPARACIONES) {
-    mostrarAvisoTickerLibre(t('cartera.grafico.buscar.limite'));
-    return;
-  }
-
-  const principalAntes = estado.cartera?.benchmark;
-  if (activando) estado.benchmarksActivos.add(simbolo);
-  else estado.benchmarksActivos.delete(simbolo);
-
-  const boton = $(`.pastilla-benchmark[data-simbolo="${CSS.escape(simbolo)}"]`);
-  if (boton) boton.setAttribute('aria-pressed', String(activando));
-
-  if (!estado.cartera) return;
-
-  // El principal solo cambia si el que se tocó desplazó al que ya lo era: eso
-  // recalcula beta/correlación en el servidor. Cualquier otro toque es puramente
-  // de cliente: la cartera y sus estadísticos no se mueven.
-  const principalDespues = benchmarkPrincipal(estado.catalogoBenchmarks);
-  if (principalDespues !== principalAntes) {
-    await cargarCartera({ silencioso: true });
-    return;
-  }
-  await cargarSeriesBenchmark(estado.cartera);
-  pintarGrafico(estado.cartera);
 }
 
 /** Series de los benchmarks activos —fijos y libres—, alineadas contra `filtrada` y a base 100. */
@@ -2538,15 +2750,129 @@ async function anadirTickerLibre() {
   }
   if (boton) boton.disabled = false;
 
-  poblarBenchmarks(estado.catalogoBenchmarks);
+  poblarBenchmarks();
   if (estado.cartera) pintarGrafico(estado.cartera);
+}
+
+/**
+ * Autocompletado del buscador de ticker libre: combobox ARIA 1.2 sobre
+ * `/api/mercado/buscar`. Un solo estado de módulo —`sugerencias`— porque solo
+ * hay un buscador de este tipo en la página; si algún día hay dos, esto se
+ * vuelve una fábrica en vez de duplicar el patrón a mano.
+ */
+const sugerencias = {
+  lista: [],
+  activo: -1, // índice resaltado, -1 = ninguno
+  generacion: 0, // descarta respuestas que ya no corresponden a la última tecla
+};
+
+function elementoSugerencia(item, indice) {
+  const li = elemento('li', 'sugerencias-ticker__item');
+  li.id = `sugerencia-ticker-${indice}`;
+  li.setAttribute('role', 'option');
+  li.dataset.simbolo = item.simbolo;
+  li.appendChild(elemento('span', 'sugerencias-ticker__simbolo', item.simbolo));
+  li.appendChild(elemento('span', 'sugerencias-ticker__nombre', item.nombre));
+  li.addEventListener('mousedown', (ev) => {
+    // `mousedown`, no `click`: dispara ANTES del `blur` del input, que si no
+    // cerraría la lista y se tragaría la selección.
+    ev.preventDefault();
+    seleccionarSugerencia(item.simbolo);
+  });
+  return li;
+}
+
+function pintarSugerencias() {
+  const campo = $('#campo-ticker-libre');
+  const lista = $('#sugerencias-ticker');
+  if (!campo || !lista) return;
+  lista.textContent = '';
+
+  if (!sugerencias.lista.length) {
+    lista.hidden = true;
+    campo.setAttribute('aria-expanded', 'false');
+    campo.removeAttribute('aria-activedescendant');
+    return;
+  }
+
+  sugerencias.lista.forEach((item, i) => {
+    const li = elementoSugerencia(item, i);
+    li.setAttribute('aria-selected', String(i === sugerencias.activo));
+    if (i === sugerencias.activo) li.classList.add('sugerencias-ticker__item--activo');
+    lista.appendChild(li);
+  });
+  lista.hidden = false;
+  campo.setAttribute('aria-expanded', 'true');
+  if (sugerencias.activo >= 0) campo.setAttribute('aria-activedescendant', `sugerencia-ticker-${sugerencias.activo}`);
+  else campo.removeAttribute('aria-activedescendant');
+}
+
+function cerrarSugerencias() {
+  sugerencias.lista = [];
+  sugerencias.activo = -1;
+  pintarSugerencias();
+}
+
+function seleccionarSugerencia(simbolo) {
+  const campo = $('#campo-ticker-libre');
+  if (campo) campo.value = simbolo;
+  cerrarSugerencias();
+  anadirTickerLibre();
+}
+
+let temporizadorSugerencias = null;
+
+async function buscarSugerenciasTicker(consulta) {
+  const generacion = ++sugerencias.generacion;
+  if (!consulta) { cerrarSugerencias(); return; }
+
+  try {
+    const r = await api(`/api/mercado/buscar?q=${encodeURIComponent(consulta)}`);
+    // Si el campo cambió mientras la petición volaba, esta respuesta ya nació
+    // vieja —mismo patrón que `cargarCartera()` con `generacionCartera`.
+    if (generacion !== sugerencias.generacion) return;
+    // Los símbolos ya activos no aportan nada en la lista: añadirlos volvería
+    // a caer en el aviso de "ya está en la comparación".
+    sugerencias.lista = (r.resultados ?? []).filter((s) => !estado.benchmarksActivos.has(s.simbolo));
+    sugerencias.activo = -1;
+    pintarSugerencias();
+  } catch {
+    // Un fallo de red no es un aviso que interrumpa la escritura: la lista
+    // simplemente se queda vacía, igual que "sin resultados".
+    if (generacion === sugerencias.generacion) cerrarSugerencias();
+  }
+}
+
+function alEscribirTickerLibre(ev) {
+  const valor = ev.target.value.trim();
+  clearTimeout(temporizadorSugerencias);
+  if (!valor) { cerrarSugerencias(); return; }
+  temporizadorSugerencias = setTimeout(() => buscarSugerenciasTicker(valor), 220);
+}
+
+function alPulsarTeclaTickerLibre(ev) {
+  if (!sugerencias.lista.length) return;
+  if (ev.key === 'ArrowDown') {
+    ev.preventDefault();
+    sugerencias.activo = (sugerencias.activo + 1) % sugerencias.lista.length;
+    pintarSugerencias();
+  } else if (ev.key === 'ArrowUp') {
+    ev.preventDefault();
+    sugerencias.activo = (sugerencias.activo - 1 + sugerencias.lista.length) % sugerencias.lista.length;
+    pintarSugerencias();
+  } else if (ev.key === 'Enter' && sugerencias.activo >= 0) {
+    ev.preventDefault();
+    seleccionarSugerencia(sugerencias.lista[sugerencias.activo].simbolo);
+  } else if (ev.key === 'Escape') {
+    cerrarSugerencias();
+  }
 }
 
 /** Quita un ticker libre de la comparación por completo —no tiene sentido guardarlo apagado. */
 function quitarTickerLibre(simbolo) {
   estado.benchmarksLibres.delete(simbolo);
   estado.benchmarksActivos.delete(simbolo);
-  poblarBenchmarks(estado.catalogoBenchmarks);
+  poblarBenchmarks();
   if (estado.cartera) pintarGrafico(estado.cartera);
 }
 
@@ -2570,20 +2896,34 @@ function pintarGrafico(datos) {
 
   estado.grafico.actualizar(serie, benchmarks);
 
-  $('#subtitulo-grafico').textContent = completa
-    ? t('cartera.grafico.subtitulo.completa', {
-      n: serie.length, base: formatearNumero(baseCapital, 0),
-    })
-    : t('cartera.grafico.subtitulo.serie', {
-      n: serie.length, fecha: formatearFecha(serie[0]?.fecha),
-    });
-
   pintarLeyenda(serie, benchmarks, {
     base: completa ? baseCapital : null,
     desde: serie[0]?.fecha,
   });
   pintarTablaRendimiento(serie, benchmarks);
   pintarTablaSerie(serie, benchmarks);
+  // Sincroniza el indicador deslizante con el botón activo cada vez que el
+  // gráfico se pinta —no solo al hacer clic—: es lo que coloca el indicador
+  // correctamente la primera vez que esta sección se hace visible (mientras
+  // `#seccion-cartera` está `hidden`, `offsetWidth`/`offsetLeft` miden 0, así
+  // que posicionarlo solo al cablear los botones en el arranque llegaría
+  // tarde). Mismo criterio que ya sigue `marcarVentana()` para Catalysts.
+  moverIndicadorRango($('#conmutador-rango .activo'));
+}
+
+/**
+ * Desliza el relleno del rango activo del gráfico de Cartera sobre el ancho y
+ * la posición REALES del botón —igual que `moverIndicadorVentana()` para
+ * Catalysts, misma técnica, sin segundo mecanismo (Regla 9)—: un valor fijo se
+ * desincronizaría entre «1M»/«Máx» según el idioma.
+ */
+function moverIndicadorRango(boton) {
+  const indicador = $('#conmutador-rango-indicador');
+  if (!indicador) return;
+  if (!boton) { indicador.style.opacity = '0'; return; }
+  indicador.style.opacity = '1';
+  indicador.style.width = `${boton.offsetWidth}px`;
+  indicador.style.transform = `translateX(${boton.offsetLeft}px)`;
 }
 
 function pintarLeyenda(serie, benchmarks, medida = {}) {
@@ -2607,14 +2947,6 @@ function pintarLeyenda(serie, benchmarks, medida = {}) {
   for (const b of benchmarks) {
     entrada(t('cartera.benchmark.rotulo', { nombre: b.nombre, simbolo: b.simbolo }), b.serie, true);
   }
-
-  /* Desde dónde se mide, dicho en la propia leyenda: sobre la serie completa la
-     cifra es la rentabilidad total y coincide con el titular, pero en un rango
-     parcial es lo hecho en ese tramo, y sin rótulo se lee como si fuera total. */
-  if (!serie?.length) return;
-  leyenda.appendChild(elemento('span', 'leyenda__medida', medida.base
-    ? t('cartera.leyenda.medida.total')
-    : t('cartera.leyenda.medida.rango', { fecha: formatearFecha(medida.desde) })));
 }
 
 /**
@@ -4241,15 +4573,33 @@ function enlazarEventos() {
       if (estado.cartera) pintarGrafico(estado.cartera);
     });
   }
+  // El indicador deslizante: grupo propio (`#conmutador-rango`), nunca el
+  // bucle genérico de arriba —ese recorre CUALQUIER `.conmutador button` del
+  // documento, incluido el selector de ventana de Catalysts, que no lleva
+  // `data-rango`—. `pintarGrafico()` ya lo sincroniza tras cada clic (porque
+  // ahí es donde el gráfico se repinta); aquí solo hace falta el gesto visual
+  // inmediato bajo el dedo, antes de que la respuesta de red vuelva.
+  for (const boton of $$('#conmutador-rango button')) {
+    boton.addEventListener('click', () => moverIndicadorRango(boton));
+  }
 
-  // Las píldoras de benchmark llevan su propio manejador: lo añade
-  // `poblarBenchmarks()` a cada botón en cuanto lo pinta, porque el conjunto de
-  // botones cambia con el catálogo y no existe uno fijo que delegar aquí.
+  // Las píldoras de benchmark —una por ticker libre añadido— llevan su propio
+  // manejador de "quitar": lo añade `poblarBenchmarks()` a cada una en cuanto
+  // la pinta, porque el conjunto cambia con lo que el analista vaya añadiendo
+  // y no existe una lista fija que delegar aquí.
 
   $('#buscador-ticker').addEventListener('submit', (ev) => {
     ev.preventDefault();
+    cerrarSugerencias();
     anadirTickerLibre();
   });
+  const campoTickerLibre = $('#campo-ticker-libre');
+  campoTickerLibre.addEventListener('input', alEscribirTickerLibre);
+  campoTickerLibre.addEventListener('keydown', alPulsarTeclaTickerLibre);
+  // `blur` cierra la lista con un retardo corto: sin él, el `blur` que sigue
+  // al `mousedown` de una fila llegaría antes que su propio `click`/selección
+  // y la lista se cerraría de golpe con la fila aún sin escoger.
+  campoTickerLibre.addEventListener('blur', () => setTimeout(cerrarSugerencias, 150));
 
   /* Recarga manual de la cartera. Llama a `cargarCartera()`, la misma
      función que usa el arranque: no hay un segundo camino de datos ni un
@@ -4318,6 +4668,9 @@ async function iniciar() {
   enlazarEventos();
   actualizarIndicadorSesion();
   seguirAlturaCabecera();
+  // Los CTA del hero, únicos "botones principales" que pide el imán: viven
+  // estáticos en el documento —no hace falta esperar a ningún dato—.
+  activarImantados('.manifiesto__acciones', '.boton');
 
   await cargarMarca();
   await cargarVocabularios();

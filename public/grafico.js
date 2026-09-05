@@ -1,5 +1,6 @@
 import { localeFormato, formatearPorcentaje } from './formato.js';
 import { t } from './i18n.js';
+import { sinMovimiento } from './movimiento.js';
 /* ============================================================================
    Grafico de evolucion de cartera — SVG, sin dependencias externas.
 
@@ -28,6 +29,18 @@ const ALTURA = 340;
    indice nuevo. A partir del quinto se repite —cuatro es mas de lo que un
    grafico de lineas puede distinguir de un vistazo de todos modos—. */
 const CLASES_BENCHMARK = ['indice-0', 'indice-1', 'indice-2', 'indice-3'];
+
+/* La curva de `--mov-entrada`, leída del documento una sola vez: WAAPI no
+   resuelve variables CSS por su cuenta —`easing` exige el cubic-bezier ya
+   resuelto—, así que se lee aquí en vez de escribirse una segunda vez a mano. */
+let cacheCurvaEntrada = null;
+function curvaEntrada() {
+  if (!cacheCurvaEntrada) {
+    cacheCurvaEntrada = getComputedStyle(document.documentElement).getPropertyValue('--mov-entrada').trim()
+      || 'cubic-bezier(0.23, 1, 0.32, 1)';
+  }
+  return cacheCurvaEntrada;
+}
 
 const crear = (nombre, atributos = {}) => {
   const el = document.createElementNS(NS, nombre);
@@ -77,6 +90,11 @@ export class GraficoCartera {
   #geometria = null;
   #indiceActivo = null;
   #observador = null;
+  // Solo `actualizar()` lo enciende: el `ResizeObserver` de abajo también
+  // llama a `#dibujar()`, y un simple cambio de ancho de ventana no es un
+  // dato nuevo que dibujar de golpe —repetiría el barrido cada vez que se
+  // arrastra el borde de la ventana, que es puro ruido, no una entrada—.
+  #animarProximoTrazo = false;
 
   constructor(contenedor) {
     this.#contenedor = contenedor;
@@ -122,10 +140,18 @@ export class GraficoCartera {
         serie: Array.isArray(b.serie) ? b.serie : [],
       })),
     };
+    this.#animarProximoTrazo = true;
     this.#dibujar();
   }
 
   #dibujar() {
+    // Se consume aquí, en la primera línea: cualquier otra razón para
+    // repintar dentro de este mismo método —el `return` de «sin datos», un
+    // redibujado disparado por el `ResizeObserver`— nunca debe heredar un
+    // «sí, anima» que no le correspondía.
+    const animarTrazo = this.#animarProximoTrazo;
+    this.#animarProximoTrazo = false;
+
     const { cartera, benchmarks } = this.#datos;
     this.#contenedor.querySelector('svg')?.remove();
     this.#ocultarEmergente();
@@ -284,7 +310,38 @@ export class GraficoCartera {
 
     // ── Serie de la cartera: trazo protagonista ──
     const dLinea = cartera.map((p, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(2)} ${y(p.valor).toFixed(2)}`).join(' ');
-    svg.appendChild(crear('path', { class: 'grafico__linea', d: dLinea }));
+    const lineaCartera = crear('path', { class: 'grafico__linea', d: dLinea });
+    svg.appendChild(lineaCartera);
+
+    /* ── El trazo se dibuja de izquierda a derecha, WAAPI nativo ──
+       Solo en la carga de datos real (`animarTrazo`, capturado arriba) y solo
+       para ESTE trazo —los benchmarks entran ya dibujados, siguiendo la
+       misma jerarquía visual que el propio cabecero del fichero fija: la
+       cartera es la serie protagonista, la única con jerarquía para un gesto
+       de entrada propio—. `stroke-dasharray`/`stroke-dashoffset` son las
+       propiedades nativas de SVG para esto —nada de layout, solo repintado
+       del propio trazo—, animadas con `element.animate()` en vez de con una
+       clase CSS porque la longitud exacta (`getTotalLength()`) es distinta
+       en cada trazado y no existe forma de expresarla en una hoja de
+       estilos sin JS igualmente. La curva se LEE de `--mov-entrada` —vía
+       `getComputedStyle`, cacheada una sola vez— en vez de copiar sus cuatro
+       números a mano: un cubic-bezier duplicado se habría desincronizado el
+       día que alguien afinara el token sin buscar esta copia. */
+    if (animarTrazo && !sinMovimiento() && typeof lineaCartera.getTotalLength === 'function') {
+      const longitud = lineaCartera.getTotalLength();
+      if (longitud > 0) {
+        lineaCartera.style.strokeDasharray = `${longitud}`;
+        lineaCartera.style.strokeDashoffset = `${longitud}`;
+        const animacion = lineaCartera.animate(
+          [{ strokeDashoffset: longitud }, { strokeDashoffset: 0 }],
+          { duration: 900, easing: curvaEntrada(), fill: 'forwards' }
+        );
+        animacion.onfinish = () => {
+          lineaCartera.style.removeProperty('stroke-dasharray');
+          lineaCartera.style.removeProperty('stroke-dashoffset');
+        };
+      }
+    }
 
     /* ── Rótulo directo al final de cada serie ──
        Nombre y último nivel pegados al punto donde la serie acaba. Es lo que
