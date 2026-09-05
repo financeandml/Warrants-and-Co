@@ -2304,10 +2304,15 @@ function coreografiaEntradaCartera() {
 function pintarResumenPortfolio(datos) {
   const cuadro = $('#resumen-portfolio');
   if (!cuadro) return;
-  // Dos cajas: rentabilidad y capital arriba, ROIC y recuento debajo. La
-  // segunda es opcional a propósito —si algún día no está en el armazón, la
-  // función sigue pintando la primera en vez de reventar—, misma disciplina
-  // que la guarda por pieza de `pintarCartera()`.
+  // Ledger de una sola columna, en capítulos —Rentabilidad y Capital aquí,
+  // Actividad en `#resumen-secundario` debajo—. Reemplaza el split en dos
+  // columnas de la ronda anterior: con 1 fila (+ desglose) en un lado y 3
+  // filas en el otro, las columnas medían distinto y dejaban un hueco
+  // irregular que se leía como roto. Sin columnas que sincronizar, no hay
+  // nada que desalinear. `secundario` es opcional a propósito —si algún día
+  // no está en el armazón, la función sigue pintando los dos capítulos
+  // principales en vez de reventar—, misma disciplina que la guarda por
+  // pieza de `pintarCartera()`.
   const secundario = $('#resumen-secundario');
   cuadro.textContent = '';
   if (secundario) secundario.textContent = '';
@@ -2318,30 +2323,6 @@ function pintarResumenPortfolio(datos) {
   const cifraPctSimple = (v) => (v === null || v === undefined ? na : porcentaje(v));
   const cifraEntera = (v) => (v === null || v === undefined ? na : String(Math.round(v)));
 
-  // La raya de la izquierda solo se tiñe donde hay una dirección real que
-  // afirmar —el mismo signo que ya lleva la cifra—: Capital desplegado,
-  // Liquidez y el recuento de posiciones no son un retorno que suba o baje,
-  // así que se quedan en la raya gris neutra. Nunca al revés: no se inventa
-  // una dirección para que la raya tenga color.
-  const claseDireccion = (v) => (v === null ? ''
-    : ` indicador--${Number(v) > 0 ? 'alza' : Number(v) < 0 ? 'baja' : 'nula'}`);
-
-  /* `clave` identifica la celda ENTRE pintados —nunca la etiqueta traducida,
-     que cambia con el idioma sin que el dato se haya movido—: es lo que
-     `pintarCifraIndicador()` usa para saber si hay un valor anterior real
-     con el que comparar, o si esta es la primera vez que la celda se pinta. */
-  const indicador = (clave, etiqueta, crudo, formatear, nota, { principal = false, variacion = null } = {}) => {
-    const bloque = elemento('div',
-      `indicador${principal ? ' indicador--principal' : ''}${claseDireccion(variacion)}`);
-    bloque.appendChild(elemento('span', 'indicador__etiqueta', etiqueta));
-    const v = elemento('strong', 'indicador__valor', '');
-    if (variacion !== null) v.className = `indicador__valor ${claseVariacion(variacion)}`;
-    bloque.appendChild(v);
-    if (nota) bloque.appendChild(elemento('span', 'indicador__nota', nota));
-    pintarCifraIndicador(v, clave, crudo, formatear);
-    return bloque;
-  };
-
   if (!r) {
     const vacio = elemento('div', 'vacio');
     vacio.appendChild(elemento('strong', null, t('cartera.resumen.vacio.titulo')));
@@ -2350,57 +2331,97 @@ function pintarResumenPortfolio(datos) {
     return;
   }
 
-  // ── Caja 1: de dónde sale la rentabilidad y cuánto capital la respalda ──
+  const capitulo = (titulo) => {
+    const nodo = elemento('section', 'capitulo');
+    nodo.appendChild(elemento('p', 'capitulo__titulo', titulo));
+    return nodo;
+  };
+
+  /* `clave` identifica la fila ENTRE pintados —nunca la etiqueta traducida,
+     que cambia con el idioma sin que el dato se haya movido—: es lo que
+     `pintarCifraIndicador()` usa para saber si hay un valor anterior real
+     con el que comparar, o si esta es la primera vez que la fila se pinta. */
+  const fila = (clave, etiqueta, crudo, formatear, { variacion = null } = {}) => {
+    const nodo = elemento('div', 'fila');
+    nodo.appendChild(elemento('span', 'fila__etiqueta', etiqueta));
+    const v = elemento('strong', 'fila__valor', '');
+    if (variacion !== null) v.className = `fila__valor ${claseVariacion(variacion)}`;
+    nodo.appendChild(v);
+    pintarCifraIndicador(v, clave, crudo, formatear);
+    return nodo;
+  };
+
+  // Parte del desglose anidado —"realizada +X % · no realizada +Y %"—, cada
+  // mitad con su propio contador en vivo, igual que cualquier otra cifra del
+  // resumen (misma `pintarCifraIndicador()`, misma clave por mitad).
+  const parteDesglose = (clave, etiquetaCorta, crudo, formatear) => {
+    const parte = elemento('span', 'fila__caption-parte');
+    parte.appendChild(document.createTextNode(`${etiquetaCorta} `));
+    const v = elemento('strong', '', '');
+    if (crudo !== null && crudo !== undefined) v.className = claseVariacion(crudo);
+    parte.appendChild(v);
+    pintarCifraIndicador(v, clave, crudo, formatear);
+    return parte;
+  };
+
+  // ── Capítulo 1: de dónde sale la rentabilidad ──
   // Mismo hecho que `cartera.indicador.rentabilidad` de `#cuadro-mando`, leído
   // del mismo campo en última instancia: `resumenPortfolio.retornoPct` es
   // literalmente `estadisticos.rentabilidadTotal`, nunca un cálculo aparte.
-  cuadro.appendChild(indicador('retorno', t('cartera.resumen.retorno'), r.retornoPct, cifraPct,
-    t('cartera.resumen.retorno.nota'), { principal: true, variacion: r.retornoPct }));
+  const capRentabilidad = capitulo(t('cartera.resumen.grupo.rentabilidad'));
+  const filaRetorno = fila('retorno', t('cartera.resumen.retorno'), r.retornoPct, cifraPct, { variacion: r.retornoPct });
+  /* Realizada / no realizada van anidadas bajo el retorno que descomponen
+     —a petición explícita, comparando con la referencia—: una sola fila
+     firmada por "Rentabilidad de la cartera", con su aritmética debajo en
+     vez de como filas hermanas. Sigue siendo la Regla 9 cumplida: cada
+     cifra aparece UNA vez en pantalla, leída del único campo que la calcula.
+     `null` cuando no hay nada cerrado (o nada abierto) se rotula «N/A» vía
+     `cifraPct`, nunca 0 %: es el tercer estado. */
+  const caption = elemento('span', 'fila__caption');
+  caption.appendChild(parteDesglose('realizado', t('cartera.resumen.realizado.corta'), r.retornoRealizadoPct, cifraPct));
+  caption.appendChild(document.createTextNode(' · '));
+  caption.appendChild(parteDesglose('noRealizado', t('cartera.resumen.noRealizado.corta'), r.retornoNoRealizadoPct, cifraPct));
+  filaRetorno.appendChild(caption);
+  capRentabilidad.appendChild(filaRetorno);
+  cuadro.appendChild(capRentabilidad);
 
-  /* Realizada / no realizada, en celda propia junto al retorno que
-     descomponen. Vivieron anidadas bajo él una ronda —la jerarquía era más
-     fiel a la aritmética—, y vuelven a ser hermanas a petición explícita,
-     comparando con la referencia. No es el caso que la Regla 9 prohíbe: cada
-     una sigue apareciendo UNA vez en pantalla, leída del único campo que la
-     calcula. Lo que sí sigue prohibido, y por eso no está, es repetirlas
-     además en un panel lateral. `null` cuando no hay nada cerrado (o nada
-     abierto) se rotula «N/A», nunca 0 %: es el tercer estado. */
-  cuadro.appendChild(indicador('realizado', t('cartera.resumen.realizado'), r.retornoRealizadoPct, cifraPct,
-    r.retornoRealizadoPct === null
-      ? t('cartera.resumen.realizado.vacio')
-      : t('cartera.resumen.realizado.nota'),
-    { variacion: r.retornoRealizadoPct }));
-  cuadro.appendChild(indicador('noRealizado', t('cartera.resumen.noRealizado'), r.retornoNoRealizadoPct, cifraPct,
-    r.retornoNoRealizadoPct === null
-      ? t('cartera.resumen.noRealizado.vacio')
-      : t('cartera.resumen.noRealizado.nota'),
-    { variacion: r.retornoNoRealizadoPct }));
-
-  cuadro.appendChild(indicador('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple,
-    t('cartera.resumen.capital.nota')));
+  // ── Capítulo 2: cuánto capital hay en juego y cómo rinde ──
+  const capCapital = capitulo(t('cartera.resumen.grupo.capital'));
+  capCapital.appendChild(fila('roic', t('cartera.resumen.roic'), r.roicPct, cifraPct, { variacion: r.roicPct }));
+  capCapital.appendChild(fila('capital', t('cartera.resumen.capital'), r.capitalDesplegadoPct, cifraPctSimple));
   // Disponible: mismo campo que ya usa `#cuadro-mando` —`datos.liquidez`—,
   // nunca un segundo cálculo de caja (Regla 9).
   const caja = datos.liquidez;
   if (caja && Number.isFinite(caja.pesoActual)) {
-    cuadro.appendChild(indicador('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple,
-      t('cartera.indicador.liquidez.nota', { capital: porcentaje(caja.pesoCapital) })));
+    capCapital.appendChild(fila('liquidez', t('cartera.indicador.liquidez'), caja.pesoActual, cifraPctSimple));
   }
+  cuadro.appendChild(capCapital);
 
-  // ── Caja 2: rendimiento del capital y recuento de tesis ──
-  const segunda = secundario ?? cuadro;
-  segunda.appendChild(indicador('roic', t('cartera.resumen.roic'), r.roicPct, cifraPct,
-    r.roicPct === null ? t('cartera.resumen.roic.vacio') : t('cartera.resumen.roic.nota'),
-    { variacion: r.roicPct }));
-  segunda.appendChild(indicador('abiertas', t('cartera.resumen.abiertas'), r.posicionesAbiertas, cifraEntera,
-    t('cartera.resumen.abiertas.nota')));
-  segunda.appendChild(indicador('cerradas', t('cartera.resumen.cerradas'), r.posicionesCerradas, cifraEntera,
-    t('cartera.resumen.cerradas.nota')));
-  // Capital comprometido / Exposición neta se retiraron de aquí: eran el
-  // mismo valor exacto que Capital desplegado y Liquidez de la Caja 1, solo
-  // con otro rótulo —la excepción a la Regla 9 que las sostenía se revoca
-  // a petición explícita, comparando con las tres referencias de gestión
-  // activa (cobasam.com, azvalor.com, magallanesvalue.com): ninguna repite
-  // la misma cifra dos veces en la misma pantalla.
+  // ── Capítulo 3: Actividad, recuento de tesis ──
+  // No es una métrica de retorno —es contexto—, así que va en su propio
+  // capítulo debajo, en `#resumen-secundario`. Las dos cifras comparten fila
+  // separadas solo por espacio —nunca una raya vertical entre ellas—.
+  if (secundario) {
+    const capActividad = capitulo(t('cartera.resumen.grupo.actividad'));
+    const filaDoble = elemento('div', 'fila fila--doble');
+    const par = (clave, etiqueta, crudo) => {
+      const nodo = elemento('div', 'par');
+      nodo.appendChild(elemento('span', 'fila__etiqueta', etiqueta));
+      const v = elemento('strong', 'fila__valor', '');
+      nodo.appendChild(v);
+      pintarCifraIndicador(v, clave, crudo, cifraEntera);
+      return nodo;
+    };
+    filaDoble.appendChild(par('abiertas', t('cartera.resumen.abiertas'), r.posicionesAbiertas));
+    filaDoble.appendChild(par('cerradas', t('cartera.resumen.cerradas'), r.posicionesCerradas));
+    capActividad.appendChild(filaDoble);
+    secundario.appendChild(capActividad);
+  }
+  // Capital comprometido / Exposición neta ya no se pintan aquí: eran el
+  // mismo valor exacto que Capital desplegado y Liquidez, solo con otro
+  // rótulo —la excepción a la Regla 9 que las sostenía se revocó comparando
+  // con las tres referencias de gestión activa (cobasam.com, azvalor.com,
+  // magallanesvalue.com): ninguna repite la misma cifra dos veces en pantalla.
 }
 
 const NS_DISTRIBUCION = 'http://www.w3.org/2000/svg';
@@ -2468,14 +2489,22 @@ function pintarDistribucionCapital(datos) {
   let acumulado = 0;
   for (const s of sectores) {
     if (s.peso > 0) {
-      svg.appendChild(crearSvg('circle', {
+      // La rotación de arranque (12 en punto) vive en un <g> propio, como
+      // atributo, y NO en el <circle> — que es quien lleva `transform-origin`
+      // y `transition: transform` para el hover (estilos.css). Las dos cosas
+      // en el MISMO nodo chocan: al no haber un valor `transform` explícito
+      // en CSS, el atributo del propio nodo deja de aplicarse y el arco
+      // desaparece entero, sin avisar. Separar el nodo que posiciona del
+      // nodo que anima evita la colisión sin perder ninguna de las dos cosas.
+      const g = crearSvg('g', { transform: `rotate(-90 ${centro} ${centro})` });
+      g.appendChild(crearSvg('circle', {
         class: 'distribucion-capital__arco',
         cx: centro, cy: centro, r: G.radio,
         fill: 'none', stroke: s.relleno, 'stroke-width': G.grosor,
         'stroke-dasharray': `${((s.peso / 100) * circunferencia).toFixed(3)} ${circunferencia.toFixed(3)}`,
         'stroke-dashoffset': `${(-(acumulado / 100) * circunferencia).toFixed(3)}`,
-        transform: `rotate(-90 ${centro} ${centro})`,
       }));
+      svg.appendChild(g);
     }
     acumulado += s.peso;
   }
@@ -2719,7 +2748,7 @@ function mostrarAvisoTickerLibre(texto) {
 // 404 limpio de "sin datos" —cae en el 500 genérico que esa ruta reserva
 // para lo que no reconoce como intento de símbolo—, y el aviso mentiría
 // sobre cuál fue el problema real.
-const PATRON_TICKER = /^\^?[A-Z0-9][A-Z0-9.\-]{0,11}$/;
+const PATRON_TICKER = /^\^?[A-Z0-9][A-Z0-9.\-=]{0,13}$/;
 
 async function anadirTickerLibre() {
   const campo = $('#campo-ticker-libre');

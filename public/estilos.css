@@ -1229,67 +1229,76 @@ button, input, select, textarea { font: inherit; color: inherit; }
   max-width: 60ch;
 }
 
-/* Cabecera de `resumenPortfolio`: excepción documentada y consciente a
-   "editorial, no tarjeta" —decisión tomada viendo qué se pierde: la lectura
-   como franja continua que motivó esa regla, y la consistencia con el resto
-   de Cartera, que sigue sin caja—. Dos cajas, una por grupo de lectura, no
-   una por cifra; sigue sin ser el lenguaje "bento" del resto de la
-   plataforma. Borde vuelto a pedido explícito —negro, `--tinta`, nunca un
-   literal—, sin relleno: la caja se lee por su contorno, no por un fondo
-   gris (eso sí se retiró, y sigue retirado). Las diez celdas se reparten
-   5+5 entre las dos cajas a propósito: mismas columnas, mismo ancho, para
-   que el encuadre entre ambas case celda a celda. */
-#seccion-cartera .cuadro-mando--caja {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  column-gap: var(--espacio-5); row-gap: var(--espacio-4);
-  align-items: start;
-  border: 1px solid var(--tinta);
-  border-radius: var(--radio-l);
-  padding: var(--espacio-4) var(--espacio-5);
-  margin-bottom: var(--espacio-3);
+/* Resumen de capital: ledger de una sola columna, en capítulos —composición
+   D, aprobada tras descartar la B: aquella partía el resumen en dos
+   columnas de altura distinta (Rentabilidad con una fila, Capital con tres)
+   y el hueco irregular resultante se leía como roto. Sin columnas que
+   sincronizar, no hay nada que desalinear. Sin caja ni fondo distinto al de
+   la página, sin rayas verticales de ningún color: la única línea es el
+   filete horizontal gris entre filas, mismo `--linea-fuerte`/`--linea-hairline`
+   que ya separa filas en el resto de la plataforma. Las cifras van a
+   `--tipo-6` —el mismo token del h1— en vez de `--tipo-4/5`: es el peso
+   editorial que pide la referencia (Cobas/Azvalor/Magallanes), y sigue
+   siendo un token existente, no un literal suelto (CLAUDE.md § Diseño 6). */
+#seccion-cartera .capitulo {
+  margin-top: var(--espacio-6);
 }
-/* Raya vertical de separación, gris y del mismo grosor en las ocho celdas
-   —sin distinguir alza/baja por color, a petición explícita—. La dirección
-   de cada cifra sigue afirmada por su glifo (▲ ▼) y signo en el propio
-   valor (Cláusula 1): esta raya deja de ser una segunda fuente de esa
-   misma señal (Regla 9) y vuelve a ser un separador puro. */
-#seccion-cartera .cuadro-mando--caja .indicador {
-  padding: 0 0 0 16px;
-  border-inline-start: 3px solid var(--linea-fuerte);
-  min-width: 0;
+/* Solo el primer capítulo de `#resumen-portfolio` pierde el margen superior
+   —es el primero de la pieza entera—. El capítulo de Actividad en
+   `#resumen-secundario`, aunque también sea `:first-child` de SU propio
+   contenedor, es el segundo capítulo de la pieza y necesita el mismo aire
+   que separa cualquier otro par: sin este scope, los dos contenedores
+   quedaban pegados y "Actividad" se leía encimado sobre la última fila de
+   Capital. */
+#seccion-cartera #resumen-portfolio > .capitulo:first-child {
+  margin-top: 0;
 }
-/* Jerarquía por peso, no por tamaño: las ocho celdas miden lo mismo a
-   propósito (nota de arriba), así que la única palanca que queda para que
-   la etiqueta se lea como "encabezado de dato" y no como texto corrido es
-   el peso — el mismo 600 que ya usa `.etiqueta-superior` en la cabecera de
-   la sección, aquí acotado a Cartera para no engordar la etiqueta en
-   Companies/Catalysts/Noticias/Repositorio, que comparten la regla base. */
-#seccion-cartera .cuadro-mando--caja .indicador__etiqueta {
-  font-weight: 600;
+#seccion-cartera .capitulo__titulo {
+  font-size: var(--tipo-1); font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--tinta-mate);
+  margin: 0 0 var(--espacio-2);
 }
-/* Las ocho celdas miden lo mismo, sin cifra dominante: es lo que pide la
-   referencia y se implementa a petición explícita. Se pierde con ello la
-   pista visual de cuál manda —«Rentabilidad de la cartera» es la que las
-   otras descomponen—; queda dicho aquí para que quien lo lea sepa que fue
-   una decisión y no un descuido. `--tipo-indicador-principal` deja de
-   aplicarse en esta vista: su excepción documentada en CLAUDE.md sigue
-   describiendo el token, que hoy no usa nadie en Cartera. */
-#seccion-cartera .cuadro-mando--caja .indicador__valor,
-#seccion-cartera .cuadro-mando--caja .indicador--principal .indicador__valor {
-  font-family: var(--geo);
+#seccion-cartera .capitulo .fila {
+  display: flex; justify-content: space-between; align-items: baseline;
+  flex-wrap: wrap; column-gap: var(--espacio-4);
+  padding-block: 18px; border-top: 1px solid var(--linea-fuerte);
+}
+#seccion-cartera .capitulo .fila + .fila {
+  border-top: 1px solid var(--linea-hairline);
+}
+#seccion-cartera .fila__etiqueta {
+  font-size: var(--tipo-3); color: var(--tinta-secundaria);
+}
+#seccion-cartera .fila__valor {
+  font-family: var(--geo); font-size: var(--tipo-6); font-weight: 500;
+  line-height: 1; white-space: nowrap;
+}
+/* Desglose anidado bajo "Rentabilidad de la cartera": aritmética en letra
+   pequeña debajo de la cifra que descompone, no filas hermanas —a petición
+   explícita, comparando con la referencia—. Ocupa el ancho completo de la
+   fila (`flex-basis: 100%`) para que quede debajo de etiqueta+valor y no al
+   lado, sin forzar la fila a envolver por falta de sitio. */
+#seccion-cartera .fila__caption {
+  flex-basis: 100%; font-size: var(--tipo-1); color: var(--tinta-mate);
+  margin-top: 4px;
+}
+#seccion-cartera .fila__caption-parte { white-space: nowrap; }
+#seccion-cartera .fila__caption-parte strong { font-weight: 600; }
+
+/* Capítulo de Actividad (`#resumen-secundario`): las dos cifras comparten
+   una sola fila, separadas solo por espacio —nunca una raya vertical entre
+   ellas, a petición explícita: solo aire y tipografía como separadores—.
+   Van a `--tipo-5`, un paso por debajo del resto: son recuento, no una
+   cifra de rentabilidad, y no compiten por el mismo peso. */
+#seccion-cartera .fila--doble {
+  display: flex; flex-wrap: wrap; column-gap: var(--espacio-6); row-gap: var(--espacio-3);
+}
+#seccion-cartera .fila--doble .par {
+  display: flex; align-items: baseline; gap: var(--espacio-2);
+}
+#seccion-cartera .fila--doble .fila__valor {
   font-size: var(--tipo-5);
-  font-weight: 500;
 }
-
-/* El desglose anidado (`.indicador__desglose*`) se retiró con esta ronda:
-   realizada y no realizada volvieron a ser celdas hermanas, así que ya no
-   hay nada anidado que estilar. El HTML que lo usaba está en el historial
-   —commit del resumen en dos cajas—, por si vuelve la jerarquía. */
-
-/* Etiquetas editoriales: pequeñas, versalitas por transformación, con tracking
-   —el mismo patrón que ya usa `.indicador__etiqueta` en el resto de la
-   plataforma, aquí no hay una segunda regla, solo se hereda. */
 
 /* Tabla fundida: cifras en monospace del sistema (`--mono`, sin fichero
    propio) y alineadas a la derecha. La cabecera y el filete de fila siguen el

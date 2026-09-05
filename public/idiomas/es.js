@@ -555,8 +555,13 @@ export default {
   // y otro para cuando no hay nada de ese lado todavía —tercer estado, no cero—.
   'cartera.resumen.vacio.titulo': 'Sin resumen que publicar',
   'cartera.resumen.vacio.motivo': 'La cartera no tiene posiciones constituidas todavía.',
+  'cartera.resumen.grupo.rentabilidad': 'Rentabilidad',
+  'cartera.resumen.grupo.capital': 'Capital',
+  'cartera.resumen.grupo.actividad': 'Actividad',
   'cartera.resumen.retorno': 'Rentabilidad de la cartera',
   'cartera.resumen.retorno.nota': 'Sobre el capital invertido',
+  'cartera.resumen.realizado.corta': 'realizada',
+  'cartera.resumen.noRealizado.corta': 'no realizada',
   // Sin `.nota`/`.vacio`: viven ahora como desglose anidado bajo el retorno
   // (compacto, dos cifras, sin nota explicativa) y en la barra comparativa
   // de abajo — ninguno de los dos sitios tiene espacio editorial para nota.

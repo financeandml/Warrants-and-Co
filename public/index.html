@@ -936,23 +936,22 @@
         </div>
       </div>
 
-      <!-- ══ Primera pieza reconstruida: resumen de capital, en dos cajas ══
-           Diez celdas en total: retorno, realizada, no realizada, capital
-           desplegado y disponible en la primera caja; ROIC, abiertas,
-           cerradas, capital comprometido y exposición neta en la segunda.
-           Realizada/no realizada dejan de ir anidadas bajo el retorno y
-           pasan a celda propia —decisión revertida a petición explícita,
-           comparando con la referencia; siguen apareciendo UNA sola vez en
-           pantalla, que es lo que la Regla 9 exige, no dónde se colocan—.
-           «Capital comprometido» y «Exposición neta» SÍ se repiten a
-           propósito: son capital desplegado y disponible con el rótulo de
-           la referencia, duplicado confirmado y pedido de forma explícita
-           —no un olvido de la Regla 9, una excepción a ella con nombre—.
-           Sin cabecera propia ni aviso de metodología: retirados a petición
-           explícita, junto con el "Rendimiento" que encabezaba el bloque. -->
+      <!-- ══ Resumen de capital: ledger de una sola columna, en capítulos ══
+           Rentabilidad (con realizada/no realizada anidadas debajo del
+           retorno) y Capital (ROIC, capital desplegado, liquidez) en
+           `#resumen-portfolio`; posiciones abiertas/cerradas en su propio
+           capítulo de Actividad, en `#resumen-secundario` debajo —son
+           recuento de tesis, no una métrica de retorno, así que se separan
+           del grupo principal—. Sin caja, sin fondo distinto al de la
+           página, sin rayas verticales: solo espacio en blanco y un filete
+           horizontal gris entre filas, estilo cobasam.com/azvalor.com/
+           magallanesvalue.com. Composición D de dos rondas de mockup: la B
+           partía el resumen en dos columnas de altura distinta y el hueco
+           resultante se leía como roto; esta es de una sola columna, nada
+           que desalinear. -->
       <section class="tarjeta">
-        <div class="cuadro-mando cuadro-mando--caja" id="resumen-portfolio"></div>
-        <div class="cuadro-mando cuadro-mando--caja" id="resumen-secundario"></div>
+        <div id="resumen-portfolio"></div>
+        <div id="resumen-secundario"></div>
       </section>
 
       <!-- ══ Segunda pieza reconstruida: el gráfico ══

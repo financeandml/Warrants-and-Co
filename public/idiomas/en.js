@@ -537,8 +537,13 @@ export default {
   // ═════════════════════ Portfolio · capital summary ═════════════════════
   'cartera.resumen.vacio.titulo': 'No summary to publish',
   'cartera.resumen.vacio.motivo': 'The portfolio has no positions constituted yet.',
+  'cartera.resumen.grupo.rentabilidad': 'Return',
+  'cartera.resumen.grupo.capital': 'Capital',
+  'cartera.resumen.grupo.actividad': 'Activity',
   'cartera.resumen.retorno': 'Portfolio return',
   'cartera.resumen.retorno.nota': 'On invested capital',
+  'cartera.resumen.realizado.corta': 'realized',
+  'cartera.resumen.noRealizado.corta': 'unrealized',
   'cartera.resumen.realizado': 'Realized return',
   'cartera.resumen.realizado.nota': 'Sum of the contribution of closed positions',
   'cartera.resumen.realizado.vacio': 'No closed position yet',
