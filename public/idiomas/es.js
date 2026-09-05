@@ -84,6 +84,15 @@ export default {
   'pie.lema': 'Plataforma interna de análisis e inversión.',
   'pie.linkedin': 'Perfil de Warrants & Co. en LinkedIn',
   'pie.nav.etiqueta': 'Secciones de Warrants & Co.',
+  'pie.newsletter.titulo': 'Newsletter',
+  'pie.newsletter.texto': 'Resumen diario y semanal de mercados, inversión y economía. Automático, directo al correo.',
+  'pie.newsletter.etiquetaCampo': 'Correo electrónico',
+  'pie.newsletter.placeholder': 'tu@correo.com',
+  'pie.newsletter.boton': 'Suscribirme',
+  'pie.newsletter.enviando': 'Enviando…',
+  'pie.newsletter.exito': 'Listo. Recibirás el resumen diario y el semanal.',
+  'pie.newsletter.yaExistia': 'Ya estabas suscrito con este correo.',
+  'pie.newsletter.error': 'No se ha podido completar el alta. Inténtalo de nuevo.',
   // Redirección "hedge fund → research verificable": se retira "las rentabilidades
   // pasadas no garantizan rendimientos futuros" — lenguaje de fondo regulado que no
   // aplica aquí, no se gestiona capital de terceros. Sustituye al aviso anterior
@@ -872,6 +881,8 @@ export default {
   'codigo.FORMATO_VIDEO_NO_ADMITIDO':
     'Formato no admitido. Únicamente se aceptan ficheros MP4 y WebM.',
   'codigo.COMPANIA_NO_CUBIERTA': 'La compañía no figura bajo cobertura.',
+  'codigo.EMAIL_NO_VALIDO': 'La dirección de correo no es válida.',
+  'codigo.TOKEN_BAJA_NO_VALIDO': 'El enlace de baja no es válido o ya se usó.',
 
   // ══════════════════════════ Acceso de analista ═══════════════════════════
   'acceso.credencialInvalida': 'Credencial no válida.',

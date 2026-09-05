@@ -83,6 +83,15 @@ export default {
   'pie.lema': 'Internal research and investment platform.',
   'pie.linkedin': 'Warrants & Co. profile on LinkedIn',
   'pie.nav.etiqueta': 'Warrants & Co. sections',
+  'pie.newsletter.titulo': 'Newsletter',
+  'pie.newsletter.texto': 'Daily and weekly summary of markets, investing and economics. Automatic, straight to your inbox.',
+  'pie.newsletter.etiquetaCampo': 'Email address',
+  'pie.newsletter.placeholder': 'you@email.com',
+  'pie.newsletter.boton': 'Subscribe',
+  'pie.newsletter.enviando': 'Sending…',
+  'pie.newsletter.exito': 'Done. You will get the daily and the weekly digest.',
+  'pie.newsletter.yaExistia': 'You were already subscribed with this email.',
+  'pie.newsletter.error': 'Could not complete the sign-up. Please try again.',
   'pie.aviso': 'This is research, not investment advice. Theses reflect the judgment of whoever signs them. The portfolio is calculated automatically from what’s published, session by session, with no manual intervention on the outcome.',
 
   // ── Formatting pieces ──
@@ -832,6 +841,8 @@ export default {
   'codigo.FORMATO_VIDEO_NO_ADMITIDO':
     'Format not supported. Only MP4 and WebM files are accepted.',
   'codigo.COMPANIA_NO_CUBIERTA': 'This company is not under coverage.',
+  'codigo.EMAIL_NO_VALIDO': 'The email address is not valid.',
+  'codigo.TOKEN_BAJA_NO_VALIDO': 'The unsubscribe link is not valid or was already used.',
 
   // ═══════════════════════════ Analyst access ═════════════════════════════
   'acceso.credencialInvalida': 'Invalid credentials.',

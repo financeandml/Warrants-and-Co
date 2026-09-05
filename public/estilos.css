@@ -5253,6 +5253,46 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   .pie__navegacion { gap: 12px 22px; }
 }
 
+/* ── Newsletter del pie: mismo filete superior que ya separa `.pie__navegacion`
+   del bloque de arriba, aplicado aquí primero porque en el marcado va antes.
+   Ancho acotado (46ch en el texto, el form no crece más allá de 420px): en
+   una pantalla ancha el pie sigue siendo una franja de lectura, no un
+   formulario a todo el ancho. */
+.pie__newsletter {
+  padding-block-start: 22px; margin-block-start: 22px;
+  border-block-start: 1px solid var(--linea);
+}
+.pie__newsletter-titulo {
+  font-size: var(--tipo-1); font-weight: 600; letter-spacing: 0.11em;
+  text-transform: uppercase; color: var(--tinta-mate); margin: 0 0 6px;
+}
+.pie__newsletter-texto { max-width: 46ch; margin: 0 0 14px; }
+.pie__newsletter-form { display: flex; flex-wrap: wrap; gap: 10px; max-width: 420px; }
+.pie__newsletter-form input {
+  flex: 1 1 220px; min-width: 0;
+  padding: 10px 12px; font-size: var(--tipo-2); color: var(--tinta);
+  border: 1px solid var(--linea-fuerte); border-radius: var(--radio);
+  background: var(--superficie);
+  transition: border-color var(--transicion);
+}
+.pie__newsletter-form input:hover { border-color: var(--tinta-mate); }
+.pie__newsletter-form input:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+.pie__newsletter-form button {
+  flex: 0 0 auto;
+  padding: 10px 18px; font-size: var(--tipo-2); font-weight: 600;
+  color: var(--tinta-inversa); background: var(--acento);
+  border: none; border-radius: var(--radio); cursor: pointer;
+  transition: opacity var(--transicion);
+}
+.pie__newsletter-form button:hover { opacity: 0.88; }
+.pie__newsletter-form button:disabled { opacity: 0.6; cursor: default; }
+.pie__newsletter-form button:focus-visible { outline: 2px solid var(--foco); outline-offset: 2px; }
+/* `.pie .pie__newsletter-aviso`, no la clase sola: `.pie p` (línea 2257) pesa
+   clase+etiqueta y le ganaría el color a una sola clase — el aviso se veía
+   siempre en `--tinta-mate`, nunca en su verde o rojo real. */
+.pie .pie__newsletter-aviso { margin: 10px 0 0; font-size: var(--tipo-1); color: var(--alcista); }
+.pie .pie__newsletter-aviso--error { color: var(--bajista); }
+
 /* ═══════════════════════ Conmutador de idioma ═══════════════════════
    Hermano exacto del conmutador de tema: mismo marco, misma píldora y la
    misma mecánica de pulsado. Cambia solo el contenido —dos letras en vez de

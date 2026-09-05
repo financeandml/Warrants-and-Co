@@ -80,6 +80,8 @@ const API = {
      ningún catálogo — el cliente recibía código, pero sin rótulo que buscar,
      y caía igual al castellano. */
   COMPANIA_NO_CUBIERTA: { status: 404, mensaje: 'La compañía no figura bajo cobertura.' },
+  EMAIL_NO_VALIDO: { status: 422, mensaje: 'La dirección de correo no es válida.' },
+  TOKEN_BAJA_NO_VALIDO: { status: 404, mensaje: 'El enlace de baja no es válido o ya se usó.' },
   /* Uno por cada motivo de `CODIGOS_LECTURA` (`src/extraccion/pdf.js`). El
      mismo status —422— que usaba `ErrorLectura` antes de tener catálogo
      propio. Su traducción al cliente no pasa por aquí: la ruta de subida de

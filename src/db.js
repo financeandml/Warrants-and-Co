@@ -172,6 +172,23 @@ db.exec(`
   END
 `);
 
+// Suscripciones a la newsletter: un alta da acceso a la diaria y a la semanal
+// a la vez, no son dos listas separadas. `token_baja` identifica el enlace de
+// baja sin exponer el email en la URL ni exigir sesión — quien lo recibió por
+// correo es quien puede darse de baja con él, y basta.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS suscriptores_newsletter (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    email      TEXT    NOT NULL UNIQUE COLLATE NOCASE,
+    idioma     TEXT    NOT NULL DEFAULT 'es',
+    activo     INTEGER NOT NULL DEFAULT 1,
+    token_baja TEXT    NOT NULL UNIQUE,
+    creado_en  TEXT    NOT NULL DEFAULT (datetime('now')),
+    dado_baja_en TEXT
+  )
+`);
+db.exec('CREATE INDEX IF NOT EXISTS idx_suscriptores_activo ON suscriptores_newsletter(activo)');
+
 db.exec('CREATE INDEX IF NOT EXISTS idx_informes_ticker ON informes(ticker)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_informes_fecha ON informes(fecha_publicacion DESC)');
 db.exec('CREATE INDEX IF NOT EXISTS idx_informes_destacado ON informes(destacado)');

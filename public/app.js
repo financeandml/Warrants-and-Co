@@ -6,7 +6,7 @@
 
 import { GraficoCartera, num } from './grafico.js';
 import { iniciarTema } from './tema.js';
-import { iniciarIdioma, t, tNodos, existe } from './i18n.js';
+import { iniciarIdioma, t, tNodos, existe, idiomaActivo } from './i18n.js';
 import { pintarCinta, seguirAlturaCabecera } from './portada.js';
 import { construirNavegacion, marcarSeccionActiva, rutasVisibles } from './navegacion.js';
 import { pintarAnillo } from './anillo.js';
@@ -1559,6 +1559,37 @@ function abrirAcceso() {
   actualizarIndicadorSesion();
   $('#dialogo-acceso').showModal();
   $('#campo-clave').focus();
+}
+
+/** Alta en la newsletter, desde el pie de cualquier sección. */
+async function enviarNewsletter(ev) {
+  ev.preventDefault();
+  const campo = $('#campo-newsletter-email');
+  const boton = $('#form-newsletter button[type="submit"]');
+  const aviso = $('#aviso-newsletter');
+  const rotuloOriginal = boton.textContent;
+
+  aviso.hidden = true;
+  aviso.classList.remove('pie__newsletter-aviso--error');
+  boton.disabled = true;
+  boton.textContent = t('pie.newsletter.enviando');
+
+  try {
+    const r = await api('/api/newsletter/suscribir', {
+      method: 'POST',
+      body: JSON.stringify({ email: campo.value.trim(), idioma: idiomaActivo() }),
+    });
+    aviso.textContent = r.yaExistia ? t('pie.newsletter.yaExistia') : t('pie.newsletter.exito');
+    aviso.hidden = false;
+    campo.value = '';
+  } catch (err) {
+    aviso.textContent = err.message || t('pie.newsletter.error');
+    aviso.classList.add('pie__newsletter-aviso--error');
+    aviso.hidden = false;
+  } finally {
+    boton.disabled = false;
+    boton.textContent = rotuloOriginal;
+  }
 }
 
 async function enviarAcceso(ev) {
@@ -4708,6 +4739,9 @@ function enlazarEventos() {
   });
 
   $('#dialogo-inusual').addEventListener('close', () => { $('#contenido-inusual').textContent = ''; });
+
+  // Newsletter (pie de página, presente en toda la plataforma)
+  $('#form-newsletter').addEventListener('submit', enviarNewsletter);
 
   // Acceso
   $('#btn-acceso').addEventListener('click', abrirAcceso);

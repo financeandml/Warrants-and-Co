@@ -1122,6 +1122,27 @@
       </a>
     </div>
 
+    <!-- ── Newsletter: una sola alta da acceso a la diaria y a la semanal ──
+         Envío gestionado por completo en el servidor (`src/newsletter/`):
+         contenido leído de la misma tabla de noticias que ya sincroniza
+         Investing.com, envío por Elastic Email según el reloj del servidor.
+         Nada de esto requiere intervención manual una vez dado de alta. -->
+    <div class="pie__newsletter" id="pie-newsletter">
+      <p class="pie__newsletter-titulo" data-i18n="pie.newsletter.titulo">Newsletter</p>
+      <p class="pie__newsletter-texto" data-i18n="pie.newsletter.texto">
+        Resumen diario y semanal de mercados, inversión y economía. Automático, directo al correo.
+      </p>
+      <form class="pie__newsletter-form" id="form-newsletter" novalidate>
+        <label class="visualmente-oculto" for="campo-newsletter-email" data-i18n="pie.newsletter.etiquetaCampo">
+          Correo electrónico
+        </label>
+        <input type="email" id="campo-newsletter-email" name="email" required maxlength="254"
+               data-i18n-attr="placeholder:pie.newsletter.placeholder" placeholder="tu@correo.com" autocomplete="email">
+        <button type="submit" data-i18n="pie.newsletter.boton">Suscribirme</button>
+      </form>
+      <p class="pie__newsletter-aviso" id="aviso-newsletter" role="status" aria-live="polite" hidden></p>
+    </div>
+
     <!-- Accesos a las áreas de la plataforma, con sus rutas reales. -->
     <nav class="pie__navegacion"
          data-i18n-attr="aria-label:pie.nav.etiqueta" aria-label="Secciones de Warrants &amp; Co.">

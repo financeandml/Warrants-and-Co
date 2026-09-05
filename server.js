@@ -22,6 +22,8 @@ const radar = require('./src/routes/radar');
 const companiasRutas = require('./src/routes/companias');
 const catalizadoresRutas = require('./src/routes/catalizadores');
 const opcionesRutas = require('./src/routes/opciones');
+const newsletterRutas = require('./src/routes/newsletter');
+const newsletterEnvio = require('./src/newsletter/envio');
 
 const app = express();
 const PUERTO = Number(process.env.PORT ?? 4173);
@@ -177,6 +179,7 @@ app.use('/api/radar', radar.router);
 app.use('/api/companias', companiasRutas.router);
 app.use('/api/catalizadores', catalizadoresRutas.router);
 app.use('/api/opciones', opcionesRutas.router);
+app.use('/api/newsletter', newsletterRutas.router);
 
 app.get('/api/salud', (req, res) => {
   const { total } = db.prepare('SELECT COUNT(*) AS total FROM informes').get();
@@ -269,6 +272,7 @@ const servidor = app.listen(PUERTO, HOST, () => {
 
   // La sindicacion arranca en segundo plano: no retrasa la disponibilidad del servicio.
   sincronizacionNoticias.iniciarSincronizacionPeriodica();
+  newsletterEnvio.iniciarProgramador();
 });
 
 servidor.on('error', (err) => {
@@ -287,6 +291,7 @@ for (const senal of ['SIGINT', 'SIGTERM']) {
     cerrando = true;
     console.log('\n  Cerrando el servidor...');
     sincronizacionNoticias.detenerSincronizacion();
+    newsletterEnvio.detenerProgramador();
     servidor.close(() => {
       try { db.close(); } catch { /* ya cerrada */ }
       process.exit(0);
