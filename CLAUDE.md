@@ -145,7 +145,8 @@ Cuando las dos preguntas empatan —una tabla que también lleva una frase expli
 fila— la fila de dato va compacta y el texto que la acompaña conserva su propio `--tipo`
 de lectura: la densidad se decide por elemento, no por sección entera, cuando la sección
 mezcla ambos. Aplicado hoy: hero cómodo, cinta compacta, noticias con cuerpo cómodo y
-metadato compacto, cartera compacta.
+metadato compacto. Cartera dejó de ser compacta con la recomposición institucional: su
+tabla de posiciones fija su propio relleno y no declara densidad —ver más abajo—.
 
 **Excepción documentada: `#tabla-serie` va cómoda.** Es una tabla de datos —por la
 cláusula 2 diría compacta—, pero se abre puntualmente con "Ver datos" y casi nadie la
@@ -154,23 +155,24 @@ naturaleza del dato, y aquí gana la frecuencia. No es una relajación sin motiv
 hueco para colar otra tabla en cómoda por comodidad: quien la vea y la "corrija" a
 compacta sin leer esto estaría deshaciendo una decisión, no arreglando un olvido.
 
-**Excepción documentada: `.tabla-posiciones` mide ~42px de fila, no los ≤34px de
-compacta.** Los tokens de densidad SÍ están puestos —12px, interlineado 1.3, relleno
-5px— y se comprobó que se aplican. Lo que empuja la fila por encima del tope es la
-primera columna, que apila dos líneas: el nombre de la posición y, debajo, «ticker ·
-sector» (`.celda-empresa small`). Bajar de dos líneas exigiría quitar el sector de ahí
-o reducirlo a solo el ticker, y eso ya no es un ajuste de densidad —es tocar qué
-información se lee de un vistazo en la tabla más consultada de Cartera, cuando ese
-mismo par ticker+sector es justo lo que el resto de la plataforma ya muestra así—.
-Decisión tomada viéndola en el navegador: se queda con sus dos líneas y sus ~42px.
-Quien la vea y la "corrija" a 34px recortando el sector estaría cambiando qué cuenta
-esta tabla, no puliendo su estilo.
+**`.tabla-posiciones` ya no declara densidad, y no es una excepción: está fuera de la
+cláusula.** Llevaba `data-densidad="compacta"` con una excepción escrita aquí que la
+autorizaba a medir ~42px en vez de ≤34px. La recomposición institucional de Cartera
+retiró el atributo: la tabla fija su propio relleno (12px por celda, 16px en la fila de
+Total) y sus filas miden ~63px —medido en navegador, 62,9–63,9px, igual a 1280px que a
+1440px—, porque la primera columna apila el nombre de la compañía y, debajo, «ticker ·
+sector», y la de precio de referencia añade su procedencia debajo de la cifra. No se
+sustituye por una excepción nueva —una excepción solo hace falta cuando algo declara
+una densidad y la incumple, y aquí no se declara ninguna—. Quien vuelva a ponerle
+`data-densidad` está sujeto otra vez al tope de la cláusula y tendrá que resolver esas
+dos líneas o justificar la excepción entonces.
 
 **Regla verificable:** para todo elemento con `data-densidad="compacta"`, una fila real
-pintada mide `getBoundingClientRect().height` ≤ 34px, **salvo las dos excepciones de
-arriba**; `"comoda"` mide ≥ 40px.
-`tests/repintado.js` lo afirma en el navegador, sobre al menos una tabla de cada
-densidad, esperando con `waitForFunction` sobre el `tbody` con filas.
+pintada mide `getBoundingClientRect().height` ≤ 34px; `"comoda"` mide ≥ 40px.
+`tests/repintado.js` lo afirma en el navegador sobre las tablas que declaran densidad,
+esperando con `waitForFunction` sobre el `tbody` con filas. Hoy la única que la declara
+es `#tabla-serie` (cómoda): la parte de compacta se cumple sin nadie a quien medir, y se
+reactiva sola en cuanto una tabla vuelva a declararla.
 
 **8 · Vocabulario de movimiento: tokens fijados, no inventados.** Dos curvas nuevas, sin
 fork paralelo de `--transicion` (140ms ease, que sigue siendo hover/color):

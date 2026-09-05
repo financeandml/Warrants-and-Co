@@ -174,7 +174,7 @@ const CARTERA_RECONSTRUIDA = false;
   }
 
   seccion('\n  ── cartera · castellano de partida ──');
-  comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
+  comp('titular', await txt('#seccion-cartera h1'), 'Cartera Warrants & Co.');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Estado');
   // Pintado en JavaScript: la liquidez de la composición y la nota del total de la
   // conciliación. Se afirman en los dos idiomas —la nota, por la palabra que cambia—
@@ -227,7 +227,7 @@ const CARTERA_RECONSTRUIDA = false;
 
   await idioma('en');
   seccion('\n  ── cartera · repintada al conmutar, sin recargar ──');
-  comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
+  comp('titular', await txt('#seccion-cartera h1'), 'Warrants & Co. portfolio');
   comp('columna de la tabla', await txt('.tabla-posiciones th:nth-child(2)'), 'Status');
   comp('liquidez en el anillo de composición',
     await txtSvg('#anillo-composicion .anillo__fila--caja .anillo__nombre'), 'Cash');
@@ -259,17 +259,34 @@ const CARTERA_RECONSTRUIDA = false;
 
   }  // fin CARTERA_RECONSTRUIDA
 
-  // Lo que hay hoy en Cartera: el armazón estático —título y aviso de
-  // reconstrucción, con `data-i18n`— y la primera pieza reconstruida, el
-  // resumen de capital, que SÍ se pinta en JavaScript
-  // (`pintarResumenPortfolio()`) y por tanto sí necesita `vistaPintada()`.
+  /* ── Cartera, tras la recomposición institucional ──
+     La intención de este bloque no cambia: afirmar que lo que Cartera pinta EN
+     JAVASCRIPT sigue al idioma. Es la clase de fallo que esta batería existe
+     para cazar, porque nada de ello lleva `data-i18n` y un repintado que no
+     ocurra deja el texto en el idioma de partida sin que se note.
+
+     Lo que cambia son los nodos sobre los que se afirma, porque la sección se
+     recompuso: el resumen en `.indicador` desapareció (hoy son
+     `pintarRendimiento()`, `pintarAsignacionCapital()` y `pintarActividad()`),
+     el aviso de reconstrucción se retiró al terminarla, y el subtítulo del
+     gráfico y el desglose lateral por posición se quitaron a petición
+     explícita en su día. Se afirma sobre lo que hoy pinta cada renderizador,
+     uno por uno, y se añade la tabla de posiciones —nota del total y nota
+     metodológica—, que antes solo se comprobaba en el bloque dormido.
+
+     La leyenda del gráfico sale de la lista a propósito: solo se pinta cuando
+     hay alguna comparación activa, y sin benchmarks está vacía por diseño. Lo
+     que ella afirmaba —que el gráfico repinta— lo afirma ahora la tira de
+     contexto, que se pinta siempre y de la misma serie. */
   await p.goto(`${B}/#/cartera`, { waitUntil: 'networkidle' });
   const resumenPintado = () => vistaPintada(p,
     () => {
-      const v = document.querySelector('#resumen-portfolio .indicador__valor');
-      const l = document.querySelector('#leyenda-grafico .leyenda__valor');
-      return Boolean(v && v.textContent.trim() && l && l.textContent.trim());
-    }, null, 'cartera · resumen y gráfico');
+      const v = document.querySelector('#rendimiento-cartera .rendimiento__cifra');
+      const c = document.querySelector('#grafico-contexto .medida__cifra');
+      const t = document.querySelector('#pie-conciliacion .celda-total');
+      return Boolean(v && v.textContent.trim() && c && c.textContent.trim()
+        && t && t.textContent.trim());
+    }, null, 'cartera · rendimiento, gráfico y posiciones');
   // Sin esto, «castellano de partida» asume que el navegador ya arranca en
   // español, y no lo hace: `idioma-inicial.js` puede caer en el idioma del
   // sistema si no hay elección guardada. El bloque original (ahora dormido
@@ -279,47 +296,49 @@ const CARTERA_RECONSTRUIDA = false;
   await resumenPintado();
   await idioma('es');
   await resumenPintado();
-  seccion('\n  ── cartera · resumen de capital, castellano de partida ──');
-  comp('titular', await txt('#seccion-cartera h1'), 'Evolución de posiciones');
-  comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Página en reconstrucción');
-  comp('etiqueta de la cifra principal',
-    await txt('#resumen-portfolio .indicador--principal .indicador__etiqueta'), 'Rentabilidad de la cartera');
-  // Realizada dejó de ser una celda anidada (`.indicador__desglose-*`) y es
-  // hermana del retorno: segunda celda de la primera caja.
-  comp('etiqueta de la realizada',
-    await txt('#resumen-portfolio .indicador:nth-child(2) .indicador__etiqueta'), 'Rentabilidad realizada');
-  // ROIC vive ahora en la segunda caja, no en la primera.
-  comp('nota de ROIC',
-    await txt('#resumen-secundario .indicador:has-text("ROIC") .indicador__nota'),
-    (v) => v && /capital desplegado/.test(v));
-  // El gráfico se pinta entero en JavaScript: leyenda y subtítulo llevan el
-  // número de sesiones y el nombre de cada serie, y sin repintado se quedarían
-  // en el idioma de partida.
-  comp('leyenda del gráfico',
-    await txt('#leyenda-grafico'), (v) => v && /Cartera Warrants & Co\./.test(v));
-  comp('subtítulo del gráfico',
-    await txt('#subtitulo-grafico'), (v) => v && /^Valor indexado/.test(v) && /sesiones/.test(v));
-  comp('cabecera del desglose por posición',
-    await txt('.grafico-desglose thead th:nth-child(3)'), 'Contribución');
+  seccion('\n  ── cartera · castellano de partida ──');
+  // El encabezado principal de la sección, por su semántica —el `h1`— y no por
+  // una clase: es lo que esta afirmación protegía desde el principio.
+  comp('titular', await txt('#seccion-cartera h1'), 'Cartera Warrants & Co.');
+  // `pintarRendimiento()`: la cifra que manda y el primero de sus dos sumandos.
+  comp('rótulo de la cifra principal',
+    await txt('#rendimiento-cartera .rendimiento__rotulo'), 'Rentabilidad total');
+  comp('rótulo de la realizada',
+    await txt('#rendimiento-cartera .rendimiento__desglose .medida:first-child .medida__rotulo'),
+    'realizada');
+  /* `pintarAsignacionCapital()`: se afirma sobre LIQUIDEZ y no sobre ROIC, que
+     se escribe igual en los dos idiomas y por tanto no probaría el repintado. */
+  comp('rótulo de la liquidez',
+    await txt('#asignacion-capital .asignacion__secundarias .medida:last-child .medida__rotulo'),
+    'Liquidez');
+  // `pintarContextoGrafico()`: el gráfico se pinta entero en JavaScript.
+  comp('contexto del gráfico',
+    await txt('#grafico-contexto .medida__rotulo'), 'Índice, base 100');
+  // `pintarConciliacion()`: nota del total y nota metodológica, las dos con
+  // palabras que cambian de idioma.
+  comp('nota del total de la conciliación',
+    await txt('#pie-conciliacion .celda-total small'), (v) => /\btramos?\b/.test(v ?? ''));
+  comp('nota metodológica',
+    await txt('#nota-conciliacion'), (v) => v && /liquidez/i.test(v) && !/\bcash\b/i.test(v));
 
   await idioma('en');
   await resumenPintado();
-  seccion('\n  ── cartera · resumen de capital, repintado al conmutar ──');
-  comp('titular', await txt('#seccion-cartera h1'), 'Position performance');
-  comp('aviso de reconstrucción', await txt('#cartera-reconstruccion strong'), 'Page under reconstruction');
-  comp('etiqueta de la cifra principal',
-    await txt('#resumen-portfolio .indicador--principal .indicador__etiqueta'), 'Portfolio return');
-  comp('etiqueta de la realizada',
-    await txt('#resumen-portfolio .indicador:nth-child(2) .indicador__etiqueta'), 'Realized return');
-  comp('nota de ROIC',
-    await txt('#resumen-secundario .indicador:has-text("ROIC") .indicador__nota'),
-    (v) => v && /capital deployed/.test(v));
-  comp('leyenda del gráfico',
-    await txt('#leyenda-grafico'), (v) => v && /Warrants & Co\. portfolio/.test(v));
-  comp('subtítulo del gráfico',
-    await txt('#subtitulo-grafico'), (v) => v && /^Indexed value/.test(v) && /sessions/.test(v));
-  comp('cabecera del desglose por posición',
-    await txt('.grafico-desglose thead th:nth-child(3)'), 'Contribution');
+  seccion('\n  ── cartera · repintada al conmutar, sin recargar ──');
+  comp('titular', await txt('#seccion-cartera h1'), 'Warrants & Co. portfolio');
+  comp('rótulo de la cifra principal',
+    await txt('#rendimiento-cartera .rendimiento__rotulo'), 'Total return');
+  comp('rótulo de la realizada',
+    await txt('#rendimiento-cartera .rendimiento__desglose .medida:first-child .medida__rotulo'),
+    'realized');
+  comp('rótulo de la liquidez',
+    await txt('#asignacion-capital .asignacion__secundarias .medida:last-child .medida__rotulo'),
+    'Cash');
+  comp('contexto del gráfico',
+    await txt('#grafico-contexto .medida__rotulo'), 'Index, base 100');
+  comp('nota del total de la conciliación',
+    await txt('#pie-conciliacion .celda-total small'), (v) => /\btranches?\b/.test(v ?? ''));
+  comp('nota metodológica',
+    await txt('#nota-conciliacion'), (v) => v && /\bcash\b/i.test(v) && !/liquidez/i.test(v));
   // Se sigue en inglés a propósito: la sección de repositorio que viene a
   // continuación comprueba primero el inglés y solo vuelve a castellano
   // después —es el mismo orden que ya traía esta batería antes de esta
