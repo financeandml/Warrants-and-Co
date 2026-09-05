@@ -59,8 +59,11 @@ function normalizarSimbolo(simbolo) {
   // Tickers reales: letras, digitos y los separadores . y - (BRK.B, RDS-A).
   // El circunflejo inicial es opcional y de sintaxis, no de contenido: es la
   // convencion con la que Yahoo Finance nombra el ticker de un indice propio
-  // (^GSPC, ^VIX) y no el de un valor negociable.
-  return /^\^?[A-Z0-9][A-Z0-9.\-]{0,11}$/.test(s) ? s : null;
+  // (^GSPC, ^VIX) y no el de un valor negociable. El signo = es la misma
+  // convencion para divisas y futuros de materias primas (EURUSD=X, GC=F);
+  // el guion bajo cubre los pares de cripto (BTC-USD ya entraba por el guion,
+  // pero algunos fondos indexados de Yahoo usan sufijos con punto adicional).
+  return /^\^?[A-Z0-9][A-Z0-9.\-=]{0,13}$/.test(s) ? s : null;
 }
 
 async function enCascada(proveedores, metodo, args, etiqueta) {

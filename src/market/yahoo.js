@@ -249,19 +249,33 @@ async function obtenerHistorico(simbolo, desdeISO) {
  * Autocompletado de tickers para el buscador de benchmarks de Cartera.
  * Reutiliza `llamarApi()` —misma sesión, mismo crumb— contra el buscador
  * de Yahoo, que no exige un endpoint distinto del resto del proveedor.
- * Solo `EQUITY` y `ETF`: son los únicos tipos que `obtenerHistorico()`
- * sabe servir después con una serie diaria comparable a la cartera; un
- * índice o una divisa en la lista invitaría a un clic que luego falla.
+ *
+ * Tipos admitidos: acciones, ETF, fondos indexados/de gestión activa,
+ * criptomonedas, materias primas (futuros) y divisas —todos sirven una
+ * serie diaria por el mismo endpoint `/v8/finance/chart/{simbolo}` que
+ * `obtenerHistorico()` ya consume, así que ampliar el filtro no exige
+ * tocar la serie—. Se deja fuera únicamente lo que no tiene una serie de
+ * precio propia (opciones, futuros de calendario complejos).
  */
+const TIPOS_BUSCABLES = new Set([
+  'EQUITY',
+  'ETF',
+  'MUTUALFUND',
+  'CRYPTOCURRENCY',
+  'CURRENCY',
+  'INDEX',
+  'FUTURE',
+]);
+
 async function buscarSimbolos(consulta) {
   const datos = await llamarApi('/v1/finance/search', {
     q: consulta,
-    quotesCount: 8,
+    quotesCount: 12,
     newsCount: 0,
   });
   const quotes = Array.isArray(datos?.quotes) ? datos.quotes : [];
   return quotes
-    .filter((q) => q.symbol && (q.quoteType === 'EQUITY' || q.quoteType === 'ETF'))
+    .filter((q) => q.symbol && TIPOS_BUSCABLES.has(q.quoteType))
     .map((q) => ({
       simbolo: q.symbol,
       nombre: q.shortname || q.longname || q.symbol,
