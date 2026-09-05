@@ -648,6 +648,15 @@ export default {
   'cartera.posiciones.titulo': 'Composición de la cartera',
   'cartera.posiciones.subtitulo': 'Peso actual: cuánto pesa hoy cada posición sobre el patrimonio, liquidez incluida · cotizaciones actualizadas en cada carga de la página',
   'cartera.posiciones.caption': 'Detalle de las posiciones en cartera',
+  // Lista de tarjetas de posición (rediseño de gestión activa): distinta de
+  // las tres claves de arriba, que describen la pieza pendiente con la caja
+  // de liquidez. Aquí solo hay tesis reales, sin fila de caja.
+  'cartera.posiciones.lista.titulo': 'Posiciones',
+  'cartera.posiciones.lista.subtitulo': 'Cada tesis publicada, abierta o cerrada, con su peso y su contribución reales a la rentabilidad.',
+  'cartera.posiciones.col.peso': 'Peso',
+  'cartera.posiciones.cierre': 'Cerrada el {fecha} · {motivo}',
+  'cartera.posiciones.detalle.ver': 'Detalle',
+  'cartera.posiciones.detalle.ocultar': 'Ocultar detalle',
   'cartera.col.alta': 'Alta',
   'cartera.col.compra': 'Compra',
   'cartera.col.cotizacion': 'Cotización',

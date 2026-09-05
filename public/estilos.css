@@ -1341,6 +1341,91 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 .fila-cartera__panel dd { font-size: var(--tipo-2); }
 
+/* ═══════════════ Posiciones: la tarjeta de decisión, no la fila ═══════════════
+   Rediseño de gestión activa (Cobas AM / azValor / Magallanes): cifras
+   grandes sin adorno, nombre con autoridad tipográfica, aire entre bloques.
+   Filete de 1px entre tarjetas —el mismo lenguaje "editorial, no tarjeta" que
+   ya rige el resto de Cartera—, nunca fondo/borde/sombra propios (Cláusula
+   "The Flat-By-Default Rule", DESIGN.md). El panel de detalle reutiliza
+   `.fila-cartera__panel` tal cual —mismo componente, no uno nuevo (Regla 9)—. */
+.lista-posiciones { display: flex; flex-direction: column; }
+#seccion-cartera .posicion {
+  display: grid; grid-template-columns: 1fr auto; gap: 8px 24px;
+  padding-block: var(--espacio-4);
+  border-block-start: 1px solid var(--linea);
+  cursor: pointer;
+}
+#seccion-cartera .posicion:first-child { border-block-start: none; padding-block-start: 0; }
+#seccion-cartera .posicion:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
+
+#seccion-cartera .posicion__identidad { grid-column: 1; min-width: 0; }
+#seccion-cartera .posicion__empresa {
+  margin: 0; font-family: var(--geo); font-weight: 600;
+  font-size: clamp(1.15rem, 2.4vw, 1.5rem); letter-spacing: -0.01em; line-height: 1.15;
+}
+#seccion-cartera .posicion__meta {
+  margin: 5px 0 0; font-family: var(--mono); font-size: var(--tipo-1);
+  letter-spacing: 0.04em; color: var(--tinta-mate);
+}
+
+#seccion-cartera .posicion__cifras { grid-column: 2; display: flex; gap: 28px; align-items: baseline; }
+#seccion-cartera .posicion__cifra { text-align: end; }
+#seccion-cartera .posicion__cifra-valor {
+  display: block; font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums;
+  font-size: clamp(1.3rem, 3vw, 1.75rem); letter-spacing: -0.01em; line-height: 1.1;
+}
+/* `.variacion--positiva/--negativa` (formato.js) ya trae el glifo ▲/▼ —
+   Cláusula 1, el color nunca carga solo—; esta regla solo ajusta el tamaño
+   del glifo a la escala grande de la cifra, que si no queda diminuto. */
+#seccion-cartera .posicion__cifra-valor.variacion::before { font-size: 0.5em; }
+#seccion-cartera .posicion__cifra-etiqueta {
+  display: block; margin-top: 4px; font-size: var(--tipo-0); letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--tinta-mate);
+}
+
+/* ── Avance hacia el take profit: solo posiciones vivas ── */
+#seccion-cartera .posicion__avance { grid-column: 1 / -1; margin-top: 14px; }
+#seccion-cartera .posicion__avance-pista {
+  position: relative; height: 3px; background: var(--linea); border-radius: 2px; overflow: hidden;
+}
+#seccion-cartera .posicion__avance-relleno {
+  position: absolute; inset-block: 0; left: 0; background: var(--tinta); border-radius: 2px;
+  transition: width 900ms var(--mov-entrada);
+}
+#seccion-cartera .posicion__avance-pie {
+  display: flex; justify-content: space-between; margin-top: 7px;
+  font-size: var(--tipo-1); color: var(--tinta-mate);
+}
+#seccion-cartera .posicion__avance-pie strong { color: var(--tinta); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) {
+  #seccion-cartera .posicion__avance-relleno { transition: none; }
+}
+
+/* ── Posición cerrada: atenuada, el cierre como cifra protagonista propia ── */
+#seccion-cartera .posicion--cerrada { opacity: 0.72; }
+#seccion-cartera .posicion--cerrada .posicion__empresa { color: var(--tinta-secundaria); }
+#seccion-cartera .posicion__cierre {
+  grid-column: 1 / -1; margin-top: 12px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  font-size: var(--tipo-1); color: var(--tinta-mate);
+}
+#seccion-cartera .posicion__cierre-glifo { font-family: var(--mono); }
+#seccion-cartera .posicion__cierre .variacion { font-weight: 600; }
+
+/* ── El detalle: mismo panel que la tabla anterior, reutilizado ── */
+#seccion-cartera .posicion__detalle-cue {
+  grid-column: 1 / -1; margin-top: 10px;
+  font-size: var(--tipo-1); color: var(--tinta-mate); text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#seccion-cartera .posicion[aria-expanded="true"] .posicion__detalle-cue { color: var(--tinta); }
+#seccion-cartera .posicion__panel { grid-column: 1 / -1; margin-top: 14px; padding-block-start: 14px; border-block-start: 1px solid var(--linea-hairline); }
+
+@media (max-width: 520px) {
+  #seccion-cartera .posicion { grid-template-columns: 1fr; }
+  #seccion-cartera .posicion__cifras { grid-column: 1; justify-content: flex-start; }
+}
+
 /* Barras de contribución: ultra-finas, alineadas con su ticker. El color vive
    SOLO en la barra y en el signo de la cifra, nunca de fondo de una caja. */
 #seccion-cartera .contribucion-fila__pista { height: 6px; background: none; }
