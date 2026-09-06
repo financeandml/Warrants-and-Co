@@ -1092,10 +1092,17 @@ en la siguiente carga de la página, **sin tocar código ni reiniciar el servido
 |---|---|---|
 | `logo` | `logo.svg` · `logo.png` · `logo.jpg` · `logo.webp` | Pie de página |
 | `sello` | `logo-marca.svg` · `logo-marca.png` · `sello.svg` · `sello.png` | Cabecera e icono de pestaña |
-| `banner` | `banner.jpg` · `banner.png` · `banner.webp` · `banner.avif` | Fondo de la portada |
+| `banner` | `banner.jpg` · `banner.png` · `banner.webp` · `banner.avif` | **Hoy, en ningún sitio** — ver la nota de abajo |
 
 `GET /api/marca` informa de qué recursos hay presentes y de su versión, que se usa para
 invalidar la caché del navegador al sustituir un fichero.
+
+> **El banner ya no se pinta (rediseño 3).** La portada tiene un Hero tipográfico y
+> `cargarMarca()` (`public/app.js`) dejó de montar la fotografía. `/api/marca` sigue
+> detectando y sirviendo el fichero, y el resto de este apartado sigue describiendo con
+> exactitud cómo lo hace: lo que ya no existe es la superficie que lo mostraba. Se
+> conserva porque el endpoint es real y funciona; quien devuelva una foto al Hero tendrá
+> que volver a montarla en el cliente. Lo que sigue describe el comportamiento histórico.
 
 **Banner de portada.** Si el fichero existe, se muestra como fondo del encabezado con un
 degradado lateral que preserva el contraste del titular, y se retira la retícula gráfica

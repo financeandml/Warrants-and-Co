@@ -20,9 +20,15 @@
        dónde fuera pasando la cinta, y no habría error que lo delatara: las dos
        mitades no se ven nunca a la vez.
 
-   2 · QUE EL ALTO NO CAMBIA. El alto de la cinta lo mide `seguirEncuadreBanner()`
-       para encuadrar la fotografía y decidir dónde cae el árbol. Una sustitución
-       que moviera un píxel movería el árbol cada veinte segundos.
+   2 · QUE EL ALTO NO CAMBIA. El motivo que se daba aquí —`seguirEncuadreBanner()`
+       encuadraba la fotografía del hero contra el alto de la cinta— caducó dos
+       veces: esa función se retiró en Fase D.6 y la fotografía entera en el
+       rediseño 3. El alto sigue importando, y ahora por una razón más directa:
+       `tests/portada.js` afirma que la cinta cabe ENTERA sobre el pliegue en
+       ocho ventanas, y el margen más ajustado es de 16px. Una sustitución de
+       valor que engordase la cinta unos píxeles cada veinte segundos sacaría
+       su pie del pliegue de forma intermitente — el peor modo de fallar, porque
+       una captura tomada en el momento equivocado lo da por bueno.
 
    3 · QUE EL SPARKLINE ES UNIVERSAL, PERO NUNCA FABRICADO. Toda celda acaba con
        su trazo. `/api/mercado/serie/:simbolo` publica cierres diarios reales, y

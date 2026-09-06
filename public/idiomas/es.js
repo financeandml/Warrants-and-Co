@@ -119,9 +119,14 @@ export default {
   'portada.acceso.cartera': 'Ver la cartera',
   'portada.acceso.research': 'Ver el análisis',
 
-  // portada.manifiesto.titular y portada.hero.subtitulo (Fase D.6) se
-  // retiraron en Fase D.13: la declaración editorial del hero desaparece, la
-  // foto pasa a ser el hero entero.
+  // Rediseño 3: el hero vuelve a tener texto, y ahora es lo único que tiene.
+  // No se reponen las claves de la Fase D.6 —`portada.manifiesto.titular` y
+  // `portada.hero.subtitulo`, retiradas en D.13—: aquellas acompañaban a una
+  // foto y estas la sustituyen, así que no dicen lo mismo ni ocupan el mismo
+  // sitio. El titular no promete nada que el motor no calcule: es la
+  // proposición de PRODUCT.md dicha en una línea.
+  'portada.hero.titular': 'Inteligencia de mercado que se deriva de lo publicado',
+  'portada.hero.bajada': 'Cada cifra sale de una tesis con su fecha y su precio. Donde no hay dato, lo decimos.',
 
   // Los cuatro pilares de la maqueta de referencia, en sustitución de los tres
   // anteriores (Análisis, Catalizadores, Cartera). Pierden el enlace a sus

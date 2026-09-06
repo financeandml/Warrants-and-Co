@@ -19,14 +19,20 @@
    código escribe ya. Llevaba así desde que Fase D.9 landeó —nadie la había
    vuelto a correr entre medias—.
 
-   El mecanismo de hoy no tiene presupuesto que ceder ni histéresis: es CSS
-   puro. `.manifiesto__visual` tiene una altura fija por `clamp()` —una según
-   el ANCHO de ventana, una según el ANCHO Y EL ALTO para ventanas bajas—, la
-   cinta se solapa un valor fijo (`-44px`) sobre el pie de la foto, y el árbol
-   se mantiene centrado en su banda con un `object-position` estático. No hay
-   nada que remedir en píxeles del fichero de la foto: `object-position` no
-   depende de dónde caiga el árbol en `banner.jpg`, así que esta batería ya no
-   comprueba eso —lo comprobaba la versión con histéresis, que ya no existe—.
+   ═══ Y el mecanismo volvió a cambiar: rediseño 3 ═══
+
+   Ya no hay foto. El Hero es tipográfico —titular serif, bajada, acciones y una
+   rejilla de tres cifras con filete de 1px—, y con la fotografía se fueron
+   `.manifiesto__visual`, el parallax, el zoom de entrada y el solape de -44px
+   de la cinta. La comprobación de «la franja de foto tiene alto real» se retira
+   porque no queda franja; en su lugar entran las dos de abajo, que son las que
+   el hero de hoy puede romper.
+
+   El alto del hero ya no lo fija ningún `clamp()` contra el ancho: lo deciden
+   cinco huecos verticales en `vh` más el alto real del titular. Eso significa
+   que la cinta puede volver a caer bajo el pliegue por dos vías nuevas —un
+   mínimo de relleno subido, o un titular que rompe en una línea de más— y las
+   dos se comprueban aquí.
 
    Lo que SÍ hace falta seguir afirmando, con el mecanismo de hoy, es lo que
    esta batería cazó al escribirse: a 1440×700 y 1920×700 —dos de las seis
@@ -81,15 +87,37 @@ async function pintada(p) {
 
 /** Lo que se ve, medido en pantalla — nunca lo que el CSS dice que debería medir. */
 const medir = (p) => p.evaluate(() => {
-  const visual = document.getElementById('hero-visual');
   const ticker = document.getElementById('ticker-mercado');
   const tr = ticker.getBoundingClientRect();
   const item = document.querySelector('#ticker-pista .ticker__item');
   const ir = item ? item.getBoundingClientRect() : null;
+  /* La marquesina traslada la pista el ancho de UN grupo y vuelve a empezar.
+     Para que no se abra un hueco al final del recorrido, la pista entera tiene
+     que medir al menos ese grupo MÁS la ventana: lo que queda a la derecha del
+     punto de retorno es `pista - grupo`, y eso ha de seguir cubriendo el ancho
+     visible. Con dos copias y un grupo más estrecho que la ventana, no cubre.
+
+     Es invisible salvo en la fase justa del bucle —una captura tomada medio
+     segundo antes lo enseña lleno—, que es exactamente el tipo de fallo que
+     solo se caza afirmándolo. Medido: 965px de grupo contra 1440px de ventana
+     dejaban 475px de cinta en blanco. */
+  const pista = document.getElementById('ticker-pista');
+  const grupo = pista?.firstElementChild?.getBoundingClientRect().width ?? 0;
+  const anchoPista = pista?.getBoundingClientRect().width ?? 0;
+
+  /* Un titular de hero que rompe en tres líneas es siempre un error de cuerpo
+     o de medida, y aquí además empuja la cinta bajo el pliegue: las 61px de la
+     tercera línea eran la mitad del desbordamiento que esta batería cazó. */
+  const h1 = document.querySelector('.manifiesto__titular');
+  const interlineado = h1 ? parseFloat(getComputedStyle(h1).lineHeight) : 0;
+
   return {
     alto: window.innerHeight,
-    visualVisible: visual ? !visual.hidden : false,
-    visualAlto: visual ? visual.getBoundingClientRect().height : 0,
+    grupoCinta: grupo,
+    anchoPista,
+    cubreVentana: grupo > 0 ? (anchoPista - grupo) >= window.innerWidth : null,
+    lineasTitular: h1 && interlineado > 0
+      ? Math.round(h1.getBoundingClientRect().height / interlineado) : null,
     tickerArriba: tr.top,
     tickerAbajo: tr.bottom,
     // El item ha de caber DENTRO del contenedor —que recorta con
@@ -140,15 +168,28 @@ const medir = (p) => p.evaluate(() => {
         `cinta ${Math.round(m.tickerArriba)}–${Math.round(m.tickerAbajo)}, se recorta con overflow:hidden`);
     }
 
-    // La foto es opcional —`cargarMarca()` la deja `hidden` sin banner
-    // depositado—, así que su ausencia no es un fallo. Su presencia con
-    // altura cero sí lo sería: sería una franja reservada que no muestra nada.
-    if (m.visualVisible) {
-      if (m.visualAlto > 0) {
-        E.acierto(`[${v.n}] la franja de foto tiene alto real`);
-      } else {
-        E.fallo(`[${v.n}] la franja de foto tiene alto real`, 'visible pero mide 0px');
-      }
+    // ── La cinta cubre la ventana en todo el recorrido del bucle ──
+    if (m.cubreVentana === null) {
+      E.pendiente(`[${v.n}] la cinta cubre la ventana en todo el bucle`, TICKER_VACIO);
+    } else if (m.cubreVentana) {
+      E.acierto(`[${v.n}] la cinta cubre la ventana en todo el bucle`);
+    } else {
+      E.fallo(`[${v.n}] la cinta cubre la ventana en todo el bucle`,
+        `pista de ${Math.round(m.anchoPista)}px con grupo de ${Math.round(m.grupoCinta)}px: `
+        + `tras el retorno quedan ${Math.round(m.anchoPista - m.grupoCinta)}px para una `
+        + `ventana de ${v.w}px — se abre un hueco de `
+        + `${Math.round(v.w - (m.anchoPista - m.grupoCinta))}px`);
+    }
+
+    // ── El titular del hero no pasa de dos líneas ──
+    if (m.lineasTitular === null) {
+      E.pendiente(`[${v.n}] el titular del hero no pasa de dos líneas`,
+        'no se encontró `.manifiesto__titular` con interlineado resuelto');
+    } else if (m.lineasTitular <= 2) {
+      E.acierto(`[${v.n}] el titular del hero no pasa de dos líneas`);
+    } else {
+      E.fallo(`[${v.n}] el titular del hero no pasa de dos líneas`,
+        `rompe en ${m.lineasTitular}`);
     }
 
     // ── Cifras del hero: tercer estado si la base no trae cartera ──

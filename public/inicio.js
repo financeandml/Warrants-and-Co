@@ -413,8 +413,27 @@ export function pintarTicker(indices, cartera) {
     return g;
   };
 
+  /* ── Cuántas copias del grupo hacen falta ──
+     Dos no bastan, y el fallo solo se ve con pocas cotizaciones o pantalla
+     ancha. El bucle traslada la pista exactamente el ancho de UN grupo y
+     vuelve a empezar; para que no se abra un hueco, lo que queda por detrás
+     del punto de retorno tiene que seguir cubriendo la ventana. Con dos
+     copias la pista mide 2 × grupo, y al estar trasladada un grupo entero
+     solo quedan `grupo` píxeles a la derecha: si un grupo mide menos que la
+     ventana, el resto es vacío. Medido: 965px de grupo contra 1440px de
+     ventana dejaban 475px de cinta en blanco.
+
+     Hacen falta copias hasta cubrir ventana + un grupo. Se calcula sobre el
+     ancho real de la primera copia ya montada, nunca sobre una estimación, y
+     con un techo por si el grupo midiera cero —una ventana sin cotizaciones
+     no debe poder colgar el bucle—. Todas las copias salvo la primera van
+     `aria-hidden`: para un lector de pantalla la cinta se lee una vez. */
   pista.appendChild(grupo(false));
-  pista.appendChild(grupo(true));
+  const anchoUnGrupo = pista.firstElementChild.getBoundingClientRect().width;
+  const copias = anchoUnGrupo > 0
+    ? Math.min(8, Math.max(2, Math.ceil((window.innerWidth + anchoUnGrupo) / anchoUnGrupo)))
+    : 2;
+  for (let i = 1; i < copias; i += 1) pista.appendChild(grupo(true));
 
   /* El gráfico llega aparte y tarde, a las DOS copias de cada clave. Se pide
      la serie una única vez por símbolo —la caché es compartida— y, si el
@@ -438,6 +457,11 @@ export function pintarTicker(indices, cartera) {
   /* La duración se fija por longitud recorrida, y solo cuando el contenido ya
      está completo: medir antes de que lleguen los gráficos daría un ancho
      corto y la cinta saltaría al ensancharse cada celda que consigue el suyo. */
+  /* El ancho se vuelve a medir cuando los gráficos ya están: cada uno
+     ensancha su celda, así que el grupo crece respecto a la medida de arriba
+     —la de arriba solo decide CUÁNTAS copias, y sobra por redondeo hacia
+     arriba—. `--recorrido` es siempre el ancho de UNA copia: es el punto de
+     retorno del bucle, no la longitud de la pista. */
   Promise.allSettled(pendientes).then(() => {
     const anchoGrupo = pista.firstElementChild.getBoundingClientRect().width;
     if (anchoGrupo > 0) {
@@ -750,9 +774,9 @@ function dibujarSerie(svg, datos) {
 
   // Caja del SVG: se mide una vez al entrar el puntero, no en cada
   // `pointermove` — `getBoundingClientRect()` es una lectura de layout y
-  // repetirla en caliente es el mismo coste que `activarBrilloVitrina()` (más
-  // abajo) evita con rAF. El recuadro no cambia mientras el puntero está
-  // dentro, así que una lectura por gesto basta.
+  // repetirla en caliente cuesta un recálculo por movimiento; se acota a un
+  // fotograma con rAF. El recuadro no cambia mientras el puntero está dentro,
+  // así que una lectura por gesto basta.
   let caja = null;
   let pendiente = null;
 
@@ -1195,40 +1219,24 @@ export function pintarCifrasHome(cartera, totalTesis) {
  * (`alAbrir`, hoy `abrirDetalle()` de `app.js` — Regla 9: un solo mecanismo
  * de apertura, no uno nuevo para esta vista).
  *
- * Sin vídeo de portada (`tieneVideoPortada`), la tarjeta intenta el logotipo
- * local de la compañía —`/assets/logos/<TICKER>.svg`, servido por el propio
- * origen, nunca un CDN (CSP)— y solo si ese fichero no existe cae al mismo
- * lenguaje de marca de agua tipográfica que ya usa `.tarjeta-compania` en
- * Companies. Ninguno de los dos casos fabrica un logo ni una foto que no
- * exista (Regla 1): el fichero lo deposita quien mantiene la marca en
- * `public/assets/logos/`, igual que el banner en `public/marca/`.
+ * Rediseño 3: la tarjeta es TIPOGRÁFICA y nada más. Se retiran, por encargo
+ * explícito, el vídeo de portada, el logotipo local de la compañía, el
+ * monograma de reserva, el fondo fotográfico, el velo en degradado y el
+ * brillo que seguía al ratón. Lo que queda es lo que la tarjeta siempre tuvo
+ * que decir: el ticker, el nombre de la compañía y su procedencia.
+ *
+ * Tres consecuencias que conviene tener escritas:
+ *
+ *   · `marcaOLogo()` desaparece con su lógica de `onerror` → monograma, y con
+ *     ella la lectura de `/assets/logos/<TICKER>.svg`. Los ficheros siguen en
+ *     su sitio; simplemente esta vista ya no los pide.
+ *   · `tieneVideoPortada` sigue viajando en la respuesta de `/api/informes` y
+ *     `/api/informes/:id/video` sigue sirviendo. Es una capacidad que esta
+ *     vista deja de mostrar, no una que se haya borrado.
+ *   · el fondo de césped era la ÚNICA excepción a color de The Monochrome
+ *     Register Rule (DESIGN.md). Al retirarse, la regla vuelve a no tener
+ *     excepciones: quien quiera reabrirla tendrá que documentarla de nuevo.
  */
-/**
- * El "medio" de una tarjeta sin vídeo: intenta el logo local de la
- * compañía y, si el fichero no existe (404, o el ticker es una compañía sin
- * logo depositado — hoy, p. ej., una biotech pequeña), sustituye el propio
- * nodo por el monograma tipográfico. `onerror` se asigna como propiedad del
- * elemento, no como atributo `onerror=""` del marcado —lo segundo violaría
- * la CSP (sin `onclick=`/manejadores en línea); asignarlo desde el script
- * cargado por `'self'` no la toca—.
- */
-function marcaOLogo(inf) {
-  if (!inf.ticker) return elemento('p', 'vitrina-tesis__marca', (inf.empresa || '?').charAt(0));
-
-  const chip = elemento('div', 'vitrina-tesis__logo-chip');
-  const logo = elemento('img', 'vitrina-tesis__logo');
-  logo.alt = '';
-  logo.setAttribute('aria-hidden', 'true');
-  logo.loading = 'lazy';
-  logo.decoding = 'async';
-  logo.src = `/assets/logos/${encodeURIComponent(inf.ticker)}.svg`;
-  logo.onerror = () => {
-    chip.replaceWith(elemento('p', 'vitrina-tesis__marca', (inf.ticker || inf.empresa || '?').charAt(0)));
-  };
-  chip.appendChild(logo);
-  return chip;
-}
-
 export function pintarVitrinaTesis(informes, alAbrir) {
   const seccion = $('#home-vitrina');
   const raiz = $('#vitrina-tesis');
@@ -1244,35 +1252,16 @@ export function pintarVitrinaTesis(informes, alAbrir) {
     tarjeta.setAttribute('role', 'button');
     tarjeta.setAttribute('tabindex', '0');
     tarjeta.setAttribute('data-revelar', '');
-    const etiquetaAbrir = t('inicio.vitrina.abrir', { empresa: inf.empresa });
-    tarjeta.setAttribute('aria-label', etiquetaAbrir);
-
-    const medio = elemento('div', 'vitrina-tesis__medio');
-    if (inf.tieneVideoPortada) {
-      const video = elemento('video', 'vitrina-tesis__video');
-      video.muted = true; video.loop = true; video.autoplay = true; video.playsInline = true;
-      video.src = `/api/informes/${inf.id}/video`;
-      if (sinMovimiento()) { video.autoplay = false; video.removeAttribute('autoplay'); }
-      medio.appendChild(video);
-    } else {
-      // El césped es la excepción documentada de DESIGN.md a The Monochrome
-      // Register Rule, acotada a esta tarjeta — capa propia, separada del
-      // logo/monograma, para que el parallax de más abajo pueda mover el
-      // fondo sin arrastrar el chip que sí debe quedarse quieto encima.
-      medio.appendChild(elemento('div', 'vitrina-tesis__fondo'));
-      medio.appendChild(marcaOLogo(inf));
-    }
-    medio.appendChild(elemento('div', 'vitrina-tesis__velo'));
-    tarjeta.appendChild(medio);
-    tarjeta.appendChild(elemento('div', 'vitrina-tesis__brillo'));
+    tarjeta.setAttribute('aria-label', t('inicio.vitrina.abrir', { empresa: inf.empresa }));
 
     const texto = elemento('div', 'vitrina-tesis__texto');
     texto.appendChild(elemento('p', 'vitrina-tesis__ticker', inf.ticker || noDisponible()));
     texto.appendChild(elemento('p', 'vitrina-tesis__empresa', inf.empresa));
     const meta = [inf.sector, inf.tipo_informe].filter(Boolean).join(' · ');
     if (meta) texto.appendChild(elemento('p', 'vitrina-tesis__meta', meta));
-    // Texto adicional real, revelado solo al pasar el ratón — nunca inventado:
-    // es `resumen_ejecutivo`, recortado, no una frase redactada aquí.
+    // Texto adicional real, nunca inventado: es `resumen_ejecutivo`, recortado.
+    // Ya no se esconde tras el hover —sin foto debajo hay sitio para leerlo, y
+    // un texto que solo existe con ratón no existe en táctil ni con teclado—.
     const resumen = recorte(inf.resumen_ejecutivo, 140);
     if (resumen) texto.appendChild(elemento('p', 'vitrina-tesis__resumen', resumen));
     tarjeta.appendChild(texto);
@@ -1287,7 +1276,6 @@ export function pintarVitrinaTesis(informes, alAbrir) {
   }
 
   for (const nodo of raiz.querySelectorAll('[data-revelar]')) revelar(nodo);
-  activarBrilloVitrina(raiz);
 }
 
 /** Recorta por palabra completa, nunca a media palabra. `null` si no hay texto. */
@@ -1298,27 +1286,3 @@ function recorte(texto, limite) {
   return `${plano.slice(0, limite).replace(/\s+\S*$/, '')}…`;
 }
 
-/**
- * Brillo que sigue al ratón: escribe `--mx`/`--my` (posición en % dentro de
- * la tarjeta) en cada `pointermove`, acotado a un fotograma por movimiento
- * con `requestAnimationFrame` — nunca un `transform` recalculado en el
- * padre para el hijo (evitaría el recálculo en cascada), solo una custom
- * property que el propio `::` de `.vitrina-tesis__brillo` ya consume en CSS.
- * Sin ratón de precisión no se escucha nada: no hay posición continua que
- * seguir en táctil.
- */
-function activarBrilloVitrina(raiz) {
-  if (!window.matchMedia('(hover: hover) and (pointer: fine)').matches) return;
-  let pendiente = null;
-  raiz.addEventListener('pointermove', (ev) => {
-    const tarjeta = ev.target.closest('.vitrina-tesis__tarjeta');
-    if (!tarjeta) return;
-    if (pendiente) return;
-    pendiente = requestAnimationFrame(() => {
-      pendiente = null;
-      const r = tarjeta.getBoundingClientRect();
-      tarjeta.style.setProperty('--mx', `${((ev.clientX - r.left) / r.width) * 100}%`);
-      tarjeta.style.setProperty('--my', `${((ev.clientY - r.top) / r.height) * 100}%`);
-    });
-  });
-}

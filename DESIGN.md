@@ -6,13 +6,14 @@ colors:
   tinta-secundaria: "#4a4a4c"
   tinta-mate: "#6e6e71"
   tinta-inversa: "#ffffff"
-  superficie: "#ffffff"
-  superficie-alt: "#f7f7f6"
-  superficie-hundida: "#f2f2f1"
+  superficie: "#FAFAFA"
+  superficie-alt: "#F5F5F5"
+  superficie-hundida: "#F2F2F2"
   superficie-inversa: "#101011"
-  linea: "#e2e2e0"
-  linea-fuerte: "#c8c8c5"
-  linea-hairline: "#ecece9"
+  linea: "#E5E5E5"
+  linea-fuerte: "#C9C9C9"
+  linea-hairline: "#EDEDED"
+  primario: "var(--tinta)"
   acento: "#4F46E5"
   acento-pleno: "#6366F1"
   acento-tenue: "rgba(99, 102, 241, 0.09)"
@@ -25,13 +26,13 @@ colors:
   verde-sesion: "#1a9d4b"
 typography:
   display:
-    fontFamily: "Jost, Futura, 'Century Gothic', 'Avenir Next', Inter, 'Helvetica Neue', Helvetica, Arial, 'Segoe UI', system-ui, sans-serif"
+    fontFamily: "'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif"
     fontSize: "clamp(1.75rem, 3.4vw, 2.55rem)"
     fontWeight: 600
     lineHeight: 1.2
     letterSpacing: "-0.01em"
   headline:
-    fontFamily: "Jost, Futura, 'Century Gothic', 'Avenir Next', Inter, sans-serif"
+    fontFamily: "'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif"
     fontSize: "1.28rem"
     fontWeight: 600
     lineHeight: 1.2
@@ -69,12 +70,12 @@ spacing:
   xxl: "54px"
 components:
   button-primary:
-    backgroundColor: "{colors.acento}"
+    backgroundColor: "{colors.primario}"
     textColor: "{colors.tinta-inversa}"
     rounded: "{rounded.xs}"
     padding: "10px 20px"
   button-primary-hover:
-    backgroundColor: "{colors.acento}"
+    backgroundColor: "{colors.primario}"
   button-outline:
     backgroundColor: "transparent"
     textColor: "{colors.tinta}"
@@ -133,11 +134,12 @@ excepción—, y ese mismo rigor se traslada aquí: cualquier variación de colo
 pantalla existe para decir algo verificable, nunca para embellecer.
 
 **Key Characteristics:**
-- Acromático con un solo acento con doble papel: identidad en cromo, información neutra en dato.
+- Acromático sobre marfil (`#FAFAFA`), con la rampa de gris entera en temperatura neutra.
+- Un solo acento con doble papel: identidad en cromo, información neutra en dato. La acción primaria, en cambio, es NEGRA (`--primario`).
 - Plano por defecto; la profundidad se gana con filete de 1px y espacio negativo, no con sombra.
 - Tres tonos direccionales y ninguno más — el color nunca sustituye al glifo o al signo.
-- Geométrica (Jost) para titulares, Inter para texto, monospace del sistema para el detalle técnico y los tickers.
-- Radios de esquina casi imperceptibles (2px) en controles; 14px solo en contenedores tipo tarjeta y bento.
+- Serif (Source Serif 4) para titulares, Inter para texto, monospace del sistema para el detalle técnico, los tickers y **toda cifra**.
+- Radios de esquina casi imperceptibles (2px) en controles; 14px solo en contenedores tipo tarjeta y bento. **La portada es la excepción: radio 0 en toda la sección.**
 
 ## Colors
 
@@ -154,12 +156,17 @@ Paleta casi monocroma — trece tonos de tinta y superficie— sobre la que un �
 - **Baja** (`--bajista` `#b02a26`): siempre con ▼ y signo `-`.
 - **Aviso** (`--aviso` `#926608`): estados pendientes o de riesgo, siempre con su propio rótulo textual.
 
+### Acción primaria
+- **Negro** (`--primario`, alias de `--tinta` `#101011`): el relleno de todo botón primario de la plataforma. Rediseño 3: el índigo se replegó a cromo de identidad y a estados de selección, y la acción primaria pasó entera a negro. Alias y no un hex repetido, por la misma razón que `--foco` es alias de `--acento`. Texto blanco sobre él, 19,02:1.
+
 ### Neutral
 - **Tinta** (`--tinta` `#101011`): texto principal, iconografía de alto contraste.
 - **Tinta secundaria** (`--tinta-secundaria` `#4a4a4c`): texto de apoyo, navegación en reposo.
 - **Tinta mate** (`--tinta-mate` `#6e6e71`): metadatos, etiquetas de campo, texto terciario — calibrado a 4.54:1 sobre `--superficie-hundida`, no solo sobre blanco.
-- **Superficie** (`--superficie` `#ffffff`) / **Superficie alterna** (`--superficie-alt` `#f7f7f6`) / **Superficie hundida** (`--superficie-hundida` `#f2f2f1`): tres profundidades de fondo plano, sin sombra entre ellas.
-- **Línea** (`--linea` `#e2e2e0`), **línea fuerte** (`--linea-fuerte` `#c8c8c5`), **línea hairline** (`--linea-hairline` `#ecece9`): el vocabulario de separación — hace en este sistema el trabajo que la sombra hace en otros.
+- **Superficie** (`--superficie` `#FAFAFA`) / **Superficie alterna** (`--superficie-alt` `#F5F5F5`) / **Superficie hundida** (`--superficie-hundida` `#F2F2F2`): tres profundidades de fondo plano, sin sombra entre ellas, y deliberadamente juntas — el trabajo de separar lo hace el filete.
+- **Línea** (`--linea` `#E5E5E5`), **línea fuerte** (`--linea-fuerte` `#C9C9C9`), **línea hairline** (`--linea-hairline` `#EDEDED`): el vocabulario de separación — hace en este sistema el trabajo que la sombra hace en otros.
+
+**The Neutral-Ramp Floor.** Toda la rampa es gris neutro, sin la temperatura cálida que tuvo hasta el rediseño 3: el filete del sistema es gris puro y una superficie tibia debajo se le nota. Y `--superficie-hundida` **no puede bajar de `#F2F2F2`**: `--tinta-mate` y `--aviso` dan ahí 4,54:1 y 4,55:1, y a `#F1F1F1` el primero ya cae por debajo de AA. Medido antes de fijar el valor. Quien oscurezca la rampa vuelve a medir los dos.
 
 ### Named Rules
 **The One Indigo Rule.** No existe un azul informativo aparte del acento de marca. Un segundo azul —por sutil que sea— reintroduce la confusión que la fusión de tokens vino a resolver. Cualquier necesidad de "color informativo neutro" se resuelve con el acento existente, nunca con un token nuevo.
@@ -168,11 +175,15 @@ Paleta casi monocroma — trece tonos de tinta y superficie— sobre la que un �
 
 ## Typography
 
-**Display Font:** Jost (con Futura, Century Gothic, Avenir Next e Inter como respaldo)
+**Display Font:** Source Serif 4 (con Iowan Old Style, Palatino, Georgia y Times New Roman como respaldo). Un solo peso servido, **600**, con el eje óptico fijado a 24 en el propio fichero: solo compone titular, nunca texto corrido. El `@font-face` declara `600` y no un rango — declarar de más deja al navegador sintetizando lo que no tiene.
 **Body Font:** Inter (con Helvetica Neue, Helvetica, Arial, Segoe UI, system-ui como respaldo)
 **Label/Mono Font:** monospace del sistema (`ui-monospace, SF Mono, Menlo, Consolas`) — sin fichero propio, deliberadamente: un tercer `.woff2` pagaría en la ruta crítica del primer pintado, y la pila del sistema ya rinde bien en las tres plataformas.
 
-**Character:** Jost aporta el registro geométrico de titular — presente, pero comedido, nunca decorativo — mientras Inter lleva todo el peso de lectura extendida. El monospace marca sin ambigüedad "esto es un dato técnico, no prosa": tickers, cifras de detalle, el rótulo `N/A`.
+**Character:** Source Serif 4 aporta el registro de casa de análisis — institucional, con autoridad de página impresa, nunca decorativo — mientras Inter lleva todo el peso de lectura extendida. El monospace marca sin ambigüedad "esto es un dato técnico, no prosa": tickers, cifras de detalle, el rótulo `N/A`, y desde el rediseño 3 **toda cifra de la portada**.
+
+**The Serif-Replaces-Rule.** La serif **sustituyó** a la geométrica, no se sumó a ella, y eso es lo que la mantiene compatible con la regla de no cargar un tercer `.woff2`. Medido: `jost.woff2` pesaba 26.588 bytes y `source-serif-4.woff2` pesa 21.468, de modo que la ruta crítica baja de 75.020 a 69.900 bytes y sigue siendo de **dos** ficheros. Quien añada un tercer peso o una segunda familia rompe la cuenta, no la matiza.
+
+**The Figures-Are-Mono Rule.** Ninguna cifra se compone en la serif. Antes las grandes iban en la geométrica de titular; hoy toda cifra —hero, Metodología, Cifras en vivo, glifos de los tres estados, tickers de tesis, cinta— va en `--mono` con `tabular-nums`. La familia distingue prosa de dato sin ambigüedad y la columna cuadra sola.
 
 ### Hierarchy
 - **Display / H1** (600, `clamp(1.75rem, 3.4vw, 2.55rem)`, 1.2): titulares de sección, manifiesto de portada.
@@ -233,6 +244,14 @@ de tabla. Pastillas de filtro y el punto de sesión usan `999px` — la única f
 totalmente circular del sistema, reservada a controles de selección/estado, nunca a
 contenedores de contenido.
 
+**Excepción documentada: la portada va a radio 0.** `.seccion--portada` redefine los
+cuatro tokens de radio a `0`, y la herencia de custom properties los lleva a todo lo
+que cuelga —cinta, tarjetas de tesis, botones, pastillas— sin un solo
+`border-radius: 0` por componente. Es de sección, no de pieza, precisamente para que
+no haya lista que mantener. Ninguna otra vista la sigue: un sistema de formas mixto
+dentro de una misma pantalla es peor que cualquiera de los dos puros, y por eso el
+alcance es la sección entera o nada.
+
 ## Imagery
 
 **Registro fotográfico: monocromo o muy desaturado, sujeto único, luz difusa,
@@ -260,14 +279,18 @@ negro o muy desaturada. Una foto a color entra en conflicto directo con The One
 Indigo Rule: introduce una paleta que la base acromática no tiene sitio para
 alojar.
 
-**Excepción documentada, acotada: el fondo de las tarjetas de la Vitrina de
-tesis (`.vitrina-tesis__medio`).** Pedido explícitamente después de flagear el
-conflicto con esta misma regla: un verde de césped natural a color, foto
-editorial premium, con degradado oscuro superpuesto para que logo y texto
-sigan leyéndose. No extiende la excepción a ninguna otra pieza —el banner de
-portada sigue monocromo—: es la única superficie de la casa que hoy admite
-color de foto, y quien añada otra debería documentarla aquí de la misma
-forma, no asumir que esta abre la puerta en general.
+**Excepción cerrada (rediseño 3): The Monochrome Register Rule vuelve a no tener
+ninguna.** Existió una, acotada al fondo de las tarjetas de la Vitrina de tesis
+(`.vitrina-tesis__medio`): un césped verde natural a color, con degradado oscuro
+superpuesto, pedido explícitamente después de flaguear el conflicto con esta misma
+regla. El rediseño 3 convirtió esas tarjetas en piezas puramente tipográficas y
+retiró la fotografía, el degradado y el chip del logotipo. Hoy no queda superficie
+alguna en la plataforma que admita color de foto.
+
+**Y el banner de portada tampoco existe ya**: el Hero es tipográfico desde el
+rediseño 3. `/api/marca` sigue pudiendo servir un banner y `cargarMarca()` ya no lo
+monta. Esta sección describe, por tanto, el criterio que se aplicaría a la próxima
+fotografía editorial que la casa publique, no a una que esté hoy en pantalla.
 
 ## Logo / Mark
 
@@ -286,11 +309,11 @@ aquí de nuevo en vez de dejar esta sección desactualizada.)*
 
 ### Buttons
 - **Shape:** radio casi imperceptible (`var(--radio)`, 2px), borde de 1px.
-- **Primary (`.boton--solido`):** relleno `--acento`, texto `--tinta-inversa`; hover baja opacidad a 0.86 en vez de cambiar de tono. Es el único sitio de cromo donde el índigo pesa más — texto blanco sobre `--acento` da 6.29:1 en claro y 6.55:1 en oscuro.
+- **Primary (`.boton--solido`):** relleno `--primario` (negro), texto `--tinta-inversa`; hover baja opacidad a 0.86 en vez de cambiar de tono. 19,02:1. Rediseño 3: era `--acento`.
 - **Outline (`.boton--contorno`):** transparente, borde `--linea-fuerte`, texto `--tinta`; hover oscurece borde a `--tinta` y rellena con `--superficie-alt`.
 - **Text (`.boton--texto`):** sin caja, color `--tinta-secundaria`; hover pasa a `--tinta` con subrayado.
 - **Sesión abierta:** variante `.boton--sesion` — pierde la caja de invitación y pasa a informar (rótulo en mayúsculas, 0.72rem), porque un control con caja solo significa algo cuando invita a una acción; sin sesión conserva `.boton--contorno`.
-- **Excepción documentada:** el CTA sólido del hero usa `--tinta-portada` (negro fijo) en vez de `--acento`, pedido explícitamente por encima de la regla de identidad — no repetir en ningún otro botón primario de la plataforma.
+- **La excepción del hero dejó de serlo.** Existió un CTA negro suelto en el hero, con un token propio (`--tinta-portada`), documentado como excepción única y cerrada. El rediseño 3 pasó **todos** los botones primarios a negro y esa excepción desapareció junto con su token: mantenerla habría dejado dos primarios de dos colores haciendo el mismo trabajo, que es la regla 9 al revés. Hoy hay un solo primario y un solo token.
 
 ### Pills / Filtros
 - **Style:** borde `--linea-fuerte`, radio `999px`, fondo `--superficie`, texto `--tinta-secundaria`.
@@ -334,4 +357,7 @@ hay sesión abierta, no dos elementos que puedan desincronizarse.
 - **Don't** añadir `box-shadow` a una tarjeta o panel en reposo; la sombra es exclusiva de lo que flota sobre el contenido (modal, aviso, foco).
 - **Don't** usar `--alcista`/`--bajista` para nada que no sea rendimiento con signo real — no son colores decorativos de "positivo/negativo" genérico.
 - **Don't** redondear un control de uso diario (botón, input) más allá de `var(--radio)` (2px); el radio grande es exclusivo de contenedores tipo tarjeta.
-- **Don't** repetir la excepción del CTA del hero (`--tinta-portada` en vez de `--acento`) en ningún otro botón primario — es una excepción única, documentada y cerrada.
+- **Don't** usar `--acento` como relleno de un botón primario: desde el rediseño 3 el primario es `--primario` (negro). El índigo se queda en cabecera, navegación, foco, carga, enlaces y estados de selección.
+- **Don't** pasar a negro un estado de selección (pastilla activa, página actual, benchmark elegido) «por coherencia con el botón»: eso es dato neutro, no una acción primaria.
+- **Don't** componer una cifra en la serif — toda cifra va en `--mono` con `tabular-nums`.
+- **Don't** dibujar una frontera con el borde de los dos vecinos: cada filete tiene un solo dueño, o sale de 2px. Y en una rejilla cuyas celdas se revelan al entrar, el filete nunca puede ser el fondo del contenedor asomando por un `gap` — con las celdas en `opacity: 0` eso destapa una plancha maciza.

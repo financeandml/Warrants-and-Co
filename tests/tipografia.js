@@ -3,7 +3,9 @@
 /* ============================================================================
    Tipografía — las dos familias llegan, y las cifras siguen cuadrando.
 
-   La plataforma se compone con Inter para el texto y Jost —geométrica, derivada de
+   La plataforma se compone con Inter para el texto y Source Serif 4 —serif institucional,
+   que sustituyó a la geométrica Jost en el rediseño 3— para los titulares. Antes decía:
+   Inter para el texto y Jost —geométrica, derivada de
    Futura— para los titulares, servidas desde este mismo dominio.
 
    ═══ Por qué esta batería existe ═══
@@ -181,8 +183,21 @@ const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
         }
         return {
           columnas: out,
-          inter: document.fonts.check('1em Inter'),
-          geo: document.fonts.check('1em Jost'),
+          /* `document.fonts.check('1em X')` NO sirve para esto, y era lo que
+             había: devuelve `true` para una familia que no existe en absoluto
+             —comprobado en navegador con «Fuente Falsa», que da `true`—,
+             porque no hay nada pendiente de cargar. Los dos verdes de abajo
+             eran vacuos: el de Jost siguió en verde después de que Jost
+             dejara de servirse, y el de Inter habría seguido en verde con el
+             `@font-face` borrado.
+
+             Lo que sí se puede afirmar es que la familia esté en
+             `document.fonts` Y con `status === 'loaded'`: eso solo es cierto
+             si el fichero llegó de verdad. Es el mismo criterio que ya usa
+             `cargadas`, aquí aplicado a la aserción en vez de solo al
+             mensaje de diagnóstico. */
+          inter: [...document.fonts].some((f) => f.family === 'Inter' && f.status === 'loaded'),
+          serif: [...document.fonts].some((f) => f.family === 'Source Serif 4' && f.status === 'loaded'),
           /* Las familias que el documento tiene CARGADAS de verdad. No vale
              `getComputedStyle(body).fontFamily`: eso devuelve lo que la hoja de
              estilos declara, que sigue diciendo «Inter» aunque el fichero no haya
@@ -196,7 +211,7 @@ const pendiente = (n, motivo) => { R.push({ n, sinDato: true, d: motivo }); };
       if (ruta === 'inicio') {
         t(`[${idioma}] Inter ha llegado`, medida.inter,
           `familias cargadas: ${medida.cargadas}`);
-        t(`[${idioma}] Jost ha llegado`, medida.geo,
+        t(`[${idioma}] Source Serif 4 ha llegado`, medida.serif,
           `familias cargadas: ${medida.cargadas}`);
       }
 

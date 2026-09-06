@@ -30,9 +30,19 @@ es bilingüe ES/EN por diccionario. Comentarios que expliquen el porqué, no el 
 
 ## Diseño
 
-Base acromática, **tres tonos direccionales** —alza, baja, aviso— y un **índigo** que es
-identidad y significado a la vez. Usa variables CSS existentes, nunca un color literal.
+Base acromática **sobre marfil**, **tres tonos direccionales** —alza, baja, aviso—, un
+**índigo** que es identidad y significado a la vez, y un **negro** que es la acción
+primaria. Usa variables CSS existentes, nunca un color literal.
 Respeta `prefers-reduced-motion`.
+
+**El rediseño 3 (portada institucional) cambió cinco cosas de este fichero.** Están
+escritas cada una en su cláusula, y ninguna se dio por evidente: la rampa de grises pasa
+a marfil y a temperatura neutra (cláusula 0, nueva), el botón primario deja de ser índigo
+y pasa a negro (cláusula 2), la geométrica de titular se sustituye por una serif
+(Tipografía), la portada entera va a radio 0 (cláusula 9, nueva) y se retiran cuatro
+efectos que solo existían por la fotografía del Hero (cláusula 8). Quien revierta
+cualquiera de las cinco debería revertir su párrafo, no dar por hecho que la cláusula
+original sigue diciendo lo que decía.
 
 **La interfaz solo se sirve en claro.** Decisión de producto: sin conmutador y sin seguir
 `prefers-color-scheme`, `public/tema.js` fija `data-tema="claro"` siempre. El sistema de
@@ -40,17 +50,54 @@ tokens de `:root[data-tema="oscuro"]` sigue en `estilos.css` y `tests/paleta.js`
 verificando —se conserva como reserva del sistema de diseño, no como deuda—, pero hoy
 ningún visitante lo ve.
 
+**0 · La base es marfil, y toda la rampa de gris es neutra.** `--superficie` es `#FAFAFA`
+—el papel de una nota institucional, no la pantalla en blanco de una app— y las tres
+profundidades se juntan a propósito, porque el trabajo de separar lo hace el filete y no
+el salto de fondo. La rampa entera es gris NEUTRO: era cálida —`#f7f7f6`, `#f2f2f1`,
+`#e2e2e0`— y los filetes del rediseño son grises puros, de modo que mezclarlas dejaba el
+fondo tibio peleándose con la línea fría dentro de la misma tarjeta. Una sola temperatura,
+que es la regla 9 aplicada al gris.
+
+**`--superficie-hundida` no puede bajar de `#F2F2F2`, y no es una preferencia.**
+`--tinta-mate` y `--aviso` están calibrados al filo y ahí dan 4,54:1 y 4,55:1; a `#F1F1F1`
+el primero cae a 4,50 y a `#EDEDED` los dos rompen AA. Medido antes de elegir el valor, no
+después de que fallara. Quien oscurezca la rampa tiene que volver a medir los dos.
+
+| | `--superficie` | `--superficie-alt` | `--superficie-hundida` |
+|---|---|---|---|
+| antes (cálida) | `#ffffff` | `#f7f7f6` | `#f2f2f1` |
+| **ahora (neutra)** | **`#FAFAFA`** | **`#F5F5F5`** | **`#F2F2F2`** |
+
+Los filetes acompañan: `--linea` `#E5E5E5`, `--linea-hairline` `#EDEDED`, `--linea-fuerte`
+`#C9C9C9`.
+
 **1 · El color nunca carga solo.** Ningún dato depende solo del color: toda variación
 lleva glifo (▲ ▼) y signo explícito; toda señal, rótulo. La plataforma se lee impresa en
 blanco y negro y con cualquier daltonismo. Esta cláusula no ha cambiado y no se negocia.
 
 **2 · El índigo significa siempre lo mismo.** No es un acento decorativo con un semántico
-azul al lado: es **un solo token**. En cromo —cabecera, navegación, foco, botón primario,
-carga— es identidad; en un dato es **información neutra, sin dirección**. Las dos cosas
-son el mismo hecho —la plataforma hablando sin apuntar a ningún lado— y por la regla 9
-salen de la misma fuente: `--acento`. **No existe `--informativo` aparte**; un segundo
-azul sería justo el color que esta cláusula impide. La dirección la llevan los otros
-tres, y solo ellos.
+azul al lado: es **un solo token**. En cromo —cabecera, navegación, foco, carga— es
+identidad; en un dato es **información neutra, sin dirección**, y eso incluye los estados
+de selección: pastilla de filtro activa, página actual de la paginación, benchmark
+elegido. Las dos cosas son el mismo hecho —la plataforma hablando sin apuntar a ningún
+lado— y por la regla 9 salen de la misma fuente: `--acento`. **No existe `--informativo`
+aparte**; un segundo azul sería justo el color que esta cláusula impide. La dirección la
+llevan los otros tres, y solo ellos.
+
+**El botón primario salió de esa lista: ahora es negro, `--primario`.** Decisión de
+producto del rediseño 3, y aplicada ENTERA a propósito. Existía ya un CTA negro suelto en
+el hero, documentado en `DESIGN.md` como «excepción única, documentada y cerrada, no
+repetir en ningún otro botón primario»; dejarlo así y ennegrecer además el del newsletter
+habría dado dos —luego tres— botones primarios de dos colores haciendo exactamente el
+mismo trabajo, que es la regla 9 al revés. Se ennegrecen todos, la excepción del hero
+deja de ser excepción porque pasa a ser la regla, y `--primario` es alias de `--tinta`
+—no un `#101011` repetido— igual que `--foco` es alias de `--acento`. Texto blanco sobre
+él da 19,02:1.
+
+Lo que el índigo NO ha perdido: cabecera, navegación, foco de teclado, barra de carga,
+enlaces y los tres estados de selección de arriba. Quien vea un control índigo y lo pase
+a negro «por coherencia con el botón» estaría vaciando la cláusula, no completándola: un
+filtro activo no es una acción primaria, es un dato neutro.
 
 El marcador de sección —`.etiqueta-superior`, el rótulo pequeño sobre cada `h1`— salió de
 esta lista: decisión de producto explícita, revertida a propósito. Ningún rótulo superior
@@ -197,6 +244,22 @@ que se repintan en cada visita o refresco —**salvo la excepción documentada d
 métricas del Hero, más abajo**—; cursor personalizado en el hero; pausa o rebote del
 marquee al pasar el ratón —no hay gesto que justifique un spring—.
 
+**Retirada (rediseño 3): el Hero ya no tiene fondo, así que no tiene parallax.** El
+párrafo de abajo revocaba la prohibición para `.manifiesto__imagen`/`.manifiesto__video`.
+Esos dos nodos ya no existen: el rediseño 3 retiró la fotografía del Hero y con ella el
+parallax, el zoom de entrada, la costura en degradado del pie de foto, el velo de
+legibilidad tras los botones y el solape de −44px de la cinta. Las cinco resolvían
+problemas que solo tiene una imagen a pantalla completa.
+
+**No se restablece la prohibición general** —quedaría prohibiendo algo que ya no puede
+ocurrir, y el día que vuelva una foto al Hero nadie sabría si la prohibición volvió con
+ella o no—. El párrafo original se conserva íntegro debajo, con su razonamiento, para que
+quien reponga una fotografía sepa exactamente qué se decidió y por qué; el parallax de la
+Vitrina de tesis, que ese párrafo citaba como precedente vivo, también se retiró con el
+rediseño de las tarjetas. Hoy no queda ni un parallax en la plataforma.
+
+<sub>Texto original, ya sin código al que aplicarse:</sub>
+
 **Revocación documentada: parallax en el fondo del Hero.** La prohibición decía "parallax
 [...] en el hero —ya prohibido por la cláusula 5—", y era una lectura floja de esa
 cláusula: la 5 solo obliga a que el parallax se retire con `prefers-reduced-motion:
@@ -240,7 +303,10 @@ cuentan se repinta en cada visita, que es justo el caso que la prohibición gene
 por nombre. No es la misma situación que esa prohibición cubre: la prohibición existe
 contra un contador que sugiera movimiento en vivo sobre un dato que no se mueve en vivo
 —una cifra que se repinta con cada refresco periódico, animada como si acabara de cambiar
-cuando en realidad solo se ha vuelto a pedir—. Las tres del Hero no tienen refresco
+cuando en realidad solo se ha vuelto a pedir—. **Sigue vigente palabra por palabra tras el rediseño 3**: las tres cifras cambiaron de
+sitio y de tipografía —de flotar sobre la fotografía a una rejilla de filete con la cifra
+en monoespaciada—, pero no de origen ni de cadencia, que es lo único que esta excepción
+argumenta. Las tres del Hero no tienen refresco
 periódico —`pintarMetricasHero()` se llama una sola vez, al montar la portada, y el sondeo
 de 20s de la cinta las excluye explícitamente (`app.js`, comentario junto a
 `programarRefrescoCinta()`)—, así que el contador no puede disparar dos veces ni sugerir un
@@ -303,12 +369,67 @@ extendiendo esta excepción.
 - Ningún contenedor de orden de `cartera` o `cotizaciones` lleva `transition`/`animation`
   sobre `transform`; prueba estática afirma su ausencia.
 
-**Tipografía.** Geométrica para titulares, Inter para texto, **monospace del sistema**
-para el detalle técnico. `--mono` no lleva fichero propio: un tercer `.woff2` se paga en
-la ruta crítica del primer pintado del hero, y la pila del sistema ya es buena en las tres
-plataformas. La cadena de respaldo de `--sans` no es decorativa: resuelve ▲ y ▼ —U+25B2 y
-U+25BC—, fuera del subconjunto `latin`. Quien la recorte se queda sin las flechas, y
-entonces el color pasa a cargar solo, contra la cláusula 1.
+**9 · La portada va a radio 0; el resto de la plataforma, no.** Decisión de producto del
+rediseño 3, y de alcance acotado a propósito. `.seccion--portada` redefine los cuatro
+tokens —`--radio`, `--radio-s`, `--radio-m`, `--radio-l`— a `0`, y la herencia de custom
+properties los lleva sola a todo lo que cuelga: cinta, tarjetas de tesis, botones,
+pastillas. No hay `border-radius: 0` suelto en ningún componente, y por tanto no hay lista
+que mantener ni pieza que se quede fuera el día que se añada otra.
+
+Fuera de la portada la escala de esquina no cambia: `--radio` 2px en controles de uso
+diario, hasta `--radio-l` 14px en contenedores tipo tarjeta. El pie es cromo compartido
+por todas las vistas y queda fuera del alcance —a 2px la diferencia no es perceptible—.
+Quien quiera radio 0 en toda la plataforma tiene que decidirlo para toda la plataforma, no
+extenderlo sección a sección: un sistema de formas mixto es peor que cualquiera de los dos
+puros.
+
+**10 · El filete tiene un solo dueño.** Cada frontera de la portada la dibuja UN elemento,
+siempre el de abajo o el de la derecha, nunca los dos vecinos a la vez. No es una
+preferencia de estilo: con `border-block` en la rejilla del hero y otro en la cinta, las
+dos costuras salían de 2px —el doble que cualquier otra línea de la página—, y se vio
+midiendo en navegador, no leyendo el CSS. Es la regla 9 aplicada a un borde.
+
+Corolario para las rejillas con celdas que se revelan al entrar: **el filete no puede ser
+el fondo del contenedor asomando por un `gap`**. `.revelado` arranca en `opacity: 0`, así
+que con las celdas aún transparentes ese fondo queda a la vista y la sección entera
+aparece como una plancha gris maciza. Lo dibuja cada celda con su propio borde superior e
+izquierdo, y el contenedor cierra por abajo y por la derecha.
+
+**Tipografía.** **Serif** para titulares, Inter para texto, **monospace del sistema**
+para el detalle técnico y para **toda cifra**. `--mono` no lleva fichero propio: un tercer
+`.woff2` se paga en la ruta crítica del primer pintado del hero, y la pila del sistema ya
+es buena en las tres plataformas. La cadena de respaldo de `--sans` no es decorativa:
+resuelve ▲ y ▼ —U+25B2 y U+25BC—, fuera del subconjunto `latin`. Quien la recorte se queda
+sin las flechas, y entonces el color pasa a cargar solo, contra la cláusula 1.
+
+**La serif sustituye a la geométrica; no se suma a ella.** El rediseño 3 retira Jost y
+pone **Source Serif 4** en `--serif` —el token se llamaba `--geo` y se ha renombrado,
+porque un token llamado «geométrica» conteniendo una serif es el mismo hecho contado mal—.
+Eso es lo que resuelve el conflicto con la frase de arriba, y la cuenta está medida, no
+estimada:
+
+| | fichero | bytes |
+|---|---|---|
+| antes | `inter.woff2` + `jost.woff2` | 48.432 + 26.588 = **75.020** |
+| **ahora** | `inter.woff2` + `source-serif-4.woff2` | 48.432 + 21.468 = **69.900** |
+
+Siguen siendo **dos** ficheros en la ruta crítica, no tres, y pesan **5.120 bytes menos**.
+La serif no se paga: devuelve. Un solo peso, 600, con el eje óptico fijado a 24 en el
+propio fichero —solo compone titular, nunca texto corrido—; el `@font-face` declara `600`
+y no un rango, porque declarar de más deja al navegador sintetizando lo que no tiene.
+Ninguna regla de la hoja pide 700 sobre la serif, que es lo que dispararía una falsa
+negrita.
+
+Aquí vivió una serif editorial y se retiró, y esto no reabre aquel error: lo que motivó la
+retirada fue una sola familia haciendo DOS trabajos bajo un nombre —el display del hero y
+cinco reglas de ticker—. Esa separación se conserva entera. El display va en `--serif`, el
+detalle técnico en `--mono`, y ninguna invade a la otra.
+
+**Toda cifra de la portada va en `--mono` con `tabular-nums`.** Las tres del hero, las de
+Metodología, las de Cifras en vivo, los glifos de los tres estados, el ticker de cada
+tesis y la cinta entera. Antes las grandes iban en la geométrica de titular; ahora la
+familia distingue sin ambigüedad prosa de dato, la columna cuadra sola, y el número se lee
+como cifra medida y no como titular de folleto.
 
 ## Cómo quiero que trabajes
 

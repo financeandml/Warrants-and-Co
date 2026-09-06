@@ -18,12 +18,27 @@
      medida en cuanto arranca y la mantiene al vuelo. */
   --alto-cabecera: 69px;
 
-  /* Superficies */
-  --superficie:        #ffffff;
-  --superficie-alt:    #f7f7f6;
-  --superficie-hundida:#f2f2f1;
+  /* ── Superficies: marfil, y la rampa entera NEUTRA ──
+     Rediseño 3. La base deja de ser blanco puro y pasa a marfil `#FAFAFA`: el
+     papel de una nota institucional, no la pantalla en blanco de una app. El
+     lenguaje de separación pasa a ser el filete (ver `--linea`), no el salto de
+     fondo, así que las tres profundidades se juntan a propósito.
+
+     Y se neutralizan. La rampa anterior era CÁLIDA —#f7f7f6, #f2f2f1, con el
+     verde tirando arriba— y los filetes que pide el rediseño son grises puros:
+     mezclarlas dejaba el fondo tibio peleándose con el filete frío en la misma
+     tarjeta. Una sola temperatura en toda la rampa, que es la regla 9 aplicada
+     al gris: dos cosas que expresan «fondo neutro» salen del mismo criterio.
+
+     `--superficie-hundida` NO puede bajar de #F2F2F2, y no es una preferencia:
+     `--tinta-mate` (#6e6e71) y `--aviso` (#926608) están calibrados al filo y
+     ahí dan 4,54:1 y 4,55:1. A #F1F1F1 el primero cae a 4,50 y a #EDEDED los dos
+     rompen AA. Medido antes de elegir, no después. `tests/paleta.js` lo afirma. */
+  --superficie:        #FAFAFA;
+  --superficie-alt:    #F5F5F5;
+  --superficie-hundida:#F2F2F2;
   --superficie-inversa:#101011;
-  --superficie-velo:   rgba(255, 255, 255, 0.94);
+  --superficie-velo:   rgba(250, 250, 250, 0.94);
 
   /* Tinta */
   --tinta:             #101011;
@@ -33,10 +48,14 @@
   --tinta-mate:        #6e6e71;
   --tinta-inversa:     #ffffff;
 
-  /* Trazos */
-  --linea:             #e2e2e0;
-  --linea-fuerte:      #c8c8c5;
-  --linea-hairline:    #ecece9;
+  /* ── Trazos ──
+     Neutros, por la misma razón que las superficies. En el rediseño 3 el filete
+     deja de ser un separador secundario y pasa a ser LA estructura: la portada
+     compone en rejilla de prensa financiera, donde la línea de 1px hace el
+     trabajo que en otros sistemas hacen el fondo y la sombra. */
+  --linea:             #E5E5E5;
+  --linea-fuerte:      #C9C9C9;
+  --linea-hairline:    #EDEDED;
 
   /* Series del grafico */
   --serie-cartera:     #101011;
@@ -82,6 +101,25 @@
      `var(--tinta)` en diez reglas sueltas, que es diez sitios donde olvidarlo. */
   --foco:              var(--acento);
 
+  /* ── La acción primaria: NEGRA, no índigo ──
+     Rediseño 3, decisión de producto explícita. El índigo se repliega a lo que
+     no es un botón —cabecera, navegación, foco, carga— y a los estados de
+     selección, que son dato neutro sin dirección: pastilla de filtro activa,
+     página actual, benchmark elegido. Ahí sigue significando exactamente lo
+     mismo que decía la cláusula 2, y por eso NO se han tocado.
+
+     Lo que cambia es solo la acción primaria. Y cambia entera: había un
+     precedente de CTA negro suelto en el hero, documentado como excepción única
+     y cerrada, y dejarlo así habría dado dos botones primarios de dos colores
+     haciendo el mismo trabajo. Eso es la regla 9 al revés. Un token, una fuente,
+     todos los primarios de la casa. La excepción del hero deja de serlo porque
+     deja de ser una excepción: ahora es la regla.
+
+     Alias de `--tinta`, no un `#101011` repetido: el negro de la plataforma es
+     un solo hecho, igual que `--foco` es un alias de `--acento` y no una copia
+     suya. Texto blanco sobre él da 19,02:1. */
+  --primario:          var(--tinta);
+
   /* La plancha sobre la que se apoya el logotipo. No se redefine por tema
      —de ahi que viva solo aqui—: el sello esta dibujado para fondo negro y
      sobre superficie clara perderia el contorno. Era `#000` repetido en dos
@@ -96,7 +134,7 @@
   --destello:          rgba(16, 16, 17, 0.04);
 
   /* ── Tipografia ──
-     Inter para el texto y Jost —geometrica, derivada de Futura— para los titulares.
+     Inter para el texto y Source Serif 4 —serif institucional— para los titulares.
      Las dos se sirven desde este dominio —`marca/fuentes/`—, y por eso la CSP no
      cambia: sin directiva `font-src`, la peticion cae en `default-src 'self'`,
      que ya las autoriza. Un origen de terceros habria obligado a abrir la
@@ -109,12 +147,32 @@
      antes. Quien recorte esta cadena se queda sin las flechas de variacion, y
      el color pasaria a cargar solo. */
   --sans: Inter, "Helvetica Neue", Helvetica, Arial, "Segoe UI", system-ui, sans-serif;
-  /* Aqui vivia la serif editorial, y su retirada es un cambio de CRITERIO y no
-     solo de cara: hacia DOS trabajos bajo un nombre —la marca del hero y el
-     titular del manifiesto, que son display, y cinco reglas de ticker, que son
-     detalle tecnico—. Se han separado: lo display va a `--geo` y los tickers a
-     `--mono`, donde ademas una columna de simbolos cuadra sola. */
-  --geo: Jost, Futura, "Century Gothic", "Avenir Next", var(--sans);
+  /* ── La serif de titular ──
+     Aqui vivio una serif editorial, se retiro, y ahora vuelve: rediseño 3, por
+     decision de producto explicita. Lo que NO vuelve es el error que motivo
+     aquella retirada —una sola familia haciendo dos trabajos bajo un nombre, el
+     display del hero y cinco reglas de ticker—. Esa separacion se conserva
+     entera: el display vive aqui, el detalle tecnico en `--mono`, y ninguna de
+     las dos invade a la otra. La retirada corrigio el SOLAPE, no la serif.
+
+     Source Serif 4, servida desde `marca/fuentes/` igual que Inter, de modo que
+     la CSP no cambia: sin directiva `font-src`, la peticion cae en
+     `default-src 'self'`, que ya la autoriza.
+
+     Sustituye a Jost, no se suma a ella, y eso es lo que resuelve el conflicto
+     con la clausula de tipografia —«un tercer .woff2 se paga en la ruta critica
+     del primer pintado»—. La cuenta, medida y no estimada: jost.woff2 pesaba
+     26.588 bytes y source-serif-4.woff2 pesa 21.468. La ruta critica baja de
+     75.020 a 69.900 bytes y sigue siendo DOS ficheros, no tres. La serif no se
+     paga: devuelve 5.120 bytes.
+
+     Un solo peso, 600, y por eso el `@font-face` declara `600` y no un rango:
+     declarar de mas deja al navegador sintetizando lo que no tiene. Ninguna
+     regla de esta hoja pide 700 sobre la serif, que es lo que dispararia un
+     falso negrita. La cadena de respaldo entrega serifas reales en las tres
+     plataformas antes de caer en Georgia. */
+  --serif: 'Source Serif 4', 'Iowan Old Style', 'Palatino Linotype', Palatino,
+           Georgia, 'Times New Roman', serif;
   /* Se invocaba en seis sitios como `var(--mono, monospace)` y no estaba
      declarada en ninguno: caia siempre en el `monospace` de respaldo. */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
@@ -244,7 +302,7 @@
   --color-focus:           var(--foco);
 
   --font-body:    var(--sans);
-  --font-display: var(--geo);
+  --font-display: var(--serif);
   --font-mono:    var(--mono);
 
   --space-1: var(--espacio-1);
@@ -419,10 +477,14 @@
   font-display: swap;
 }
 
+/* Un solo peso real, declarado como el fichero lo trae. El eje optico va fijado
+   a 24 en el propio fichero: la serif solo compone titular —h1, h2, display del
+   hero, nombre de compañia—, nunca texto corrido, asi que un eje optico variable
+   habria costado el doble de bytes para un rango que esta hoja no recorre. */
 @font-face {
-  font-family: 'Jost';
-  src: url('marca/fuentes/jost.woff2') format('woff2');
-  font-weight: 400 700;
+  font-family: 'Source Serif 4';
+  src: url('marca/fuentes/source-serif-4.woff2') format('woff2');
+  font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
@@ -447,7 +509,7 @@ body {
 }
 
 h1, h2, h3, h4 {
-  margin: 0; font-family: var(--geo); font-weight: 600;
+  margin: 0; font-family: var(--serif); font-weight: 600;
   line-height: 1.2; letter-spacing: -0.01em; text-wrap: balance;
 }
 h1 { font-size: var(--tipo-6); }
@@ -605,7 +667,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 /* El primario es el sitio de cromo donde el índigo pesa más. Rellena con
    `--acento` y no con `--acento-pleno`: el rótulo mide 0,83rem y sobre #6366F1
    daría 4,47:1. Sobre `--acento` da 6,29:1 en claro y 6,55:1 en oscuro. */
-.boton--solido   { background: var(--acento); color: var(--tinta-inversa); border-color: var(--acento); }
+.boton--solido   { background: var(--primario); color: var(--tinta-inversa); border-color: var(--primario); }
 .boton--solido:hover:not(:disabled)  { opacity: 0.86; }
 
 .boton--contorno { border-color: var(--linea-fuerte); color: var(--tinta); }
@@ -780,7 +842,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
   font-size: var(--tipo-1); letter-spacing: 0.12em; color: var(--tinta-mate);
 }
 #seccion-repositorio .repositorio-destacado__nombre {
-  font-family: var(--geo); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
+  font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
   margin-top: 6px; transition: color var(--transicion);
 }
 #seccion-repositorio .repositorio-destacado:hover .repositorio-destacado__nombre { color: var(--acento); }
@@ -1099,7 +1161,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 /* La tipografía grande de la cifra principal, en cambio, NO es 4 de 4: hoy
    Catalysts no lleva este tratamiento (su `.indicador--principal` usa el
-   tamaño por defecto de `.indicador__valor`, 2,6rem, sin `--geo`). Es una
+   tamaño por defecto de `.indicador__valor`, 2,6rem, sin `--serif`). Es una
    inconsistencia real entre secciones, no una elección deliberada documentada
    en ningún sitio — se deja constatada aquí y sin tocar: decidir si Catalysts
    adopta este tamaño es una decisión visual para la Fase C, no de esta fase
@@ -1108,7 +1170,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #seccion-noticias .noticias-metricas .indicador--principal .indicador__valor,
 #seccion-repositorio .repositorio-metricas .indicador--principal .indicador__valor,
 .wc-metrics .wc-metric--principal .wc-metric__value {
-  font-family: var(--geo); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
+  font-family: var(--serif); font-size: clamp(2.2rem, 5vw, 3.4rem); font-weight: 500;
 }
 
 /* `.wc-featured` (Fase B): pieza destacada asimétrica de dos columnas.
@@ -1310,7 +1372,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 }
 #seccion-cartera .medida__cifra {
   display: block; margin: 0;
-  font-family: var(--geo); font-size: var(--tipo-5); font-weight: 500;
+  font-family: var(--serif); font-size: var(--tipo-5); font-weight: 500;
   font-variant-numeric: tabular-nums; line-height: 1; white-space: nowrap;
 }
 /* El glifo ▲/▼ que trae `.variacion` (formato.js) se ajusta a la escala de la
@@ -1342,7 +1404,7 @@ button, input, select, textarea { font: inherit; color: inherit; }
 #seccion-cartera .rendimiento__principal { min-width: 0; }
 #seccion-cartera .rendimiento__cifra {
   display: block;
-  font-family: var(--geo); font-size: var(--tipo-indicador-principal);
+  font-family: var(--serif); font-size: var(--tipo-indicador-principal);
   font-weight: 600; font-variant-numeric: tabular-nums;
   line-height: 0.95; letter-spacing: -0.02em; white-space: nowrap;
 }
@@ -2405,351 +2467,240 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 
 /* ══════════════════════════ PORTADA · HERO ══════════════════════════════
-   Fase D.13: la foto vuelve a ser el hero entero, a pantalla completa —no
-   una franja fija bajo una declaración de texto—. Se retira el bloque
-   editorial que llevaba desde D.9 (titular, subtítulo, el propio concepto de
-   "secuencia de franjas apiladas"): decisión de producto, no recorte de
-   paso. Las cifras y las acciones pasan a superponerse sobre la foto — su
-   posición final se resuelve en un commit aparte, medida contra el árbol.
+   Rediseño 3: registro de gestora institucional. La fotografía a sangre de la
+   Fase D.13 se retira entera y el hero vuelve a ser tipográfico — titular
+   serif, aire, y las tres cifras del fondo en una rejilla de filete de 1px
+   con la cifra en monoespaciada.
 
-   `--alto-cabecera` (`portada.js`, `seguirAlturaCabecera()`) es la MISMA
-   cifra que ya usaba la cabecera `sticky`; el hero resta esa altura real del
-   viewport en vez de una constante aparte, para que las dos cifras no puedan
-   discrepar sin que nada lo diga (Regla 9). */
+   Lo que se fue con la foto, y dónde queda constancia de por qué: el parallax
+   nativo de scroll, el zoom de entrada por `@starting-style`, la costura en
+   degradado del pie de foto, el velo de legibilidad tras los botones y el
+   solape de -44px de la cinta. Las cinco existían para resolver problemas que
+   solo tiene una imagen a pantalla completa. Las revocaciones están escritas
+   en CLAUDE.md § Diseño 8; quien las eche de menos debería leerlas allí antes
+   de reponer ninguna.
 
-.seccion--portada { padding: 0; }
+   `--alto-cabecera` ya no interviene aquí: el hero no mide contra el viewport
+   —ver `.hero`—, así que la única consumidora de esa cifra vuelve a ser la
+   cabecera `sticky` que la publica. */
+
+/* ── Radio 0: la portada entera, no pieza a pieza ──
+   Rediseño 3, decisión de producto. Se redefinen los CUATRO tokens de radio
+   en la raíz de la sección, no `border-radius: 0` en cada componente: la
+   herencia de custom properties los lleva sola a todo lo que cuelga —cinta,
+   tarjetas de tesis, botones, pastillas—, así que no hay lista que mantener
+   ni componente que se quede fuera el día que se añada otro.
+
+   Solo la portada. El resto de la plataforma conserva su escala de esquina:
+   `--radio` 2px en controles, hasta `--radio-l` 14px en contenedores. El pie
+   es cromo compartido por todas las vistas y por eso queda fuera del alcance;
+   a 2px la diferencia no es perceptible. */
+.seccion--portada {
+  padding: 0;
+  --radio: 0; --radio-s: 0; --radio-m: 0; --radio-l: 0;
+}
 
 .manifiesto { background: var(--superficie); }
 
-/* Fase D.15: los dos botones se centran en la franja entre la base del
-   árbol y la cinta, con el mismo tratamiento fantasma —transparente, borde
-   fino, texto blanco—. Ningún botón sólido sobre la foto: el índigo
-   sólido queda reservado al resto del sitio (cabecera, foco, formularios).
-   `--tinta-inversa` es #ffffff en claro —el único tema que se sirve—, así
-   que da el blanco sin literal, con el mismo token que ya usaba
-   `.boton--solido` para su texto sobre índigo. */
-/* Centrado sin `transform`: `.manifiesto__acciones` lleva `.revelado`, y
-   `.revelado[data-visible="true"]` fija `transform:none` al terminar de
-   entrar —el mecanismo lo comparte toda la Home, no se toca aquí—, así que
-   un `translateX(-50%)` para centrar quedaría anulado justo cuando la
-   entrada termina. `inset-inline:0` + `justify-content:center` centra el
-   contenido del flex sin pelearse con esa transición. */
-/* `inset-block-end` no se mide desde donde ve la cinta, sino desde el
-   borde inferior de `.manifiesto__visual` — y la cinta sube 44px sobre ese
-   borde (la regla del solape, más arriba). Un `clamp` que tocara 44px o
-   menos pondría los botones justo bajo la cinta o dentro de ella, que es
-   el mismo bug de la cinta bajo el pliegue que ya se midió una vez en este
-   hero. Por eso el suelo es `44px` fijo —el solape— más un margen propio
-   que sí escala con la ventana. */
-/* Velo tras los botones (hallazgo 1 de taste-skill): blanco sobre blanco
-   —`--tinta-inversa` puro, sin fondo— se leía bien contra un tramo oscuro
-   de la foto, pero el banner es reemplazable (`public/marca/LEEME.txt`) y
-   con una foto clara como la actual el texto se funde con la nieve. El
-   degradado vive en `::before`, acotado a la franja de los botones —nunca
-   se extiende al resto de la foto ni toca las cifras de arriba—. */
-.manifiesto__acciones {
-  position: absolute; z-index: 1;
-  inset-inline: 0; inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
-  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px;
+/* ── El hero tipográfico ──
+   `.manifiesto__hero` y no `.hero`: ese nombre ya lo tiene el HERO DEL PANEL
+   —`.hero`/`.hero__interior`/`.hero__titulo`, más abajo en esta hoja—, que
+   declara `border-bottom` y `overflow: hidden`. Un `.hero` aquí arriba se los
+   comía sin decir nada: la regla de más abajo gana por orden de cascada, y el
+   hero de la portada aparecía con un filete inferior que nadie había pedido.
+   Visto en navegador, no deducido.
+   Rediseño 3. Ni foto, ni caja, ni fondo: una columna de texto alineada a la
+   izquierda con mucho aire alrededor. El aire NO es relleno sobrante — es la
+   mitad del argumento de una gestora: quien tiene una cifra que enseñar no
+   necesita llenar la pantalla.
+
+   Alto por relleno, nunca `100vh`. La versión anterior media el viewport
+   exacto porque tenía que encajar una fotografía a sangre sobre el pliegue;
+   sin foto, atar el alto al viewport solo consigue que el hero se estire en
+   una pantalla alta y aplaste el texto en un portátil. El relleno escala con
+   `clamp()` y el contenido decide lo que mide. */
+/* ── Por qué todo el ritmo vertical del hero va en `vh` y con mínimos bajos ──
+   `tests/portada.js` exige que la cinta entera quepa sobre el pliegue en ocho
+   ventanas, y las bajas —700, 720, 800, 816px de alto— son las que mandan. La
+   primera versión medía `clamp(72px, 13vh, 148px)` arriba y dejaba la cinta 95px
+   por debajo del pliegue a 1440×700. Los cinco huecos del hero se recalibraron
+   contra la matriz real, no a ojo: mínimos más bajos para que la ventana corta
+   pueda comprimir, y el tramo `vh` haciendo el trabajo en el resto.
+
+   Quien suba cualquiera de estos cinco mínimos vuelve a empujar la cinta bajo
+   el pliegue en las cuatro ventanas bajas, y la batería lo dirá. */
+.manifiesto__hero {
+  padding-block: clamp(48px, 10vh, 140px) clamp(28px, 4.5vh, 68px);
 }
-/* Corto a propósito: es el resplandor DETRÁS DE LOS BOTONES, no la costura
-   con la cinta —esa la resuelve `.manifiesto__visual::after`, más arriba,
-   con su propio degradado y sin el riesgo de este veil de pintarse por
-   encima de la cinta (`.manifiesto__acciones` lleva `z-index:1` propio y
-   escapa a compararse con `.ticker` en la raíz en vez de quedarse detrás
-   por ir antes en el DOM). Estirar este offset para tapar el hueco fue un
-   intento fallido: agrandaba el veil entero a un bloque gris demasiado
-   grande Y ademas terminaba pintándose sobre la cinta. */
-.manifiesto__acciones::before {
-  content: ''; position: absolute; z-index: -1;
-  inset: -72px 0 -20px 0;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.34), transparent);
-  pointer-events: none;
+/* Medida de línea corta a propósito —el titular rompe en dos, nunca en cuatro—
+   y `text-wrap: balance` (heredado de `h1`) reparte las dos líneas parejas. */
+/* Dos líneas, nunca tres. A 19ch el titular rompía en TRES en los dos idiomas
+   —183px de alto medidos—, y esas 61px de más eran la mitad de lo que sacaba la
+   cinta del pliegue. Un titular de tres líneas en un hero es siempre un error de
+   cuerpo o de medida, no de longitud del texto. */
+.manifiesto__titular {
+  max-width: 26ch;
+  font-size: var(--tipo-7);
+  line-height: 1.06;
+  letter-spacing: -0.021em;
+}
+.manifiesto__bajada {
+  max-width: 54ch;
+  margin-block-start: clamp(16px, 2.4vh, 28px);
+  font-size: var(--tipo-4);
+  line-height: 1.55;
+  color: var(--tinta-secundaria);
+  text-wrap: pretty;
+}
+/* En el flujo, no superpuestas: sin foto debajo no hay nada que esquivar, y
+   el velo de legibilidad que llevaban —un degradado negro bajo los botones—
+   se retira con ella. Botón primario NEGRO sobre marfil (19,02:1), que es el
+   mismo `--primario` del resto de la casa. */
+.manifiesto__acciones {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+  margin-block-start: clamp(24px, 3.6vh, 44px);
 }
 /* `--tx`/`--ty` los escribe `activarImantados()` (`movimiento.js`) con
    `setProperty` en cada `pointermove` — la variable vive en el PROPIO botón,
    nunca en el contenedor: leerla aquí para trasladar al hijo de un padre
    sería el caso que la regla de rendimiento prohíbe (recálculo de estilo en
    cascada para cada hijo); aquí el que la escribe y el que la lee son el
-   mismo elemento. */
-/* La elevación al hover suma un tercer desplazamiento vertical, `--ly`, al
+   mismo elemento.
+
+   La elevación al hover suma un tercer desplazamiento vertical, `--ly`, al
    MISMO `translate()` que ya lee `--tx`/`--ty`: un segundo `transform` en una
-   regla más específica sustituiría al del imán entero, en vez de sumarse
-   (es el mismo bug de especificidad ya documentado para las tarjetas de
-   Companies, más abajo en este fichero). `--ly` no necesita `@property` para
-   animar suave: la transición está declarada sobre `transform`, y el
-   navegador interpola el `transform` YA RESUELTO en cada fotograma, sin que
-   la custom property en sí tenga que ser animable. */
+   regla más específica sustituiría al del imán entero en vez de sumarse. */
 .manifiesto__acciones .boton {
   --ly: 0px;
-  background: transparent;
-  color: var(--tinta-inversa);
-  border-color: var(--tinta-inversa);
-  padding: 11px 20px;
+  padding: 12px 22px;
   font-size: var(--tipo-2); font-weight: 600; letter-spacing: 0.01em;
   transform: translate(var(--tx, 0px), calc(var(--ty, 0px) - var(--ly)));
-  transition: transform 320ms var(--mov-resorte), box-shadow 320ms var(--mov-resorte);
+  transition: transform 320ms var(--mov-resorte);
 }
-.manifiesto__acciones .boton:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--tinta-inversa) 14%, transparent);
-  opacity: 1;
-}
-/* Elevación + sombra difusa al pasar el ratón, con física de muelle real al
-   soltar (`--mov-resorte`, el mismo oscilador amortiguado que ya usa el
-   imán). Solo bajo puntero de precisión: en táctil no hay "acercarse" ni
-   "retirar el cursor" que compensar. La sombra es transitoria, nunca en
-   reposo —sigue siendo la señal de "por encima del flujo" que fija la
-   cláusula de sombra de DESIGN.md, aquí aplicada al propio botón que acaba
-   de literalmente elevarse sobre la foto—. */
 @media (hover: hover) and (pointer: fine) {
-  .manifiesto__acciones .boton:hover:not(:disabled) {
-    --ly: 4px;
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
-  }
+  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .manifiesto__acciones .boton { transition: none; }
-  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 0px; box-shadow: none; }
+  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 0px; }
 }
-.manifiesto__flecha { display: inline-block; transition: transform var(--transicion); }
+.manifiesto__flecha {
+  display: inline-block; margin-inline-start: 8px;
+  transition: transform var(--transicion);
+}
 .manifiesto__acciones .boton:hover .manifiesto__flecha { transform: translateX(3px); }
 
-/* ── Métricas del Hero (Fase D.12) ──
-   El componente «cifra con filete» —`dato()`, en `inicio.js`—, número grande,
-   tabular, sin caja. */
+/* ── Las tres cifras: rejilla de resultados, no rótulo flotante ──
+   Rediseño 3. Antes flotaban en `position: absolute` sobre la franja de cielo
+   de la fotografía, con su posición atada a dónde terminaba el árbol —54,5%
+   del alto del fichero, medido—. Sin foto, esa geometría no significa nada.
+
+   Ahora son lo que siempre fueron: el cuadro de resultados de la casa. Tres
+   columnas iguales, filete de 1px arriba y abajo, filete entre columnas, y la
+   cifra en monoespaciada con cifras tabulares — la columna cuadra sola y el
+   número se lee como dato medido, no como titular de marketing.
+
+   Filete ENTRE columnas y no alrededor de cada celda: un recuadro por cifra
+   daría tres cajas y esto es una sola tabla. La primera celda además pierde
+   su filete y su relleno inicial, para que la cifra arranque exactamente en
+   la misma vertical que el titular de arriba.
+
+   El componente sigue siendo `dato()` (`inicio.js`), el mismo de la ficha de
+   compañía: ninguna caja nueva, ningún marcado propio. */
 .manifiesto__metricas {
-  position: absolute; z-index: 1;
-  inset-inline-start: 50%; inset-block-start: clamp(20px, 4vh, 44px);
-  transform: translateX(-50%);
-  display: flex; flex-direction: row; gap: clamp(22px, 2.6vw, 36px);
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin-block-start: clamp(32px, 5.5vh, 80px);
+  /* Solo arriba. La cinta que viene justo debajo trae su propio filete
+     superior y `.bloque-home` el suyo: con `border-block` aquí, las dos
+     costuras se dibujaban DOS veces y se veían de 2px, el doble de grueso
+     que cualquier otra línea de la página. Medido en navegador —805px y
+     870px con dos bordes cada uno—, no a ojo. Cada frontera la dibuja el
+     elemento de abajo, siempre, y así ninguna depende de que su vecino de
+     arriba exista: la rejilla se oculta entera cuando no hay datos. */
+  border-block-start: 1px solid var(--linea);
 }
-/* Fase D.17: en escritorio las tres cifras bajan a la franja entre la base
-   del árbol y los botones, centradas en horizontal —ya no en la banda sobre
-   la copa (Fase D.16), que dejaba el bloque pegado a la izquierda para no
-   caer sobre el follaje—. El árbol termina, medido igual que su arranque,
-   al 54,5% del alto de `.manifiesto__visual`; `inset-block-start: 54.5%`
-   abre la franja justo ahí. `inset-block-end` repite la misma fórmula que
-   ya fija el suelo de `.manifiesto__acciones` (el solape de 44px de la
-   cinta + su margen que escala con la ventana): las dos cierran la franja
-   por el mismo borde, así que el hueco entre las cifras y los botones nunca
-   se abre ni se cierra por su cuenta. `align-items` e `inset-inline` + `
-   justify-content: center` centran el contenido real dentro de esa franja,
-   igual que `height: 37.3%` centraba en la de arriba —contra el alto real
-   del bloque, no una cifra en px calculada a mano—. Medido en las seis
-   ventanas de 641 a 1920px: la franja disponible (187,6–328,0px) más que
-   dobla el alto del bloque de cifras en la más estrecha. Por debajo de
-   641px la fila pasa a columna (regla ya existente, más abajo) y conserva
-   la posición centrada de siempre, sin esta excepción. */
-@media (min-width: 641px) {
-  .manifiesto__metricas {
-    inset-inline: 0;
-    inset-block-start: 54.5%;
-    inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
-    height: auto;
-    align-items: center;
-    justify-content: center;
-    transform: none;
-  }
+.manifiesto__metricas .dato {
+  gap: 12px;
+  padding: clamp(18px, 2.6vh, 30px) clamp(16px, 2.2vw, 32px);
+  border-inline-start: 1px solid var(--linea);
+}
+.manifiesto__metricas .dato:first-child {
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
+.manifiesto__metricas .dato__etiqueta {
+  letter-spacing: 0.11em;
+  color: var(--tinta-mate);
 }
 .manifiesto__metricas .dato__valor {
-  font-family: var(--mono, monospace);
-  /* Reducido desde clamp(1.5rem, 2.4vw, 2rem) al bajar las cifras a la
-     franja inferior (Fase D.17): con más aire disponible que en la banda de
-     arriba, un número algo menor deja el bloque menos dominante sobre los
-     botones sin dejar de leerse — medido, no a ojo, contra la franja real. */
-  font-size: clamp(1.25rem, 2vw, 1.625rem);
-  font-weight: 600;
-}
-.manifiesto__metricas .dato__etiqueta { letter-spacing: 0.09em; }
-
-/* El hover: un gesto de UI, no una lectura de dato —no lleva significado
-   direccional, así que no le hace falta glifo ni cumple la cláusula 1—. Fuera
-   de puntero fino no hay nada que compensar: `pointer: fine` ya lo hace la
-   cinta y el resto de filas con hover. */
-@media (hover: hover) and (pointer: fine) {
-  .manifiesto__metricas .dato { transition: transform var(--transicion); }
-  .manifiesto__metricas .dato:hover { transform: translateY(-2px); }
+  font-family: var(--mono);
+  font-size: var(--tipo-6);
+  font-weight: 400;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
 }
 
-/* El sparkline de cada métrica: mismo trazo que `.ticker__grafico` —mismo
-   `construirSparkline()`, con prefijo de clase propio para su propio tamaño—,
-   nunca una pieza nueva. Llega tarde y a veces no llega, igual que en la
-   cinta: sin serie no reserva hueco.
+/* ── El sparkline de cada cifra ──
+   Trazo decorativo y redundante: el signo y el glifo ya están escritos en el
+   valor. Si la serie no llega, la celda es exactamente la misma sin él.
 
-   Tamaño en píxeles fijos y `flex-shrink: 0`, no un `width: 100%`: `.dato` es
-   hijo de un flex `column` cuyo propio ancho depende de su contenido —no hay
-   un ancho definido contra el que resolver un porcentaje—, y un SVG con
-   `preserveAspectRatio="none"` estira su trazo a la forma exacta de la caja
-   que le toque: si esa caja colapsaba a un rectángulo alto y estrecho, la
-   línea horizontal del sparkline se veía en vertical. `.ticker__grafico`
-   nunca tuvo este problema porque ya usaba medidas fijas. */
+   Monocromo, igual que el de la cinta y por el mismo motivo. Con el trazo y
+   su relleno en verde, cada celda decía «sube» TRES veces —glifo ▲, signo +,
+   y el color repetido en el número, la línea y el área bajo ella—, y el
+   degradado a todo lo ancho era además lo más ruidoso de la portada. La
+   dirección sigue enterita en el número, que es donde se lee. */
 .hero-metrica__grafico {
-  display: block; width: 100px; height: 22px; flex-shrink: 0;
-  margin-block-start: 6px; overflow: visible;
+  width: 100%; height: 26px; margin-block-start: 2px;
+  overflow: visible;
 }
 .hero-metrica__grafico__linea {
   fill: none;
-  stroke-width: 1.6;
+  stroke-width: 1.5;
   vector-effect: non-scaling-stroke;
 }
-.hero-metrica__grafico__linea--alza { stroke: var(--alcista); }
-.hero-metrica__grafico__linea--baja { stroke: var(--bajista); }
+.hero-metrica__grafico__linea--alza { stroke: var(--tinta-mate); }
+.hero-metrica__grafico__linea--baja { stroke: var(--tinta-mate); }
 .hero-metrica__grafico__linea--plana { stroke: var(--tinta-mate); }
-.hero-metrica__grafico__area { stroke: none; }
-.hero-metrica__grafico__parada--alza { stop-color: var(--alcista); }
-.hero-metrica__grafico__parada--baja { stop-color: var(--bajista); }
+/* Sin relleno bajo la línea. Con el trazo en color, el área degradada era
+   la misma lectura con más superficie; en monocromo es una mancha gris bajo
+   una línea gris, y lo único que aporta es suciedad. Se oculta en vez de
+   dejar de construirse: el `<path>` sigue en el SVG con sus paradas, así que
+   devolver el relleno es quitar esta línea, no rehacer el generador. */
+.hero-metrica__grafico__area { display: none; }
+.hero-metrica__grafico__parada--alza { stop-color: var(--tinta-mate); }
+.hero-metrica__grafico__parada--baja { stop-color: var(--tinta-mate); }
 .hero-metrica__grafico__parada--plana { stop-color: var(--tinta-mate); }
 
+/* Por debajo de 641px las tres columnas no caben sin partir la cifra: pasan a
+   filas apiladas y el filete cambia de eje —vertical entre columnas, horizontal
+   entre filas—, que es la misma tabla girada, no otra composición. */
 @media (max-width: 640px) {
-  .manifiesto__metricas { flex-direction: column; flex-wrap: nowrap; }
-}
-
-/* ── La fotografía: el hero entero, a pantalla completa ──
-   Fase D.13. `position: relative` porque las cifras y las acciones se
-   superponen dentro de ella —hijos `position: absolute`, colocación
-   provisional hasta la siguiente pieza—. Sin radio, sin sombra, sin velo ni
-   degradado. `hidden` por defecto: `cargarMarca()` la revela solo tras
-   precargar el fichero real de `public/marca/`.
-
-   Alto: `100vh` menos `--alto-cabecera` —la misma cifra que ya publica
-   `seguirAlturaCabecera()` para la cabecera `sticky`, no una constante
-   aparte (Regla 9)—, menos 22px más. Ese resto no es un ajuste a ojo: medido
-   en las seis ventanas de la matriz, la foto a `100vh - cabecera` exacto
-   dejaba la cinta 21px por debajo del pliegue EN LAS SEIS, siempre la misma
-   cifra sin importar la ventana —porque es aritmética fija, no geometría de
-   foto—: la cinta mide 65,36px de alto y se solapa -44px sobre el pie de la
-   foto (ver más abajo), así que aporta 65,36 − 44 = 21,36px que la foto no
-   estaba cediendo. Se resta ese neto, redondeado a 22px por el margen de
-   0,64px. Ya no depende del ancho de ventana por `clamp()`; depende del alto
-   real disponible y de la cinta, que es lo que de verdad determina si cabe
-   sobre el pliegue. */
-.manifiesto__visual {
-  position: relative;
-  height: calc(100vh - var(--alto-cabecera) - 22px);
-  overflow: hidden;
-}
-/* Costura pie de foto → cinta: degradado propio, deliberadamente separado
-   del velo de `.manifiesto__acciones` (justo abajo). Ese velo existe para
-   la legibilidad de los botones y es corto a propósito; estirarlo hasta
-   aquí lo convertía en un bloque gris demasiado grande y, peor, se pintaba
-   POR ENCIMA de la cinta —`.manifiesto__acciones` lleva `z-index:1` propio
-   y escapa a compararse con `.ticker` en la raíz, en vez de quedarse detrás
-   por ir antes en el DOM—. Este `::after` no fija `z-index`: pinta en el
-   orden normal del documento, así que la cinta —que llega después— lo tapa
-   sin más en el tramo que solapa, igual que ya tapa la foto sin tratar. */
-.manifiesto__visual::after {
-  content: ''; position: absolute;
-  inset-inline: 0; inset-block-end: 0;
-  height: 64px;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.22), transparent);
-  pointer-events: none;
-}
-/* El árbol vive en la banda 37,3–54,3% del alto del fichero (medido en Fase
-   C) y algo a la derecha del centro. `object-position` mantiene esa banda
-   centrada en el recorte en vez de dejarla a merced de la proporción de cada
-   ventana. */
-/* `bottom: -2px` en vez de heredar el `0` de `inset` de arriba: el fondo
-   lleva un `animation-timeline: view()` (el parallax de más abajo) que en
-   WebKit/Safari lo sube a su propia capa de composición GPU, y esa capa
-   rasteriza con un redondeo de subpíxel propio, distinto del resto del
-   documento — deja una línea clara de 1-2px justo en el borde de recorte,
-   confirmada en WebKit real (Playwright) contra la cinta. `overflow: hidden`
-   en `.manifiesto__visual` sigue recortando estos 2px de más, así que no
-   cambia nada visible; lo que cambia es que el límite de la capa ya no
-   coincide con el límite del recorte, que es donde WebKit dejaba la costura. */
-.manifiesto__imagen {
-  position: absolute; inset: 0;
-  bottom: -2px;
-  display: block;
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: 50% 38%;
-}
-/* El filtro vive solo en el vídeo, no en la foto: pedido explícito de
-   devolver el banner a como estaba, sin el tratamiento que oscurecía la
-   imagen. Un futuro vídeo de fondo (hoy no hay ninguno depositado, así que
-   esto no se ve) sigue entrando desaturado al registro editorial de la casa
-   (`DESIGN.md`, The Monochrome Register Rule) sin depender de que quien lo
-   suba lo entregue ya en blanco y negro. */
-.manifiesto__video {
-  object-position: 50% 45%; pointer-events: none;
-  filter: grayscale(1) contrast(1.05) brightness(1.02);
-}
-
-/* ── Zoom de entrada: excepción documentada de la cláusula 8, no parallax ──
-   `cargarMarca()` (`app.js`) quita `hidden` una sola vez, tras precargar el
-   fichero real —no hay recorrido de scroll que escuchar—, así que el zoom no
-   es el efecto que la cláusula prohíbe para el Hero: es una llegada puntual,
-   del mismo género que la entrada de un modal. `@starting-style` dispara el
-   `scale(1.05) → scale(1)` justo en ese cambio de `display:none` a visible
-   —el mismo mecanismo que ya anima otras salidas de `hidden` en la Home—.
-   Sin soporte de `@starting-style` el bloque entero se ignora y la foto
-   aparece directamente en su estado final, sin zoom que perder.
-
-   Anima la propiedad individual `scale`, no la abreviatura `transform`: el
-   parallax de scroll, justo debajo, anima `translate` sobre el MISMO
-   elemento, y las dos son propiedades de transformación independientes
-   (CSS Transforms Level 2) que se componen sin pisarse — si las dos
-   escribieran `transform`, la última declarada ganaría entera y la otra
-   desaparecería. */
-@media (prefers-reduced-motion: no-preference) {
-  .manifiesto__imagen, .manifiesto__video {
-    transition: scale 900ms var(--mov-entrada);
-    transition-behavior: allow-discrete;
+  .manifiesto__metricas { grid-template-columns: 1fr; }
+  .manifiesto__metricas .dato {
+    border-inline-start: none;
+    border-block-start: 1px solid var(--linea);
+    padding-inline: 0;
   }
-  @starting-style {
-    .manifiesto__imagen, .manifiesto__video { scale: 1.05; }
-  }
+  .manifiesto__metricas .dato:first-child { border-block-start: none; }
 }
 
-/* ── Parallax del fondo: revocación documentada de la cláusula 8 ──
-   Nativo, `animation-timeline: view()`: el fondo se traslada un 4% de su
-   propio alto mientras `.manifiesto__visual` cruza el viewport, y el texto
-   —`.manifiesto__metricas`, `.manifiesto__acciones`— no lleva ninguna
-   animación ligada a scroll, así que avanza a la velocidad normal de lectura
-   mientras el fondo se retrasa/adelanta una fracción: esa diferencia de
-   velocidad es la profundidad. `linear`, obligatorio en cualquier animación
-   atada a un timeline de scroll —cualquier otra curva pelearía con la
-   velocidad real del gesto—. Anima solo `translate` (transform-only, GPU,
-   sin reflow) y solo bajo soporte real de la especificación de scroll-driven
-   animations; sin él, el fondo se queda fijo, nunca a medio camino. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .manifiesto__imagen, .manifiesto__video {
-      animation-name: hero-parallax;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-      will-change: translate;
-    }
-  }
-}
-@keyframes hero-parallax {
-  from { translate: 0 -4%; }
-  to   { translate: 0 4%; }
-}
-
-/* ── Cinta de mercado: se solapa con el pie de la fotografía, no la sucede ──
-   Fase D.9 la trató como la línea que CIERRA la secuencia, después de la
-   foto. Fase D.10 va más lejos: la cinta sube 44px y se superpone al borde
-   inferior de la fotografía —un solape real, no un filete entre las dos—,
-   con su propio fondo opaco cubriendo el tramo donde pisa la imagen. Es la
-   fotografía "conectando" con el contenido que pide la fase, sin escribir
-   nunca texto sobre los píxeles de la imagen: donde se tocan, la cinta gana,
-   opaca, con su propio filete superior como frontera. */
+/* ── La cinta cierra la portada, y ahora la sucede de verdad ──
+   El solape de -44px sobre el pie de la fotografía se retira con la
+   fotografía: existía para que la cinta pisara la imagen en lugar de dejar
+   un filete entre las dos, y sin imagen no hay nada que pisar. La cinta
+   vuelve a ser la línea que sigue al hero, con su filete propio arriba y
+   abajo y sin radio (heredado de `.seccion--portada`). */
 .seccion--portada > .ticker {
   display: flex; align-items: stretch;
-  border-radius: 0; border-inline: none;
-  border-block: 1px solid var(--linea);
+  border-inline: none;
+  /* Mismo criterio que la rejilla de arriba: cada frontera, un solo filete, y
+     lo dibuja siempre el de abajo. El inferior lo pone `.bloque-home`. */
+  border-block-start: 1px solid var(--linea);
+  border-block-end: none;
   background: var(--superficie);
   position: relative;
-}
-/* El solape solo tiene sentido si hay fotografía que pisar: sin banner
-   depositado, `.manifiesto__visual` sigue `hidden` y la cinta debe seguir
-   siendo la línea que sucede al texto, no una que trepa sobre él. */
-.manifiesto:has(.manifiesto__visual:not([hidden])) + .ticker {
-  margin-block-start: -44px;
 }
 .seccion--portada > .ticker .ticker__item {
   padding: 10px 22px;
@@ -3799,7 +3750,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   font-size: var(--tipo-1); letter-spacing: 0.12em; color: var(--tinta-mate);
 }
 #seccion-companias .destacada-principal__nombre {
-  font-family: var(--geo); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
+  font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.1rem); font-weight: 500;
   margin-top: 6px; transition: color var(--transicion);
 }
 #seccion-companias .destacada-principal:hover .destacada-principal__nombre { color: var(--acento); }
@@ -3865,7 +3816,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
    se eleva con z-index para que nunca pierda legibilidad ni contraste. */
 #seccion-companias .tarjeta-compania__marca {
   position: absolute; top: -6px; right: 2px; z-index: 0;
-  font-family: var(--geo); font-size: 5.2rem; line-height: 1; font-weight: 500;
+  font-family: var(--serif); font-size: 5.2rem; line-height: 1; font-weight: 500;
   color: var(--acento); opacity: 0.07; pointer-events: none; user-select: none;
 }
 #seccion-companias .tarjeta-compania__cabecera,
@@ -4062,7 +4013,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 /* La fila en sí y el indicador viven en `.wc-metrics`/`.wc-metric` (sección
    Filtros, más arriba); aquí solo lo propio de Catalysts. Nota: a diferencia
    de Companies/Noticias/Repositorio, Catalysts no lleva el tratamiento
-   tipográfico grande (`--geo`) en su indicador principal — inconsistencia
+   tipográfico grande (`--serif`) en su indicador principal — inconsistencia
    real, documentada junto a `.wc-metric--principal`, sin tocar en esta fase. */
 #seccion-catalizadores .catalizadores-metricas {
   padding-block: var(--espacio-5); border-block-end: 1px solid var(--linea);
@@ -4078,7 +4029,7 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   font-size: var(--tipo-1); letter-spacing: 0.12em; color: var(--tinta-mate);
 }
 #seccion-catalizadores .siguiente-catalizador__cuenta {
-  font-family: var(--geo); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 500;
+  font-family: var(--serif); font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 500;
   margin-top: 6px; transition: color var(--transicion);
 }
 #seccion-catalizadores .siguiente-catalizador:hover .siguiente-catalizador__cuenta { color: var(--acento); }
@@ -4516,11 +4467,32 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__item--estatico { cursor: default; }
 .ticker__item--estatico:hover { background: none; }
 .ticker__texto { display: flex; flex-direction: column; gap: 6px; }
+/* ── Registro monocromo y técnico (rediseño 3) ──
+   La cinta pasa entera a monoespaciada con cifras tabulares: es la línea de
+   cotizaciones de una terminal, no una fila de titulares. El rótulo pierde la
+   negrita —a caja alta y con este espaciado ya destaca lo suficiente— y se
+   queda en `--tinta-mate`, un escalón por detrás de la cifra, que es lo que
+   se viene a leer. */
 .ticker__etiqueta {
-  font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase;
+  font-family: var(--mono);
+  font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase;
   font-size: var(--tipo-0);
+  color: var(--tinta-mate);
 }
 .ticker__cifras { display: inline-flex; align-items: baseline; gap: 9px; }
+.ticker__valor { font-family: var(--mono); color: var(--tinta); }
+.ticker__var { font-family: var(--mono); }
+/* Dirección sin color, dentro de la cinta y SOLO dentro de ella. El resto de
+   la plataforma conserva `--alcista`/`--bajista` intactos: aquí la lectura la
+   dan el glifo ▲/▼ que `.lectura--*::before` ya escribe y el signo explícito
+   del propio número, exactamente los dos portadores que la cláusula 1 exige
+   que existan aparte del color. Quitar el tinte no deja nada sin decir; deja
+   una cinta que no parpadea en verde y rojo mientras se desplaza sola.
+
+   Doble clase, no `!important`: `.ticker .lectura--alza` pesa 0,2,0 contra el
+   0,1,0 de la regla global, así que gana por especificidad normal. */
+.ticker .lectura--alza,
+.ticker .lectura--baja { color: var(--tinta-secundaria); }
 
 /* ── El sparkline ──
    Llega tarde y a veces no llega: es un trazo decorativo, redundante con el
@@ -4537,17 +4509,25 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
-.ticker__grafico__linea--alza { stroke: var(--alcista); }
-.ticker__grafico__linea--baja { stroke: var(--bajista); }
+/* Rediseño 3: un solo tono para las tres direcciones. El trazo nunca fue el
+   portador de la lectura —el signo y el glifo ▲/▼ van escritos al lado, y la
+   cláusula 1 exige justamente eso—, así que quitarle el color no quita
+   información: quita ruido. Las tres reglas se conservan por separado, y no
+   se fusionan en un selector, porque el día que alguien quiera devolver el
+   color direccional aquí tiene los tres sitios donde ponerlo. */
+.ticker__grafico__linea--alza { stroke: var(--tinta-mate); }
+.ticker__grafico__linea--baja { stroke: var(--tinta-mate); }
 .ticker__grafico__linea--plana { stroke: var(--tinta-mate); }
 
 /* El área bajo la línea: mismo color, degradado a transparente hacia abajo
    —la opacidad de cada parada la fija el propio SVG, no esta hoja—. Ningún
    dato viaja en el relleno que no esté ya en el trazo o en el signo de al
    lado: es la misma redundancia con más superficie, no una lectura nueva. */
-.ticker__grafico__area { stroke: none; }
-.ticker__grafico__parada--alza { stop-color: var(--alcista); }
-.ticker__grafico__parada--baja { stop-color: var(--bajista); }
+/* Mismo criterio que el sparkline del hero: en monocromo el área degradada
+   es una mancha bajo una línea del mismo tono, no una segunda lectura. */
+.ticker__grafico__area { display: none; }
+.ticker__grafico__parada--alza { stop-color: var(--tinta-mate); }
+.ticker__grafico__parada--baja { stop-color: var(--tinta-mate); }
 .ticker__grafico__parada--plana { stop-color: var(--tinta-mate); }
 
 /* ── El valor de la cinta, y por qué es `inline-block` ──
@@ -4635,14 +4615,14 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   margin-block-end: clamp(34px, 5vh, 54px);
 }
 /* Fase C: cabecera de sección con la misma tipografía display del manifiesto
-   —`--geo`—, para que Research/Cartera/Catalysts lean como piezas de una
+   —`--serif`—, para que Research/Cartera/Catalysts lean como piezas de una
    publicación y no como paneles de un dashboard. El tamaño BASE es el de
    Portfolio —la evidencia, capítulo intermedio—; Research y Upcoming lo
    escalan hacia arriba y hacia abajo con sus propios overrides, para que la
    escala del titular cuente la misma jerarquía que el espacio ocupado. */
 .bloque-home__titulo {
   margin-block-start: 10px;
-  font-family: var(--geo);
+  font-family: var(--serif);
   font-size: var(--tipo-6);
   font-weight: 600; letter-spacing: -0.03em; line-height: 1.08;
 }
@@ -4657,335 +4637,287 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   transition: color var(--transicion);
 }
 
-/* ════════════════ Metodología: bento asimétrico ════════════════
-   Una celda grande —la regla que resume todo el mecanismo— y tres iguales
-   con un hecho mecánico cada una. El filete de 1px entre celdas es el propio
-   fondo del contenedor asomando por el hueco de 1px del grid: nunca un
-   `border` por celda, que duplicaría la línea donde dos celdas se tocan. */
-/* 3 columnas × 2 filas, colocación explícita: la grande ocupa la columna 1
-   entera (las dos filas) y las tres restantes llenan exactamente las cuatro
-   celdas que quedan —una por fila arriba, una a lo ancho abajo—. Con
-   `grid-column: span` a secas, cuatro piezas de contenido sobre un hueco de
-   2×2 dejaban una celda vacía sin nada dentro; con posición explícita no hay
-   celda que sobre. */
+/* ════════════ Metodología · Cifras · Estados: registro de prensa ═══════════
+   Rediseño 3. Los tres bloques eran el mismo bento con distinto contenido:
+   rejilla con `gap: 1px` sobre un fondo `--linea` —el hueco haciendo de
+   filete—, caja de 1px alrededor, y una celda anclada en negro sólido. Leía
+   como panel de producto, y el encargo pide lo contrario: una página de
+   prensa financiera.
+
+   Qué cambia, y por qué cada cosa:
+
+   1 · SE VA LA CAJA. Un periódico no encierra sus columnas en un recuadro,
+       las separa con un filete. `border` alrededor + `gap` de fondo se
+       sustituyen por reglas de columna: filete arriba del grupo y filete
+       ENTRE columnas, ninguno fuera. Menos tinta y más estructura.
+
+   2 · SE VAN LOS RELLENOS SÓLIDOS. La celda negra de ancla desaparece de los
+       dos bentos. En el rediseño 3 el negro pasa a significar UNA cosa —la
+       acción primaria, `--primario`—, y un bloque de contenido pintado del
+       mismo negro le quitaba ese significado justo en la página donde el
+       botón primario tiene que destacar. La jerarquía la lleva ahora el
+       tamaño de la cifra y el ancho de la columna, que es como la lleva una
+       tabla de resultados.
+
+   3 · LAS CIFRAS PASAN A MONOESPACIADA. Estaban en `--serif`, que ahora es
+       exclusivamente titular. Toda cifra de la portada comparte familia y
+       `tabular-nums`: la columna cuadra sola y el número se lee como dato
+       medido. Es la misma decisión que ya rige la rejilla del hero y la
+       cinta, aplicada aquí para que las tres digan lo mismo del mismo modo.
+
+   La rejilla de Metodología conserva su asimetría —la regla que resume el
+   mecanismo pesa más que los tres hechos que la desarrollan—, pero ahora la
+   asimetría se ve en la medida de la columna y en el cuerpo de la cifra, no
+   en un fondo de color. */
 .bento-metodologia {
-  display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(2, auto);
-  gap: 1px; background: var(--linea);
-  border: 1px solid var(--linea);
+  display: grid;
+  grid-template-columns: 1.15fr 1fr 1fr;
+  border-block-start: 1px solid var(--linea);
 }
 .bento-metodologia__celda {
-  display: flex; flex-direction: column; justify-content: center; gap: 10px;
-  background: var(--superficie);
-  padding: var(--espacio-5) var(--espacio-4);
+  display: flex; flex-direction: column; gap: 12px;
+  padding: clamp(24px, 3.4vh, 38px) clamp(20px, 2.4vw, 34px) 0;
+  border-inline-start: 1px solid var(--linea);
 }
-.bento-metodologia__celda--grande {
-  grid-column: 1; grid-row: 1 / span 2;
-  background: var(--tinta); color: var(--tinta-inversa);
+.bento-metodologia__celda:first-child {
+  border-inline-start: none;
+  padding-inline-start: 0;
 }
+/* La celda de la regla ocupa la primera columna en las DOS filas: es la
+   premisa de la que cuelgan las otras tres, y leerla arriba del todo a la
+   izquierda es el orden en que se lee una página. */
+.bento-metodologia__celda--grande { grid-column: 1; grid-row: 1 / span 2; }
 .bento-metodologia__celda:nth-child(2) { grid-column: 2; grid-row: 1; }
 .bento-metodologia__celda:nth-child(3) { grid-column: 3; grid-row: 1; }
 .bento-metodologia__celda:nth-child(4) { grid-column: 2 / span 2; grid-row: 2; }
 .bento-metodologia__cifra {
-  font-family: var(--geo); font-size: var(--tipo-7);
-  font-weight: 600; letter-spacing: -0.02em; line-height: 1;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--tipo-7);
+  font-weight: 400; letter-spacing: -0.045em; line-height: 1;
 }
-.bento-metodologia__texto { max-width: 34ch; font-size: var(--tipo-3); line-height: 1.55; opacity: 0.86; }
-.bento-metodologia__titulo { font-size: var(--tipo-4); font-weight: 600; }
-.bento-metodologia__detalle { font-size: var(--tipo-2); color: var(--tinta-mate); line-height: 1.55; }
+.bento-metodologia__texto {
+  max-width: 34ch; font-size: var(--tipo-3); line-height: 1.55;
+  color: var(--tinta-secundaria);
+}
+.bento-metodologia__titulo {
+  font-size: var(--tipo-4); font-weight: 600; letter-spacing: -0.01em;
+}
+.bento-metodologia__detalle {
+  max-width: 34ch; font-size: var(--tipo-2); color: var(--tinta-mate); line-height: 1.55;
+}
+/* La cuarta celda cruza dos columnas y quedaría pegada a la de arriba sin
+   nada que las separe: filete horizontal, el mismo que ya separa columnas. */
+.bento-metodologia__celda:nth-child(4) {
+  margin-block-start: clamp(24px, 3.4vh, 38px);
+  border-block-start: 1px solid var(--linea);
+}
 
 @media (max-width: 860px) {
-  .bento-metodologia { grid-template-columns: 1fr 1fr; grid-template-rows: repeat(3, auto); }
+  .bento-metodologia { grid-template-columns: 1fr 1fr; }
   .bento-metodologia__celda--grande { grid-column: 1 / span 2; grid-row: 1; }
-  .bento-metodologia__celda:nth-child(2) { grid-column: 1; grid-row: 2; }
+  .bento-metodologia__celda:nth-child(2) { grid-column: 1; grid-row: 2; border-inline-start: none; padding-inline-start: 0; }
   .bento-metodologia__celda:nth-child(3) { grid-column: 2; grid-row: 2; }
+  .bento-metodologia__celda:nth-child(2),
+  .bento-metodologia__celda:nth-child(3) {
+    margin-block-start: clamp(24px, 3.4vh, 38px);
+    border-block-start: 1px solid var(--linea);
+  }
   .bento-metodologia__celda:nth-child(4) { grid-column: 1 / span 2; grid-row: 3; }
 }
 @media (max-width: 560px) {
-  .bento-metodologia { grid-template-columns: 1fr; grid-template-rows: none; }
+  .bento-metodologia { grid-template-columns: 1fr; }
   .bento-metodologia__celda,
   .bento-metodologia__celda--grande,
   .bento-metodologia__celda:nth-child(2),
   .bento-metodologia__celda:nth-child(3),
-  .bento-metodologia__celda:nth-child(4) { grid-column: 1; grid-row: auto; }
+  .bento-metodologia__celda:nth-child(4) {
+    grid-column: 1; grid-row: auto;
+    border-inline-start: none; padding-inline: 0;
+    margin-block-start: clamp(24px, 3.4vh, 38px);
+    border-block-start: 1px solid var(--linea);
+  }
+  .bento-metodologia__celda:first-child { margin-block-start: 0; border-block-start: none; }
 }
 
-/* ════════════════ Cifras en vivo: bento asimétrico ════════════════
-   Mismo lenguaje visual que Metodología —celda oscura como ancla—, para que
-   las dos lean como piezas de la misma familia sin repetir su contenido:
-   una dice reglas, la otra dice estado. */
+/* ── Cifras en vivo: franja de resultados, no bento ──
+   Deja de repetir la composición de Metodología. Dos secciones seguidas con
+   la misma rejilla asimétrica leían como la misma pieza dicha dos veces, y
+   dicen cosas distintas: una son las REGLAS, esta es el ESTADO. Aquí la
+   composición es una franja de columnas iguales —el pie de cifras de una
+   tabla de resultados—, con el mismo vocabulario de filete y la misma
+   monoespaciada tabular que la rejilla del hero. */
 .bento-cifras {
   display: grid; grid-template-columns: repeat(3, 1fr);
-  gap: 1px; background: var(--linea);
-  border: 1px solid var(--linea);
-  margin-top: var(--espacio-4);
+  margin-top: clamp(24px, 3.4vh, 38px);
+  border-block-start: 1px solid var(--linea);
 }
 .bento-cifras__celda {
-  display: flex; flex-direction: column; gap: 8px;
-  background: var(--superficie);
-  padding: var(--espacio-5) var(--espacio-4);
+  display: flex; flex-direction: column; gap: 10px;
+  padding: clamp(22px, 3vh, 34px) clamp(18px, 2.2vw, 32px) 0;
+  border-inline-start: 1px solid var(--linea);
 }
-.bento-cifras__celda--grande { background: var(--tinta); color: var(--tinta-inversa); }
-.bento-cifras__celda--grande .bento-cifras__etiqueta { color: inherit; opacity: 0.7; }
+.bento-cifras__celda:first-child {
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
 .bento-cifras__cifra {
-  font-family: var(--geo); font-variant-numeric: tabular-nums;
-  font-size: var(--tipo-7); font-weight: 600; letter-spacing: -0.02em; line-height: 1;
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--tipo-7); font-weight: 400; letter-spacing: -0.045em; line-height: 1;
 }
 .bento-cifras__etiqueta {
-  font-size: var(--tipo-1); letter-spacing: 0.07em; text-transform: uppercase;
+  font-size: var(--tipo-0); letter-spacing: 0.11em; text-transform: uppercase;
   color: var(--tinta-mate);
 }
 .bento-cifras__nota { max-width: 62ch; font-size: var(--tipo-2); color: var(--tinta-mate); }
 
 @media (max-width: 760px) {
   .bento-cifras { grid-template-columns: 1fr; }
+  .bento-cifras__celda {
+    border-inline-start: none; border-block-start: 1px solid var(--linea);
+    padding-inline: 0; margin-block-start: clamp(22px, 3vh, 34px);
+  }
+  .bento-cifras__celda:first-child { border-block-start: none; margin-block-start: 0; }
 }
 
 /* ════════════════ Los tres estados: franja editorial ════════════════
-   Sin fondo de color: esto describe una disciplina, no presenta un dato con
-   dirección, así que se queda en el vocabulario acromático puro —filete y
-   tipografía— igual que el resto de la plataforma en reposo. */
+   Ya estaba en el registro que el resto adopta ahora —filete y tipografía,
+   sin fondo de color—, así que apenas cambia: el glifo de ejemplo pasa a
+   cuadrar con las demás cifras de la página (`tabular-nums`) y las medidas
+   se alinean con las otras dos franjas. Describe una disciplina, no presenta
+   un dato con dirección, y por eso sigue sin tocar los tonos direccionales. */
 .franja-estados {
   display: grid; grid-template-columns: repeat(3, 1fr);
   border-block-start: 1px solid var(--linea);
-  margin-top: var(--espacio-4);
+  margin-top: clamp(24px, 3.4vh, 38px);
 }
 .franja-estados__celda {
-  padding: var(--espacio-5) var(--espacio-4) 0;
+  padding: clamp(22px, 3vh, 34px) clamp(18px, 2.2vw, 32px) 0;
   border-inline-start: 1px solid var(--linea);
 }
-.franja-estados__celda:first-child { border-inline-start: none; }
+.franja-estados__celda:first-child {
+  border-inline-start: none;
+  padding-inline-start: 0;
+}
 .franja-estados__glifo {
   margin-bottom: 14px;
-  font-family: var(--mono); font-size: var(--tipo-6); font-weight: 500;
-  letter-spacing: -0.01em; color: var(--tinta-mate);
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-size: var(--tipo-6); font-weight: 400;
+  letter-spacing: -0.03em; color: var(--tinta-mate);
 }
-.franja-estados__nombre { margin-bottom: 6px; font-size: var(--tipo-4); font-weight: 600; }
+.franja-estados__nombre {
+  margin-bottom: 6px; font-size: var(--tipo-4); font-weight: 600; letter-spacing: -0.01em;
+}
 .franja-estados__detalle { max-width: 32ch; font-size: var(--tipo-2); color: var(--tinta-mate); line-height: 1.55; }
 
 @media (max-width: 720px) {
   .franja-estados { grid-template-columns: 1fr; }
   .franja-estados__celda {
     border-inline-start: none; border-block-start: 1px solid var(--linea);
-    padding: var(--espacio-4) 0 0;
+    padding: clamp(22px, 3vh, 34px) 0 0;
   }
   .franja-estados__celda:first-child { border-block-start: none; padding-block-start: 0; }
 }
 
-/* ════════════════ Vitrina de tesis: galería editorial ════════════════
-   `auto-fill` en vez de un número fijo de columnas: la lista real de tesis
-   varía sesión a sesión, y una rejilla de casillas fijas dejaría huecos
-   vacíos con menos de seis. Aquí el número de celdas SIEMPRE es el número de
-   tesis — nunca una casilla de más. */
+/* ════════════════ Vitrina de tesis: tarjeta brutalista ════════════════
+   Rediseño 3. La tarjeta era una postal: proporción 3/4, fotografía de césped
+   a color de fondo, chip de cristal translúcido con el logo de la compañía,
+   velo en degradado para que el texto leyera encima, brillo radial siguiendo
+   al ratón, parallax de scroll sobre el fondo y el resumen escondido hasta
+   el hover. Se retira TODO, por encargo explícito, y lo que queda es
+   tipografía sobre un rectángulo con filete.
+
+   Lo que eso arregla de paso, y que no es cosmético:
+
+   · El resumen deja de vivir en el hover. Un texto que solo aparece con ratón
+     de precisión no aparece en táctil, y con teclado solo asomaba porque la
+     tarjeta entera es `tabindex=0`. Ahora se lee siempre, en todos.
+   · Desaparece la única superficie a color de la plataforma —el césped—, que
+     era una excepción documentada a The Monochrome Register Rule. La regla
+     vuelve a no tener excepciones.
+   · Desaparecen tres capas absolutas por tarjeta (fondo, velo, brillo) y la
+     animación de scroll que movía la primera. Seis tarjetas por seis capas
+     menos, y un `pointermove` con rAF menos escuchando en la portada.
+
+   Sin `aspect-ratio`: la altura la da el contenido. Una rejilla de rectángulos
+   idénticos con texto de distinta longitud dentro obliga a recortar o a dejar
+   hueco muerto; `align-items: stretch` (por defecto en grid) las iguala por
+   fila, que es lo que hace una tabla. */
+/* ── Cómo se dibuja el filete de la rejilla, y por qué así ──
+   El primer intento fue `gap: 1px` sobre un contenedor con `background:
+   var(--linea)`: la línea sale del fondo asomando por el hueco. Es la técnica
+   que usan los dos bentos de arriba y funciona bien... cuando las celdas son
+   opacas. Estas no lo son: llevan `data-revelar`, y `.revelado` arranca en
+   `opacity: 0`. Con las seis tarjetas transparentes, el fondo del contenedor
+   quedaba a la vista y la sección entera aparecía como una PLANCHA GRIS
+   maciza hasta que el observador disparaba la entrada. Visto en captura de
+   página completa, no razonado.
+
+   Así que la línea la dibuja cada tarjeta, no el contenedor: cada una pone su
+   filete superior e izquierdo, y el contenedor cierra por abajo y por la
+   derecha. Ninguna frontera se dibuja dos veces —cada línea tiene un solo
+   dueño, que es la regla 9 aplicada a un borde—, la rejilla se cierra entera
+   sea cual sea el número de columnas que `auto-fill` decida, y una tarjeta en
+   `opacity: 0` se lleva solo sus dos filetes en vez de destapar una plancha. */
 .vitrina-tesis {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: var(--espacio-4);
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+  border-block-end: 1px solid var(--linea);
+  border-inline-end: 1px solid var(--linea);
 }
 .vitrina-tesis__tarjeta {
-  position: relative; overflow: hidden;
-  aspect-ratio: 3 / 4;
-  border-radius: var(--radio-l);
-  background: var(--superficie-hundida);
+  border-block-start: 1px solid var(--linea);
+  border-inline-start: 1px solid var(--linea);
+  position: relative;
+  display: flex; flex-direction: column;
+  gap: 10px;
+  padding: clamp(22px, 2.6vw, 30px);
+  background: var(--superficie);
   cursor: pointer;
-  transition: transform 320ms var(--mov-resorte);
+  transition: background var(--transicion);
 }
-/* El gesto físico —elevar con rebote— solo bajo ratón de precisión: el tacto
-   no tiene "hover", y forzarlo ahí deja la tarjeta con el efecto pegado tras
-   el toque. `translateY` + `scale` leves, nunca solos: el rebote lo da la
-   curva (`--mov-resorte`), no la distancia recorrida. */
 @media (hover: hover) and (pointer: fine) {
   .vitrina-tesis__tarjeta:hover,
-  .vitrina-tesis__tarjeta:focus-within {
-    transform: translateY(-6px) scale(1.015);
-  }
+  .vitrina-tesis__tarjeta:focus-within { background: var(--superficie-alt); }
 }
-.vitrina-tesis__tarjeta:focus-visible { outline: 2px solid var(--foco); outline-offset: 3px; }
-
-.vitrina-tesis__medio { position: absolute; inset: 0; }
-/* Igual que el vídeo del Hero: el filtro vive aquí, no en el fichero que se
-   suba — The Monochrome Register Rule se cumple sola. */
-.vitrina-tesis__video {
-  width: 100%; height: 100%; object-fit: cover;
-  filter: grayscale(1) contrast(1.05) brightness(0.95);
-}
-/* Sin vídeo de portada NI ticker reconocible: el mismo lenguaje de marca de
-   agua tipográfica que `.tarjeta-compania` en Companies — nunca una foto de
-   stock inventada. Cae aquí solo cuando no hay ticker o el logo local dio
-   404 (`marcaOLogo()`, `inicio.js`). */
-.vitrina-tesis__marca {
-  position: absolute; inset: 0; margin: 0; display: grid; place-items: center;
-  background: linear-gradient(165deg, var(--superficie-alt), var(--superficie-hundida));
-  font-family: var(--geo); font-size: 5.2rem; font-weight: 500;
-  color: var(--acento); opacity: 0.16;
+/* `outline-offset` negativo: con la tarjeta a ras del filete de la rejilla, un
+   anillo por fuera se comería el hueco de 1px y pisaría a la vecina. Hacia
+   dentro se ve entero y no mueve nada. */
+.vitrina-tesis__tarjeta:focus-visible {
+  outline: 2px solid var(--foco); outline-offset: -2px;
 }
 
-/* ── El césped: excepción documentada de DESIGN.md, acotada a esta pieza ──
-   `public/assets/img/fondo-premium.jpg` lo deposita quien mantiene la marca
-   —igual que el banner del Hero en `public/marca/`—; sin fichero, el
-   navegador pinta el color de fondo de reserva y el chip del logo (o el
-   monograma) sigue leyéndose igual, porque su contraste no depende de la
-   foto. Sin `filter: grayscale`, a propósito: es la única superficie de la
-   casa que hoy admite color de foto (DESIGN.md, The Monochrome Register
-   Rule). El degradado oscuro es el mismo trabajo que `.vitrina-tesis__velo`
-   ya hace para el texto, aquí también para que el logo lea sobre un césped
-   real, no sobre un color plano. */
-.vitrina-tesis__fondo {
-  position: absolute; inset: 0;
-  background-color: var(--superficie-hundida);
-  background-image:
-    linear-gradient(180deg, rgba(0, 0, 0, 0.22) 0%, rgba(0, 0, 0, 0.04) 38%, rgba(0, 0, 0, 0.5) 100%),
-    url('/assets/img/fondo-premium.jpg');
-  background-size: cover;
-  background-position: center;
-}
-
-/* ── El chip del logo: contraste garantizado, cualquiera que sea el césped ──
-   Material translúcido —blanco, `backdrop-filter`— por encima del césped:
-   un logo de marca trae sus propios colores (no pasa por el índigo, igual
-   que ninguna foto editorial lo hace), así que necesita una superficie
-   propia para leerse con cualquier fondo, no solo con uno favorable. Mismo
-   criterio que la cabecera o cualquier material de Apple Design: separar el
-   cromo del contenido con una capa, no con más contraste forzado en el
-   propio logo. */
-.vitrina-tesis__logo-chip {
-  position: absolute; z-index: 1;
-  inset-inline: 0; inset-block-start: 20%;
-  margin-inline: auto;
-  width: clamp(56px, 22%, 76px); aspect-ratio: 1;
-  display: grid; place-items: center;
-  border-radius: var(--radio-m);
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(6px) saturate(140%);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
-}
-.vitrina-tesis__logo {
-  width: 62%; height: 62%;
-  object-fit: contain;
-}
-
-/* ── Parallax, solo aquí: el Hero lo prohíbe por nombre (Cláusula 8) ──
-   Nunca `window.addEventListener('scroll')`: la posición se ata al recorrido
-   real de la propia tarjeta por el viewport vía `animation-timeline: view()`,
-   sin JS y sin hilo principal. `scale(1.08)` de fondo dale el margen que el
-   desplazamiento necesita para no dejar borde en blanco — `overflow: hidden`
-   de `.vitrina-tesis__tarjeta` recorta el resto. Progresivo a propósito: en un
-   navegador sin soporte la tarjeta se queda fija, nunca rota.
-
-   Tres afinados sobre la versión anterior, los tres pensados para que el
-   recorrido se sienta orgánico y no solo correcto:
-
-   1. `animation-range: cover 0% cover 100%` en vez de `entry 0% exit 100%`.
-      Son el mismo tramo —el rango con nombre que va del primer píxel que
-      entra al último que sale—, pero `cover` es el término que describe
-      justo eso; `entry`/`exit` son las DOS FASES que ese tramo concatena, y
-      nombrarlas por separado sugería (a quien lo leyera después) que había
-      algo que ajustar en el punto donde una acaba y la otra empieza. No lo
-      hay: es un único recorrido continuo.
-
-   2. Un tercer punto al 50% que NO mueve `transform` pero sí levanta
-      `opacity` a 1 —entra y sale a 0,88, respira al 1 mientras cruza el
-      centro del encuadre—. Es la diferencia entre "una capa que se desliza"
-      y "una capa que también respira": el ligero aumento y caída de opacidad
-      es lo que de verdad separa un parallax mecánico de uno que se siente
-      vivo, y sigue siendo una propiedad de composición, igual que `transform`.
-
-   3. `will-change: transform, opacity`, dentro del propio `@supports`: aquí
-      SÍ se cumple la condición que hace legítimo `will-change` —un elemento
-      que va a animar de forma continua mientras esté en pantalla, no una
-      promesa especulativa—, y queda fuera del navegador que no soporta
-      `view()`, que es donde no haría ninguna falta.
-
-   Sigue siendo EXCLUSIVAMENTE `transform` y `opacity` — ninguna propiedad de
-   layout ni de pintura combinada entra en el keyframe —, así que el
-   recorrido entero corre compuesto en la GPU: 60fps sin un reflow. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    .vitrina-tesis__video,
-    .vitrina-tesis__marca,
-    .vitrina-tesis__fondo {
-      animation-name: vitrina-parallax;
-      animation-timing-function: linear; /* obligatorio en una animación ligada a scroll: cualquier otra curva pelearía con la velocidad real del gesto */
-      animation-fill-mode: both;
-      animation-timeline: view();
-      animation-range: cover 0% cover 100%;
-      will-change: transform, opacity;
-    }
-  }
-}
-@keyframes vitrina-parallax {
-  0%   { transform: scale(1.08) translateY(-5%); opacity: 0.88; }
-  50%  { opacity: 1; }
-  100% { transform: scale(1.08) translateY(5%);  opacity: 0.88; }
-}
-.vitrina-tesis__velo {
-  position: absolute; inset: 0; pointer-events: none;
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.18) 45%, transparent 70%);
-}
-/* ── Brillo que sigue al ratón ──
-   Blanco puro, nunca el índigo: es un reflejo de luz sobre el cristal de la
-   tarjeta, cromo sin significado (Cláusula 2), no un dato. `--mx`/`--my` los
-   escribe `activarBrilloVitrina()` en `inicio.js` en cada `pointermove`,
-   acotados a fracción de segundo por rAF — la propiedad que cambia es la
-   CUSTOM PROPERTY, nunca un `transform` calculado en el padre para un hijo
-   (evita el recálculo de estilo en cascada que esa práctica dispara). Solo
-   ratón de precisión: en táctil no hay posición continua que seguir. */
-.vitrina-tesis__brillo {
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  opacity: 0;
-  background: radial-gradient(
-    260px circle at var(--mx, 50%) var(--my, 50%),
-    rgba(255, 255, 255, 0.16), transparent 70%
-  );
-  transition: opacity 200ms var(--mov-entrada);
-}
-@media (hover: hover) and (pointer: fine) {
-  .vitrina-tesis__tarjeta:hover .vitrina-tesis__brillo { opacity: 1; }
-}
-
-.vitrina-tesis__texto {
-  position: absolute; inset-inline: 0; inset-block-end: 0; z-index: 2;
-  padding: var(--espacio-4);
-  color: var(--tinta-inversa);
-}
+/* El ticker es el ancla de la tarjeta: monoespaciada, tamaño de titular y
+   caja alta. Es lo que el encargo pide que cargue el peso, y lo carga por
+   cuerpo y espaciado, no por color. */
 .vitrina-tesis__ticker {
-  font-family: var(--mono); font-size: var(--tipo-1);
-  letter-spacing: 0.06em; opacity: 0.85;
+  font-family: var(--mono);
+  font-size: var(--tipo-5);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--tinta);
 }
 .vitrina-tesis__empresa {
-  margin-top: 4px;
-  font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600; line-height: 1.25;
+  font-family: var(--serif);
+  font-size: var(--tipo-4);
+  font-weight: 600; line-height: 1.22; letter-spacing: -0.01em;
+  text-wrap: balance;
 }
-.vitrina-tesis__meta { margin-top: 4px; font-size: var(--tipo-1); opacity: 0.78; }
-/* ── Resumen: texto adicional real, revelado al hover ──
-   `resumen_ejecutivo` ya viaja en la respuesta de `/api/informes` — se
-   trunca en el cliente para la vista de tarjeta (Regla 1: recortar un texto
-   real no es inventarlo). Cerrado por defecto con `max-height` + `opacity`
-   —nunca `display`, que no se puede transicionar— y con `visibility` para que
-   el texto oculto no quede en el orden de tabulación. */
+.vitrina-tesis__meta {
+  font-size: var(--tipo-0);
+  letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--tinta-mate);
+}
+/* Empujado al fondo de la tarjeta con `margin-block-start: auto`: en una fila
+   de tarjetas de alto igualado, los resúmenes de distinta longitud arrancan
+   todos a la misma altura en vez de flotar cada uno donde le toque. */
 .vitrina-tesis__resumen {
-  margin-top: 8px;
-  max-height: 0; opacity: 0; visibility: hidden;
-  font-size: var(--tipo-1); line-height: 1.5; color: var(--tinta-inversa);
-  overflow: hidden;
-  transition: max-height 260ms var(--mov-entrada), opacity 200ms var(--mov-entrada),
-              visibility 0s linear 260ms;
+  margin-block-start: auto;
+  padding-block-start: 14px;
+  font-size: var(--tipo-1); line-height: 1.5;
+  color: var(--tinta-secundaria);
 }
-@media (hover: hover) and (pointer: fine) {
-  .vitrina-tesis__tarjeta:hover .vitrina-tesis__resumen,
-  .vitrina-tesis__tarjeta:focus-within .vitrina-tesis__resumen {
-    max-height: 4.5em; opacity: 0.88; visibility: visible;
-    transition: max-height 260ms var(--mov-entrada), opacity 260ms var(--mov-entrada) 40ms,
-                visibility 0s linear 0s;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .vitrina-tesis__brillo { display: none; }
-  .vitrina-tesis__resumen { transition: opacity 150ms ease; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .vitrina-tesis__tarjeta { transition: none; }
-  .vitrina-tesis__tarjeta:hover,
-  .vitrina-tesis__tarjeta:focus-within { transform: none; }
+.vitrina-tesis__texto {
+  display: contents;   /* el envoltorio no compone: las cuatro líneas son hijas directas del flex de la tarjeta */
 }
 
 .enlace-avance:hover { color: var(--tinta-secundaria); }
@@ -5361,7 +5293,9 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .pie__newsletter-form button {
   flex: 0 0 auto;
   padding: 10px 18px; font-size: var(--tipo-2); font-weight: 600;
-  color: var(--tinta-inversa); background: var(--acento);
+  /* `--primario`, el mismo token que `.boton--solido`: es el mismo hecho —la
+     acción primaria de la casa— y por la regla 9 sale de una sola fuente. */
+  color: var(--tinta-inversa); background: var(--primario);
   border: none; border-radius: var(--radio); cursor: pointer;
   transition: opacity var(--transicion);
 }
@@ -5485,7 +5419,7 @@ a.senal:active, button.senal:active,
 }
 
 .carga__nombre {
-  font-family: var(--geo); font-size: var(--tipo-4); font-weight: 600;
+  font-family: var(--serif); font-size: var(--tipo-4); font-weight: 600;
   letter-spacing: 0.02em; color: var(--tinta);
 }
 
