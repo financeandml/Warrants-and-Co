@@ -221,6 +221,26 @@ export default {
   'inicio.vitrina.enlace': 'View the repository',
   'inicio.vitrina.abrir': 'Open the {empresa} thesis',
 
+  // ── Home · track record ──
+  // Labels for the block painted by `pintarTrackRecord()` (inicio.js). «Track
+  // record» and «Ticker» stay in English in both languages: they are terms of
+  // trade an analyst uses in English even when speaking Spanish.
+  // «Exit price», not «Close»: the column shows the price the position was
+  // liquidated at, not the latest market close — as the cell's own comment
+  // states — and calling it «close» would conflate the two.
+  'inicio.trackRecord.etiqueta': 'Trade log',
+  'inicio.trackRecord.titulo': 'Track record',
+  'inicio.trackRecord.nota': 'Every line comes from a published thesis, with its date and its price. What the provider does not publish is labelled N/A; nothing is filled in.',
+  'inicio.trackRecord.marco': 'Track record, scrollable horizontally',
+  'inicio.trackRecord.caption': 'Track record: positions by entry date, with vehicle, entry price, exit price and return.',
+  'inicio.trackRecord.col.ticker': 'Ticker',
+  'inicio.trackRecord.col.empresa': 'Company',
+  'inicio.trackRecord.col.vehiculo': 'Vehicle',
+  'inicio.trackRecord.col.entrada': 'Entry date',
+  'inicio.trackRecord.col.precioEntrada': 'Entry price',
+  'inicio.trackRecord.col.cierre': 'Exit price',
+  'inicio.trackRecord.col.roi': 'Return',
+
   // ── Home · market pulse ──
   'inicio.pulse.etiqueta': 'Market',
   'inicio.pulse.titulo': 'Market pulse',
@@ -398,8 +418,14 @@ export default {
   'informe.campo.recomendacion': 'Recommendation',
   'informe.campo.precioObjetivo': 'Target price',
   'informe.campo.divisa': 'Currency',
+  'informe.campo.vehiculo': 'Vehicle',
   'informe.campo.peso': 'Portfolio weight (%)',
   'informe.campo.peso.hint': 'Equal-weighted if left blank',
+
+  // Position vehicle (`VEHICULOS`, validacion.js). What is stored is the
+  // Spanish text; only the label is translated here, as with the recommendation.
+  'informe.vehiculo.accion': 'Equity',
+  'informe.vehiculo.opcion': 'Option',
 
   // ── Report closed vocabulary: type, recommendation, sector ──
   'informe.tipo.tesisInversion': 'Investment thesis',

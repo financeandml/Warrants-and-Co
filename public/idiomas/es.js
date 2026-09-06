@@ -229,6 +229,26 @@ export default {
   'inicio.vitrina.enlace': 'Ver el repositorio',
   'inicio.vitrina.abrir': 'Abrir la tesis de {empresa}',
 
+  // ── Inicio · track record ──
+  // Rótulos del bloque que pinta `pintarTrackRecord()` (inicio.js). «Track
+  // record» y «Ticker» se quedan en inglés en los dos idiomas: son términos de
+  // oficio que un analista dice en inglés aunque hable en castellano.
+  // «Salida» y no «Cierre» a propósito: la columna muestra el precio al que se
+  // liquidó la posición, no el último cierre de mercado —lo dice el comentario
+  // de la propia celda—, y llamarla «cierre» confundiría las dos cosas.
+  'inicio.trackRecord.etiqueta': 'Registro de operaciones',
+  'inicio.trackRecord.titulo': 'Track record',
+  'inicio.trackRecord.nota': 'Cada línea sale de una tesis publicada, con su fecha y su precio. Lo que el proveedor no publica se rotula N/A; nada se rellena.',
+  'inicio.trackRecord.marco': 'Track record, desplazable en horizontal',
+  'inicio.trackRecord.caption': 'Track record: posiciones por fecha de entrada, con vehículo, precio de entrada, precio de salida y rentabilidad.',
+  'inicio.trackRecord.col.ticker': 'Ticker',
+  'inicio.trackRecord.col.empresa': 'Compañía',
+  'inicio.trackRecord.col.vehiculo': 'Vehículo',
+  'inicio.trackRecord.col.entrada': 'Fecha de entrada',
+  'inicio.trackRecord.col.precioEntrada': 'Precio de entrada',
+  'inicio.trackRecord.col.cierre': 'Precio de salida',
+  'inicio.trackRecord.col.roi': 'Rentabilidad',
+
   // ── Inicio · pulso de mercado ──
   'inicio.pulse.etiqueta': 'Mercado',
   'inicio.pulse.titulo': 'Pulso de mercado',
@@ -410,8 +430,14 @@ export default {
   'informe.campo.recomendacion': 'Recomendación',
   'informe.campo.precioObjetivo': 'Precio objetivo',
   'informe.campo.divisa': 'Divisa',
+  'informe.campo.vehiculo': 'Vehículo',
   'informe.campo.peso': 'Peso en cartera (%)',
   'informe.campo.peso.hint': 'Equiponderado si se omite',
+
+  // Vehículo de la posición (`VEHICULOS`, validacion.js). Lo guardado es el
+  // texto castellano; aquí solo se traduce el rótulo, igual que la recomendación.
+  'informe.vehiculo.accion': 'Acción',
+  'informe.vehiculo.opcion': 'Opción',
 
   // ── Vocabulario cerrado de informe: tipo, recomendación, sector ──
   'informe.tipo.tesisInversion': 'Tesis de inversión',
