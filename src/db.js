@@ -89,6 +89,12 @@ anadirColumna('informes', 'precio_compra', 'REAL');
 anadirColumna('informes', 'take_profit', 'REAL');
 anadirColumna('informes', 'stop_loss', 'REAL');
 
+// Vehiculo con el que se toma la posicion: accion u opcion. Sin declarar es
+// NULL, nunca 'Accion' por defecto — la cartera existente se dio de alta sin
+// este campo y suponerlo seria inventar un dato (Regla 1). El Track Record de
+// la portada rotula esas lineas como N/A, que es el tercer estado.
+anadirColumna('informes', 'vehiculo', 'TEXT');
+
 // Juicio narrativo del analista sobre los riesgos de la tesis. A diferencia de
 // un precio o una cotizacion, esto no se deriva de ningun proveedor: es
 // texto que el propio analista escribe, y por eso vive como columna, no como

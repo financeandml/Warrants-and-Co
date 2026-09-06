@@ -18,6 +18,13 @@ const RECOMENDACIONES = ['Comprar', 'Sobreponderar', 'Mantener', 'Infraponderar'
 
 // Claves internas sin diacriticos; la denominacion visible se resuelve en el cliente.
 const NIVELES_ACCESO = ['publico', 'cliente', 'institucional', 'interno'];
+
+/* Vehiculo de la posicion. Se guarda el texto castellano —igual que
+   `recomendacion` y `tipo_informe`—, y la interfaz traduce solo el rotulo.
+   Cerrada a dos valores a proposito: mientras el motor de cartera trate cada
+   linea como un tramo de acciones, admitir un tercero seria prometer una
+   aritmetica que `cartera.js` no hace. */
+const VEHICULOS = ['Acción', 'Opción'];
 const ETIQUETAS_ACCESO = {
   publico: 'Público',
   cliente: 'Cliente',
@@ -142,6 +149,7 @@ function validarInforme(cuerpo, { parcial = false } = {}) {
     ['tipo_informe', TIPOS_INFORME, 'TIPO_INFORME_NO_RECONOCIDO'],
     ['recomendacion', RECOMENDACIONES, 'RECOMENDACION_NO_RECONOCIDA'],
     ['nivel_acceso', NIVELES_ACCESO, 'NIVEL_ACCESO_NO_RECONOCIDO'],
+    ['vehiculo', VEHICULOS, 'VEHICULO_NO_RECONOCIDO'],
   ]) {
     if (!parcial || cuerpo[campo] !== undefined) {
       const v = texto(cuerpo[campo], 60);
@@ -301,6 +309,6 @@ function validarNoticia(cuerpo, { parcial = false } = {}) {
 
 module.exports = {
   validarInforme, validarNoticia, ErrorValidacion, normalizarEtiquetas, esFechaISO,
-  TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS,
+  TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, VEHICULOS, ETIQUETAS_ACCESO, SECTORES, DIVISAS,
   CATEGORIAS_NOTICIA, RELEVANCIAS, ETIQUETAS_RELEVANCIA,
 };

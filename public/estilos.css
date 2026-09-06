@@ -2467,22 +2467,23 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 
 /* ══════════════════════════ PORTADA · HERO ══════════════════════════════
-   Rediseño 3: registro de gestora institucional. La fotografía a sangre de la
-   Fase D.13 se retira entera y el hero vuelve a ser tipográfico — titular
-   serif, aire, y las tres cifras del fondo en una rejilla de filete de 1px
-   con la cifra en monoespaciada.
+   La fotografía a sangre de la Fase D.13 vuelve a ser el hero entero, y con
+   ella las cinco piezas que solo tienen sentido con una imagen a pantalla
+   completa: el parallax nativo de scroll, el zoom de entrada por
+   `@starting-style`, la costura en degradado del pie de foto, el velo de
+   legibilidad tras los botones y el solape de -44px de la cinta.
 
-   Lo que se fue con la foto, y dónde queda constancia de por qué: el parallax
-   nativo de scroll, el zoom de entrada por `@starting-style`, la costura en
-   degradado del pie de foto, el velo de legibilidad tras los botones y el
-   solape de -44px de la cinta. Las cinco existían para resolver problemas que
-   solo tiene una imagen a pantalla completa. Las revocaciones están escritas
-   en CLAUDE.md § Diseño 8; quien las eche de menos debería leerlas allí antes
-   de reponer ninguna.
+   El rediseño 3 las había retirado todas para poner un hero tipográfico; esa
+   decisión se revierte por encargo explícito, y sus párrafos se revierten con
+   ella en CLAUDE.md § Diseño 8 y en DESIGN.md — no se dan por sobreentendidos.
+   Lo que el rediseño 3 SÍ conserva, porque no dependía de la foto: la rampa
+   marfil, el botón negro, `--serif`, el radio 0 de la portada, la cifra en
+   `--mono` y el filete de un solo dueño.
 
-   `--alto-cabecera` ya no interviene aquí: el hero no mide contra el viewport
-   —ver `.hero`—, así que la única consumidora de esa cifra vuelve a ser la
-   cabecera `sticky` que la publica. */
+   `--alto-cabecera` (`portada.js`, `seguirAlturaCabecera()`) vuelve a
+   intervenir aquí: es la MISMA cifra que ya usaba la cabecera `sticky`, y el
+   hero resta esa altura real del viewport en vez de una constante aparte,
+   para que las dos no puedan discrepar sin que nada lo diga (Regla 9). */
 
 /* ── Radio 0: la portada entera, no pieza a pieza ──
    Rediseño 3, decisión de producto. Se redefinen los CUATRO tokens de radio
@@ -2502,205 +2503,341 @@ button, input, select, textarea { font: inherit; color: inherit; }
 
 .manifiesto { background: var(--superficie); }
 
-/* ── El hero tipográfico ──
-   `.manifiesto__hero` y no `.hero`: ese nombre ya lo tiene el HERO DEL PANEL
-   —`.hero`/`.hero__interior`/`.hero__titulo`, más abajo en esta hoja—, que
-   declara `border-bottom` y `overflow: hidden`. Un `.hero` aquí arriba se los
-   comía sin decir nada: la regla de más abajo gana por orden de cascada, y el
-   hero de la portada aparecía con un filete inferior que nadie había pedido.
-   Visto en navegador, no deducido.
-   Rediseño 3. Ni foto, ni caja, ni fondo: una columna de texto alineada a la
-   izquierda con mucho aire alrededor. El aire NO es relleno sobrante — es la
-   mitad del argumento de una gestora: quien tiene una cifra que enseñar no
-   necesita llenar la pantalla.
-
-   Alto por relleno, nunca `100vh`. La versión anterior media el viewport
-   exacto porque tenía que encajar una fotografía a sangre sobre el pliegue;
-   sin foto, atar el alto al viewport solo consigue que el hero se estire en
-   una pantalla alta y aplaste el texto en un portátil. El relleno escala con
-   `clamp()` y el contenido decide lo que mide. */
-/* ── Por qué todo el ritmo vertical del hero va en `vh` y con mínimos bajos ──
-   `tests/portada.js` exige que la cinta entera quepa sobre el pliegue en ocho
-   ventanas, y las bajas —700, 720, 800, 816px de alto— son las que mandan. La
-   primera versión medía `clamp(72px, 13vh, 148px)` arriba y dejaba la cinta 95px
-   por debajo del pliegue a 1440×700. Los cinco huecos del hero se recalibraron
-   contra la matriz real, no a ojo: mínimos más bajos para que la ventana corta
-   pueda comprimir, y el tramo `vh` haciendo el trabajo en el resto.
-
-   Quien suba cualquiera de estos cinco mínimos vuelve a empujar la cinta bajo
-   el pliegue en las cuatro ventanas bajas, y la batería lo dirá. */
-.manifiesto__hero {
-  padding-block: clamp(48px, 10vh, 140px) clamp(28px, 4.5vh, 68px);
-}
-/* Medida de línea corta a propósito —el titular rompe en dos, nunca en cuatro—
-   y `text-wrap: balance` (heredado de `h1`) reparte las dos líneas parejas. */
-/* Dos líneas, nunca tres. A 19ch el titular rompía en TRES en los dos idiomas
-   —183px de alto medidos—, y esas 61px de más eran la mitad de lo que sacaba la
-   cinta del pliegue. Un titular de tres líneas en un hero es siempre un error de
-   cuerpo o de medida, no de longitud del texto. */
-.manifiesto__titular {
-  max-width: 26ch;
-  font-size: var(--tipo-7);
-  line-height: 1.06;
-  letter-spacing: -0.021em;
-}
-.manifiesto__bajada {
-  max-width: 54ch;
-  margin-block-start: clamp(16px, 2.4vh, 28px);
-  font-size: var(--tipo-4);
-  line-height: 1.55;
-  color: var(--tinta-secundaria);
-  text-wrap: pretty;
-}
-/* En el flujo, no superpuestas: sin foto debajo no hay nada que esquivar, y
-   el velo de legibilidad que llevaban —un degradado negro bajo los botones—
-   se retira con ella. Botón primario NEGRO sobre marfil (19,02:1), que es el
-   mismo `--primario` del resto de la casa. */
+/* Fase D.15: los dos botones se centran en la franja entre la base del
+   árbol y la cinta, con el mismo tratamiento fantasma —transparente, borde
+   fino, texto blanco—. Ningún botón sólido sobre la foto: el índigo
+   sólido queda reservado al resto del sitio (cabecera, foco, formularios).
+   `--tinta-inversa` es #ffffff en claro —el único tema que se sirve—, así
+   que da el blanco sin literal, con el mismo token que ya usaba
+   `.boton--solido` para su texto sobre índigo. */
+/* Centrado sin `transform`: `.manifiesto__acciones` lleva `.revelado`, y
+   `.revelado[data-visible="true"]` fija `transform:none` al terminar de
+   entrar —el mecanismo lo comparte toda la Home, no se toca aquí—, así que
+   un `translateX(-50%)` para centrar quedaría anulado justo cuando la
+   entrada termina. `inset-inline:0` + `justify-content:center` centra el
+   contenido del flex sin pelearse con esa transición. */
+/* `inset-block-end` no se mide desde donde ve la cinta, sino desde el
+   borde inferior de `.manifiesto__visual` — y la cinta sube 44px sobre ese
+   borde (la regla del solape, más arriba). Un `clamp` que tocara 44px o
+   menos pondría los botones justo bajo la cinta o dentro de ella, que es
+   el mismo bug de la cinta bajo el pliegue que ya se midió una vez en este
+   hero. Por eso el suelo es `44px` fijo —el solape— más un margen propio
+   que sí escala con la ventana. */
+/* Velo tras los botones (hallazgo 1 de taste-skill): blanco sobre blanco
+   —`--tinta-inversa` puro, sin fondo— se leía bien contra un tramo oscuro
+   de la foto, pero el banner es reemplazable (`public/marca/LEEME.txt`) y
+   con una foto clara como la actual el texto se funde con la nieve. El
+   degradado vive en `::before`, acotado a la franja de los botones —nunca
+   se extiende al resto de la foto ni toca las cifras de arriba—. */
 .manifiesto__acciones {
-  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
-  margin-block-start: clamp(24px, 3.6vh, 44px);
+  position: absolute; z-index: 1;
+  inset-inline: 0; inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 18px;
+}
+/* Corto a propósito: es el resplandor DETRÁS DE LOS BOTONES, no la costura
+   con la cinta —esa la resuelve `.manifiesto__visual::after`, más arriba,
+   con su propio degradado y sin el riesgo de este veil de pintarse por
+   encima de la cinta (`.manifiesto__acciones` lleva `z-index:1` propio y
+   escapa a compararse con `.ticker` en la raíz en vez de quedarse detrás
+   por ir antes en el DOM). Estirar este offset para tapar el hueco fue un
+   intento fallido: agrandaba el veil entero a un bloque gris demasiado
+   grande Y ademas terminaba pintándose sobre la cinta. */
+.manifiesto__acciones::before {
+  content: ''; position: absolute; z-index: -1;
+  inset: -72px 0 -20px 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.34), transparent);
+  pointer-events: none;
 }
 /* `--tx`/`--ty` los escribe `activarImantados()` (`movimiento.js`) con
    `setProperty` en cada `pointermove` — la variable vive en el PROPIO botón,
    nunca en el contenedor: leerla aquí para trasladar al hijo de un padre
    sería el caso que la regla de rendimiento prohíbe (recálculo de estilo en
    cascada para cada hijo); aquí el que la escribe y el que la lee son el
-   mismo elemento.
-
-   La elevación al hover suma un tercer desplazamiento vertical, `--ly`, al
+   mismo elemento. */
+/* La elevación al hover suma un tercer desplazamiento vertical, `--ly`, al
    MISMO `translate()` que ya lee `--tx`/`--ty`: un segundo `transform` en una
-   regla más específica sustituiría al del imán entero en vez de sumarse. */
+   regla más específica sustituiría al del imán entero, en vez de sumarse
+   (es el mismo bug de especificidad ya documentado para las tarjetas de
+   Companies, más abajo en este fichero). `--ly` no necesita `@property` para
+   animar suave: la transición está declarada sobre `transform`, y el
+   navegador interpola el `transform` YA RESUELTO en cada fotograma, sin que
+   la custom property en sí tenga que ser animable. */
 .manifiesto__acciones .boton {
   --ly: 0px;
-  padding: 12px 22px;
+  background: transparent;
+  color: var(--tinta-inversa);
+  border-color: var(--tinta-inversa);
+  padding: 11px 20px;
   font-size: var(--tipo-2); font-weight: 600; letter-spacing: 0.01em;
   transform: translate(var(--tx, 0px), calc(var(--ty, 0px) - var(--ly)));
-  transition: transform 320ms var(--mov-resorte);
+  transition: transform 320ms var(--mov-resorte), box-shadow 320ms var(--mov-resorte);
 }
+.manifiesto__acciones .boton:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--tinta-inversa) 14%, transparent);
+  opacity: 1;
+}
+/* Elevación + sombra difusa al pasar el ratón, con física de muelle real al
+   soltar (`--mov-resorte`, el mismo oscilador amortiguado que ya usa el
+   imán). Solo bajo puntero de precisión: en táctil no hay "acercarse" ni
+   "retirar el cursor" que compensar. La sombra es transitoria, nunca en
+   reposo —sigue siendo la señal de "por encima del flujo" que fija la
+   cláusula de sombra de DESIGN.md, aquí aplicada al propio botón que acaba
+   de literalmente elevarse sobre la foto—. */
 @media (hover: hover) and (pointer: fine) {
-  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 3px; }
+  .manifiesto__acciones .boton:hover:not(:disabled) {
+    --ly: 4px;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+  }
 }
 @media (prefers-reduced-motion: reduce) {
   .manifiesto__acciones .boton { transition: none; }
-  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 0px; }
+  .manifiesto__acciones .boton:hover:not(:disabled) { --ly: 0px; box-shadow: none; }
 }
-.manifiesto__flecha {
-  display: inline-block; margin-inline-start: 8px;
-  transition: transform var(--transicion);
-}
+.manifiesto__flecha { display: inline-block; transition: transform var(--transicion); }
 .manifiesto__acciones .boton:hover .manifiesto__flecha { transform: translateX(3px); }
 
-/* ── Las tres cifras: rejilla de resultados, no rótulo flotante ──
-   Rediseño 3. Antes flotaban en `position: absolute` sobre la franja de cielo
-   de la fotografía, con su posición atada a dónde terminaba el árbol —54,5%
-   del alto del fichero, medido—. Sin foto, esa geometría no significa nada.
-
-   Ahora son lo que siempre fueron: el cuadro de resultados de la casa. Tres
-   columnas iguales, filete de 1px arriba y abajo, filete entre columnas, y la
-   cifra en monoespaciada con cifras tabulares — la columna cuadra sola y el
-   número se lee como dato medido, no como titular de marketing.
-
-   Filete ENTRE columnas y no alrededor de cada celda: un recuadro por cifra
-   daría tres cajas y esto es una sola tabla. La primera celda además pierde
-   su filete y su relleno inicial, para que la cifra arranque exactamente en
-   la misma vertical que el titular de arriba.
-
-   El componente sigue siendo `dato()` (`inicio.js`), el mismo de la ficha de
-   compañía: ninguna caja nueva, ningún marcado propio. */
+/* ── Métricas del Hero (Fase D.12) ──
+   El componente «cifra con filete» —`dato()`, en `inicio.js`—, número grande,
+   tabular, sin caja. */
 .manifiesto__metricas {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  margin-block-start: clamp(32px, 5.5vh, 80px);
-  /* Solo arriba. La cinta que viene justo debajo trae su propio filete
-     superior y `.bloque-home` el suyo: con `border-block` aquí, las dos
-     costuras se dibujaban DOS veces y se veían de 2px, el doble de grueso
-     que cualquier otra línea de la página. Medido en navegador —805px y
-     870px con dos bordes cada uno—, no a ojo. Cada frontera la dibuja el
-     elemento de abajo, siempre, y así ninguna depende de que su vecino de
-     arriba exista: la rejilla se oculta entera cuando no hay datos. */
-  border-block-start: 1px solid var(--linea);
+  position: absolute; z-index: 1;
+  inset-inline-start: 50%; inset-block-start: clamp(20px, 4vh, 44px);
+  transform: translateX(-50%);
+  display: flex; flex-direction: row; gap: clamp(22px, 2.6vw, 36px);
 }
-.manifiesto__metricas .dato {
-  gap: 12px;
-  padding: clamp(18px, 2.6vh, 30px) clamp(16px, 2.2vw, 32px);
-  border-inline-start: 1px solid var(--linea);
-}
-.manifiesto__metricas .dato:first-child {
-  border-inline-start: none;
-  padding-inline-start: 0;
-}
-.manifiesto__metricas .dato__etiqueta {
-  letter-spacing: 0.11em;
-  color: var(--tinta-mate);
+/* Fase D.17: en escritorio las tres cifras bajan a la franja entre la base
+   del árbol y los botones, centradas en horizontal —ya no en la banda sobre
+   la copa (Fase D.16), que dejaba el bloque pegado a la izquierda para no
+   caer sobre el follaje—. El árbol termina, medido igual que su arranque,
+   al 54,5% del alto de `.manifiesto__visual`; `inset-block-start: 54.5%`
+   abre la franja justo ahí. `inset-block-end` repite la misma fórmula que
+   ya fija el suelo de `.manifiesto__acciones` (el solape de 44px de la
+   cinta + su margen que escala con la ventana): las dos cierran la franja
+   por el mismo borde, así que el hueco entre las cifras y los botones nunca
+   se abre ni se cierra por su cuenta. `align-items` e `inset-inline` + `
+   justify-content: center` centran el contenido real dentro de esa franja,
+   igual que `height: 37.3%` centraba en la de arriba —contra el alto real
+   del bloque, no una cifra en px calculada a mano—. Medido en las seis
+   ventanas de 641 a 1920px: la franja disponible (187,6–328,0px) más que
+   dobla el alto del bloque de cifras en la más estrecha. Por debajo de
+   641px la fila pasa a columna (regla ya existente, más abajo) y conserva
+   la posición centrada de siempre, sin esta excepción. */
+@media (min-width: 641px) {
+  .manifiesto__metricas {
+    inset-inline: 0;
+    inset-block-start: 54.5%;
+    inset-block-end: calc(44px + clamp(14px, 3vh, 32px));
+    height: auto;
+    align-items: center;
+    justify-content: center;
+    transform: none;
+  }
 }
 .manifiesto__metricas .dato__valor {
   font-family: var(--mono);
-  font-size: var(--tipo-6);
-  font-weight: 400;
-  font-variant-numeric: tabular-nums;
-  letter-spacing: -0.03em;
-  line-height: 1;
+  /* Reducido desde clamp(1.5rem, 2.4vw, 2rem) al bajar las cifras a la
+     franja inferior (Fase D.17): con más aire disponible que en la banda de
+     arriba, un número algo menor deja el bloque menos dominante sobre los
+     botones sin dejar de leerse — medido, no a ojo, contra la franja real. */
+  font-size: clamp(1.25rem, 2vw, 1.625rem);
+  font-weight: 600;
+}
+.manifiesto__metricas .dato__etiqueta { letter-spacing: 0.09em; }
+
+/* El hover: un gesto de UI, no una lectura de dato —no lleva significado
+   direccional, así que no le hace falta glifo ni cumple la cláusula 1—. Fuera
+   de puntero fino no hay nada que compensar: `pointer: fine` ya lo hace la
+   cinta y el resto de filas con hover. */
+@media (hover: hover) and (pointer: fine) {
+  .manifiesto__metricas .dato { transition: transform var(--transicion); }
+  .manifiesto__metricas .dato:hover { transform: translateY(-2px); }
 }
 
-/* ── El sparkline de cada cifra ──
-   Trazo decorativo y redundante: el signo y el glifo ya están escritos en el
-   valor. Si la serie no llega, la celda es exactamente la misma sin él.
+/* El sparkline de cada métrica: mismo trazo que `.ticker__grafico` —mismo
+   `construirSparkline()`, con prefijo de clase propio para su propio tamaño—,
+   nunca una pieza nueva. Llega tarde y a veces no llega, igual que en la
+   cinta: sin serie no reserva hueco.
 
-   Monocromo, igual que el de la cinta y por el mismo motivo. Con el trazo y
-   su relleno en verde, cada celda decía «sube» TRES veces —glifo ▲, signo +,
-   y el color repetido en el número, la línea y el área bajo ella—, y el
-   degradado a todo lo ancho era además lo más ruidoso de la portada. La
-   dirección sigue enterita en el número, que es donde se lee. */
+   Tamaño en píxeles fijos y `flex-shrink: 0`, no un `width: 100%`: `.dato` es
+   hijo de un flex `column` cuyo propio ancho depende de su contenido —no hay
+   un ancho definido contra el que resolver un porcentaje—, y un SVG con
+   `preserveAspectRatio="none"` estira su trazo a la forma exacta de la caja
+   que le toque: si esa caja colapsaba a un rectángulo alto y estrecho, la
+   línea horizontal del sparkline se veía en vertical. `.ticker__grafico`
+   nunca tuvo este problema porque ya usaba medidas fijas. */
 .hero-metrica__grafico {
-  width: 100%; height: 26px; margin-block-start: 2px;
-  overflow: visible;
+  display: block; width: 100px; height: 22px; flex-shrink: 0;
+  margin-block-start: 6px; overflow: visible;
 }
 .hero-metrica__grafico__linea {
   fill: none;
-  stroke-width: 1.5;
+  stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
-.hero-metrica__grafico__linea--alza { stroke: var(--tinta-mate); }
-.hero-metrica__grafico__linea--baja { stroke: var(--tinta-mate); }
+.hero-metrica__grafico__linea--alza { stroke: var(--alcista); }
+.hero-metrica__grafico__linea--baja { stroke: var(--bajista); }
 .hero-metrica__grafico__linea--plana { stroke: var(--tinta-mate); }
-/* Sin relleno bajo la línea. Con el trazo en color, el área degradada era
-   la misma lectura con más superficie; en monocromo es una mancha gris bajo
-   una línea gris, y lo único que aporta es suciedad. Se oculta en vez de
-   dejar de construirse: el `<path>` sigue en el SVG con sus paradas, así que
-   devolver el relleno es quitar esta línea, no rehacer el generador. */
-.hero-metrica__grafico__area { display: none; }
-.hero-metrica__grafico__parada--alza { stop-color: var(--tinta-mate); }
-.hero-metrica__grafico__parada--baja { stop-color: var(--tinta-mate); }
+.hero-metrica__grafico__area { stroke: none; }
+.hero-metrica__grafico__parada--alza { stop-color: var(--alcista); }
+.hero-metrica__grafico__parada--baja { stop-color: var(--bajista); }
 .hero-metrica__grafico__parada--plana { stop-color: var(--tinta-mate); }
 
-/* Por debajo de 641px las tres columnas no caben sin partir la cifra: pasan a
-   filas apiladas y el filete cambia de eje —vertical entre columnas, horizontal
-   entre filas—, que es la misma tabla girada, no otra composición. */
 @media (max-width: 640px) {
-  .manifiesto__metricas { grid-template-columns: 1fr; }
-  .manifiesto__metricas .dato {
-    border-inline-start: none;
-    border-block-start: 1px solid var(--linea);
-    padding-inline: 0;
-  }
-  .manifiesto__metricas .dato:first-child { border-block-start: none; }
+  .manifiesto__metricas { flex-direction: column; flex-wrap: nowrap; }
 }
 
-/* ── La cinta cierra la portada, y ahora la sucede de verdad ──
-   El solape de -44px sobre el pie de la fotografía se retira con la
-   fotografía: existía para que la cinta pisara la imagen en lugar de dejar
-   un filete entre las dos, y sin imagen no hay nada que pisar. La cinta
-   vuelve a ser la línea que sigue al hero, con su filete propio arriba y
-   abajo y sin radio (heredado de `.seccion--portada`). */
+/* ── La fotografía: el hero entero, a pantalla completa ──
+   Fase D.13. `position: relative` porque las cifras y las acciones se
+   superponen dentro de ella —hijos `position: absolute`, colocación
+   provisional hasta la siguiente pieza—. Sin radio, sin sombra, sin velo ni
+   degradado. `hidden` por defecto: `cargarMarca()` la revela solo tras
+   precargar el fichero real de `public/marca/`.
+
+   Alto: `100vh` menos `--alto-cabecera` —la misma cifra que ya publica
+   `seguirAlturaCabecera()` para la cabecera `sticky`, no una constante
+   aparte (Regla 9)—, menos 22px más. Ese resto no es un ajuste a ojo: medido
+   en las seis ventanas de la matriz, la foto a `100vh - cabecera` exacto
+   dejaba la cinta 21px por debajo del pliegue EN LAS SEIS, siempre la misma
+   cifra sin importar la ventana —porque es aritmética fija, no geometría de
+   foto—: la cinta mide 65,36px de alto y se solapa -44px sobre el pie de la
+   foto (ver más abajo), así que aporta 65,36 − 44 = 21,36px que la foto no
+   estaba cediendo. Se resta ese neto, redondeado a 22px por el margen de
+   0,64px. Ya no depende del ancho de ventana por `clamp()`; depende del alto
+   real disponible y de la cinta, que es lo que de verdad determina si cabe
+   sobre el pliegue. */
+.manifiesto__visual {
+  position: relative;
+  height: calc(100vh - var(--alto-cabecera) - 22px);
+  overflow: hidden;
+}
+/* Costura pie de foto → cinta: degradado propio, deliberadamente separado
+   del velo de `.manifiesto__acciones` (justo abajo). Ese velo existe para
+   la legibilidad de los botones y es corto a propósito; estirarlo hasta
+   aquí lo convertía en un bloque gris demasiado grande y, peor, se pintaba
+   POR ENCIMA de la cinta —`.manifiesto__acciones` lleva `z-index:1` propio
+   y escapa a compararse con `.ticker` en la raíz, en vez de quedarse detrás
+   por ir antes en el DOM—. Este `::after` no fija `z-index`: pinta en el
+   orden normal del documento, así que la cinta —que llega después— lo tapa
+   sin más en el tramo que solapa, igual que ya tapa la foto sin tratar. */
+.manifiesto__visual::after {
+  content: ''; position: absolute;
+  inset-inline: 0; inset-block-end: 0;
+  height: 64px;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.22), transparent);
+  pointer-events: none;
+}
+/* El árbol vive en la banda 37,3–54,3% del alto del fichero (medido en Fase
+   C) y algo a la derecha del centro. `object-position` mantiene esa banda
+   centrada en el recorte en vez de dejarla a merced de la proporción de cada
+   ventana. */
+/* `bottom: -2px` en vez de heredar el `0` de `inset` de arriba: el fondo
+   lleva un `animation-timeline: view()` (el parallax de más abajo) que en
+   WebKit/Safari lo sube a su propia capa de composición GPU, y esa capa
+   rasteriza con un redondeo de subpíxel propio, distinto del resto del
+   documento — deja una línea clara de 1-2px justo en el borde de recorte,
+   confirmada en WebKit real (Playwright) contra la cinta. `overflow: hidden`
+   en `.manifiesto__visual` sigue recortando estos 2px de más, así que no
+   cambia nada visible; lo que cambia es que el límite de la capa ya no
+   coincide con el límite del recorte, que es donde WebKit dejaba la costura. */
+.manifiesto__imagen {
+  position: absolute; inset: 0;
+  bottom: -2px;
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: 50% 38%;
+}
+/* El filtro vive solo en el vídeo, no en la foto: pedido explícito de
+   devolver el banner a como estaba, sin el tratamiento que oscurecía la
+   imagen. Un futuro vídeo de fondo (hoy no hay ninguno depositado, así que
+   esto no se ve) sigue entrando desaturado al registro editorial de la casa
+   (`DESIGN.md`, The Monochrome Register Rule) sin depender de que quien lo
+   suba lo entregue ya en blanco y negro. */
+.manifiesto__video {
+  object-position: 50% 45%; pointer-events: none;
+  filter: grayscale(1) contrast(1.05) brightness(1.02);
+}
+
+/* ── Zoom de entrada: excepción documentada de la cláusula 8, no parallax ──
+   `cargarMarca()` (`app.js`) quita `hidden` una sola vez, tras precargar el
+   fichero real —no hay recorrido de scroll que escuchar—, así que el zoom no
+   es el efecto que la cláusula prohíbe para el Hero: es una llegada puntual,
+   del mismo género que la entrada de un modal. `@starting-style` dispara el
+   `scale(1.05) → scale(1)` justo en ese cambio de `display:none` a visible
+   —el mismo mecanismo que ya anima otras salidas de `hidden` en la Home—.
+   Sin soporte de `@starting-style` el bloque entero se ignora y la foto
+   aparece directamente en su estado final, sin zoom que perder.
+
+   Anima la propiedad individual `scale`, no la abreviatura `transform`: el
+   parallax de scroll, justo debajo, anima `translate` sobre el MISMO
+   elemento, y las dos son propiedades de transformación independientes
+   (CSS Transforms Level 2) que se componen sin pisarse — si las dos
+   escribieran `transform`, la última declarada ganaría entera y la otra
+   desaparecería. */
+@media (prefers-reduced-motion: no-preference) {
+  .manifiesto__imagen, .manifiesto__video {
+    transition: scale 900ms var(--mov-entrada);
+    transition-behavior: allow-discrete;
+  }
+  @starting-style {
+    .manifiesto__imagen, .manifiesto__video { scale: 1.05; }
+  }
+}
+
+/* ── Parallax del fondo: revocación documentada de la cláusula 8 ──
+   Nativo, `animation-timeline: view()`: el fondo se traslada un 4% de su
+   propio alto mientras `.manifiesto__visual` cruza el viewport, y el texto
+   —`.manifiesto__metricas`, `.manifiesto__acciones`— no lleva ninguna
+   animación ligada a scroll, así que avanza a la velocidad normal de lectura
+   mientras el fondo se retrasa/adelanta una fracción: esa diferencia de
+   velocidad es la profundidad. `linear`, obligatorio en cualquier animación
+   atada a un timeline de scroll —cualquier otra curva pelearía con la
+   velocidad real del gesto—. Anima solo `translate` (transform-only, GPU,
+   sin reflow) y solo bajo soporte real de la especificación de scroll-driven
+   animations; sin él, el fondo se queda fijo, nunca a medio camino. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .manifiesto__imagen, .manifiesto__video {
+      animation-name: hero-parallax;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: cover 0% cover 100%;
+      will-change: translate;
+    }
+  }
+}
+@keyframes hero-parallax {
+  from { translate: 0 -4%; }
+  to   { translate: 0 4%; }
+}
+
+/* ── Cinta de mercado: se solapa con el pie de la fotografía, no la sucede ──
+   Fase D.9 la trató como la línea que CIERRA la secuencia, después de la
+   foto. Fase D.10 va más lejos: la cinta sube 44px y se superpone al borde
+   inferior de la fotografía —un solape real, no un filete entre las dos—,
+   con su propio fondo opaco cubriendo el tramo donde pisa la imagen. Es la
+   fotografía "conectando" con el contenido que pide la fase, sin escribir
+   nunca texto sobre los píxeles de la imagen: donde se tocan, la cinta gana,
+   opaca, con su propio filete superior como frontera. */
 .seccion--portada > .ticker {
   display: flex; align-items: stretch;
   border-inline: none;
-  /* Mismo criterio que la rejilla de arriba: cada frontera, un solo filete, y
-     lo dibuja siempre el de abajo. El inferior lo pone `.bloque-home`. */
+  /* Un solo dueño por frontera (cláusula 10). El filete inferior lo dibuja
+     `.bloque-home` con su `border-block-start`; declararlo también aquí daba
+     una costura de 2px, el doble que cualquier otra línea de la página. Se
+     midió durante el rediseño 3 y el hallazgo sobrevive a su reversión: no
+     dependía de la fotografía. Sin `border-radius: 0` propio: los cuatro
+     tokens de radio ya valen 0 en `.seccion--portada`. */
   border-block-start: 1px solid var(--linea);
-  border-block-end: none;
   background: var(--superficie);
   position: relative;
+}
+/* El solape solo tiene sentido si hay fotografía que pisar: sin banner
+   depositado, `.manifiesto__visual` sigue `hidden` y la cinta debe seguir
+   siendo la línea que sucede al texto, no una que trepa sobre él. */
+.manifiesto:has(.manifiesto__visual:not([hidden])) + .ticker {
+  margin-block-start: -44px;
 }
 .seccion--portada > .ticker .ticker__item {
   padding: 10px 22px;
@@ -4482,17 +4619,12 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
 .ticker__cifras { display: inline-flex; align-items: baseline; gap: 9px; }
 .ticker__valor { font-family: var(--mono); color: var(--tinta); }
 .ticker__var { font-family: var(--mono); }
-/* Dirección sin color, dentro de la cinta y SOLO dentro de ella. El resto de
-   la plataforma conserva `--alcista`/`--bajista` intactos: aquí la lectura la
-   dan el glifo ▲/▼ que `.lectura--*::before` ya escribe y el signo explícito
-   del propio número, exactamente los dos portadores que la cláusula 1 exige
-   que existan aparte del color. Quitar el tinte no deja nada sin decir; deja
-   una cinta que no parpadea en verde y rojo mientras se desplaza sola.
-
-   Doble clase, no `!important`: `.ticker .lectura--alza` pesa 0,2,0 contra el
-   0,1,0 de la regla global, así que gana por especificidad normal. */
-.ticker .lectura--alza,
-.ticker .lectura--baja { color: var(--tinta-secundaria); }
+/* La dirección va teñida, y vuelve a estarlo tras la reversión del rediseño 3:
+   la cinta no declara color propio, de modo que `.lectura--alza`/`--baja`
+   —`--alcista` y `--bajista`, los mismos de toda la plataforma— llegan aquí por
+   la regla global. Sigue sin cargar el color solo: el glifo ▲/▼ que
+   `.lectura--*::before` escribe y el signo explícito del número son los dos
+   portadores que la cláusula 1 exige, y ninguno se ha tocado. */
 
 /* ── El sparkline ──
    Llega tarde y a veces no llega: es un trazo decorativo, redundante con el
@@ -4509,25 +4641,17 @@ a.senal:hover, button.senal:hover { border-color: var(--acento); transform: tran
   stroke-width: 1.6;
   vector-effect: non-scaling-stroke;
 }
-/* Rediseño 3: un solo tono para las tres direcciones. El trazo nunca fue el
-   portador de la lectura —el signo y el glifo ▲/▼ van escritos al lado, y la
-   cláusula 1 exige justamente eso—, así que quitarle el color no quita
-   información: quita ruido. Las tres reglas se conservan por separado, y no
-   se fusionan en un selector, porque el día que alguien quiera devolver el
-   color direccional aquí tiene los tres sitios donde ponerlo. */
-.ticker__grafico__linea--alza { stroke: var(--tinta-mate); }
-.ticker__grafico__linea--baja { stroke: var(--tinta-mate); }
+.ticker__grafico__linea--alza { stroke: var(--alcista); }
+.ticker__grafico__linea--baja { stroke: var(--bajista); }
 .ticker__grafico__linea--plana { stroke: var(--tinta-mate); }
 
 /* El área bajo la línea: mismo color, degradado a transparente hacia abajo
    —la opacidad de cada parada la fija el propio SVG, no esta hoja—. Ningún
    dato viaja en el relleno que no esté ya en el trazo o en el signo de al
    lado: es la misma redundancia con más superficie, no una lectura nueva. */
-/* Mismo criterio que el sparkline del hero: en monocromo el área degradada
-   es una mancha bajo una línea del mismo tono, no una segunda lectura. */
-.ticker__grafico__area { display: none; }
-.ticker__grafico__parada--alza { stop-color: var(--tinta-mate); }
-.ticker__grafico__parada--baja { stop-color: var(--tinta-mate); }
+.ticker__grafico__area { stroke: none; }
+.ticker__grafico__parada--alza { stop-color: var(--alcista); }
+.ticker__grafico__parada--baja { stop-color: var(--bajista); }
 .ticker__grafico__parada--plana { stop-color: var(--tinta-mate); }
 
 /* ── El valor de la cinta, y por qué es `inline-block` ──

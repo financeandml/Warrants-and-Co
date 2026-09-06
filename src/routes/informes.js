@@ -11,7 +11,7 @@ const crypto = require('node:crypto');
 const { db, UPLOAD_DIR } = require('../db');
 const { cuerpoError, fallo } = require('../errores');
 const sincronizacion = require('../noticias/sincronizacion');
-const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
+const { validarInforme, ErrorValidacion, TIPOS_INFORME, RECOMENDACIONES, NIVELES_ACCESO, VEHICULOS, ETIQUETAS_ACCESO, SECTORES, DIVISAS } = require('../validacion');
 const { leerPdf, ErrorLectura } = require('../extraccion/pdf');
 const { extraerFicha, CAMPOS, CAMPOS_FUERA_DE_EXTRACCION } = require('../extraccion/ficha');
 const { MOTIVOS_PETICION } = require('../extraccion/motivos');
@@ -168,6 +168,7 @@ router.get('/vocabularios', (req, res) => {
     tipos: TIPOS_INFORME,
     recomendaciones: RECOMENDACIONES,
     nivelesAcceso: NIVELES_ACCESO,
+    vehiculos: VEHICULOS,
     etiquetasAcceso: ETIQUETAS_ACCESO,
     sectoresSugeridos: SECTORES,
     divisas: DIVISAS,

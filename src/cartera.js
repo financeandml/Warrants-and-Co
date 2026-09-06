@@ -553,6 +553,8 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
         takeProfit: Number.isFinite(l.take_profit) ? l.take_profit : null,
         stopLoss: Number.isFinite(l.stop_loss) ? l.stop_loss : null,
         divisa: l.divisa || 'USD',
+        // Sin declarar se queda en null: el cliente lo rotula N/A (Regla 1).
+        vehiculo: l.vehiculo || null,
         informes: 1,
         informeId: l.id,
       });
@@ -567,6 +569,7 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
         if (Number.isFinite(l.precio_compra)) previo.precioCompra = l.precio_compra;
         if (Number.isFinite(l.take_profit)) previo.takeProfit = l.take_profit;
         if (Number.isFinite(l.stop_loss)) previo.stopLoss = l.stop_loss;
+        if (l.vehiculo) previo.vehiculo = l.vehiculo;
       }
     }
   }
@@ -728,6 +731,12 @@ async function calcularCartera(lineas, { benchmark = 'SPY', tasaLibreRiesgo = 4 
       takeProfit: p.takeProfit,
       stopLoss: p.stopLoss,
       divisa: q?.divisa ?? p.divisa ?? 'USD',
+      /* Vehiculo con el que se tomo la posicion. Se publica tal cual, null
+         incluido: una linea dada de alta antes de que existiera la columna no
+         tiene vehiculo declarado, y el cliente la rotula N/A. Suponer 'Accion'
+         porque el motor calcula tramos de acciones seria convertir una
+         limitacion del motor en un hecho sobre la tesis (Regla 1, Regla 3). */
+      vehiculo: p.vehiculo ?? null,
       /* Cuando imprimio el mercado este precio, y si es eso de verdad.
          Se publica —en vez de quedarse en el orquestador, que es donde estaba—
          porque sin ello el cliente no puede decir nada honesto sobre frescura:

@@ -19,20 +19,20 @@
    código escribe ya. Llevaba así desde que Fase D.9 landeó —nadie la había
    vuelto a correr entre medias—.
 
-   ═══ Y el mecanismo volvió a cambiar: rediseño 3 ═══
+   ═══ Y volvió a cambiar dos veces: rediseño 3, y su reversión ═══
 
-   Ya no hay foto. El Hero es tipográfico —titular serif, bajada, acciones y una
-   rejilla de tres cifras con filete de 1px—, y con la fotografía se fueron
-   `.manifiesto__visual`, el parallax, el zoom de entrada y el solape de -44px
-   de la cinta. La comprobación de «la franja de foto tiene alto real» se retira
-   porque no queda franja; en su lugar entran las dos de abajo, que son las que
-   el hero de hoy puede romper.
+   El rediseño 3 retiró la fotografía y puso un hero tipográfico; la reversión
+   la repone. Vuelven por tanto `.manifiesto__visual`, el parallax, el zoom de
+   entrada y el solape de -44px de la cinta, y con ellos la comprobación de que
+   la franja de foto tiene alto real. La del titular se retira: ya no hay
+   `.manifiesto__titular` que pueda romper en tres líneas.
 
-   El alto del hero ya no lo fija ningún `clamp()` contra el ancho: lo deciden
-   cinco huecos verticales en `vh` más el alto real del titular. Eso significa
-   que la cinta puede volver a caer bajo el pliegue por dos vías nuevas —un
-   mínimo de relleno subido, o un titular que rompe en una línea de más— y las
-   dos se comprueban aquí.
+   Lo que NO se revierte, porque no era diseño sino un fallo medido: la cinta
+   monta tantas copias del grupo como haga falta para cubrir la ventana más un
+   grupo (`pintarTicker()`, `inicio.js`). Con dos copias fijas, un grupo más
+   estrecho que la ventana abría un hueco en la fase justa del bucle —965px de
+   grupo contra 1440px de ventana dejaban 475px de cinta en blanco—. Esa
+   aserción se queda.
 
    Lo que SÍ hace falta seguir afirmando, con el mecanismo de hoy, es lo que
    esta batería cazó al escribirse: a 1440×700 y 1920×700 —dos de las seis
@@ -105,19 +105,15 @@ const medir = (p) => p.evaluate(() => {
   const grupo = pista?.firstElementChild?.getBoundingClientRect().width ?? 0;
   const anchoPista = pista?.getBoundingClientRect().width ?? 0;
 
-  /* Un titular de hero que rompe en tres líneas es siempre un error de cuerpo
-     o de medida, y aquí además empuja la cinta bajo el pliegue: las 61px de la
-     tercera línea eran la mitad del desbordamiento que esta batería cazó. */
-  const h1 = document.querySelector('.manifiesto__titular');
-  const interlineado = h1 ? parseFloat(getComputedStyle(h1).lineHeight) : 0;
+  const visual = document.getElementById('hero-visual');
 
   return {
     alto: window.innerHeight,
     grupoCinta: grupo,
     anchoPista,
     cubreVentana: grupo > 0 ? (anchoPista - grupo) >= window.innerWidth : null,
-    lineasTitular: h1 && interlineado > 0
-      ? Math.round(h1.getBoundingClientRect().height / interlineado) : null,
+    visualVisible: visual ? !visual.hidden : false,
+    visualAlto: visual ? visual.getBoundingClientRect().height : 0,
     tickerArriba: tr.top,
     tickerAbajo: tr.bottom,
     // El item ha de caber DENTRO del contenedor —que recorta con
@@ -181,15 +177,15 @@ const medir = (p) => p.evaluate(() => {
         + `${Math.round(v.w - (m.anchoPista - m.grupoCinta))}px`);
     }
 
-    // ── El titular del hero no pasa de dos líneas ──
-    if (m.lineasTitular === null) {
-      E.pendiente(`[${v.n}] el titular del hero no pasa de dos líneas`,
-        'no se encontró `.manifiesto__titular` con interlineado resuelto');
-    } else if (m.lineasTitular <= 2) {
-      E.acierto(`[${v.n}] el titular del hero no pasa de dos líneas`);
-    } else {
-      E.fallo(`[${v.n}] el titular del hero no pasa de dos líneas`,
-        `rompe en ${m.lineasTitular}`);
+    // La foto es opcional —`cargarMarca()` la deja `hidden` sin banner
+    // depositado—, así que su ausencia no es un fallo. Su presencia con
+    // altura cero sí lo sería: sería una franja reservada que no muestra nada.
+    if (m.visualVisible) {
+      if (m.visualAlto > 0) {
+        E.acierto(`[${v.n}] la franja de foto tiene alto real`);
+      } else {
+        E.fallo(`[${v.n}] la franja de foto tiene alto real`, 'visible pero mide 0px');
+      }
     }
 
     // ── Cifras del hero: tercer estado si la base no trae cartera ──

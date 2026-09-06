@@ -11,7 +11,14 @@
    Marquesina en bucle continuo: la pista se duplica y la animación recorre
    exactamente la mitad, de modo que el ciclo encaja sin salto visual. El
    duplicado se oculta al lector de pantalla. Cada activo aparece DOS veces en
-   el documento, y las dos copias han de cambiar a la vez.
+   el documento, y TODAS las copias han de cambiar a la vez.
+
+   Cuántas son dejó de ser dos: `pintarTicker()` monta tantas como hagan falta
+   para cubrir la ventana más un grupo, porque con dos fijas un grupo más
+   estrecho que la ventana abría un hueco en la fase justa del bucle. Esta
+   batería llegó a exigir exactamente dos y falló en rojo cuando el cálculo
+   cambió — se generaliza a N, que es lo que la propiedad siempre quiso decir:
+   ninguna copia se queda con el valor viejo.
 
    ═══ Qué se afirma, y por qué cada cosa ═══
 
@@ -21,9 +28,10 @@
        mitades no se ven nunca a la vez.
 
    2 · QUE EL ALTO NO CAMBIA. El motivo que se daba aquí —`seguirEncuadreBanner()`
-       encuadraba la fotografía del hero contra el alto de la cinta— caducó dos
-       veces: esa función se retiró en Fase D.6 y la fotografía entera en el
-       rediseño 3. El alto sigue importando, y ahora por una razón más directa:
+       encuadraba la fotografía del hero contra el alto de la cinta— caducó con
+       la Fase D.6, que retiró esa función; la fotografía sigue en el hero, pero
+       ya no se encuadra contra la cinta. El alto sigue importando, y ahora por
+       una razón más directa:
        `tests/portada.js` afirma que la cinta cabe ENTERA sobre el pliegue en
        ocho ventanas, y el margen más ajustado es de 16px. Una sustitución de
        valor que engordase la cinta unos píxeles cada veinte segundos sacaría
@@ -116,13 +124,15 @@ const pintada = (p) => p.waitForFunction(() =>
       return {
         alto: document.getElementById('ticker-mercado').getBoundingClientRect().height,
         porClave: items.filter((i) => i.dataset.clave === items[0].dataset.clave).length,
+        copias: document.getElementById('ticker-pista').children.length,
         clave: items[0].dataset.clave,
         valor: items[0].querySelector('.ticker__valor').textContent,
       };
     });
 
-    t('cada valor está dos veces: el original y el del bucle',
-      antes.porClave === 2, `«${antes.clave}» aparece ${antes.porClave} vez(ces)`);
+    t('cada valor está en todas las copias del grupo',
+      antes.porClave === antes.copias && antes.copias >= 2,
+      `«${antes.clave}» aparece ${antes.porClave} vez(ces) con ${antes.copias} copia(s)`);
 
     /* `esperarCambio` vuelve en cuanto el texto es otro, que es el final del
        primer tramo: el segundo sigue corriendo. Se mide AHÍ, con la
@@ -152,13 +162,14 @@ const pintada = (p) => p.waitForFunction(() =>
       };
     }, antes.clave);
 
-    t('las dos copias del valor dicen lo mismo tras el cambio',
-      despues.valores.length === 2 && despues.valores[0] === despues.valores[1]
+    t('todas las copias del valor dicen lo mismo tras el cambio',
+      despues.valores.length === antes.copias
+        && despues.valores.every((v) => v === despues.valores[0])
         && despues.valores[0] !== antes.valor,
       `antes «${antes.valor}» · ahora ${JSON.stringify(despues.valores)}`);
 
-    t('las dos copias quedan marcadas como cambiadas',
-      despues.marcados === 2, `${despues.marcados} de 2`);
+    t('todas las copias quedan marcadas como cambiadas',
+      despues.marcados === antes.copias, `${despues.marcados} de ${antes.copias}`);
 
     t('la sustitución no cambia el alto de la cinta',
       Math.abs(antes.alto - despues.alto) < 0.5,

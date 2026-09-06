@@ -131,6 +131,21 @@ const CLAVES_MOTIVO_CIERRE = {
 /** Rótulo del motivo de cierre de una posición. */
 export const etiquetaMotivoCierre = rotular(CLAVES_MOTIVO_CIERRE);
 
+/* Vehículo con el que se toma la posición (`validacion.js`, `VEHICULOS`). Lo
+   que se guarda es el texto castellano, igual que `recomendacion`; aquí solo se
+   traduce el rótulo. `rotular()` compara en mayúsculas, así que las claves van
+   en mayúsculas y con su tilde —«ACCIÓN», no «ACCION»—: `toUpperCase()` de
+   «Acción» conserva el acento, y una clave sin él no casaría y devolvería el
+   código crudo en inglés. Un valor no enumerado se enseña tal cual, nunca en
+   blanco. */
+const CLAVES_VEHICULO = {
+  'ACCIÓN': 'informe.vehiculo.accion',
+  'OPCIÓN': 'informe.vehiculo.opcion',
+};
+
+/** Rótulo del vehículo de la posición. */
+export const etiquetaVehiculo = rotular(CLAVES_VEHICULO);
+
 /* Motivo de cotización no disponible (`companias/index.js`). Solo cubre el
    caso enumerable —sin proveedor que resuelva el instrumento—; el texto de
    un proveedor caído sigue viajando aparte, sin código, misma doctrina que

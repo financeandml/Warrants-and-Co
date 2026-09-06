@@ -112,14 +112,11 @@ export default {
   // retired in Phase D.13: the hero's editorial copy is gone, the photo is
   // now the whole hero.
 
-  // Redesign 3: the hero has text again, and now text is all it has. The
-  // Phase D.6 keys —`portada.manifiesto.titular`, `portada.hero.subtitulo`,
-  // dropped in D.13— are not restored: those sat beside a photograph and
-  // these replace it, so they neither say the same thing nor hold the same
-  // place. The headline promises nothing the engine does not compute: it is
-  // the PRODUCT.md proposition in one line.
-  'portada.hero.titular': 'Market intelligence derived from what we publish',
-  'portada.hero.bajada': 'Every figure comes from a thesis with its date and its price. Where there is no data, we say so.',
+  // The hero has no copy again: the photograph is the whole hero, as in Phase
+  // D.13. `portada.hero.titular` and `portada.hero.bajada`, the two keys
+  // redesign 3 added for its typographic hero, are retired with it. The Phase
+  // D.6 keys are not restored either —they were already dropped in D.13 and
+  // nobody has asked for them back.
 
   // The four pillars from the reference mockup, replacing the previous three
   // (Research, Catalysts, Portfolio). They lose the link to their routes

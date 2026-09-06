@@ -31,6 +31,7 @@ import {
   porcentaje, formatearPorcentaje } from './formato.js';
 import { sinMovimiento, revelar, observarEntrada } from './movimiento.js';
 import { t } from './i18n.js';
+import { etiquetaVehiculo } from './vocabulario.js';
 
 /* Se resuelven al pintar, no al cargar el módulo: el idioma puede cambiar
    después y una constante habría quedado congelada en el de arranque. */
@@ -1211,6 +1212,135 @@ export function pintarCifrasHome(cartera, totalTesis) {
 }
 
 // ═══════════════════════ VITRINA DE TESIS (home) ═══════════════════════
+
+/* ══════════════════════════ TRACK RECORD ══════════════════════════════════
+   El registro de operaciones de la cartera, en el registro de una terminal.
+
+   FUENTE ÚNICA (Regla 9). Todo sale de `cartera.posiciones`, exactamente el
+   mismo objeto que ya alimenta las tres cifras del hero, `#home-cifras` y la
+   tabla de la sección Cartera. Esta vista no calcula NADA: no deriva un ROI, no
+   suma, no promedia. Si alguna vez hiciera falta una cifra que el motor no
+   publique, se añade en `src/cartera.js` y viaja desde ahí — calcularla aquí
+   sería el mismo hecho contado en dos sitios, que es justo lo que la regla 9
+   prohíbe, y ninguna prueba de interfaz podría ver el desacuerdo.
+
+   SIN `innerHTML` (Regla 4, CSP). Cada nodo se crea con `elemento()` y el texto
+   entra por `textContent`, cabeceras incluidas. No hay plantilla en el HTML: el
+   marcado de `index.html` es un contenedor vacío. Eso no es ceremonia — es lo
+   que hace que conmutar idioma repinte también los rótulos de columna, porque
+   se leen del diccionario en cada pasada.
+
+   LOS TRES ESTADOS (Regla 2). Hay dato · el dato es cero · no hay dato:
+     · una posición sin `vehiculo` declarado —toda la cartera dada de alta antes
+       de que existiera la columna— rotula N/A, nunca «Acción» por defecto;
+     · una posición viva no tiene precio de cierre, y su celda rotula N/A: no
+       está vacía por descuido, es que aún no ha cerrado;
+     · un ROI de 0,00 % se escribe 0,00 %, con su glifo plano — no es «sin dato».
+
+   EL COLOR NO CARGA SOLO (Cláusula 1). El ROI va con `claseDireccion()`, la
+   misma que la cinta y la cartera: el color lo pone la clase, el glifo ▲/▼ lo
+   escribe `.lectura--*::before` y el signo va dentro del propio número. Impreso
+   en blanco y negro la columna se sigue leyendo entera. */
+
+/** Cabeceras de la tabla, en orden. `num` alinea a la derecha y pone `--mono`. */
+const COLUMNAS_TRACK_RECORD = [
+  { clave: 'inicio.trackRecord.col.ticker', num: false, clase: 'track-record__ticker' },
+  { clave: 'inicio.trackRecord.col.empresa', num: false, clase: 'track-record__empresa' },
+  { clave: 'inicio.trackRecord.col.vehiculo', num: false, clase: 'track-record__vehiculo' },
+  { clave: 'inicio.trackRecord.col.entrada', num: true },
+  { clave: 'inicio.trackRecord.col.precioEntrada', num: true },
+  { clave: 'inicio.trackRecord.col.cierre', num: true },
+  { clave: 'inicio.trackRecord.col.roi', num: true },
+];
+
+/**
+ * Una celda de dato. `num` la manda a la derecha con cifras tabulares.
+ *
+ * `textContent` siempre, incluso para el rótulo de ausencia: `noDisponible()`
+ * es texto traducido, no marcado, y pasa por la misma puerta que una cifra.
+ */
+function celdaTrack(texto, { num = false, clase = '' } = {}) {
+  const clases = ['track-record__celda'];
+  if (num) clases.push('track-record__celda--num');
+  if (clase) clases.push(clase);
+  return elemento('td', clases.join(' '), texto);
+}
+
+/**
+ * Pinta el track record de la portada.
+ *
+ * Se llama con `cartera` tal cual llega de `/api/mercado/cartera`. Sin
+ * posiciones, la sección entera se oculta: una tabla con solo cabeceras es una
+ * promesa de dato que no se cumple (Regla 1).
+ *
+ * Orden: por fecha de entrada descendente —lo último operado arriba, que es
+ * como se lee un registro—. Las que no declaran fecha van al final, nunca
+ * mezcladas con una fecha inventada.
+ */
+export function pintarTrackRecord(cartera) {
+  const seccion = $('#home-track-record');
+  const marco = $('#track-record-marco');
+  if (!seccion || !marco) return;
+
+  marco.textContent = '';
+  const posiciones = cartera?.posiciones ?? [];
+  seccion.hidden = posiciones.length === 0;
+  if (!posiciones.length) return;
+
+  const tabla = elemento('table', 'track-record');
+  tabla.appendChild(elemento('caption', 'visualmente-oculto', t('inicio.trackRecord.caption')));
+
+  const thead = elemento('thead');
+  const filaCab = elemento('tr');
+  for (const col of COLUMNAS_TRACK_RECORD) {
+    const th = elemento('th', col.num ? 'track-record__cab track-record__cab--num' : 'track-record__cab',
+      t(col.clave));
+    th.scope = 'col';
+    filaCab.appendChild(th);
+  }
+  thead.appendChild(filaCab);
+  tabla.appendChild(thead);
+
+  /* Descendente por fecha de entrada. `localeCompare` sobre ISO ordena bien
+     porque `YYYY-MM-DD` es lexicográficamente monótono; las que no la traen se
+     empujan al final con una cadena vacía, que compara por debajo de cualquier
+     fecha real. No se les asigna una fecha de respaldo. */
+  const ordenadas = [...posiciones].sort((a, b) =>
+    String(b.fechaEntrada ?? '').localeCompare(String(a.fechaEntrada ?? '')));
+
+  const tbody = elemento('tbody');
+  for (const p of ordenadas) {
+    const fila = elemento('tr', p.cerrada ? 'track-record__fila track-record__fila--cerrada'
+      : 'track-record__fila');
+
+    fila.appendChild(celdaTrack(p.ticker ?? noDisponible(), { clase: 'track-record__ticker' }));
+    fila.appendChild(celdaTrack(p.empresa ?? noDisponible(), { clase: 'track-record__empresa' }));
+    // Sin vehículo declarado la celda dice N/A. No se supone «Acción» porque el
+    // motor calcule tramos de acciones: eso es una limitación del motor, no un
+    // hecho sobre la tesis (Regla 1, Regla 3).
+    fila.appendChild(celdaTrack(p.vehiculo ? etiquetaVehiculo(p.vehiculo) : noDisponible(),
+      { clase: 'track-record__vehiculo' }));
+    fila.appendChild(celdaTrack(p.fechaEntrada ? formatearFecha(p.fechaEntrada) : noDisponible(),
+      { num: true }));
+    fila.appendChild(celdaTrack(
+      Number.isFinite(p.precioEntrada) ? formatearNumero(p.precioEntrada, 2) : noDisponible(),
+      { num: true }));
+    /* Cierre es el precio de SALIDA, no la última cotización: una posición viva
+       no tiene cierre y lo dice. Distinguirlas importa —un precio de referencia
+       aquí haría pasar por cerrada una línea que sigue abierta—. */
+    fila.appendChild(celdaTrack(
+      Number.isFinite(p.precioCierre) ? formatearNumero(p.precioCierre, 2) : noDisponible(),
+      { num: true }));
+
+    const roi = elemento('td', `track-record__celda track-record__celda--num ${claseDireccion(p.rentabilidadPct)}`,
+      Number.isFinite(p.rentabilidadPct) ? formatearPorcentaje(p.rentabilidadPct) : noDisponible());
+    fila.appendChild(roi);
+
+    tbody.appendChild(fila);
+  }
+  tabla.appendChild(tbody);
+  marco.appendChild(tabla);
+}
 
 /**
  * "Galería de proyectos" del encargo, mapeada a lo que el producto tiene de

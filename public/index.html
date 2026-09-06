@@ -56,42 +56,50 @@
        Research (el producto) antes que Portfolio (la prueba de convicción). -->
   <section class="seccion seccion--portada" id="seccion-inicio" data-seccion-panel="inicio">
 
-    <!-- ── Hero tipográfico ──
-         Rediseño 3. La fotografía a sangre de la Fase D.13 se retira: el hero
-         vuelve a ser texto, y ahora el texto es lo único que hay. No es la
-         declaración editorial de la D.9 recuperada — aquella compartía fila con
-         una foto y competía con ella—: aquí el titular ocupa la composición
-         entera y el aire alrededor es la mitad del argumento.
+    <!-- ── Hero: foto a pantalla completa, sin bloque de texto ──
+         La fotografía del árbol vuelve a ser el hero entero: `.manifiesto__visual`
+         mide `calc(100vh - var(--alto-cabecera) - 22px)`, y las cifras y las
+         acciones se superponen sobre ella. Es la misma foto de `public/marca/`
+         desde la Fase D.6.1; si no hay banner depositado, `cargarMarca()` deja
+         `.manifiesto__visual` oculto y la secuencia pasa directa de la cabecera
+         a la cinta.
 
-         Con la foto se van cuatro decisiones que solo existían por ella y que
-         quedan revocadas en CLAUDE.md, no huérfanas: el parallax nativo del
-         fondo, el zoom de entrada de `@starting-style`, el solape de -44px de
-         la cinta y el montaje de `cargarMarca()`. El sello y el logo del pie
-         siguen viniendo de `/api/marca`; lo que deja de existir es el banner.
+         El hero tipográfico del rediseño 3 —titular serif y bajada— se retira
+         por encargo explícito, y con él sus dos claves de diccionario. Lo que
+         vuelve con la foto está escrito, no sobreentendido: el parallax nativo
+         del fondo, el zoom de entrada de `@starting-style`, la costura en
+         degradado del pie de foto, el velo tras los botones y el solape de
+         -44px de la cinta. Los párrafos correspondientes se revierten en
+         CLAUDE.md § Diseño 8 y en DESIGN.md.
 
-         Las tres cifras son las de siempre, de la misma fuente de siempre
-         (`cartera.estadisticos`, Regla 9) y con el mismo contador de entrada
-         —la excepción documentada de la cláusula 8 sigue vigente palabra por
-         palabra: se pintan una vez al montar, el sondeo de 20s de la cinta las
-         excluye, y el contador corre una vez al entrar en el viewport—. Lo que
-         cambia es dónde viven y cómo se leen: ya no flotan sobre el follaje,
-         sino en una rejilla de tres columnas separadas por filete de 1px, con
-         la cifra en monoespaciada. Un cuadro de resultados, no un rótulo. -->
+         Lo que NO vuelve, porque nunca dependió de la foto: la rampa marfil,
+         el botón negro, `--serif` en lugar de Jost, el radio 0 de la portada y
+         la cifra en `--mono` con `tabular-nums`. -->
     <div class="manifiesto">
-      <div class="contenedor">
-        <div class="manifiesto__hero">
-          <h1 class="manifiesto__titular" data-i18n="portada.hero.titular">Inteligencia de mercado que se deriva de lo publicado</h1>
-          <p class="manifiesto__bajada" data-i18n="portada.hero.bajada">Cada cifra sale de una tesis con su fecha y su precio. Donde no hay dato, lo decimos.</p>
-          <div class="manifiesto__acciones">
-            <a class="boton boton--solido" href="#/cartera" data-ruta
-               data-i18n="portada.acceso.cartera">Ver la cartera<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
-            <a class="boton boton--texto" href="#/repositorio" data-ruta
-               data-i18n="portada.acceso.research">Ver el análisis</a>
-          </div>
-        </div>
-        <!-- `hidden` hasta que `pintarMetricasHero()` tenga datos reales:
-             la rejilla no reserva tres huecos vacíos por si acaso (Regla 1). -->
+      <!-- El visual admite foto O vídeo, nunca los dos a la vez: `cargarMarca()`
+           revela uno solo, según lo que `/api/marca` resuelva. El vídeo es mudo,
+           en bucle y sin controles —fondo, nunca contenido que reclame atención
+           propia (Cláusula 5)— y `prefers-reduced-motion` lo congela en vez de
+           reproducirlo. El filtro de desaturación es del propio contenedor, no
+           del fichero: cualquier vídeo que se deposite entra ya al registro
+           monocromo de la casa (`DESIGN.md`), sin depender de que quien lo suba
+           lo entregue ya en blanco y negro. -->
+      <div class="manifiesto__visual" id="hero-visual" hidden>
+        <img class="manifiesto__imagen" id="hero-imagen" alt="" width="1600" height="900">
+        <video class="manifiesto__imagen manifiesto__video" id="hero-video"
+               muted loop autoplay playsinline hidden></video>
+        <!-- Las tres cifras de rendimiento del fondo — la misma fuente que ya
+             pinta `#home-cartera`, nunca un cálculo aparte (Regla 9). `hidden`
+             hasta que `pintarMetricasHero()` tenga datos reales que mostrar.
+             Siguen en `--mono` con `tabular-nums`: eso lo trajo el rediseño 3 y
+             se conserva, porque es tipografía y no encuadre. -->
         <div class="manifiesto__metricas" id="hero-metricas" aria-live="polite" hidden></div>
+        <div class="manifiesto__acciones">
+          <a class="boton boton--solido" href="#/cartera" data-ruta
+             data-i18n="portada.acceso.cartera">Ver la cartera<span class="manifiesto__flecha" aria-hidden="true">→</span></a>
+          <a class="boton boton--texto" href="#/repositorio" data-ruta
+             data-i18n="portada.acceso.research">Ver el análisis</a>
+        </div>
       </div>
     </div>
 
@@ -171,6 +179,49 @@
           Cada cifra de abajo la calcula el mismo motor que la cartera. Ninguna se redacta aparte.
         </p>
         <div class="bento-cifras" id="bento-cifras" aria-live="polite"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════ TRACK RECORD ═══════════════════════════════
+         El registro de operaciones detrás de las cifras de arriba, en el
+         registro de una terminal: filete de 1px por fila, sin fondos alternos,
+         cifra y fecha en monoespaciada tabular alineadas a la derecha.
+
+         Fuente ÚNICA: `datosInicio.cartera.posiciones`, la misma que ya alimenta
+         las tres cifras del hero, `#home-cifras` y la tabla de Cartera (Regla 9).
+         No hay un segundo cálculo aquí — esta vista no deriva nada, solo rotula
+         lo que el motor publica.
+
+         El cuerpo entero lo construye `pintarTrackRecord()` (`inicio.js`) con
+         `elemento()` y `textContent`, cabeceras incluidas: ni un `innerHTML`
+         (Regla 4, CSP). Las cabeceras se pintan desde el diccionario en cada
+         repintado, que es lo que hace que conmutar idioma las traduzca.
+
+         `hidden` hasta que haya posiciones reales: la sección no reserva una
+         tabla vacía por si acaso (Regla 1). -->
+    <section class="bloque-home bloque-home--track-record" id="home-track-record"
+             aria-labelledby="titulo-home-track-record" hidden>
+      <div class="contenedor">
+        <header class="bloque-home__cabecera">
+          <div>
+            <p class="etiqueta-superior" data-i18n="inicio.trackRecord.etiqueta">Registro de operaciones</p>
+            <h2 id="titulo-home-track-record" class="bloque-home__titulo"
+                data-i18n="inicio.trackRecord.titulo">Track record</h2>
+          </div>
+        </header>
+        <p class="track-record__nota" data-i18n="inicio.trackRecord.nota">
+          Cada línea sale de una tesis publicada, con su fecha y su precio. Lo que el proveedor
+          no publica se rotula N/A; nada se rellena.
+        </p>
+        <!-- El marco es quien desborda, no la tabla: `overflow-x` sobre el
+             `<table>` no crea contexto de scroll en todos los navegadores, y
+             además recortaría el foco de teclado de las celdas. En móvil la
+             tabla conserva sus siete columnas y se arrastra en horizontal, en
+             vez de partirse en tarjetas: una fila de track record se lee
+             comparando columnas entre sí. -->
+        <div class="track-record__marco" id="track-record-marco" tabindex="0"
+             role="region" data-i18n-attr="aria-label:inicio.trackRecord.marco"
+             aria-label="Track record, desplazable en horizontal"></div>
       </div>
     </section>
 
@@ -1301,6 +1352,10 @@
     <fieldset>
       <legend data-i18n="informe.grupo.operativa">Operativa de la posición</legend>
       <div class="rejilla-campos">
+        <label class="campo">
+          <span data-i18n="informe.campo.vehiculo">Vehículo</span>
+          <select name="vehiculo" id="campo-vehiculo"></select>
+        </label>
         <label class="campo">
           <span data-i18n="informe.campo.precioCompra">Precio de compra</span>
           <input type="number" name="precio_compra" step="0.0001" min="0" inputmode="decimal"

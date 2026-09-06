@@ -48,7 +48,7 @@ function lineasDeCartera() {
   return db
     .prepare(
       `SELECT id, empresa, ticker, sector, pais, recomendacion, precio_objetivo, peso_cartera,
-              precio_compra, take_profit, stop_loss, divisa, fecha_publicacion
+              precio_compra, take_profit, stop_loss, divisa, vehiculo, fecha_publicacion
        FROM informes
        WHERE en_cartera = 1 AND ticker IS NOT NULL AND ticker <> ''
        ORDER BY fecha_publicacion ASC, id ASC`

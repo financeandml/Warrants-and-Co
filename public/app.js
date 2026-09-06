@@ -356,14 +356,14 @@ function seccionDesdeHash() {
  * Adopta los recursos de marca disponibles en `public/marca/`.
  *
  * La ausencia de un recurso no degrada nada: el logotipo cae al SVG por
- * defecto.
+ * defecto y, sin banner depositado, `.manifiesto__visual` se queda oculto y la
+ * portada pasa directa de la cabecera a la cinta.
  *
- * El banner ya no se monta. El rediseño 3 retiró la fotografía del hero, y con
- * ella el `<img>`, el `<video>`, la precarga que evitaba verlos a medio pintar
- * y la rama de movimiento reducido que elegía entre uno y otro. Aquí quedan el
- * sello de cabecera y el logotipo del pie, que son los dos recursos de marca
- * que la interfaz sigue pintando. `/api/marca` no se toca: puede seguir
- * sirviendo un banner, y nadie lo pide.
+ * El banner vuelve a montarse. El rediseño 3 había retirado la fotografía del
+ * hero y con ella este bloque entero; la reversión lo repone tal cual estaba,
+ * precarga incluida —evita que la foto se vea a medio pintar la primera vez
+ * que llega—. El banner no alimenta ninguna geometría de encuadre: es una
+ * imagen editorial más, como el sello o el logo.
  */
 async function cargarMarca() {
   let marca;
@@ -381,6 +381,39 @@ async function cargarMarca() {
   if (marca.logo?.url) {
     const logo = $('#pie-logo');
     if (logo) logo.src = `${marca.logo.url}?v=${marca.logo.version}`;
+  }
+
+  const visual = $('#hero-visual');
+  const imagen = $('#hero-imagen');
+  const video = $('#hero-video');
+
+  const usarImagen = () => {
+    if (!marca.banner?.url || !imagen) { if (visual) visual.hidden = true; return; }
+    const precarga = new Image();
+    precarga.onload = () => {
+      imagen.src = `${marca.banner.url}?v=${marca.banner.version}`;
+      imagen.hidden = false;
+      if (video) video.hidden = true;
+      visual.hidden = false;
+    };
+    precarga.onerror = () => { visual.hidden = true; };
+    precarga.src = `${marca.banner.url}?v=${marca.banner.version}`;
+  };
+
+  /* El vídeo es fondo mudo, nunca contenido: con movimiento reducido no se
+     reproduce —cae a la foto, si existe, en vez de a un fotograma congelado
+     a medias— (Cláusula 5). Sin foto de respaldo, el hero se queda oculto: es
+     preferible a una imagen que no se sabe si terminó de decodificar. */
+  if (marca.bannerVideo?.url && video && visual && !sinMovimiento()) {
+    video.src = `${marca.bannerVideo.url}?v=${marca.bannerVideo.version}`;
+    video.oncanplay = () => {
+      video.hidden = false;
+      imagen.hidden = true;
+      visual.hidden = false;
+    };
+    video.onerror = usarImagen;
+  } else {
+    usarImagen();
   }
 }
 
