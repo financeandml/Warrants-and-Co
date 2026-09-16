@@ -18,3 +18,26 @@ perfil_memoria.csv
 
 # Temporales de Office (los ~$ que crea Excel/Word al abrir un archivo)
 ~$*
+
+# Informes generados y capturas de revision: son artefactos, se regeneran.
+salida/
+informes_out.txt
+informes_err.txt
+
+# Cache local de descargas de SEC EDGAR: se regenera sola, no va al repositorio
+.cache_sec/
+.cache_investing/
+
+# Muestras generadas: artefactos, se regeneran (80 MB de PDF no van al repo)
+muestras/
+informes/salida_*.pdf
+scratch_*.pdf
+informes.pid
+
+# La firma habla en nombre de una persona: no va al repositorio.
+firma.json
+# Las posiciones de la firma y del analista, y el registro de emisiones.
+# El registro es el historico de la casa: no viaja en el repositorio del
+# codigo, se respalda aparte. Sus plantillas si estan versionadas.
+posiciones.json
+registro/

@@ -1,0 +1,19 @@
+# El registro de recomendaciones emitidas es una cadena de hashes sobre el
+# TEXTO EXACTO de cada linea. Cualquier cosa que reescriba el fichero la rompe.
+#
+# Medido: convertir el fichero entero a CRLF NO la rompe --se lee con
+# traduccion universal de finales de linea, de modo que el texto de cada linea
+# es el mismo--. Lo que si la rompe es reformatear el JSON: compactar
+# separadores, cambiar el orden de las claves o escapar los acentos. Las tres
+# detectadas.
+#
+# De ahi las tres marcas:
+#   -text   git no convierte finales de linea ni al entrar ni al salir
+#   -diff   no se intenta un diff de texto: una linea es un registro, no prosa
+#   -merge  y sobre todo: NUNCA se fusiona. Un merge de un historico de solo
+#           anadir produciria lineas intercaladas, con la cadena rota y sin que
+#           nadie lo vea. Un conflicto ruidoso es infinitamente preferible.
+registro/*.jsonl -text -diff -merge
+
+# Las plantillas si son texto normal.
+*.ejemplo.json text

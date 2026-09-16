@@ -1,0 +1,8 @@
+{
+  "_revisa_esto": "REVISA LA CERTIFICACIÓN ANTES DE EMITIR NADA: habla en tu nombre. Aquí solo va lo que es, por naturaleza, una declaración tuya: quién firma, con qué cargo, en qué buzón se te localiza, qué certificas y bajo qué política revisas. Lo DERIVADO no cabe y el validador lo rechaza: el reparto histórico se cuenta del registro de emisiones (registro.py) y la declaración de conflictos se comprueba contra posiciones.json el día de la emisión (posiciones.py). El texto viaja tal cual al informe, de modo que va acentuado.",
+  "analista": "Sergio de Santiago López",
+  "cargo": "Analista de renta variable",
+  "contacto": "financeandml@gmail.com",
+  "certificacion": "El analista que firma este informe certifica que las opiniones expresadas reflejan fielmente su criterio personal sobre el emisor y los instrumentos analizados, y que ninguna parte de su retribución está, ha estado ni estará directa o indirectamente ligada a las recomendaciones u opiniones concretas contenidas en él.",
+  "politica_actualizacion": "La recomendación se revisa trimestralmente, tras la publicación de resultados del emisor. Se revisa además de forma extraordinaria cuando se cumple alguno de los criterios de invalidación enunciados en el apartado 35, cuando se anuncia una operación corporativa relevante o cuando el precio alcanza el objetivo publicado."
+}

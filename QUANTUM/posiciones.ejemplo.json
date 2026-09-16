@@ -1,0 +1,15 @@
+{
+  "_lee_esto": "La cartera vigente de los DOS sujetos que el informe declara: la firma y cada analista que pueda firmar, no solo el que firme hoy. Solo los emisores en los que HAY posición abierta, con su dirección. Un analista con la lista vacía es «se ha mirado y no tiene»; un analista que no figura aquí es «no se ha mirado», y el generador los distingue: por eso hay que dar de alta a cada uno aunque su lista quede vacía.",
+  "_no_es_la_fuente": "Este fichero NO es por sí solo la declaración de conflictos. La emisión pregunta en el momento —si hay posición en el emisor y si ha habido operaciones propias en el instrumento desde que se produjo el borrador— y publica esa respuesta con el nombre de quien la dio y la hora. Esto es lo que la corrobora. Si los dos se contradicen, la emisión aborta; si este fichero falta o tiene fecha vieja, se emite con un aviso, porque lo que se declara es la respuesta de hoy y no un fichero de hace tres meses.",
+  "fecha_actualizacion": "2026-09-08",
+  "firma": [],
+  "analistas": {
+    "Nombre Apellido Apellido": []
+  },
+  "_ejemplo_de_apunte": {
+    "ticker": "XXXX",
+    "isin": "US0000000000",
+    "direccion": "LARGA",
+    "_como_se_usa": "Un objeto así dentro de «firma» o dentro de la lista de un analista. «direccion» vale LARGA o CORTA. Basta con el ticker o con el ISIN: se compara por los dos. Esta clave empieza por «_», de modo que es una anotación y no se lee como una posición."
+  }
+}
